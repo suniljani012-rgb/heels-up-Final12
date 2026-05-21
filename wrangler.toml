@@ -1,12 +1,12 @@
-name = "heelsup-api"
-main = "backend/index.js"
+name = "heelsupnew"
+main = "src/index.js"
 compatibility_date = "2026-05-08"
 workers_dev = true
 
 [vars]
 APP_NAME = "HeelsUp"
 CORS_ORIGIN = "*"
-API_BASE_URL = "https://heelsupnew.heelsup.workers.dev/api/health"
+API_BASE_URL = "https://heelsupnew.heelsup.workers.dev"
 GOOGLE_APPSCRIPT_ENDPOINT = ""
 GOOGLE_APPSCRIPT_TOKEN = ""
 JWT_EXPIRES_DAYS = "30"
