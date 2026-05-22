@@ -85,6 +85,30 @@ export default {
     }
 
     try {
+      // Automatic Schema Upgrades for Shipping and Taxes
+      const upgrades = [
+        "ALTER TABLE tax_rules ADD COLUMN hsn_code TEXT",
+        "ALTER TABLE tax_rules ADD COLUMN condition_type TEXT",
+        "ALTER TABLE tax_rules ADD COLUMN condition_amount REAL",
+        "ALTER TABLE tax_rules ADD COLUMN notes TEXT",
+        "ALTER TABLE shipping_zones ADD COLUMN delivery_days TEXT",
+        "ALTER TABLE shipping_zones ADD COLUMN standard_rate REAL",
+        "ALTER TABLE shipping_zones ADD COLUMN express_rate REAL",
+        "ALTER TABLE shipping_zones ADD COLUMN sameday_rate REAL",
+        "ALTER TABLE shipping_zones ADD COLUMN free_above REAL"
+      ];
+      for (const sql of upgrades) {
+        try { await env.DB.prepare(sql).run(); } catch(e) {}
+      }
+    } catch (err) {
+      if (err.message && err.message.includes("no such table")) {
+        console.log("Waiting for schema initialization...");
+      } else {
+        console.error("Unhandled error in ensureTables:", err?.stack || err);
+      }
+    }
+
+    try {
       const response = await router(request, env);
       
       // Store in cache if cacheable
@@ -1511,7 +1535,8 @@ async function handleAdmin(request, path, url, env) {
   if (method === "DELETE" && /^\/api\/admin\/customers\/(\d+)$/.test(path)) {
     if (!isAdmin) return json({ error: "Only admin can delete customers" }, 403);
     const id = toInt(path.split("/").pop(), 0);
-    await env.DB.prepare("UPDATE users SET is_blocked=1, updated_at=? WHERE id=?").bind(nowIso(), id).run();
+    // Hard delete as explicitly requested
+    await env.DB.prepare("DELETE FROM users WHERE id=?").bind(id).run();
     await auditLog(env, auth.user.id, "user_deleted", "users", id, {});
     return json({ ok: true });
   }
@@ -1717,75 +1742,113 @@ async function handleAdmin(request, path, url, env) {
     return json({ ok: true });
   }
 
-  // ── TAX RULES ─────────────────────────────────────────────────
-  if (method === "GET" && path === "/api/admin/taxes") {
-    const { results } = await env.DB.prepare("SELECT * FROM tax_rules ORDER BY id ASC").all();
-    return json({ taxes: results || [] });
+  // ── TAX SETTINGS & RULES ────────────────────────────────────────────────
+  if (method === "GET" && path === "/api/admin/taxes/settings") {
+    const keys = ["gst_registered","gst_inclusive","auto_footwear_slab","gstin_number","business_name","gst_state","default_tax_rate","invoice_prefix","fy_start","invoice_note","show_gst_breakup","show_hsn_code","auto_invoice_pdf"];
+    const settings = {};
+    for (const k of keys) settings[k] = await getSetting(env, k, "");
+    settings.gst_registered = settings.gst_registered !== "false";
+    settings.gst_inclusive = settings.gst_inclusive === "true";
+    settings.auto_footwear_slab = settings.auto_footwear_slab !== "false";
+    settings.show_gst_breakup = settings.show_gst_breakup !== "false";
+    settings.show_hsn_code = settings.show_hsn_code === "true";
+    settings.auto_invoice_pdf = settings.auto_invoice_pdf === "true";
+    return json(settings);
   }
-  if (method === "POST" && path === "/api/admin/taxes") {
+  if (method === "PUT" && path === "/api/admin/taxes/settings") {
+    const body = await readJson(request);
+    for (const k of Object.keys(body)) {
+      await setSetting(env, k, String(body[k]));
+    }
+    return json({ ok: true });
+  }
+
+  if (method === "GET" && path === "/api/admin/taxes/rules") {
+    const { results } = await env.DB.prepare("SELECT id, category, name as category_label, hsn_code, rate as tax_rate, condition_type, condition_amount, notes, active as is_active FROM tax_rules ORDER BY id ASC").all();
+    return json({ rules: results || [] });
+  }
+  if (method === "POST" && path === "/api/admin/taxes/rules") {
     const body = await readJson(request);
     const result = await env.DB.prepare(
-      "INSERT INTO tax_rules (name, type, rate, country, state, category, active, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?)"
-    ).bind(String(body?.name || ""), String(body?.type || "percentage"), Number(body?.rate || 0), String(body?.country || "IN"), String(body?.state || ""), String(body?.category || ""), body?.active !== false ? 1 : 0, nowIso(), nowIso()).run();
+      "INSERT INTO tax_rules (name, category, hsn_code, rate, condition_type, condition_amount, notes, active, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)"
+    ).bind(String(body?.category_label || ""), String(body?.category || ""), String(body?.hsn_code || ""), Number(body?.tax_rate || 0), String(body?.condition_type || "none"), body?.condition_amount ? Number(body?.condition_amount) : null, String(body?.notes || ""), body?.is_active !== false ? 1 : 0, nowIso(), nowIso()).run();
     return json({ ok: true, id: result.meta?.last_row_id }, 201);
   }
-  if (method === "PUT" && /^\/api\/admin\/taxes\/(\d+)$/.test(path)) {
+  if (method === "PUT" && /^\/api\/admin\/taxes\/rules\/(\d+)$/.test(path)) {
     const id = toInt(path.split("/").pop(), 0);
     const body = await readJson(request);
     await env.DB.prepare(
-      "UPDATE tax_rules SET name=?, type=?, rate=?, country=?, state=?, category=?, active=?, updated_at=? WHERE id=?"
-    ).bind(String(body?.name || ""), String(body?.type || "percentage"), Number(body?.rate || 0), String(body?.country || "IN"), String(body?.state || ""), String(body?.category || ""), body?.active !== false ? 1 : 0, nowIso(), id).run();
+      "UPDATE tax_rules SET name=?, category=?, hsn_code=?, rate=?, condition_type=?, condition_amount=?, notes=?, active=?, updated_at=? WHERE id=?"
+    ).bind(String(body?.category_label || ""), String(body?.category || ""), String(body?.hsn_code || ""), Number(body?.tax_rate || 0), String(body?.condition_type || "none"), body?.condition_amount ? Number(body?.condition_amount) : null, String(body?.notes || ""), body?.is_active !== false ? 1 : 0, nowIso(), id).run();
     return json({ ok: true });
   }
-  if (method === "DELETE" && /^\/api\/admin\/taxes\/(\d+)$/.test(path)) {
+  if (method === "PATCH" && /^\/api\/admin\/taxes\/rules\/(\d+)$/.test(path)) {
+    const id = toInt(path.split("/").pop(), 0);
+    const body = await readJson(request);
+    if (body?.is_active !== undefined) {
+      await env.DB.prepare("UPDATE tax_rules SET active=? WHERE id=?").bind(body.is_active ? 1 : 0, id).run();
+    }
+    return json({ ok: true });
+  }
+  if (method === "DELETE" && /^\/api\/admin\/taxes\/rules\/(\d+)$/.test(path)) {
     const id = toInt(path.split("/").pop(), 0);
     await env.DB.prepare("DELETE FROM tax_rules WHERE id=?").bind(id).run();
     return json({ ok: true });
   }
 
-  // ── SHIPPING ──────────────────────────────────────────────────
-  if (method === "GET" && path === "/api/admin/shipping") {
-    const { results: zones } = await env.DB.prepare("SELECT * FROM shipping_zones ORDER BY sort_order ASC, id ASC").all();
-    const { results: rates } = await env.DB.prepare("SELECT * FROM shipping_rates ORDER BY zone_id ASC, id ASC").all();
-    return json({ zones: zones || [], rates: rates || [] });
+  // ── SHIPPING ZONES & SETTINGS ──────────────────────────────────────────────────
+  if (method === "GET" && path === "/api/admin/shipping/settings") {
+    const free_shipping_threshold = await getSetting(env, "free_shipping_threshold", "");
+    return json({ free_shipping_threshold });
+  }
+  if (method === "PUT" && path === "/api/admin/shipping/settings") {
+    const body = await readJson(request);
+    if (body.free_shipping_threshold !== undefined) {
+      await setSetting(env, "free_shipping_threshold", String(body.free_shipping_threshold));
+    }
+    return json({ ok: true });
+  }
+
+  if (method === "GET" && path === "/api/admin/shipping/zones") {
+    const { results } = await env.DB.prepare("SELECT id, name, states, delivery_days, sort_order, active as is_active, standard_rate, express_rate, sameday_rate, free_above FROM shipping_zones ORDER BY sort_order ASC, id ASC").all();
+    return json({ zones: results || [] });
   }
   if (method === "POST" && path === "/api/admin/shipping/zones") {
     const body = await readJson(request);
     const result = await env.DB.prepare(
-      "INSERT INTO shipping_zones (name, countries, states, active, sort_order, created_at, updated_at) VALUES (?,?,?,?,?,?,?)"
-    ).bind(String(body?.name || ""), String(body?.countries || "IN"), String(body?.states || ""), body?.active !== false ? 1 : 0, toInt(body?.sort_order, 0), nowIso(), nowIso()).run();
+      "INSERT INTO shipping_zones (name, states, delivery_days, sort_order, active, created_at, updated_at) VALUES (?,?,?,?,?,?,?)"
+    ).bind(String(body?.name || ""), String(body?.states || ""), String(body?.delivery_days || ""), toInt(body?.sort_order, 0), body?.is_active !== false ? 1 : 0, nowIso(), nowIso()).run();
     return json({ ok: true, id: result.meta?.last_row_id }, 201);
   }
   if (method === "PUT" && /^\/api\/admin\/shipping\/zones\/(\d+)$/.test(path)) {
     const id = toInt(path.split("/").pop(), 0);
     const body = await readJson(request);
     await env.DB.prepare(
-      "UPDATE shipping_zones SET name=?, countries=?, states=?, active=?, sort_order=?, updated_at=? WHERE id=?"
-    ).bind(String(body?.name || ""), String(body?.countries || "IN"), String(body?.states || ""), body?.active !== false ? 1 : 0, toInt(body?.sort_order, 0), nowIso(), id).run();
+      "UPDATE shipping_zones SET name=?, states=?, delivery_days=?, sort_order=?, active=?, updated_at=? WHERE id=?"
+    ).bind(String(body?.name || ""), String(body?.states || ""), String(body?.delivery_days || ""), toInt(body?.sort_order, 0), body?.is_active !== false ? 1 : 0, nowIso(), id).run();
     return json({ ok: true });
   }
-  if (method === "POST" && path === "/api/admin/shipping/rates") {
-    const body = await readJson(request);
-    const result = await env.DB.prepare(
-      "INSERT INTO shipping_rates (zone_id, name, type, rate, min_weight, max_weight, min_order, max_order, free_above, estimated_days, active, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
-    ).bind(toInt(body?.zone_id, 1), String(body?.name || ""), String(body?.type || "flat"), Number(body?.rate || 0), Number(body?.min_weight || 0), body?.max_weight || null, Number(body?.min_order || 0), body?.max_order || null, body?.free_above || null, String(body?.estimated_days || ""), body?.active !== false ? 1 : 0, nowIso()).run();
-    return json({ ok: true, id: result.meta?.last_row_id }, 201);
-  }
-  if (method === "PUT" && /^\/api\/admin\/shipping\/rates\/(\d+)$/.test(path)) {
+  if (method === "PATCH" && /^\/api\/admin\/shipping\/zones\/(\d+)$/.test(path)) {
     const id = toInt(path.split("/").pop(), 0);
     const body = await readJson(request);
-    await env.DB.prepare(
-      "UPDATE shipping_rates SET zone_id=?, name=?, type=?, rate=?, min_order=?, free_above=?, estimated_days=?, active=? WHERE id=?"
-    ).bind(toInt(body?.zone_id, 1), String(body?.name || ""), String(body?.type || "flat"), Number(body?.rate || 0), Number(body?.min_order || 0), body?.free_above || null, String(body?.estimated_days || ""), body?.active !== false ? 1 : 0, id).run();
+    const setCols = []; const binds = [];
+    if (body.is_active !== undefined) { setCols.push("active=?"); binds.push(body.is_active ? 1 : 0); }
+    if (body.standard_rate !== undefined) { setCols.push("standard_rate=?"); binds.push(body.standard_rate); }
+    if (body.express_rate !== undefined) { setCols.push("express_rate=?"); binds.push(body.express_rate); }
+    if (body.sameday_rate !== undefined) { setCols.push("sameday_rate=?"); binds.push(body.sameday_rate); }
+    if (body.free_above !== undefined) { setCols.push("free_above=?"); binds.push(body.free_above); }
+    if (setCols.length > 0) {
+      binds.push(id);
+      await env.DB.prepare(`UPDATE shipping_zones SET ${setCols.join(", ")} WHERE id=?`).bind(...binds).run();
+    }
     return json({ ok: true });
   }
-  if (method === "DELETE" && /^\/api\/admin\/shipping\/(zones|rates)\/(\d+)$/.test(path)) {
-    const parts = path.split("/");
-    const table = parts[4] === "zones" ? "shipping_zones" : "shipping_rates";
-    const id = toInt(parts[5], 0);
-    await env.DB.prepare(`DELETE FROM ${table} WHERE id=?`).bind(id).run();
+  if (method === "DELETE" && /^\/api\/admin\/shipping\/zones\/(\d+)$/.test(path)) {
+    const id = toInt(path.split("/").pop(), 0);
+    await env.DB.prepare(`DELETE FROM shipping_zones WHERE id=?`).bind(id).run();
     return json({ ok: true });
   }
+
 
   // ── SHIPPING EXTENDED (METHODS & PINCODES) ────────────────────
   if (method === "GET" && path === "/api/admin/shipping/methods") {

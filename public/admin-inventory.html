@@ -1159,8 +1159,8 @@
 
                 // Execute Live Update
                 await HeelsUpAuth.api(`/api/admin/products/${id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(payload)
+                    method: 'PATCH',
+                    body: JSON.stringify({ stock: newStockVal })
                 });
 
                 showToast(`Stock updated to ${newStockVal} successfully.`);

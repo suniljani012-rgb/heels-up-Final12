@@ -818,9 +818,11 @@
         async function loadCustomers() {
             document.getElementById('customersTableBody').innerHTML = '<tr><td colspan="5"><div class="loading-spinner"><i class="fa-solid fa-spinner"></i>Loading customers...</div></td></tr>';
             try {
-                // Utilizing the standard HeelsUp API wrapper expected in your project
                 const data = await HeelsUpAuth.api('/api/admin/customers');
-                allCustomers = data.customers || data || [];
+                const rawUsers = data.customers || data || [];
+                // User requirement: staff should not show in customer list
+                allCustomers = rawUsers.filter(u => u.role !== 'admin');
+                
                 filterCustomers();
             } catch (e) {
                 console.error('API Error:', e);
