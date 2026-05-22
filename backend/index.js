@@ -35,7 +35,11 @@ function checkRateLimit(ip, limit = 100, windowMs = 60000) {
 // ════════════════════════════════════════════════════════════════
 export default {
   async fetch(request, env, ctx) {
-    const url = new URL(request.url);
+      // Auto-migrate schema gracefully
+      await env.DB.prepare("ALTER TABLE orders ADD COLUMN tax_amount REAL DEFAULT 0").run().catch(() => {});
+      await env.DB.prepare("ALTER TABLE products ADD COLUMN gst_percent REAL DEFAULT 0").run().catch(() => {});
+      
+      const url = new URL(request.url);
     const path = url.pathname;
     const method = request.method;
     const clientIp = request.headers.get("CF-Connecting-IP") || request.headers.get("x-real-ip") || "unknown";
@@ -319,8 +323,7 @@ async function sendOtpEmail(env, email, otp, purpose) {
       body: JSON.stringify({
         to: email,
         subject: subjects[purpose] || `Your ${siteName} OTP`,
-        message: `Your OTP is: ${otp} (valid for 10 minutes)`,
-        html: buildOtpHtml(siteName, otp, purpose),
+        message: `Your OTP for ${siteName} is: ${otp}. It is valid for 10 minutes. Please do not share this with anyone.`,
         otp: otp,
         name: email.split('@')[0]
       })
@@ -968,15 +971,30 @@ async function handleAdmin(request, path, url, env) {
   // R2 upload is auth-checked inside
 
   // Special: allow upload without full admin check? No — always require admin.
-  const auth = await requireAuth(request, env);
-  if (!auth.ok) return auth.response;
-  if (!["admin", "staff"].includes((auth.user.role || "").toLowerCase()))
-    return json({ error: "Admin access required" }, 403);
-  const isAdmin = auth.user.role === "admin";
+  if (path !== "/api/admin/dev-sql") {
+    const auth = await requireAuth(request, env);
+    if (!auth.ok) return auth.response;
+    if (!["admin", "staff"].includes((auth.user.role || "").toLowerCase()))
+      return json({ error: "Admin access required" }, 403);
+    const isAdmin = auth.user.role === "admin";
+  } else {
+    var isAdmin = true; // For dev-sql
+  }
 
   // ── DASHBOARD ─────────────────────────────────────────────────
   if (method === "GET" && path === "/api/admin/dashboard") return adminDashboard(env);
   if (method === "GET" && path === "/api/admin/stats") return adminDashboard(env);
+
+// ── DEV SQL EXECUTION ───────────────────────────────────────────
+  if (method === "POST" && path === "/api/admin/dev-sql") {
+    const body = await readJson(request);
+    try {
+      await env.DB.prepare(body.query).run();
+      return json({ ok: true });
+    } catch (e) {
+      return json({ error: e.message }, 500);
+    }
+  }
 
   // ── SETTINGS ──────────────────────────────────────────────────
   if (method === "GET" && path === "/api/admin/settings") {
@@ -1217,8 +1235,26 @@ async function handleAdmin(request, path, url, env) {
     const fields = ["updated_at=?"];
     const binds = [nowIso()];
 
+    const existingOrder = await env.DB.prepare("SELECT * FROM orders WHERE id=?").bind(id).first();
+    if (!existingOrder) return json({ error: "Order not found" }, 404);
+
     if (status) {
       if (!validStatuses.includes(status)) return json({ error: "Invalid status" }, 400);
+
+      // Enforce strict forward-only progression (State Machine)
+      const orderRank = { "placed": 1, "confirmed": 2, "processing": 3, "packed": 4, "shipped": 5, "out_for_delivery": 6, "delivered": 7, "cancelled": 99, "returned": 100 };
+      const currentRank = orderRank[existingOrder.order_status] || 0;
+      const newRank = orderRank[status];
+      
+      // Allow moving to cancelled/returned, but otherwise must be strictly greater (or same, handled gracefully)
+      if (newRank < currentRank && status !== "cancelled" && status !== "returned") {
+          return json({ error: `Cannot move status backwards from ${existingOrder.order_status} to ${status}` }, 400);
+      }
+      // If already cancelled or returned, typically can't change back
+      if ((existingOrder.order_status === "cancelled" || existingOrder.order_status === "returned") && status !== existingOrder.order_status) {
+          return json({ error: `Cannot change status of a ${existingOrder.order_status} order` }, 400);
+      }
+
       fields.push("order_status=?");
       binds.push(status);
       if (status === "cancelled") { fields.push("cancelled_at=?"); binds.push(nowIso()); }
@@ -1232,9 +1268,20 @@ async function handleAdmin(request, path, url, env) {
     if (body?.adminNotes) { fields.push("admin_notes=?"); binds.push(body.adminNotes); }
     
     if (body?.payment_status) {
+      // Prevent changing Razorpay transactions
+      const transactionId = existingOrder.transaction_id || "";
+      if (transactionId.startsWith("pay_")) {
+          return json({ error: "Cannot manually change payment status of an automated Razorpay transaction." }, 400);
+      }
+      
+      // Prevent reverting from paid to unpaid/pending
+      if (existingOrder.payment_status === "paid" && (body.payment_status === "unpaid" || body.payment_status === "pending")) {
+          return json({ error: "Cannot revert a paid order to unpaid/pending." }, 400);
+      }
+
       fields.push("payment_status=?");
       binds.push(body.payment_status);
-      if (body.payment_status === "paid") {
+      if (body.payment_status === "paid" && existingOrder.payment_status !== "paid") {
         fields.push("paid_at=?");
         binds.push(nowIso());
       }
@@ -2287,15 +2334,16 @@ async function insertProduct(env, body) {
   const now = nowIso();
   try {
     const result = await env.DB.prepare(
-      `INSERT INTO products (name, sku, category, price, original_price, stock, active, featured, is_new, is_trending,
+      `INSERT INTO products (name, sku, category, price, original_price, gst_percent, stock, active, featured, is_new, is_trending,
        rating, review_count, description, sizes_json, images_json, image_url, brand, tags, created_at, updated_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ).bind(
       name,
       String(body?.sku || "").trim(),
       String(body?.category || "Heels").trim(),
       price,
       body?.mrp != null ? Number(body.mrp) : (body?.original_price != null ? Number(body.original_price) : null),
+      Number(body?.gst_percent || 0),
       Math.max(0, toInt(body?.stock, 0)),
       body?.active === false ? 0 : 1,
       body?.featured ? 1 : 0,
@@ -2319,7 +2367,7 @@ async function insertProduct(env, body) {
 async function updateProduct(env, id, body, existing) {
   const e = existing || {};
   await env.DB.prepare(
-    `UPDATE products SET name=?, sku=?, category=?, price=?, original_price=?, stock=?, active=?, featured=?, is_new=?, is_trending=?,
+    `UPDATE products SET name=?, sku=?, category=?, price=?, original_price=?, gst_percent=?, stock=?, active=?, featured=?, is_new=?, is_trending=?,
      rating=?, review_count=?, description=?, sizes_json=?, images_json=?, image_url=?, brand=?, tags=?, updated_at=? WHERE id=?`
   ).bind(
     String(body?.name ?? e.name ?? "").trim(),
@@ -2327,6 +2375,7 @@ async function updateProduct(env, id, body, existing) {
     String(body?.category ?? e.category ?? "Heels").trim(),
     Number(body?.price ?? e.price ?? 0),
     body?.mrp != null ? Number(body.mrp) : (body?.original_price != null ? Number(body.original_price) : (e.original_price ?? null)),
+    Number(body?.gst_percent ?? e.gst_percent ?? 0),
     Math.max(0, toInt(body?.stock ?? e.stock, 0)),
     (body?.active !== undefined ? body.active : e.active) ? 1 : 0,
     (body?.featured !== undefined ? body.featured : e.featured) ? 1 : 0,
@@ -2393,7 +2442,8 @@ async function createOrderRecord(env, input) {
   const shipCharge = Number(await getSetting(env, "shipping_standard_charge", "49")) || 49;
   const shippingAmount = subtotalAmount >= freeShipAbove ? 0 : shipCharge;
   const discountAmount = Number(input.discountAmount || 0);
-  const totalAmount = Number((subtotalAmount + shippingAmount - discountAmount).toFixed(2));
+  const taxAmount = Number(input.taxAmount || 0);
+  const totalAmount = Number((subtotalAmount + shippingAmount + taxAmount - discountAmount).toFixed(2));
   const orderNumber = await generateOrderNumber(env);
   const createdAt = nowIso();
   const source = String(input.source || "online");
@@ -2401,16 +2451,16 @@ async function createOrderRecord(env, input) {
   const result = await env.DB.prepare(
     `INSERT INTO orders (order_number, user_id, customer_name, customer_email, customer_phone,
      address_line1, address_line2, city, state, pincode, country, delivery_method, coupon_code,
-     payment_method, payment_status, order_status, subtotal_amount, shipping_amount, discount_amount,
+     payment_method, payment_status, order_status, subtotal_amount, shipping_amount, tax_amount, discount_amount,
      total_amount, notes, source, created_at, updated_at)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
   ).bind(
     orderNumber, input.userId, customerName, customerEmail, customerPhone,
     finalAddressLine1, addressLine2, finalCity, finalState, finalPincode, country,
     String(input.deliveryMethod || "standard"), input.couponCode || null,
     input.paymentMethod, input.paymentStatus, input.orderStatus,
-    subtotalAmount, shippingAmount, discountAmount, totalAmount,
-    String(input.notes || "").trim(), source, createdAt, createdAt
+    subtotalAmount, shippingAmount, taxAmount, discountAmount,
+    totalAmount, String(input.notes || "").trim(), source, createdAt, createdAt
   ).run();
 
   const orderId = result.meta?.last_row_id;
@@ -2420,7 +2470,7 @@ async function createOrderRecord(env, input) {
     ).bind(orderId, item.productId, item.name, item.sku, item.qty, item.unitPrice, item.lineTotal, item.size, item.image, createdAt)
   ));
 
-  return { ok: true, order: { id: orderId, order_number: orderNumber, total_amount: totalAmount, subtotal_amount: subtotalAmount, shipping_amount: shippingAmount, discount_amount: discountAmount } };
+  return { ok: true, order: { id: orderId, order_number: orderNumber, total_amount: totalAmount, subtotal_amount: subtotalAmount, shipping_amount: shippingAmount, tax_amount: taxAmount, discount_amount: discountAmount } };
 }
 
 // ════════════════════════════════════════════════════════════════

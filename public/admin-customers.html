@@ -873,6 +873,10 @@
                     roleToggleBtn = `<button class="btn-icon btn-outline" onclick="updateCustomerRole(${c.id}, 'customer')" title="Remove Admin Privilege"><i class="fa-solid fa-user-shield"></i></button>`;
                 }
 
+                const blockBtnColor = c.is_blocked ? 'var(--success)' : 'var(--warning)';
+                const blockBtnIcon = c.is_blocked ? 'fa-unlock' : 'fa-ban';
+                const blockBtnTitle = c.is_blocked ? 'Unblock Customer' : 'Block Customer';
+
                 return `<tr>
                     <td>
                         <div class="tbl-name">${esc(fullName.trim() || 'Unknown User')}</div>
@@ -887,10 +891,12 @@
                     </td>
                     <td>
                         <span class="badge ${roleBadgeClass}">${esc(displayRole)}</span>
+                        ${c.is_blocked ? '<span class="badge" style="background:#fef2f2;color:#dc2626">Blocked</span>' : ''}
                     </td>
                     <td>
                         <div class="act-cell">
                             ${roleToggleBtn}
+                            <button class="btn-icon btn-outline" style="color:${blockBtnColor}" onclick="toggleBlockCustomer(${c.id}, ${c.is_blocked ? 'false' : 'true'})" title="${blockBtnTitle}"><i class="fa-solid ${blockBtnIcon}"></i></button>
                             <button class="btn-icon btn-del" onclick="deleteCustomer(${c.id})" title="Delete Customer"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </td>
@@ -904,7 +910,7 @@
         async function updateCustomerRole(id, newRole) {
             if (!confirm(`Set this user as ${newRole}?`)) return;
             try {
-                await HeelsUpAuth.api(`/api/admin/customers/${id}`, {
+                await HeelsUpAuth.api(`/api/admin/customers/${id}/role`, {
                     method: 'PUT',
                     body: JSON.stringify({ role: newRole })
                 });
@@ -928,6 +934,22 @@
                 filterCustomers();
             } catch (e) {
                 showToast(e.message || 'Error deleting customer', 'error');
+            }
+        }
+
+        async function toggleBlockCustomer(id, block) {
+            const actionStr = block ? 'block' : 'unblock';
+            if (!confirm(`Are you sure you want to ${actionStr} this customer?`)) return;
+            try {
+                await HeelsUpAuth.api(`/api/admin/customers/${id}/block`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ blocked: block })
+                });
+                showToast(`Customer ${actionStr}ed successfully!`);
+                allCustomers = [];
+                loadCustomers();
+            } catch(e) {
+                showToast(e.message || `Error ${actionStr}ing customer`, 'error');
             }
         }
 

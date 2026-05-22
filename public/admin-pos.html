@@ -1008,23 +1008,30 @@
                             <div class="card-header">
                                 <div class="card-title"><i class="fa-solid fa-calculator"></i> Order Summary</div>
                             </div>
-                            <div class="form-field" style="margin-bottom:16px">
-                                <label class="form-label">Apply Discount (Flat ₹)</label>
-                                <input type="number" class="form-input" id="discountInput" value="0" min="0"
-                                    oninput="calculateTotals()" style="max-width:180px" />
+                            <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                                <div class="form-field">
+                                    <label class="form-label">Apply Discount (Flat ₹)</label>
+                                    <input type="number" class="form-input" id="discountInput" value="0" min="0"
+                                        oninput="calculateTotals()" style="max-width:180px" />
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Apply GST (Flat ₹)</label>
+                                    <input type="number" class="form-input" id="taxInput" value="0" min="0"
+                                        oninput="calculateTotals()" style="max-width:180px" />
+                                </div>
                             </div>
                             <div class="summary-box">
                                 <div class="summary-row">
                                     <span>Subtotal</span>
                                     <strong id="summary-subtotal">₹0.00</strong>
                                 </div>
-                                <div class="summary-row summary-discount">
+                                <div class="summary-row">
                                     <span>Discount</span>
-                                    <span id="summary-discount-val">-₹0.00</span>
+                                    <strong id="summary-discount" style="color:var(--danger)">-₹0.00</strong>
                                 </div>
                                 <div class="summary-row">
-                                    <span>Tax (Included 18% GST)</span>
-                                    <span id="summary-tax">₹0.00</span>
+                                    <span>GST / Tax</span>
+                                    <strong id="summary-tax" style="color:var(--muted)">+₹0.00</strong>
                                 </div>
                                 <div class="summary-row total">
                                     <span>Grand Total</span>
@@ -1280,13 +1287,12 @@
                 subtotal += line;
             });
             const discount = Math.min(Number(document.getElementById('discountInput').value) || 0, subtotal);
-            const afterDiscount = subtotal - discount;
-            const gst = afterDiscount - (afterDiscount / 1.18);
-            const total = afterDiscount;
+            const tax = Number(document.getElementById('taxInput').value) || 0;
+            const total = subtotal - discount + tax;
 
             document.getElementById('summary-subtotal').textContent = '₹' + subtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-            document.getElementById('summary-discount-val').textContent = '-₹' + discount.toLocaleString('en-IN', { minimumFractionDigits: 2 });
-            document.getElementById('summary-tax').textContent = '₹' + gst.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('summary-discount').textContent = '-₹' + discount.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            document.getElementById('summary-tax').textContent = '+₹' + tax.toLocaleString('en-IN', { minimumFractionDigits: 2 });
             document.getElementById('summary-total').textContent = '₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 });
         }
 
@@ -1324,7 +1330,8 @@
             }
 
             const discount = Number(document.getElementById('discountInput').value) || 0;
-            const totalAmount = subtotal - discount;
+            const taxAmount = Number(document.getElementById('taxInput').value) || 0;
+            const totalAmount = subtotal - discount + taxAmount;
             const paymentMode = document.getElementById('selectedPaymentMethod').value;
             const customRef = document.getElementById('paymentRef').value.trim();
             const invoiceNum = document.getElementById('invoiceNumber').value.trim();
@@ -1368,6 +1375,7 @@
                     payment_method: paymentMode === 'cash' ? 'pos_cash' : (paymentMode === 'upi' ? 'pos_upi' : 'pos_card'),
                     transaction_id: customRef,
                     order_status: 'delivered',
+                    taxAmount: taxAmount,
                     deliveryMethod: 'pos',
                     shipping_address: 'In-Store Purchase (POS)',
                     city: 'Jodhpur',

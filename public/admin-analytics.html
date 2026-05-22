@@ -1242,10 +1242,19 @@
                 renderRecentOrders((orders.orders || []).slice(0, 8));
             } catch (e) {
                 showToast('Failed to load analytics data', 'error');
-                // Show empty states
+                // Show empty states for charts
                 ['revenueChartWrap', 'orderStatusDonut', 'topProductsTable', 'categoryChart', 'funnelChart', 'paymentChart', 'keyMetrics'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el) el.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:24px;font-size:.83rem">No data available</p>';
+                });
+                // Clear KPI spinners
+                ['kpiRevenue', 'kpiOrders', 'kpiCustomers', 'kpiAOV'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerHTML = '<span style="font-size:1.2rem;color:#94a3b8">—</span>';
+                });
+                ['kpiRevSub', 'kpiOrdSub', 'kpiCustSub', 'kpiAOVSub'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = 'Data unavailable';
                 });
             }
         }

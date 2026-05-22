@@ -1235,6 +1235,8 @@
                             class="form-input" name="price" required min="0" placeholder="899"></div>
                     <div class="form-field"><label class="form-label">MRP / Original (₹)</label><input type="number"
                             class="form-input" name="mrp" min="0" placeholder="1499"></div>
+                    <div class="form-field"><label class="form-label">GST (%)</label><input type="number"
+                            class="form-input" name="gst_percent" min="0" max="100" placeholder="18"></div>
                     <div class="form-field"><label class="form-label">Stock Quantity</label><input type="number"
                             class="form-input" name="stock" min="0" placeholder="50" value="0"></div>
                     <div class="form-field"><label class="form-label">Variants (Optional)</label><input type="number"
@@ -1362,7 +1364,7 @@
         function changePage(page) { currentPage = page; renderTable(); }
 
         function openProductModal() { editingProductId = null; document.getElementById('productForm').reset(); document.getElementById('chkActive').checked = true; document.getElementById('modalTitle').textContent = 'Add New Product'; document.getElementById('productModal').classList.add('show'); }
-        function openEditModal(p) { editingProductId = p.id; document.getElementById('modalTitle').textContent = 'Edit Product'; const f = document.getElementById('productForm'); f.name.value = p.name || ''; f.sku.value = p.sku || ''; f.category.value = p.category || ''; f.price.value = p.price || ''; f.mrp.value = p.mrp || ''; f.stock.value = p.stock || 0; f.variants.value = p.variants || ''; f.description.value = p.description || ''; f.image_url.value = p.image_url || ''; f.active.checked = p.is_active !== 0 && p.is_active !== false; document.getElementById('productModal').classList.add('show'); }
+        function openEditModal(p) { editingProductId = p.id; document.getElementById('modalTitle').textContent = 'Edit Product'; const f = document.getElementById('productForm'); f.name.value = p.name || ''; f.sku.value = p.sku || ''; f.category.value = p.category || ''; f.price.value = p.price || ''; f.mrp.value = p.mrp || ''; f.gst_percent.value = p.gst_percent || 0; f.stock.value = p.stock || 0; f.variants.value = p.variants || ''; f.description.value = p.description || ''; f.image_url.value = p.image_url || ''; f.active.checked = p.is_active !== 0 && p.is_active !== false; document.getElementById('productModal').classList.add('show'); }
         function closeProductModal() { document.getElementById('productModal').classList.remove('show'); editingProductId = null; }
         document.getElementById('productModal').addEventListener('click', function (e) { if (e.target === this) closeProductModal(); });
 
@@ -1408,7 +1410,8 @@
                     sku: f.sku.value.trim(), 
                     category_id: category_id, 
                     price: Number(f.price.value), 
-                    mrp: f.mrp.value ? Number(f.mrp.value) : null, 
+                    mrp: f.mrp.value ? Number(f.mrp.value) : null,
+                    gst_percent: f.gst_percent.value ? Number(f.gst_percent.value) : 0,
                     stock: Number(f.stock.value) || 0, 
                     description: f.description.value.trim(), 
                     image_url: mainImage, 
@@ -1440,13 +1443,30 @@
                     }
                 }
 
-                showToast(editingProductId ? 'Product updated!' : 'Product added!'); 
+                showToast(`Product ${editingProductId ? 'updated' : 'added'} successfully`);
                 closeProductModal(); 
                 await loadProducts();
             } catch (err) { 
                 showToast(err.message || 'Failed to save product', 'error'); 
             } finally { 
                 btn.disabled = false; btn.innerHTML = original; 
+            }
+        }
+
+        async function updateStock(inputEl) {
+            const id = inputEl.getAttribute('data-id');
+            const newStock = Number(inputEl.value);
+            try {
+                await HeelsUpAuth.api(`/api/admin/products/${id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ stock: newStock, reason: 'Quick stock update' })
+                });
+                showToast('Stock updated successfully', 'success');
+                const p = allProducts.find(x => x.id == id);
+                if (p) p.stock = newStock;
+            } catch (err) {
+                showToast(err.message || 'Failed to update stock', 'error');
+                loadProducts();
             }
         }
 
