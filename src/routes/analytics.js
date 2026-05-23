@@ -1,6 +1,10 @@
 import { requireAdmin } from '../middleware/auth.js';
 import { ok, error, serverError } from '../utils/response.js';
 
+// In-memory cache for ultra-fast 0.1ms responses across the same Cloudflare isolate
+const queryCache = new Map();
+const CACHE_TTL_MS = 60000; // 1 minute cache
+
 export async function analyticsRouter(request, env) {
     const url = new URL(request.url);
     // Remove both /api/analytics and /api/admin/analytics to get the exact path
@@ -12,6 +16,15 @@ export async function analyticsRouter(request, env) {
         if (authError) return authError;
 
         try {
+            // 0. Ultra-fast Isolate Caching (Returns instantly if requested recently)
+            const cacheKey = url.search;
+            if (queryCache.has(cacheKey)) {
+                const cached = queryCache.get(cacheKey);
+                if (Date.now() - cached.time < CACHE_TTL_MS) {
+                    return ok(cached.data);
+                }
+            }
+
             // 1. Dynamic Date Filtering based on URL parameters
             const period = url.searchParams.get('period') || '30';
             let startDate = "date('now', '-30 days')";
@@ -35,13 +48,11 @@ export async function analyticsRouter(request, env) {
             const dateFilterO = `o.created_at >= ${startDate} AND o.created_at <= ${endDate}`;
 
             // 2. ULTRA-FAST BATCH EXECUTION
-            // Instead of Promise.all (which sends multiple HTTP requests to D1), 
-            // batch() sends all queries in ONE single network request. This is the key to sub-millisecond feel.
             const results = await env.DB.batch([
                 // Query 0: Aggregate Orders (Revenue, counts, and statuses in one pass)
                 env.DB.prepare(`
                     SELECT 
-                        COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN total ELSE 0 END), 0) as total_revenue,
+                        COALESCE(SUM(CASE WHEN payment_status = 'paid' AND status NOT IN ('cancelled', 'returned') THEN total ELSE 0 END), 0) as total_revenue,
                         COUNT(*) as total_orders,
                         SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_orders,
                         SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
@@ -65,7 +76,7 @@ export async function analyticsRouter(request, env) {
                 env.DB.prepare(`
                     SELECT date(created_at) as date, COALESCE(SUM(total), 0) as revenue, COUNT(*) as orders
                     FROM orders 
-                    WHERE payment_status='paid' AND ${dateFilter} 
+                    WHERE payment_status='paid' AND status NOT IN ('cancelled', 'returned') AND ${dateFilter} 
                     GROUP BY date ORDER BY date ASC
                 `),
 
@@ -75,7 +86,7 @@ export async function analyticsRouter(request, env) {
                     FROM order_items oi 
                     JOIN products p ON oi.product_id = p.id
                     JOIN orders o ON oi.order_id = o.id 
-                    WHERE o.payment_status = 'paid' AND ${dateFilterO}
+                    WHERE o.payment_status = 'paid' AND o.status NOT IN ('cancelled', 'returned') AND ${dateFilterO}
                     GROUP BY p.id ORDER BY revenue DESC LIMIT 7
                 `),
 
@@ -85,7 +96,7 @@ export async function analyticsRouter(request, env) {
                     FROM order_items oi 
                     JOIN products p ON oi.product_id = p.id
                     JOIN orders o ON oi.order_id = o.id 
-                    WHERE o.payment_status = 'paid' AND ${dateFilterO}
+                    WHERE o.payment_status = 'paid' AND o.status NOT IN ('cancelled', 'returned') AND ${dateFilterO}
                     GROUP BY p.category ORDER BY revenue DESC
                 `),
 
@@ -118,8 +129,7 @@ export async function analyticsRouter(request, env) {
                 visits: Math.round(tOrders * 35)         // Assumes ~2.8% overall conversion
             };
 
-            // 4. Return the exact structure expected by the HTML
-            return ok({
+            const responseData = {
                 summary: {
                     total_revenue: orderStats.total_revenue,
                     total_orders: orderStats.total_orders,
@@ -144,7 +154,13 @@ export async function analyticsRouter(request, env) {
                 category_sales: results[4].results,
                 payment_methods: payment_methods,
                 funnel: funnel
-            });
+            };
+
+            // Save to isolate memory cache
+            queryCache.set(cacheKey, { time: Date.now(), data: responseData });
+
+            // 4. Return the exact structure expected by the HTML
+            return ok(responseData);
 
         } catch (e) {
             console.error('Analytics execution error:', e);
