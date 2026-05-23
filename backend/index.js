@@ -1347,6 +1347,8 @@ async function handleAdmin(request, path, url, env) {
       if (!res.ok) throw new Error("Failed to send via Resend");
       return json({ ok: true, message: `Test OTP ${testOtp} sent to ${email}` });
     } catch (e) { return json({ error: "Failed: " + e.message }, 500); }
+  }
+  
   // ── TEMPORARY MIGRATION (Delete after run) ────────────────────
   if (method === "GET" && path === "/api/admin/migrate-category") {
     try {
