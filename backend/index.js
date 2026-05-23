@@ -1347,6 +1347,14 @@ async function handleAdmin(request, path, url, env) {
       if (!res.ok) throw new Error("Failed to send via Resend");
       return json({ ok: true, message: `Test OTP ${testOtp} sent to ${email}` });
     } catch (e) { return json({ error: "Failed: " + e.message }, 500); }
+  // ── TEMPORARY MIGRATION (Delete after run) ────────────────────
+  if (method === "GET" && path === "/api/admin/migrate-category") {
+    try {
+      await env.DB.prepare("ALTER TABLE products ADD COLUMN category_id INTEGER").run();
+      return json({ ok: true, msg: "Column category_id added" });
+    } catch (e) {
+      return json({ ok: false, error: e.message });
+    }
   }
 
   // ── PRODUCTS ──────────────────────────────────────────────────
@@ -1360,7 +1368,8 @@ async function handleAdmin(request, path, url, env) {
     const binds = [];
     if (search) { sql += " AND (LOWER(name) LIKE LOWER(?) OR sku LIKE ?)"; binds.push(`%${search}%`, `%${search}%`); }
     if (cat) { sql += " AND LOWER(category)=LOWER(?)"; binds.push(cat); }
-    if (active !== "") { sql += " AND active=?"; binds.push(active === "true" || active === "1" ? 1 : 0); }
+    const isActiveFilter = url.searchParams.get("active") || url.searchParams.get("is_active") || "";
+    if (isActiveFilter !== "") { sql += " AND active=?"; binds.push(isActiveFilter === "true" || isActiveFilter === "1" ? 1 : 0); }
     sql += " ORDER BY id DESC LIMIT ? OFFSET ?";
     binds.push(limit, offset);
     const { results } = await env.DB.prepare(sql).bind(...binds).all();
@@ -1385,8 +1394,10 @@ async function handleAdmin(request, path, url, env) {
     const updates = [];
     const binds = [];
     if (body?.stock !== undefined) { updates.push("stock=?"); binds.push(Math.max(0, toInt(body.stock, 0))); }
-    if (body?.active !== undefined) { updates.push("active=?"); binds.push(body.active ? 1 : 0); }
-    if (body?.featured !== undefined) { updates.push("featured=?"); binds.push(body.featured ? 1 : 0); }
+    if (body?.is_active !== undefined) { updates.push("active=?"); binds.push(body.is_active ? 1 : 0); }
+    else if (body?.active !== undefined) { updates.push("active=?"); binds.push(body.active ? 1 : 0); }
+    if (body?.is_featured !== undefined) { updates.push("featured=?"); binds.push(body.is_featured ? 1 : 0); }
+    else if (body?.featured !== undefined) { updates.push("featured=?"); binds.push(body.featured ? 1 : 0); }
     if (body?.is_new !== undefined) { updates.push("is_new=?"); binds.push(body.is_new ? 1 : 0); }
     if (body?.is_trending !== undefined) { updates.push("is_trending=?"); binds.push(body.is_trending ? 1 : 0); }
     if (!updates.length) return json({ error: "No valid fields to update" }, 400);
@@ -2737,8 +2748,8 @@ async function insertProduct(env, body) {
       body?.mrp != null ? Number(body.mrp) : (body?.original_price != null ? Number(body.original_price) : null),
       Number(body?.gst_percent || 0),
       Math.max(0, toInt(body?.stock, 0)),
-      body?.active === false ? 0 : 1,
-      body?.featured ? 1 : 0,
+      body?.is_active !== undefined ? (body.is_active ? 1 : 0) : (body?.active === false ? 0 : 1),
+      body?.is_featured !== undefined ? (body.is_featured ? 1 : 0) : (body?.featured ? 1 : 0),
       body?.is_new ? 1 : 0,
       body?.is_trending ? 1 : 0,
       Number(body?.rating || 4.5),
@@ -2751,6 +2762,10 @@ async function insertProduct(env, body) {
       String(body?.tags || "").trim(),
       now, now
     ).run();
+    // category_id migration fallback (don't break if column doesn't exist)
+    try {
+      await env.DB.prepare(`UPDATE products SET category_id=? WHERE id=?`).bind(body?.category_id || null, result.meta?.last_row_id).run();
+    } catch (e) {}
     return { ok: true, id: result.meta?.last_row_id };
   } catch (e) { return { ok: false, error: e.message }; }
 }
@@ -2769,8 +2784,8 @@ async function updateProduct(env, id, body, existing) {
     body?.mrp != null ? Number(body.mrp) : (body?.original_price != null ? Number(body.original_price) : (e.original_price ?? null)),
     Number(body?.gst_percent ?? e.gst_percent ?? 0),
     Math.max(0, toInt(body?.stock ?? e.stock, 0)),
-    (body?.active !== undefined ? body.active : e.active) ? 1 : 0,
-    (body?.featured !== undefined ? body.featured : e.featured) ? 1 : 0,
+    (body?.is_active !== undefined ? body.is_active : (body?.active !== undefined ? body.active : e.active)) ? 1 : 0,
+    (body?.is_featured !== undefined ? body.is_featured : (body?.featured !== undefined ? body.featured : e.featured)) ? 1 : 0,
     (body?.is_new !== undefined ? body.is_new : e.is_new) ? 1 : 0,
     (body?.is_trending !== undefined ? body.is_trending : e.is_trending) ? 1 : 0,
     Number(body?.rating ?? e.rating ?? 4.5),
@@ -2783,6 +2798,12 @@ async function updateProduct(env, id, body, existing) {
     String(body?.tags ?? e.tags ?? "").trim(),
     nowIso(), id
   ).run();
+  
+  try {
+    if (body?.category_id !== undefined) {
+      await env.DB.prepare(`UPDATE products SET category_id=? WHERE id=?`).bind(body.category_id, id).run();
+    }
+  } catch (e) {}
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -2880,12 +2901,18 @@ function mapProduct(p) {
     mrp: p.original_price ? Number(p.original_price) : null,
     stock: Number(p.stock || 0),
     active: !!p.active,
+    is_active: !!p.active,
     featured: !!p.featured,
+    is_featured: !!p.featured,
     is_new: !!p.is_new,
     is_trending: !!p.is_trending,
     rating: Number(p.rating || 4.5),
     review_count: Number(p.review_count || 0),
     sold_count: Number(p.sold_count || 0),
+    sales: Number(p.sold_count || 0),
+    sales_count: Number(p.sold_count || 0),
+    gst_percent: Number(p.gst_percent || 0),
+    category_id: p.category_id || null,
     description: p.description || "",
     sizes: safeJsonParse(p.sizes_json, []),
     images: safeJsonParse(p.images_json, p.image_url ? [p.image_url] : []),
