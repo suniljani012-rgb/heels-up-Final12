@@ -239,6 +239,51 @@
     });
   }
 
+  // ── Dynamic Navigation ──────────────────────────────────────────
+  async function loadDynamicNavigation() {
+    try {
+      const data = await apiFetch('/api/categories');
+      const cats = data.categories || [];
+      if (!cats.length) return;
+      
+      // Update Desktop Dropdown
+      const dropdowns = document.querySelectorAll('.nav-dropdown');
+      dropdowns.forEach(dd => {
+        dd.innerHTML = cats.map(c => 
+          `<a href="shop.html?category=${c.slug || c.name}"><span class="nav-dropdown-icon">✨</span> ${c.name}</a>`
+        ).join('');
+      });
+
+      // Update Mobile Menu
+      const mobileBody = document.querySelector('.mobile-menu-body');
+      if (mobileBody) {
+        // Find where to insert (after 'Shop All')
+        const shopAllLink = Array.from(mobileBody.querySelectorAll('a')).find(a => a.textContent.includes('Shop All'));
+        if (shopAllLink) {
+          // Remove old hardcoded categories (the ones between Shop All and About Us)
+          let next = shopAllLink.nextElementSibling;
+          while (next && !next.textContent.includes('About') && !next.textContent.includes('New Arrivals') && next.tagName === 'A') {
+            const toRemove = next;
+            next = next.nextElementSibling;
+            toRemove.remove();
+          }
+          
+          // Insert new categories
+          const fragment = document.createDocumentFragment();
+          cats.forEach(c => {
+            const a = document.createElement('a');
+            a.href = `shop.html?category=${c.slug || c.name}`;
+            a.innerHTML = `✨ ${c.name}`;
+            fragment.appendChild(a);
+          });
+          shopAllLink.after(fragment);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load dynamic navigation:', e);
+    }
+  }
+
   // ── Export ─────────────────────────────────────────────────────
   window.HeelsUpUI = {
     LOGO_SVG,
@@ -257,7 +302,8 @@
     formatDate,
     statusBadge,
     initScrollReveal,
-    initBackToTop
+    initBackToTop,
+    loadDynamicNavigation
   };
 
   // Auto-init on DOM ready
@@ -266,5 +312,6 @@
     updateWishlistBadge();
     initScrollReveal();
     initBackToTop();
+    loadDynamicNavigation();
   });
 })();

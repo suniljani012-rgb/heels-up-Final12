@@ -843,20 +843,19 @@
   <!-- ==========================================
        HERO SECTION
   =========================================== -->
-  <section class="hero" aria-label="Hero banner">
-    <div class="hero-bg">
-      <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=1920&q=80&auto=format&fit=crop" alt="Premium ladies heels collection 2025" loading="eager" fetchpriority="high" />
+  <section class="hero" id="hero-section" aria-label="Hero banner">
+    <div class="hero-bg" id="hero-bg">
+      <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=1920&q=80&auto=format&fit=crop" alt="Premium ladies heels collection" loading="eager" fetchpriority="high" />
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-content-wrap">
       <div class="container">
         <div class="hero-content">
-          <span class="hero-tag"><i class="fa-solid fa-sparkles" style="font-size:0.65rem"></i> New Collection 2025</span>
-          <h1 class="hero-title">Step Into <em>Elegance</em></h1>
-          <p class="hero-sub">Premium ladies footwear crafted for the modern Indian woman. Free shipping above ₹499.</p>
-          <div class="hero-btns">
+          <span class="hero-tag"><i class="fa-solid fa-sparkles" style="font-size:0.65rem"></i> New Collection</span>
+          <h1 class="hero-title" id="hero-title">Step Into <em>Elegance</em></h1>
+          <p class="hero-sub" id="hero-sub">Premium ladies footwear crafted for the modern Indian woman. Free shipping above ₹499.</p>
+          <div class="hero-btns" id="hero-btns">
             <a href="shop.html" class="btn btn-primary btn-lg"><i class="fa-solid fa-bag-shopping"></i> Shop Now</a>
-            <a href="shop.html" class="btn btn-outline btn-lg" style="border-color:rgba(255,255,255,0.35);color:#fff;background:rgba(255,255,255,0.08);backdrop-filter:blur(8px)">View Collection</a>
           </div>
         </div>
       </div>
@@ -899,59 +898,12 @@
         <span class="section-label">Shop By Category</span>
         <h2>Find Your <em style="font-style:italic;color:var(--color-primary)">Perfect</em> Style</h2>
       </div>
-      <div class="cat-grid">
-        <!-- Heels - Large -->
-        <a href="shop.html?category=Heels" class="cat-card cat-large">
-          <div class="cat-card-img">
-            <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=80&auto=format&fit=crop" alt="Heels" loading="lazy" />
-          </div>
-          <div class="cat-card-over"></div>
-          <div class="cat-card-body">
-            <span class="cat-label">Category</span>
-            <div class="cat-name">Heels</div>
-            <div class="cat-count" id="cat-count-heels">Loading…</div>
-            <span class="cat-cta">Shop Now <i class="fa-solid fa-arrow-right cat-cta-arrow"></i></span>
-          </div>
-        </a>
-        <!-- Sandals -->
-        <a href="shop.html?category=Sandals" class="cat-card">
-          <div class="cat-card-img">
-            <img src="https://images.unsplash.com/photo-1603487742131-4160ec999306?w=600&q=80&auto=format&fit=crop" alt="Sandals" loading="lazy" />
-          </div>
-          <div class="cat-card-over"></div>
-          <div class="cat-card-body">
-            <span class="cat-label">Category</span>
-            <div class="cat-name">Sandals</div>
-            <div class="cat-count" id="cat-count-sandals">Loading…</div>
-            <span class="cat-cta">Shop Now <i class="fa-solid fa-arrow-right cat-cta-arrow"></i></span>
-          </div>
-        </a>
-        <!-- Bags -->
-        <a href="shop.html?category=Bags" class="cat-card">
-          <div class="cat-card-img">
-            <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&auto=format&fit=crop" alt="Bags" loading="lazy" />
-          </div>
-          <div class="cat-card-over"></div>
-          <div class="cat-card-body">
-            <span class="cat-label">Category</span>
-            <div class="cat-name">Bags</div>
-            <div class="cat-count" id="cat-count-bags">Loading…</div>
-            <span class="cat-cta">Shop Now <i class="fa-solid fa-arrow-right cat-cta-arrow"></i></span>
-          </div>
-        </a>
-        <!-- Accessories -->
-        <a href="shop.html?category=Accessories" class="cat-card">
-          <div class="cat-card-img">
-            <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600&q=80&auto=format&fit=crop" alt="Accessories" loading="lazy" />
-          </div>
-          <div class="cat-card-over"></div>
-          <div class="cat-card-body">
-            <span class="cat-label">Category</span>
-            <div class="cat-name">Accessories</div>
-            <div class="cat-count" id="cat-count-accessories">Loading…</div>
-            <span class="cat-cta">Shop Now <i class="fa-solid fa-arrow-right cat-cta-arrow"></i></span>
-          </div>
-        </a>
+      <div class="cat-grid" id="home-cat-grid">
+        <!-- Skeleton loading -->
+        <div class="skeleton-card" style="height:350px"></div>
+        <div class="skeleton-card" style="height:350px"></div>
+        <div class="skeleton-card" style="height:350px"></div>
+        <div class="skeleton-card" style="height:350px"></div>
       </div>
     </div>
   </section>
@@ -1397,22 +1349,54 @@
       }
       loadFeatured();
 
-      // ── LOAD CATEGORY COUNTS ──
-      async function loadCategoryCounts() {
-        const cats = ['Heels', 'Sandals', 'Bags', 'Accessories'];
-        for (const cat of cats) {
-          try {
-            const data = await HeelsUpAuth.api(`/api/products?category=${cat}&limit=1`);
-            const total = data.total || data.count || (data.products && data.products.length) || '';
-            const el = document.getElementById('cat-count-' + cat.toLowerCase());
-            if (el) el.textContent = total ? `${total}+ products` : '';
-          } catch (e) {
-            const el = document.getElementById('cat-count-' + cat.toLowerCase());
-            if (el) el.textContent = '';
+      // ── LOAD HERO BANNER ──
+      async function loadHeroBanner() {
+        try {
+          const data = await HeelsUpAuth.api('/api/banners');
+          const banners = data.banners || [];
+          if (banners.length > 0) {
+            const b = banners[0]; // Just use the first one for the hero
+            document.getElementById('hero-bg').innerHTML = `<img src="${b.image_url}" alt="${b.title || ''}" loading="eager" fetchpriority="high" />`;
+            if (b.title) document.getElementById('hero-title').innerHTML = b.title;
+            if (b.subtitle) document.getElementById('hero-sub').innerHTML = b.subtitle;
+            if (b.link) {
+              document.getElementById('hero-btns').innerHTML = `<a href="${b.link}" class="btn btn-primary btn-lg"><i class="fa-solid fa-bag-shopping"></i> Shop Now</a>`;
+            }
           }
+        } catch (e) { console.error('Failed to load banners:', e); }
+      }
+      loadHeroBanner();
+
+      // ── LOAD CATEGORIES (DYNAMIC) ──
+      async function loadDynamicCategories() {
+        const grid = document.getElementById('home-cat-grid');
+        try {
+          const data = await HeelsUpAuth.api('/api/categories');
+          const cats = data.categories || [];
+          if (cats.length) {
+            grid.innerHTML = cats.slice(0, 4).map((c, i) => `
+              <a href="shop.html?category=${c.slug || c.name}" class="cat-card ${i === 0 ? 'cat-large' : ''}">
+                <div class="cat-card-img">
+                  <img src="${c.image_url || 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=80&auto=format&fit=crop'}" alt="${c.name}" loading="lazy" />
+                </div>
+                <div class="cat-card-over"></div>
+                <div class="cat-card-body">
+                  <span class="cat-label">Category</span>
+                  <div class="cat-name">${c.name}</div>
+                  <div class="cat-count">${c.product_count ? c.product_count + ' Products' : 'Explore'}</div>
+                  <span class="cat-cta">Shop Now <i class="fa-solid fa-arrow-right cat-cta-arrow"></i></span>
+                </div>
+              </a>
+            `).join('');
+          } else {
+            grid.innerHTML = '<p>No categories found.</p>';
+          }
+        } catch (e) {
+          console.error('Failed to load categories:', e);
+          grid.innerHTML = '<p>Failed to load categories.</p>';
         }
       }
-      loadCategoryCounts();
+      loadDynamicCategories();
 
       // ── TRENDING TABS ──
       const trendingCache = {};

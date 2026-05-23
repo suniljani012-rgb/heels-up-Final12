@@ -1057,34 +1057,70 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initTopbar(); initNavbar(); initSearch(); initCart();
-            initScrollTop(); loadProducts();
+            initScrollTop(); loadShopData();
             initFilterEvents(); initSortEvents();
             updateCartUI();
         });
 
         function updateShopHeader(cat) {
-            const titles = { heels: 'Heels', flats: 'Flats', sandals: 'Sandals', wedges: 'Wedges', bags: 'Bags', clutches: 'Clutches', new: 'New Arrivals', sale: 'Sale' };
-            const subs = { heels: '120+ heel styles — block heels, stilettos, wedges aur aur bhi', flats: '80+ flat styles — juttis, ballet flats, loafers', sandals: '90+ sandal styles — summer ke liye perfect', wedges: '40+ wedge styles — comfortable aur stylish', bags: '60+ bag styles — tote, sling, shoulder bags', clutches: '30+ clutch styles — parties aur events ke liye', new: 'Naye arrivals — har hafte nayi styles', sale: 'Up to 50% off — limited time offer' };
-            if (titles[cat]) {
-                document.getElementById('shop-page-title').innerHTML = `Shop <em>${titles[cat]}</em>`;
-                document.getElementById('shop-page-sub').textContent = subs[cat] || '';
-                document.getElementById('breadcrumb-current').textContent = titles[cat];
+            if (!cat || cat === 'all') {
+                document.getElementById('shop-page-title').innerHTML = `Shop <em>All</em>`;
+                document.getElementById('shop-page-sub').textContent = 'Explore our full collection of premium footwear and accessories';
+                document.getElementById('breadcrumb-current').textContent = 'All Products';
+                return;
             }
+            const title = cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' ');
+            document.getElementById('shop-page-title').innerHTML = `Shop <em>${title}</em>`;
+            document.getElementById('shop-page-sub').textContent = `Explore our exclusive collection of ${title}`;
+            document.getElementById('breadcrumb-current').textContent = title;
         }
 
-        async function loadProducts() {
+        async function loadShopData() {
             const container = document.getElementById('products-container');
-            // Show skeleton
             container.className = 'products-grid-4';
             container.innerHTML = Array(8).fill('<div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w-60"></div><div class="skeleton-line w-80"></div><div class="skeleton-line w-40"></div></div></div>').join('');
             try {
-                const data = await HeelsUpAuth.api('/api/products?limit=100');
-                products = Array.isArray(data) ? data : (data.products || data.data || []);
+                const [prodRes, catRes] = await Promise.all([
+                    HeelsUpAuth.api('/api/products?limit=100').catch(e => null),
+                    HeelsUpAuth.api('/api/categories').catch(e => null)
+                ]);
+                products = (prodRes && (Array.isArray(prodRes) ? prodRes : (prodRes.products || prodRes.data || []))) || [];
+                const categories = (catRes && catRes.categories) || [];
+
+                // Render categories in sidebar
+                const catList = document.getElementById('cat-list');
+                if (catList && categories.length) {
+                    let totalProds = products.length;
+                    let html = `<button class="cat-filter-btn ${activeCategory === 'all' ? 'active' : ''}" data-cat="all">
+                        <span>🛍️ All Products</span>
+                        <span class="cat-filter-count">${totalProds}</span>
+                    </button>`;
+                    html += categories.map(c => `
+                        <button class="cat-filter-btn ${activeCategory === c.name || activeCategory === c.slug ? 'active' : ''}" data-cat="${c.slug || c.name}">
+                            <span>✨ ${c.name}</span>
+                            <span class="cat-filter-count">${c.product_count || 0}</span>
+                        </button>
+                    `).join('');
+                    catList.innerHTML = html;
+                    initCategoryFilterEvents();
+                }
             } catch(err) {
-                container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px"><div style="font-size:2.5rem;margin-bottom:12px">⚠️</div><h3>Unable to load products</h3><p style="color:var(--text-muted);margin:8px 0 20px">Please check your connection and try again.</p><button class="btn btn-primary" onclick="loadProducts()">Retry</button></div>`;
+                container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px 20px"><div style="font-size:2.5rem;margin-bottom:12px">⚠️</div><h3>Unable to load products</h3><p style="color:var(--text-muted);margin:8px 0 20px">Please check your connection and try again.</p><button class="btn btn-primary" onclick="loadShopData()">Retry</button></div>`;
                 return;
             }
             applyFilters();
+        }
+
+        function initCategoryFilterEvents() {
+            document.querySelectorAll('.cat-filter-btn[data-cat]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.cat-filter-btn[data-cat]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    activeCategory = btn.dataset.cat;
+                    updateShopHeader(activeCategory);
+                    applyFilters();
+                });
+            });
         }
 
         function applyFilters() {
@@ -1206,15 +1242,7 @@
         }
 
         function initFilterEvents() {
-            // Category buttons
-            document.querySelectorAll('.cat-filter-btn[data-cat]').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.cat-filter-btn[data-cat]').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    activeCategory = btn.dataset.cat;
-                    applyFilters();
-                });
-            });
+            initCategoryFilterEvents();
             // Sort buttons sidebar
             document.querySelectorAll('.cat-filter-btn[data-sort]').forEach(btn => {
                 btn.addEventListener('click', () => {
