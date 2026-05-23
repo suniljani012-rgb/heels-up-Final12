@@ -1383,7 +1383,7 @@ async function handleAdmin(request, path, url, env) {
     if (!isAdmin) return json({ error: "Only admin can change settings" }, 403);
     const body = await readJson(request);
     const updates = body?.settings && typeof body.settings === "object" ? body.settings : (body || {});
-    const allowed = ["razorpay_key_id", "razorpay_key_secret", "razorpay_mode", "otp_script_url", "site_name", "site_email", "support_phone", "shipping_free_above", "shipping_standard_charge", "require_email_otp", "otp_expiry_minutes", "max_login_attempts", "lockout_duration_minutes", "maintenance_mode", "announcement_text"];
+    const allowed = ["razorpay_key_id", "razorpay_key_secret", "razorpay_mode", "otp_script_url", "site_name", "site_email", "support_phone", "shipping_free_above", "shipping_standard_charge", "require_email_otp", "otp_expiry_minutes", "max_login_attempts", "lockout_duration_minutes", "maintenance_mode", "announcement_text", "google_client_id"];
     const changed = [];
     for (const key of allowed) {
       if (updates[key] !== undefined) {
