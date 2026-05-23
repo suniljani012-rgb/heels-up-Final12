@@ -2977,7 +2977,11 @@ async function generateOrderNumber(env) {
 
 function normalizeEmail(e) { return String(e || "").trim().toLowerCase(); }
 function toInt(v, def) { const n = parseInt(v); return isNaN(n) ? def : n; }
-function nowIso() { return new Date().toISOString(); }
+function nowIso(addMinutes = 0) {
+  const d = new Date();
+  if (addMinutes) d.setMinutes(d.getMinutes() + addMinutes);
+  return d.toISOString();
+}
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
