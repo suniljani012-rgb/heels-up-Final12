@@ -438,7 +438,7 @@ async function verifyOtpRoute(request, env) {
 async function verifyOtp(env, email, otp, purpose) {
   const otpPlain = String(otp).trim();
   const token = await env.DB.prepare(
-    "SELECT * FROM otp_tokens WHERE email=? AND purpose=? AND verified=0 AND expires_at>? ORDER BY id DESC LIMIT 1"
+    "SELECT * FROM otp_tokens WHERE email=? AND purpose=? AND verified IN (0, 1) AND expires_at>? ORDER BY id DESC LIMIT 1"
   ).bind(email, purpose, nowIso()).first();
   if (!token) return { ok: false, error: "OTP expired or not found. Request a new OTP." };
   if ((token.attempts || 0) >= 5) return { ok: false, error: "Too many incorrect attempts. Request a new OTP." };
@@ -565,6 +565,7 @@ async function resetPassword(request, env) {
     await env.DB.prepare("UPDATE sessions SET revoked=1 WHERE user_id=?").bind(user.id).run();
     await auditLog(env, user.id, "password_reset", "users", user.id, {});
   }
+  await env.DB.prepare("DELETE FROM otp_tokens WHERE email=? AND purpose='forgot'").bind(email).run();
   return json({ ok: true, message: "Password reset successful. Please log in." });
 }
 
