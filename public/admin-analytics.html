@@ -1,3 +1,4 @@
+<!-- STREAMING_CHUNK:HTML Structure -> Boilerplate and Styles -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -1360,6 +1361,7 @@
 
 <body>
 
+    <!-- STREAMING_CHUNK:HTML Structure -> Sidebar and layout -->
     <div class="mob-overlay" id="mobOverlay" onclick="closeSidebar()"></div>
     <div class="toast-wrap" id="toastWrap"></div>
 
@@ -1461,6 +1463,7 @@
                 </div>
             </div>
 
+            <!-- STREAMING_CHUNK:HTML Structure -> Content and Cards -->
             <!-- CONTENT -->
             <div class="content">
 
@@ -1476,7 +1479,7 @@
                         <button class="btn btn-sm btn-dark" onclick="exportCSV()">
                             <i class="fa-solid fa-download"></i> Export
                         </button>
-                        <button class="btn btn-sm btn-primary" onclick="loadAll()" id="refreshBtn">
+                        <button class="btn btn-sm btn-primary" onclick="loadAll(true)" id="refreshBtn">
                             <i class="fa-solid fa-arrows-rotate"></i> Refresh
                         </button>
                     </div>
@@ -1685,6 +1688,7 @@
         </div><!-- /main -->
     </div><!-- /layout -->
 
+    <!-- STREAMING_CHUNK:Javascript Logic -> Main Script -->
     <script src="app-auth.js"></script>
     <script>
         // ── AUTH ─────────────────────────────────────────────────────────────────
@@ -1782,20 +1786,22 @@
         }
 
         // ── API ───────────────────────────────────────────────────────────────────
-        async function apiFetch(url) {
+        async function apiFetch(url, skipCache = false) {
             const cacheKey = url;
             // Cache for 30s
-            if (cache[cacheKey] && Date.now() - cache[cacheKey].ts < 30000) return cache[cacheKey].data;
+            if (!skipCache && cache[cacheKey] && Date.now() - cache[cacheKey].ts < 30000) return cache[cacheKey].data;
             let apiFunc;
             try { apiFunc = HeelsUpAuth.api; } catch (e) { apiFunc = null; }
             if (!apiFunc) throw new Error('Not authenticated');
-            const data = await apiFunc(url);
+            // Add a tiny random timestamp to avoid browser-level caching when forcing refresh
+            const fetchUrl = skipCache ? url + (url.includes('?') ? '&' : '?') + 't=' + Date.now() : url;
+            const data = await apiFunc(fetchUrl);
             cache[cacheKey] = { data, ts: Date.now() };
             return data;
         }
 
         // ── MAIN LOAD ─────────────────────────────────────────────────────────────
-        async function loadAll() {
+        async function loadAll(forceRefresh = false) {
             const btn = $('refreshBtn');
             if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading'; btn.disabled = true; }
 
@@ -1803,13 +1809,8 @@
                 let url = `/api/admin/analytics/dashboard?period=${period}`;
                 if (period === 'custom' && customStart && customEnd) url += `&start=${customStart}&end=${customEnd}`;
 
-                // Parallel fetch — fast
-                const t0 = performance.now();
-                const [dash, ordersRes] = await Promise.all([
-                    apiFetch(url),
-                    apiFetch('/api/admin/orders')
-                ]);
-                const ms = (performance.now() - t0).toFixed(1);
+                // SINGLE fast fetch now that the backend returns recent_orders too!
+                const dash = await apiFetch(url, forceRefresh);
 
                 dashData = dash;
                 const s = dash.summary || {};
@@ -1826,10 +1827,12 @@
                 renderFunnel(dash.funnel || {});
                 renderPaymentMethods(dash.payment_methods || {});
                 renderKeyMetrics(s);
-                renderRecentOrders((ordersRes.orders || []).slice(0, 10));
 
-                toast(`Data loaded in ${ms}ms ✓`, 'success');
-                $('heroPeriod').textContent = ($('heroPeriod').textContent || '').replace(/·.*/, `· ${ms}ms load`);
+                // Using dash.recent_orders directly from the batch request
+                renderRecentOrders(dash.recent_orders || []);
+
+                toast(`Dashboard updated successfully ✓`, 'success');
+                $('heroPeriod').textContent = ($('heroPeriod').textContent || '').replace(/·.*/, `· Updated just now`);
 
             } catch (e) {
                 toast('Failed to load analytics: ' + (e.message || 'Network error'), 'error');

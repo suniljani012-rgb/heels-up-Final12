@@ -104,6 +104,14 @@ export async function analyticsRouter(request, env) {
                 env.DB.prepare(`
                     SELECT payment_method, COUNT(*) as count 
                     FROM orders WHERE ${dateFilter} GROUP BY payment_method
+                `),
+
+                // Query 6: Recent Orders (Added to eliminate separate slow frontend API call)
+                env.DB.prepare(`
+                    SELECT o.id, o.order_number, o.total as total_amount, o.status as order_status, o.payment_status, o.created_at,
+                           COALESCE(u.name, o.guest_name) as customer_name, COALESCE(u.email, o.guest_email) as customer_email
+                    FROM orders o LEFT JOIN users u ON o.user_id = u.id
+                    ORDER BY o.created_at DESC LIMIT 10
                 `)
             ]);
 
@@ -153,7 +161,8 @@ export async function analyticsRouter(request, env) {
                 top_products: results[3].results,
                 category_sales: results[4].results,
                 payment_methods: payment_methods,
-                funnel: funnel
+                funnel: funnel,
+                recent_orders: results[6] ? results[6].results : []
             };
 
             // Save to isolate memory cache
