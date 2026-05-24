@@ -1,168 +1,890 @@
-<!DOCTYPE html><html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+    <meta name="theme-color" content="#E8CCC5" />
+
+    <!-- ═══ PRIMARY SEO ═══ -->
     <title>FAQs – HeelsUp | Frequently Asked Questions</title>
-    <meta name="description" content="HeelsUp ke baare mein aapke saare sawaal aur unke jawab.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&amp;family=Playfair+Display:ital,wght@0,400;0,600;1,400&amp;display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link rel="stylesheet" href="main.css">
+    <meta name="description"
+        content="Find answers to all your questions about HeelsUp orders, shipping, returns, and more." />
+    <meta name="keywords" content="heelsup faq, customer support, tracking, returns, ladies footwear" />
+
+    <!-- ═══ PRECONNECT ═══ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
     <style>
-        .faq-hero {
-            background: linear-gradient(135deg, var(--color-dark) 0%, #1a1008 100%);
-            padding: 80px 0;
-            text-align: center;
+        /* ═══════════════════════════════════════════════════
+       DESIGN SYSTEM — HeelsUp Brand Colors (From Target)
+    ═══════════════════════════════════════════════════ */
+        :root {
+            /* Brand Colors */
+            --blush: #E8CCC5;
+            --cream: #F6E7C6;
+            --sage-blue: #BDCED3;
+            --warm-gray: #BBB9B2;
+            --sage-green: #CFD4AE;
+            --dark-gray: #807E79;
+            --light-gray: #E3E3E3;
+            --red: #C0392B;
+            --red-lt: #e74c3c;
+            --red-dk: #a93226;
+
+            /* Base */
+            --ink: #1a1a1a;
+            --ink2: #2d2d2d;
+            --white: #ffffff;
+            --bg: #faf8f5;
+            --bg2: #f5f0eb;
+
+            /* Semantic */
+            --primary: var(--red);
+            --primary-lt: var(--red-lt);
+            --primary-dk: var(--red-dk);
+            --surface: var(--white);
+            --surface2: #fdf9f7;
+            --border: #e8e2dc;
+            --border2: #d4ccc5;
+            --text-h: var(--ink);
+            --text-b: #3d3d3d;
+            --text-m: #807E79;
+            --text-pale: #a09890;
+
+            /* Font System */
+            --font-head: 'Poppins', sans-serif;
+            --font-body: 'Inter', sans-serif;
+
+            /* Layout */
+            --radius: 12px;
+            --radius-sm: 8px;
+            --radius-lg: 18px;
+            --radius-xl: 28px;
+            --radius-pill: 100px;
+
+            /* Shadows */
+            --shadow-xs: 0 1px 3px rgba(0, 0, 0, .06);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, .08);
+            --shadow: 0 4px 20px rgba(0, 0, 0, .10);
+            --shadow-md: 0 8px 32px rgba(0, 0, 0, .12);
+            --shadow-lg: 0 16px 48px rgba(0, 0, 0, .16);
+            --shadow-xl: 0 24px 64px rgba(0, 0, 0, .20);
+
+            /* Transitions */
+            --t: .22s cubic-bezier(.4, 0, .2, 1);
+            --t-slow: .4s cubic-bezier(.4, 0, .2, 1);
+
+            /* Z-index */
+            --z-ann: 90;
+            --z-nav: 100;
+            --z-drop: 110;
+            --z-mob: 200;
+            --z-search: 250;
+            --z-modal: 300;
+            --z-cart: 310;
+            --z-toast: 400;
         }
 
-        .faq-hero h1 {
-            font-family: var(--fd);
-            font-size: clamp(2.2rem, 5vw, 4rem);
-            font-weight: 300;
-            color: #fff;
-            margin-bottom: 14px;
+        /* ═══ RESET ═══ */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .faq-hero h1 em {
-            font-style: italic;
-            color: var(--color-primary-light);
+        html,
+        body {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
         }
 
-        .faq-hero p {
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: var(--font-body);
             font-size: 15px;
-            color: rgba(255, 255, 255, 0.55);
-            max-width: 500px;
-            margin: 0 auto 32px;
+            font-weight: 400;
+            line-height: 1.6;
+            color: var(--text-b);
+            background: var(--bg);
         }
 
-        .faq-search-wrap {
-            display: flex;
-            max-width: 480px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 100px;
-            padding: 6px 6px 6px 22px;
-        }
-
-        .faq-search-wrap input {
-            flex: 1;
-            background: transparent;
-            color: #fff;
-            font-size: 15px;
-        }
-
-        .faq-search-wrap input::placeholder {
-            color: rgba(255, 255, 255, 0.35);
-        }
-
-        .faq-search-wrap button {
-            padding: 10px 22px;
-            background: var(--gold);
-            color: var(--color-dark);
-            border-radius: 100px;
-            font-size: 12px;
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: var(--font-head);
             font-weight: 700;
+            line-height: 1.25;
+            color: var(--text-h);
+            letter-spacing: -.01em;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: color var(--t);
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: var(--font-body);
+            font-size: inherit;
+            line-height: 1;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        input,
+        select,
+        textarea {
+            font-family: var(--font-body);
+            font-size: 14px;
+            outline: none;
+        }
+
+        ul,
+        ol {
+            list-style: none;
+        }
+
+        /* ═══ SCROLLBAR ═══ */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light-gray);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--warm-gray);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark-gray);
+        }
+
+        ::selection {
+            background: var(--blush);
+            color: var(--ink);
+        }
+
+        /* ═══ CONTAINER ═══ */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        @media(max-width:768px) {
+            .container {
+                padding: 0 16px;
+            }
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* ═══════════════════════════
+       ANNOUNCEMENT BAR
+    ═══════════════════════════ */
+        .ann-bar {
+            background: var(--ink);
+            color: rgba(255, 255, 255, .85);
+            font-family: var(--font-body);
+            font-size: 12.5px;
+            font-weight: 500;
+            letter-spacing: .02em;
+            padding: 9px 0;
+            position: relative;
+            z-index: var(--z-ann);
+            overflow: hidden;
+        }
+
+        .ann-scroll {
+            display: flex;
+            align-items: center;
+            animation: annScroll 30s linear infinite;
+            white-space: nowrap;
+        }
+
+        .ann-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 40px;
+            flex-shrink: 0;
+        }
+
+        .ann-item strong,
+        .ann-item a {
+            color: var(--blush);
+            font-weight: 700;
+        }
+
+        .ann-item a:hover {
+            color: var(--cream);
+        }
+
+        .ann-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .25);
+        }
+
+        .ann-close {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, .45);
+            font-size: 12px;
+            padding: 4px 8px;
+            transition: color var(--t);
+            z-index: 2;
+            background: transparent;
             border: none;
             cursor: pointer;
         }
 
-        .faq-page {
-            background: var(--cream2);
-            padding: 70px 0;
+        .ann-close:hover {
+            color: rgba(255, 255, 255, .85);
         }
 
-        .faq-layout {
+        @keyframes annScroll {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* ═══════════════════════════
+       NAVBAR
+    ═══════════════════════════ */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: var(--z-nav);
+            background: rgba(250, 248, 245, .97);
+            backdrop-filter: blur(16px) saturate(1.3);
+            -webkit-backdrop-filter: blur(16px) saturate(1.3);
+            border-bottom: 1px solid var(--border);
+            transition: box-shadow var(--t), background var(--t);
+        }
+
+        .navbar.scrolled {
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-inner {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            text-decoration: none;
+            max-width: 200px;
+        }
+
+        .nav-logo img {
+            height: 42px;
+            width: auto;
+            object-fit: contain;
+            mix-blend-mode: multiply;
+            filter: contrast(1.05);
+            transition: transform var(--t);
+        }
+
+        .nav-logo:hover img {
+            transform: scale(1.03);
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            margin-left: auto;
+        }
+
+        .nav-link {
+            padding: 8px 13px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-head);
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-b);
+            letter-spacing: .01em;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background var(--t), color var(--t);
+            position: relative;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary);
+            background: rgba(192, 57, 43, .06);
+        }
+
+        .nav-link i {
+            font-size: 9px;
+            opacity: .6;
+            transition: transform var(--t);
+        }
+
+        .nav-item:hover>.nav-link i {
+            transform: rotate(180deg);
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-drop {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            min-width: 260px;
+            padding: 8px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all var(--t);
+            z-index: var(--z-drop);
+        }
+
+        .nav-item:hover .nav-drop {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .nav-drop-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-b);
+            transition: all var(--t);
+        }
+
+        .nav-drop-link:hover {
+            background: var(--bg2);
+            color: var(--primary);
+        }
+
+        .nav-drop-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: #f4f0eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7b756d;
+            flex-shrink: 0;
+            transition: all var(--t);
+        }
+
+        .nav-drop-link:hover .nav-drop-icon {
+            background: var(--blush);
+            color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .nav-drop-text strong {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: var(--font-head);
+        }
+
+        .nav-drop-text span {
+            font-size: 11px;
+            color: var(--text-pale);
+        }
+
+        .nav-drop-sep {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 20px;
+            flex-shrink: 0;
+        }
+
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            color: var(--text-b);
+            transition: all var(--t);
+            position: relative;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg2);
+            color: var(--primary);
+        }
+
+        .nav-badge {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            min-width: 17px;
+            height: 17px;
+            padding: 0 4px;
+            background: var(--primary);
+            color: #fff;
+            font-family: var(--font-head);
+            font-size: 9.5px;
+            font-weight: 700;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--bg);
+        }
+
+        .nav-hamburger {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: background var(--t);
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-hamburger:hover {
+            background: var(--bg2);
+        }
+
+        .ham-line {
+            width: 22px;
+            height: 2px;
+            background: var(--text-h);
+            border-radius: 2px;
+            transition: all var(--t);
+        }
+
+        .nav-hamburger.open .ham-line:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .nav-hamburger.open .ham-line:nth-child(2) {
+            opacity: 0;
+            transform: scaleX(0);
+        }
+
+        .nav-hamburger.open .ham-line:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        @media(max-width:1024px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .nav-hamburger {
+                display: flex;
+            }
+
+            .nav-actions {
+                margin-left: auto;
+            }
+        }
+
+        /* ═══════════════════════════
+       BUTTONS
+    ═══════════════════════════ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 26px;
+            border-radius: var(--radius);
+            font-family: var(--font-head);
+            font-size: 13.5px;
+            font-weight: 600;
+            letter-spacing: .01em;
+            transition: all var(--t);
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            line-height: 1;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dk);
+            border-color: var(--primary-dk);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(192, 57, 43, .3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-h);
+            border-color: var(--border2);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(192, 57, 43, .04);
+        }
+
+        .btn-dark {
+            background: var(--ink);
+            color: #fff;
+            border-color: var(--ink);
+        }
+
+        .btn-dark:hover {
+            background: var(--ink2);
+            transform: translateY(-1px);
+        }
+
+        .btn-pill {
+            border-radius: var(--radius-pill);
+        }
+
+        /* ═══════════════════════════
+       FAQ HERO
+    ═══════════════════════════ */
+        .faq-hero {
+            background: linear-gradient(135deg, var(--ink) 0%, #0d0d0d 100%);
+            padding: 100px 0 80px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .faq-hero-title {
+            font-family: var(--font-head);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .faq-hero-title em {
+            color: var(--blush);
+            font-style: italic;
+            font-weight: 300;
+        }
+
+        .faq-hero-sub {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.65);
+            max-width: 500px;
+            margin: 0 auto 36px;
+            line-height: 1.6;
+        }
+
+        .faq-search-box {
+            display: flex;
+            max-width: 520px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-pill);
+            padding: 6px 6px 6px 24px;
+            transition: all var(--t);
+            backdrop-filter: blur(8px);
+        }
+
+        .faq-search-box:focus-within {
+            border-color: var(--blush);
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 0 4px rgba(232, 204, 197, 0.1);
+        }
+
+        .faq-search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 15px;
+            font-family: var(--font-body);
+            outline: none;
+        }
+
+        .faq-search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .faq-search-box button {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-pill);
+            padding: 12px 28px;
+            font-family: var(--font-head);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--t);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .faq-search-box button:hover {
+            background: var(--primary-dk);
+        }
+
+        /* ═══════════════════════════
+       FAQ PAGE LAYOUT
+    ═══════════════════════════ */
+        .faq-page {
+            padding: 80px 0;
+            background: var(--bg);
+        }
+
+        .faq-grid {
             display: grid;
-            grid-template-columns: 240px 1fr;
-            gap: 40px;
+            grid-template-columns: 280px 1fr;
+            gap: 48px;
             align-items: start;
         }
 
-        /* Category Nav */
-        .faq-cats {
-            background: var(--color-white);
-            border-radius: 18px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            position: sticky;
-            top: 90px;
+        /* Breadcrumb */
+        .breadcrumb {
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-m);
         }
 
-        .faq-cats-title {
-            padding: 20px 22px 14px;
+        .breadcrumb a {
+            color: var(--text-h);
+            font-weight: 500;
+            transition: color var(--t);
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary);
+        }
+
+        .breadcrumb i {
+            font-size: 9px;
+            opacity: 0.5;
+        }
+
+        /* Sidebar */
+        .faq-sidebar {
+            position: sticky;
+            top: 100px;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .faq-sidebar-title {
+            font-family: var(--font-head);
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.15em;
             text-transform: uppercase;
-            color: var(--text-3);
-            border-bottom: 1px solid var(--border);
+            color: var(--text-pale);
+            margin-bottom: 16px;
+            display: block;
         }
 
-        .faq-cat-item {
+        .faq-cat-link {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 13px 22px;
-            font-size: 14px;
+            justify-content: space-between;
+            padding: 12px 16px;
+            margin-bottom: 6px;
+            border-radius: var(--radius-sm);
+            color: var(--text-b);
             font-weight: 500;
-            color: var(--text-2);
+            font-size: 14.5px;
+            font-family: var(--font-head);
             cursor: pointer;
+            transition: all var(--t);
             border-left: 3px solid transparent;
-            transition: all 0.2s;
+            background: transparent;
+            width: 100%;
+            text-align: left;
         }
 
-        .faq-cat-item:hover {
-            color: var(--gold);
-            background: var(--color-primary-glow);
+        .faq-cat-link i {
+            width: 24px;
+            color: var(--text-m);
+            transition: color var(--t);
+            font-size: 16px;
         }
 
-        .faq-cat-item.active {
-            color: var(--gold);
-            background: var(--color-primary-glow);
-            border-left-color: var(--gold);
+        .faq-cat-link span {
+            flex: 1;
+        }
+
+        .faq-cat-link:hover {
+            background: var(--bg2);
+            color: var(--primary);
+        }
+
+        .faq-cat-link:hover i {
+            color: var(--primary);
+        }
+
+        .faq-cat-link.active {
+            background: rgba(192, 57, 43, 0.06);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .faq-cat-link.active i {
+            color: var(--primary);
         }
 
         .faq-cat-count {
-            margin-left: auto;
             font-size: 11px;
-            color: var(--text-3);
-            background: var(--color-light-3);
+            background: var(--light-gray);
             padding: 2px 8px;
-            border-radius: 100px;
+            border-radius: var(--radius-pill);
+            color: var(--text-m);
+            font-family: var(--font-body);
+            font-weight: 600;
+            transition: all var(--t);
         }
 
-        /* FAQ Groups */
+        .faq-cat-link.active .faq-cat-count {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* Accordion Groups */
         .faq-group {
-            margin-bottom: 40px;
+            margin-bottom: 56px;
+            scroll-margin-top: 100px;
         }
 
         .faq-group-title {
-            font-family: var(--fh);
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 16px;
+            font-family: var(--font-head);
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-h);
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: -0.02em;
         }
 
-        .faq-group-icon {
-            color: var(--gold);
+        .faq-group-title i {
+            color: var(--primary);
+            background: rgba(192, 57, 43, 0.08);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
         }
 
-        /* Accordion */
         .faq-item {
-            background: var(--color-white);
+            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 14px;
-            margin-bottom: 10px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 12px;
+            transition: all var(--t);
             overflow: hidden;
-            transition: box-shadow 0.2s;
         }
 
-        .faq-item.open {
-            box-shadow: var(--shadow-md);
+        .faq-item:hover {
+            border-color: var(--border2);
+        }
+
+        .faq-item.active {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+            background: var(--surface2);
         }
 
         .faq-question {
@@ -170,468 +892,1043 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            cursor: pointer;
             gap: 16px;
-        }
-
-        .faq-question-text {
-            font-size: 15px;
+            cursor: pointer;
+            font-family: var(--font-head);
             font-weight: 600;
-            color: var(--text-1);
+            font-size: 1.05rem;
+            color: var(--text-h);
             line-height: 1.4;
         }
 
-        .faq-item.open .faq-question-text {
-            color: var(--gold-dk);
-        }
-
         .faq-toggle {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            border: 1.5px solid var(--border);
+            background: var(--bg2);
+            color: var(--text-m);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
-            color: var(--text-3);
+            transition: all var(--t);
             flex-shrink: 0;
-            transition: all 0.3s;
+            font-size: 14px;
         }
 
-        .faq-item.open .faq-toggle {
-            background: var(--gold);
-            border-color: var(--gold);
-            color: var(--color-dark);
-            transform: rotate(45deg);
+        .faq-item:hover .faq-toggle {
+            background: var(--blush);
+            color: var(--primary);
+        }
+
+        .faq-item.active .faq-toggle {
+            background: var(--primary);
+            color: #fff;
+            transform: rotate(180deg);
         }
 
         .faq-answer {
-            display: none;
-            padding: 0 24px 20px;
-            font-size: 14px;
-            color: var(--text-2);
-            line-height: 1.8;
-            border-top: 1px solid var(--border);
-            padding-top: 16px;
+            padding: 0 24px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            color: var(--text-b);
+            line-height: 1.7;
+            font-size: 14.5px;
+            opacity: 0;
         }
 
-        .faq-item.open .faq-answer {
-            display: block;
+        .faq-item.active .faq-answer {
+            padding: 0 24px 24px;
+            max-height: 1000px;
+            opacity: 1;
         }
 
         /* Contact CTA */
-        .faq-contact-cta {
-            background: var(--color-dark);
-            border-radius: 20px;
-            padding: 44px;
+        .faq-cta {
             text-align: center;
-            margin-top: 40px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 56px 24px;
+            margin-top: 24px;
+            box-shadow: var(--shadow-xs);
         }
 
-        .faq-contact-cta h3 {
-            font-family: var(--fd);
+        .faq-cta-title {
+            font-family: var(--font-head);
             font-size: 2rem;
-            font-weight: 300;
-            color: #fff;
-            margin-bottom: 10px;
+            font-weight: 700;
+            color: var(--text-h);
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
         }
 
-        .faq-contact-cta h3 em {
+        .faq-cta-title em {
             font-style: italic;
-            color: var(--color-primary-light);
+            color: var(--primary);
+            font-weight: 300;
         }
 
-        .faq-contact-cta p {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 24px;
+        .faq-cta p {
+            color: var(--text-m);
+            margin-bottom: 32px;
+            font-size: 1.05rem;
         }
 
-        .faq-contact-btns {
+        .faq-cta-btns {
             display: flex;
-            gap: 14px;
+            align-items: center;
             justify-content: center;
+            gap: 16px;
             flex-wrap: wrap;
         }
 
-        @media(max-width:900px) {
-            .faq-layout {
+        /* Responsive adjustments */
+        @media(max-width: 900px) {
+            .faq-grid {
                 grid-template-columns: 1fr;
+                gap: 32px;
             }
 
-            .faq-cats {
-                position: static;
+            .faq-sidebar {
+                position: relative;
+                top: 0;
+                padding: 16px;
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                scrollbar-width: none;
+                border-radius: 0;
+                border: none;
+                border-bottom: 1px solid var(--border);
+                background: transparent;
+                margin: -20px -16px 20px;
+                box-shadow: none;
             }
+
+            .faq-sidebar::-webkit-scrollbar {
+                display: none;
+            }
+
+            .faq-sidebar-title {
+                display: none;
+            }
+
+            .faq-cat-link {
+                flex-shrink: 0;
+                width: auto;
+                padding: 10px 18px;
+                border-left: none;
+                border-bottom: 2px solid transparent;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-pill);
+                margin: 0;
+            }
+
+            .faq-cat-link i {
+                display: none;
+            }
+
+            .faq-cat-link.active {
+                border: 1px solid var(--primary);
+                background: rgba(192, 57, 43, 0.06);
+                border-bottom: 1px solid var(--primary);
+            }
+        }
+
+        @media(max-width: 600px) {
+            .faq-question {
+                padding: 16px;
+                font-size: 1rem;
+            }
+
+            .faq-answer {
+                padding: 0 16px;
+            }
+
+            .faq-item.active .faq-answer {
+                padding: 0 16px 20px;
+            }
+
+            .faq-cta {
+                padding: 40px 20px;
+            }
+        }
+
+        /* ═══════════════════════════
+       FOOTER (From target)
+    ═══════════════════════════ */
+        .footer {
+            background: var(--ink2);
+            border-top: 1px solid rgba(255, 255, 255, .05)
+        }
+
+        .footer-top {
+            padding: 68px 0 52px
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.8fr 1fr 1fr 1fr;
+            gap: 44px;
+        }
+
+        @media(max-width:1024px) {
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 36px
+            }
+        }
+
+        @media(max-width:600px) {
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 28px
+            }
+        }
+
+        .footer-logo-wrap img {
+            height: 42px;
+            width: auto;
+            filter: grayscale(1) invert(1) brightness(1.5);
+            mix-blend-mode: screen;
+            margin-bottom: 14px;
+            opacity: 0.95;
+        }
+
+        .footer-tagline {
+            font-size: 13px;
+            color: rgba(255, 255, 255, .4);
+            line-height: 1.8;
+            margin-bottom: 22px;
+            max-width: 280px
+        }
+
+        .footer-socials {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .footer-soc {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, .1);
+            color: rgba(255, 255, 255, .45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            transition: all var(--t);
+            text-decoration: none;
+        }
+
+        .footer-soc:hover {
+            border-color: var(--blush);
+            color: var(--blush);
+            background: rgba(232, 204, 197, .08)
+        }
+
+        .footer-col-title {
+            font-family: var(--font-head);
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .65);
+            margin-bottom: 18px;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: rgba(255, 255, 255, .38);
+            transition: color var(--t);
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: rgba(255, 255, 255, .75)
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, .06);
+            padding: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .footer-copy {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .25);
+            font-family: var(--font-body)
+        }
+
+        .footer-legal {
+            display: flex;
+            gap: 18px
+        }
+
+        .footer-legal a {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .25);
+            transition: color var(--t);
+            text-decoration: none;
+        }
+
+        .footer-legal a:hover {
+            color: rgba(255, 255, 255, .6)
+        }
+
+        .footer-pay {
+            display: flex;
+            gap: 6px;
+            align-items: center
+        }
+
+        .pay-chip {
+            background: rgba(255, 255, 255, .06);
+            border: 1px solid rgba(255, 255, 255, .09);
+            border-radius: 5px;
+            padding: 3px 9px;
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, .35);
+            font-family: var(--font-head);
+            letter-spacing: .03em;
+        }
+
+        /* Floating */
+        .whatsapp-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: var(--z-toast);
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #25d366;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.45rem;
+            box-shadow: 0 6px 20px rgba(37, 211, 102, .4);
+            transition: all var(--t);
+            text-decoration: none;
+        }
+
+        .whatsapp-fab:hover {
+            transform: scale(1.1) rotate(-8deg);
+            box-shadow: 0 10px 28px rgba(37, 211, 102, .5)
         }
     </style>
 </head>
 
 <body>
-    <div class="topbar">
-        <div class="topbar-marquee"><span class="topbar-text">🚚 FREE Shipping above ₹799</span><span class="topbar-dot"></span><span class="topbar-text">💬 24/7 WhatsApp Support</span></div>
-    </div>
-    <nav class="navbar" id="navbar">
-    <div class="ctn">
-      <div class="nb-inner">
-        <!-- Logo -->
-        <a href="/" class="nb-logo">
-          <img src="logo.png" alt="HeelsUp" id="logo-img" onerror="this.classList.add('err');this.style.display='none'">
-          <span class="nb-logo-txt">Heels<span>Up</span></span>
-        </a>
 
-        <!-- Desktop Menu -->
-        <ul class="nb-menu">
-          <li><a href="/" class="nb-link active">Home</a></li>
-          <li>
-            <a href="/shop.html" class="nb-link">
-              Shop
-              <svg class="nb-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M6 9l6 6 6-6"></path>
-              </svg>
-            </a>
-            <div class="nb-drop">
-              <a href="/category.html?cat=heels">
-                <div class="nb-drop-ico"><svg viewBox="0 0 24 24">
-                    <path d="M20 18H4l2-8h12l2 8zM4 18l-2 2M20 18l2 2M8 10V6a4 4 0 018 0v4"></path>
-                  </svg></div>
-                <div class="nb-drop-txt"><strong>Heels</strong><span>Block, Stiletto, Cone</span></div>
-              </a>
-              <a href="/category.html?cat=sandals">
-                <div class="nb-drop-ico"><svg viewBox="0 0 24 24">
-                    <path d="M3 20h18M5 20V10l7-7 7 7v10M9 20v-6h6v6"></path>
-                  </svg></div>
-                <div class="nb-drop-txt"><strong>Sandals</strong><span>Strappy, Flat, Wedge</span></div>
-              </a>
-              <a href="/category.html?cat=flats">
-                <div class="nb-drop-ico"><svg viewBox="0 0 24 24">
-                    <ellipse cx="12" cy="17" rx="9" ry="3"></ellipse>
-                    <path d="M3 17V7l9-4 9 4v10"></path>
-                  </svg></div>
-                <div class="nb-drop-txt"><strong>Flats</strong><span>Mules, Loafers, Slip-ons</span></div>
-              </a>
-              <a href="/category.html?cat=wedges">
-                <div class="nb-drop-ico"><svg viewBox="0 0 24 24">
-                    <path d="M4 20h16M4 20l4-12h8l4 12"></path>
-                  </svg></div>
-                <div class="nb-drop-txt"><strong>Wedges</strong><span>Espadrilles, Platform</span></div>
-              </a>
-              <a href="/category.html?cat=bags">
-                <div class="nb-drop-ico"><svg viewBox="0 0 24 24">
-                    <path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"></path>
-                  </svg></div>
-                <div class="nb-drop-txt"><strong>Bags</strong><span>Tote, Clutch, Sling</span></div>
-              </a>
-              <a href="/category.html?cat=clutches">
-                <div class="nb-drop-ico"><svg viewBox="0 0 24 24">
-                    <rect x="3" y="8" width="18" height="13" rx="2"></rect>
-                    <path d="M8 8V5a4 4 0 018 0v3"></path>
-                  </svg></div>
-                <div class="nb-drop-txt"><strong>Clutches</strong><span>Evening, Party</span></div>
-              </a>
-            </div>
-          </li>
-          <li><a href="/category.html?cat=heels" class="nb-link">Heels</a></li>
-          <li><a href="/category.html?cat=sandals" class="nb-link">Sandals</a></li>
-          <li><a href="/category.html?cat=bags" class="nb-link">Bags</a></li>
-          <li><a href="/about.html" class="nb-link">About</a></li>
-          <li><a href="/contact.html" class="nb-link">Contact</a></li>
-        </ul>
+    <!-- ═══ TOAST CONTAINER ═══ -->
+    <div class="toast-container" id="toast-wrap" aria-live="polite"></div>
 
-        <!-- Actions -->
-        <div class="nb-actions">
-          <a href="/search.html" class="nb-btn" id="search-btn" aria-label="Search">
-            <svg viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="M21 21l-4.35-4.35"></path>
-            </svg>
-          </a>
-          <a href="/wishlist.html" class="nb-btn" aria-label="Wishlist">
-            <svg viewBox="0 0 24 24">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path>
-            </svg>
-          </a>
-          <a href="/profile.html" class="nb-btn" id="nav-account" aria-label="Account">
-            <svg viewBox="0 0 24 24">
-              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </a>
-          <button class="nb-btn" id="cart-btn" aria-label="Cart">
-            <svg viewBox="0 0 24 24">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"></path>
-            </svg>
-            <span class="nb-badge" id="cart-cnt">0</span>
-          </button>
-          <button class="nb-ham" id="hamburger" aria-label="Menu">
-            <span class="ham-ln"></span>
-            <span class="ham-ln"></span>
-            <span class="ham-ln"></span>
-          </button>
+    <!-- ═══ ANNOUNCEMENT BAR ═══ -->
+    <div class="ann-bar" id="ann-bar">
+        <div class="ann-scroll">
+            <span class="ann-item">🚚 <strong>Free Shipping</strong> on orders above ₹799!</span>
+            <span class="ann-dot"></span>
+            <span class="ann-item">✨ 21,700+ Happy Customers &nbsp;·&nbsp; Pan-India Delivery</span>
+            <span class="ann-dot"></span>
+            <span class="ann-item">💫 Exchange Policy Available &nbsp;·&nbsp; Authentic Quality Guaranteed</span>
+            <span class="ann-dot"></span>
+            <span class="ann-item">🚚 <strong>Free Shipping</strong> on orders above ₹799!</span>
+            <span class="ann-dot"></span>
+            <span class="ann-item">✨ 21,700+ Happy Customers &nbsp;·&nbsp; Pan-India Delivery</span>
+            <span class="ann-dot"></span>
+            <span class="ann-item">💫 Exchange Policy Available &nbsp;·&nbsp; Authentic Quality Guaranteed</span>
+            <span class="ann-dot"></span>
         </div>
-      </div>
-    </div>
-  </nav>
-
-    <!-- Hero -->
-    <div class="faq-hero">
-        <div class="ctn">
-            <h1>Frequently Asked <em>Questions</em></h1>
-            <p>Aapke sawaalon ke jawab ek jagah par. Nahi mila? Hum se seedha poochho.</p>
-            <div class="faq-search-wrap">
-                <input type="text" id="faq-search" placeholder="Koi sawaal dhundho...">
-                <button><i class="fa-solid fa-magnifying-glass"></i></button>
-            </div>
-        </div>
+        <button class="ann-close" id="ann-close" aria-label="Close announcement">✕</button>
     </div>
 
-    <div class="faq-page">
-        <div class="ctn">
-            <nav class="breadcrumb"><span class="breadcrumb-item"><a href="index.html">Home</a></span><span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right" style="font-size:8px"></i></span><span class="breadcrumb-item active">FAQs</span></nav>
-            <div class="faq-layout">
-                <!-- Category Nav -->
-                <aside class="faq-cats">
-                    <div class="faq-cats-title">Categories</div>
-                    <div class="faq-cat-item active" data-cat="all"><i class="fa-solid fa-list" style="color:var(--gold)"></i> All Questions <span class="faq-cat-count">20</span>
-                    </div>
-                    <div class="faq-cat-item" data-cat="orders"><i class="fa-solid fa-box" style="color:var(--gold)"></i> Orders <span class="faq-cat-count">5</span></div>
-                    <div class="faq-cat-item" data-cat="shipping"><i class="fa-solid fa-truck" style="color:var(--gold)"></i> Shipping <span class="faq-cat-count">4</span></div>
-                    <div class="faq-cat-item" data-cat="returns"><i class="fa-solid fa-rotate-left" style="color:var(--gold)"></i> Returns <span class="faq-cat-count">4</span></div>
-                    <div class="faq-cat-item" data-cat="payment"><i class="fa-solid fa-credit-card" style="color:var(--gold)"></i> Payments <span class="faq-cat-count">4</span></div>
-                    <div class="faq-cat-item" data-cat="products"><i class="fa-solid fa-shoe-prints" style="color:var(--gold)"></i> Products <span class="faq-cat-count">3</span></div>
-                </aside>
+    <!-- ═══ NAVBAR ═══ -->
+    <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
+        <div class="container">
+            <div class="nav-inner">
+                <!-- Logo -->
+                <a href="/" class="nav-logo" aria-label="HeelsUp Home">
+                    <img src="/logo.png" alt="HeelsUp" id="logo-img" width="140" height="42" loading="eager"
+                        onerror="this.style.display='none'" />
+                    <span
+                        style="font-family:var(--font-head);font-weight:700;font-size:1.4rem;color:var(--text-h);display:none"
+                        id="logo-text">Heels<span style="color:var(--primary)">Up</span></span>
+                </a>
 
-                <!-- FAQs -->
-                <div>
-                    <!-- Orders -->
-                    <div class="faq-group" data-cat="orders">
-                        <div class="faq-group-title"><i class="fa-solid fa-box faq-group-icon"></i> Orders</div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Order kaise place
-                                    karein?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">HeelsUp pe order karna bahut easy hai! Apni pasand ki product choose
-                                karo, size select karo, cart mein add karo, aur checkout karo. Hum UPI, cards, aur COD
-                                accept karte hain.</div>
+                <!-- Desktop Menu -->
+                <ul class="nav-menu" role="list">
+                    <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
+                    <li class="nav-item">
+                        <a href="/shop.html" class="nav-link" aria-haspopup="true">
+                            Shop <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                        </a>
+                        <div class="nav-drop" role="menu">
+                            <a href="/shop.html?cat=heels" class="nav-drop-link" role="menuitem">
+                                <span class="nav-drop-icon" aria-hidden="true"><i
+                                        class="fa-solid fa-shoe-prints"></i></span>
+                                <div class="nav-drop-text"><strong>Heels</strong><span>Block, Stiletto, Cone</span>
+                                </div>
+                            </a>
+                            <a href="/shop.html?cat=flats" class="nav-drop-link" role="menuitem">
+                                <span class="nav-drop-icon" aria-hidden="true"><i class="fa-solid fa-shoe-prints"
+                                        style="transform:rotate(180deg)"></i></span>
+                                <div class="nav-drop-text"><strong>Flats</strong><span>Mules, Loafers, Slip-ons</span>
+                                </div>
+                            </a>
+                            <a href="/shop.html?cat=sandals" class="nav-drop-link" role="menuitem">
+                                <span class="nav-drop-icon" aria-hidden="true"><i
+                                        class="fa-solid fa-shoe-prints"></i></span>
+                                <div class="nav-drop-text"><strong>Sandals</strong><span>Strappy, Flat, Wedge</span>
+                                </div>
+                            </a>
+                            <a href="/shop.html?cat=bags" class="nav-drop-link" role="menuitem">
+                                <span class="nav-drop-icon" aria-hidden="true"><i
+                                        class="fa-solid fa-briefcase"></i></span>
+                                <div class="nav-drop-text"><strong>Bags</strong><span>Tote, Clutch, Sling</span></div>
+                            </a>
                         </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Order place karne ke baad cancel
-                                    kar sakte hain?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Haan! Agar order shipped nahi hua hai, toh aap profile mein jaake
-                                cancel kar sakte hain. Shipped hone ke baad return policy apply hogi.</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Order track kaise
-                                    karein?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Order place hone ke baad aapko email/SMS mein tracking ID milegi.
-                                Profile &gt; Orders mein bhi track kar sakte hain. Koi problem ho toh WhatsApp karo.
-                            </div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Mujhe order confirmation kab
-                                    milega?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Order place karte hi aapko email aur SMS confirmation milega. Agar
-                                30 minutes mein na mile, toh spam folder check karo ya hum se contact karo.</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Bulk order possible
-                                    hai?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Bilkul! Bulk orders ke liye special discounts milte hain. WhatsApp
-                                pe contact karo aur hum best price offer karenge.</div>
-                        </div>
-                    </div>
+                    </li>
+                    <li class="nav-item"><a href="/shop.html?cat=heels" class="nav-link">Heels</a></li>
+                    <li class="nav-item"><a href="/shop.html?cat=sandals" class="nav-link">Sandals</a></li>
+                    <li class="nav-item"><a href="/shop.html?cat=bags" class="nav-link">Bags</a></li>
+                    <li class="nav-item"><a href="/about.html" class="nav-link">About</a></li>
+                    <li class="nav-item"><a href="/contact.html" class="nav-link">Contact</a></li>
+                </ul>
 
-                    <!-- Shipping -->
-                    <div class="faq-group" data-cat="shipping">
-                        <div class="faq-group-title"><i class="fa-solid fa-truck faq-group-icon"></i> Shipping &amp;
-                            Delivery</div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Delivery charge kitna
-                                    hai?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">₹799 se upar ke orders pe FREE shipping milti hai. ₹799 se kam ke
-                                orders pe ₹49 shipping charge lagta hai.</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Delivery kitne din mein
-                                    hogi?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Jodhpur mein same-day ya next-day delivery milti hai. Baaki
-                                Rajasthan mein 2-3 din, India-wide 3-5 business days mein delivery hoti hai.</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Kya aap India ke bahar deliver
-                                    karte ho?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span>
-                            </div>
-                            <div class="faq-answer">Abhi hum sirf India mein deliver karte hain. International shipping
-                                jald hi shuru hogi. Updates ke liye newsletter subscribe karo!</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Delivery partner kaun
-                                    hai?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Hum Blue Dart, Delhivery, aur India Post ke saath kaam karte hain
-                                best delivery experience ke liye.</div>
-                        </div>
-                    </div>
-
-                    <!-- Returns -->
-                    <div class="faq-group" data-cat="returns">
-                        <div class="faq-group-title"><i class="fa-solid fa-rotate-left faq-group-icon"></i> Returns &amp;
-                            Exchange</div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Return policy kya hai?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Delivery ke 7 din ke andar return ya exchange kar sakte hain.
-                                Product original condition mein, tags ke saath honi chahiye. <a href="policy/returns.html" style="color:var(--gold)">Full return policy
-                                    padhein.</a></div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Size galat ayi — kya exchange
-                                    milegi?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Bilkul! Size exchange ke liye WhatsApp karo. Hum pickup arrange
-                                karenge aur sahi size bhej denge. Agar stock mein available ho toh 3-5 din mein exchange
-                                ho jaati hai.</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Refund kab milega?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Return receive hone ke 5-7 business days mein refund original
-                                payment method pe aa jaata hai. UPI/Wallet refunds faster hoti hain.</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Damaged product mila — kya
-                                    karein?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Immediately WhatsApp pe photos bhejo. Hum 24 hours mein replacement
-                                arrange karenge. Damaged products ke liye koi extra charge nahi hoga.</div>
-                        </div>
-                    </div>
-
-                    <!-- Payment -->
-                    <div class="faq-group" data-cat="payment">
-                        <div class="faq-group-title"><i class="fa-solid fa-credit-card faq-group-icon"></i> Payments
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Kaun se payment methods accept
-                                    hote hain?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span>
-                            </div>
-                            <div class="faq-answer">UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, Net Banking, aur
-                                Cash on Delivery (COD) accept karte hain.</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">EMI available hai?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Haan! ₹1999 se upar ke orders pe EMI available hai major credit
-                                cards pe (3, 6, 12 months).</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">COD pe extra charge
-                                    hai?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">₹49 COD handling charge lagta hai. Prepaid orders pe yeh charge nahi
-                                hota.</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Discount code kaise use
-                                    karein?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Checkout page pe "Apply Coupon" field mein code daalo aur Apply
-                                button dabao. Discount automatically apply ho jaayega.</div>
-                        </div>
-                    </div>
-
-                    <!-- Products -->
-                    <div class="faq-group" data-cat="products">
-                        <div class="faq-group-title"><i class="fa-solid fa-shoe-prints faq-group-icon"></i> Products &amp;
-                            Sizing</div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Size chart kahan hai?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Har product page pe size chart available hai. Generally India size
-                                3-9 mein available hain. Doubt ho toh WhatsApp karo — hum guide karenge.</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">Products ki quality kaisi
-                                    hai?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Har product quality-checked hai. Hum premium materials use karte
-                                hain. 10,000+ customers ne 4.8★ rating di hai — quality ki guarantee hai!</div>
-                        </div>
-                        <div class="faq-item">
-                            <div class="faq-question"><span class="faq-question-text">New arrivals kab aate
-                                    hain?</span><span class="faq-toggle"><i class="fa-solid fa-plus"></i></span></div>
-                            <div class="faq-answer">Har hafte naye products aate hain! Instagram @heelsup.in follow karo
-                                ya newsletter subscribe karo — pehle notification aapko milega.</div>
-                        </div>
-                    </div>
-
-                    <!-- Contact CTA -->
-                    <div class="faq-contact-cta">
-                        <h3>Aur <em>Sawaal</em> Hai?</h3>
-                        <p>Hum hamesha available hain — WhatsApp pe ya email pe seedha poochho</p>
-                        <div class="faq-contact-btns">
-                            <a href="https://wa.me/919xxxxxxxxx" class="btn btn" target="_blank"><i class="fa-brands fa-whatsapp"></i> WhatsApp Chat</a>
-                            <a href="contact.html" class="btn btn-white">Contact Form</a>
-                        </div>
-                    </div>
+                <!-- Actions -->
+                <div class="nav-actions">
+                    <a href="/search.html" class="nav-btn">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    </a>
+                    <a href="/wishlist.html" class="nav-btn" aria-label="My Wishlist">
+                        <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                    </a>
+                    <a href="/profile.html" class="nav-btn" id="nav-account-btn" aria-label="My Account">
+                        <i class="fa-regular fa-user" aria-hidden="true"></i>
+                    </a>
+                    <button class="nav-btn" id="cart-open-btn" aria-label="Shopping Cart" aria-expanded="false">
+                        <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+                        <span class="nav-badge" id="cart-count" style="display:none" aria-label="items in cart">0</span>
+                    </button>
+                    <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu" aria-expanded="false">
+                        <span class="ham-line"></span>
+                        <span class="ham-line"></span>
+                        <span class="ham-line"></span>
+                    </button>
                 </div>
             </div>
         </div>
-    </div>
+    </nav>
 
-    <!-- Footer minimal -->
-    <footer style="background:var(--color-dark);padding:32px 0;border-top:1px solid rgba(255,255,255,0.06)">
-        <div class="ctn" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
-            <span style="font-family:var(--fd);font-size:1.4rem;color:#fff">Heels<span style="color:var(--gold)">Up</span></span>
-            <p style="font-size:12px;color:rgba(255,255,255,0.35)">© 2025 HeelsUp. Made with ❤️ in Jodhpur.</p>
-            <div style="display:flex;gap:20px">
-                <a href="policy/privacy.html" style="font-size:12px;color:rgba(255,255,255,0.4)">Privacy</a>
-                <a href="policy/terms.html" style="font-size:12px;color:rgba(255,255,255,0.4)">Terms</a>
-                <a href="policy/returns.html" style="font-size:12px;color:rgba(255,255,255,0.4)">Returns</a>
+    <!-- ═══ FAQ HERO ═══ -->
+    <header class="faq-hero">
+        <div class="container">
+            <h1 class="faq-hero-title">Frequently Asked <em>Questions</em></h1>
+            <p class="faq-hero-sub">Find everything you need to know about your order, our products, and how we ensure
+                the best experience for you.</p>
+
+            <div class="faq-search-box">
+                <i class="fa-solid fa-magnifying-glass"
+                    style="color:rgba(255,255,255,0.4); margin-right:8px; font-size:16px;"></i>
+                <input type="text" id="faq-search-input" placeholder="Search for answers..." autocomplete="off">
+                <button type="button" id="faq-search-btn">Search</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ═══ FAQ MAIN CONTENT ═══ -->
+    <main class="faq-page">
+        <div class="container">
+            <!-- Breadcrumbs -->
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+                <a href="/">Home</a>
+                <i class="fa-solid fa-chevron-right"></i>
+                <span aria-current="page">FAQs</span>
+            </nav>
+
+            <div class="faq-grid">
+
+                <!-- Sidebar Categories -->
+                <aside>
+                    <div class="faq-sidebar">
+                        <span class="faq-sidebar-title">Categories</span>
+                        <button class="faq-cat-link active" data-target="all">
+                            <i class="fa-solid fa-layer-group"></i> <span>All Questions</span> <span
+                                class="faq-cat-count">19</span>
+                        </button>
+                        <button class="faq-cat-link" data-target="cat-orders">
+                            <i class="fa-solid fa-box-open"></i> <span>Orders & Delivery</span> <span
+                                class="faq-cat-count">4</span>
+                        </button>
+                        <button class="faq-cat-link" data-target="cat-products">
+                            <i class="fa-solid fa-shoe-prints"></i> <span>Products & Quality</span> <span
+                                class="faq-cat-count">6</span>
+                        </button>
+                        <button class="faq-cat-link" data-target="cat-returns">
+                            <i class="fa-solid fa-rotate-left"></i> <span>Returns & Support</span> <span
+                                class="faq-cat-count">5</span>
+                        </button>
+                        <button class="faq-cat-link" data-target="cat-payments">
+                            <i class="fa-solid fa-credit-card"></i> <span>Payments & Security</span> <span
+                                class="faq-cat-count">2</span>
+                        </button>
+                        <button class="faq-cat-link" data-target="cat-brand">
+                            <i class="fa-solid fa-shield-heart"></i> <span>Brand & Trust</span> <span
+                                class="faq-cat-count">2</span>
+                        </button>
+                    </div>
+                </aside>
+
+                <!-- FAQ Items -->
+                <div id="faq-content-area">
+
+                    <!-- Orders & Delivery -->
+                    <section class="faq-group" id="cat-orders">
+                        <h2 class="faq-group-title"><i class="fa-solid fa-box-open"></i> Orders & Delivery</h2>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Do you deliver all over India?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Yes, we deliver across India with safe packaging and reliable shipping partners to
+                                ensure your order reaches you smoothly.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>How long does delivery take?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Orders are usually delivered within 3–7 business days depending on your location.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>How can I track my order?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Once your order is shipped, you will receive tracking details via WhatsApp, SMS, or
+                                email. You can also track it directly from the "Track Order" page on our website.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Do you offer Cash on Delivery (COD)?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Yes, Cash on Delivery (COD) is available on eligible orders above ₹2000 depending on
+                                location and service availability. Additional convenience charges may apply on COD
+                                orders.
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Products & Quality -->
+                    <section class="faq-group" id="cat-products">
+                        <h2 class="faq-group-title"><i class="fa-solid fa-shoe-prints"></i> Products & Quality</h2>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Are your products premium quality?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Absolutely. Every product is carefully selected and quality-checked to ensure comfort,
+                                durability, and premium finishing.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Are the heels comfortable for long wear?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Yes, our collections are designed to balance both style and comfort, making them
+                                suitable for parties, weddings, and long wear.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Do the product images match the actual product?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Yes, we try our best to ensure product images accurately represent the real product.
+                                Slight color variations may occur due to screen settings and lighting.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Do you have wedding and party wear collections?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Yes, we offer a wide range of premium wedding heels, party wear footwear, elegant flats,
+                                and stylish bags for every occasion. Check out our Wedding Collection tab!
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>How do I choose the correct size?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                We recommend checking the size chart available on each product page before placing your
+                                order. If you are between sizes or need assistance, our support team will be happy to
+                                guide you.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>What if the size doesn’t fit me?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                If you face a size issue, you can request an exchange for eligible products within the
+                                allowed exchange period. The product must be unused and returned with original
+                                packaging.
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Returns, Exchange & Support -->
+                    <section class="faq-group" id="cat-returns">
+                        <h2 class="faq-group-title"><i class="fa-solid fa-rotate-left"></i> Returns & Support</h2>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Do you offer returns or refunds?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                No, we currently do not offer returns or refunds. We only provide exchanges for eligible
+                                cases such as size issues, damaged products, or wrong items received.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>What if I receive a damaged or wrong product?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                If you receive a damaged or incorrect item, please contact our support team within 48
+                                hours of delivery along with product images and a proper parcel opening video for
+                                verification.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Is parcel opening video compulsory for exchange requests?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Yes, a clear and unedited parcel opening video is mandatory for claims related to
+                                damaged, missing, or wrong products. Without the video, exchange requests may not be
+                                approved.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Can I exchange my order?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Yes, exchanges are available for eligible products. Once we receive and inspect the
+                                returned product, the exchange process may take around 7 business days or more depending
+                                on availability and logistics.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>How can I contact HeelsUp support?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                You can connect with us through WhatsApp, Instagram, email, or the Contact Us page on
+                                our website. Our team is always happy to assist you!
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Payments & Security -->
+                    <section class="faq-group" id="cat-payments">
+                        <h2 class="faq-group-title"><i class="fa-solid fa-credit-card"></i> Payments & Security</h2>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Which payment methods do you accept?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                We accept UPI, Credit Cards, Debit Cards, Net Banking, Wallets, and other secure online
+                                payment methods for a safe checkout experience.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Are online payments secure?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                Yes, all online transactions are processed through secure and trusted payment gateways
+                                to ensure complete payment safety and data protection.
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Brand & Trust -->
+                    <section class="faq-group" id="cat-brand">
+                        <h2 class="faq-group-title"><i class="fa-solid fa-shield-heart"></i> Brand & Trust</h2>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>When was HeelsUp started?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                HeelsUp started its journey in 2021 as an offline store in Jodhpur and now proudly
+                                serves customers all across India.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>How many customers have shopped with HeelsUp?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                We are proud to be trusted by 21.7K+ happy customers across India who love our premium
+                                quality and designs.
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <div class="faq-question">
+                                <span>Is HeelsUp only an online brand?</span>
+                                <span class="faq-toggle"><i class="fa-solid fa-chevron-down"></i></span>
+                            </div>
+                            <div class="faq-answer">
+                                No, HeelsUp started as an offline store in Jodhpur and is now expanding its journey
+                                online to reach customers across India.
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Search No Results State -->
+                    <div id="faq-no-results"
+                        style="display:none; text-align:center; padding: 40px; background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border);">
+                        <i class="fa-regular fa-face-frown"
+                            style="font-size:3rem; color:var(--text-pale); margin-bottom:16px; display:block;"></i>
+                        <h3
+                            style="font-family:var(--font-head); font-size:1.4rem; color:var(--text-h); margin-bottom:8px;">
+                            No matching questions found</h3>
+                        <p style="color:var(--text-m);">We couldn't find an answer for your search. Feel free to contact
+                            our support team.</p>
+                    </div>
+
+                    <!-- Contact CTA -->
+                    <div class="faq-cta">
+                        <h3 class="faq-cta-title">Still have <em>Questions?</em></h3>
+                        <p>Our support team is always here to help you out.</p>
+                        <div class="faq-cta-btns">
+                            <a href="https://wa.me/917891470935" target="_blank" class="btn btn-primary btn-pill">
+                                <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+                            </a>
+                            <a href="/contact.html" class="btn btn-outline btn-pill">
+                                Contact Form
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ═══ FOOTER ═══ -->
+    <footer class="footer" role="contentinfo">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-grid">
+                    <!-- Brand -->
+                    <div>
+                        <div class="footer-logo-wrap">
+                            <img src="/logo.png" alt="HeelsUp"
+                                onerror="this.style.display='none'; document.getElementById('logo-text-footer').style.display='block';"
+                                height="42" />
+                            <span
+                                style="font-family:var(--font-head);font-weight:700;font-size:1.4rem;color:#fff;display:none"
+                                id="logo-text-footer">Heels<span style="color:var(--primary)">Up</span></span>
+                        </div>
+                        <p class="footer-tagline">
+                            Premium ladies footwear &amp; bags for the modern Indian woman.
+                            Quality, style, and comfort — all in one place. Give Value to Your Feet.
+                        </p>
+                        <div class="footer-socials">
+                            <a href="https://www.instagram.com/heel_s_up" target="_blank" rel="noopener noreferrer"
+                                class="footer-soc" aria-label="HeelsUp on Instagram"><i class="fa-brands fa-instagram"
+                                    aria-hidden="true"></i></a>
+                            <a href="https://wa.me/917891470935" target="_blank" rel="noopener noreferrer"
+                                class="footer-soc" aria-label="HeelsUp on WhatsApp"><i class="fa-brands fa-whatsapp"
+                                    aria-hidden="true"></i></a>
+                            <a href="mailto:support@heelsup.in" class="footer-soc" aria-label="Email HeelsUp"><i
+                                    class="fa-regular fa-envelope" aria-hidden="true"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Shop -->
+                    <div>
+                        <div class="footer-col-title">Shop</div>
+                        <nav class="footer-links" aria-label="Shop navigation">
+                            <a href="/shop.html">All Products</a>
+                            <a href="/shop.html?cat=heels">Heels</a>
+                            <a href="/shop.html?cat=flats">Flats</a>
+                            <a href="/shop.html?cat=sandals">Sandals</a>
+                            <a href="/shop.html?cat=bags">Bags</a>
+                            <a href="/shop.html?cat=summer">Summer Collection</a>
+                            <a href="/shop.html?cat=wedding">Wedding Collection</a>
+                        </nav>
+                    </div>
+
+                    <!-- Company -->
+                    <div>
+                        <div class="footer-col-title">Company</div>
+                        <nav class="footer-links" aria-label="Company navigation">
+                            <a href="/about.html">About Us</a>
+                            <a href="/contact.html">Contact</a>
+                            <a href="/order-tracking.html">Track Order</a>
+                            <a href="/faq.html">FAQ</a>
+                        </nav>
+                    </div>
+
+                    <!-- Help -->
+                    <div>
+                        <div class="footer-col-title">Help &amp; Policies</div>
+                        <nav class="footer-links" aria-label="Help navigation">
+                            <a href="/shipping-info.html">Shipping Policy</a>
+                            <a href="/returns.html">Exchange Policy</a>
+                            <a href="/privacy.html">Privacy Policy</a>
+                            <a href="/terms.html">Terms &amp; Conditions</a>
+                            <a href="/size-guide.html">Size Guide</a>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p class="footer-copy">© 2025 HeelsUp. All rights reserved.</p>
+                <div class="footer-pay" aria-label="Accepted payment methods">
+                    <span class="pay-chip">UPI</span>
+                    <span class="pay-chip">Visa</span>
+                    <span class="pay-chip">Mastercard</span>
+                    <span class="pay-chip">Net Banking</span>
+                </div>
+                <div class="footer-legal">
+                    <a href="/privacy.html">Privacy</a>
+                    <a href="/terms.html">Terms</a>
+                    <a href="/shipping-info.html">Shipping</a>
+                </div>
             </div>
         </div>
     </footer>
 
-    <div class="cart-drawer-backdrop" id="cart-backdrop"></div>
-    <aside class="cart-drawer" id="cart-drawer">
-        <div class="cart-drawer-header">
-            <h3>My Cart</h3><button class="cart-close-btn" id="cart-close-btn">✕</button>
-        </div>
-        <div class="cart-drawer-body">
-            <div class="cart-empty">
-                <div class="cart-empty-icon">🛍️</div>
-                <div class="cart-empty-text">Cart is empty</div><a href="shop.html" class="btn btn" style="margin-top:12px">Shop Now</a>
-            </div>
-        </div>
-    </aside>
-    <div class="toast-container" id="toast-container"></div>
+    <!-- ═══ FLOATING ═══ -->
+    <a href="https://wa.me/917891470935?text=Hi%20HeelsUp%2C%20I%20need%20help%20with%20an%20order" target="_blank"
+        rel="noopener noreferrer" class="whatsapp-fab" aria-label="Chat on WhatsApp">
+        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+    </a>
+
+    <!-- ═══ SCRIPTS ═══ -->
+    <script src="app-config.js" defer></script>
+    <script src="app-auth.js" defer></script>
+    <script src="js/cart.js" defer></script>
 
     <script>
-        window.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60));
-        // Accordion
-        document.querySelectorAll('.faq-item').forEach(item => {
-            item.querySelector('.faq-question').addEventListener('click', () => {
-                const wasOpen = item.classList.contains('open');
-                document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-                if (!wasOpen) item.classList.add('open');
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Navbar Scroll Effect
+            const navbar = document.getElementById('navbar');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
             });
-        });
-        // Category filter
-        document.querySelectorAll('.faq-cat-item').forEach(cat => {
-            cat.addEventListener('click', () => {
-                document.querySelectorAll('.faq-cat-item').forEach(c => c.classList.remove('active'));
-                cat.classList.add('active');
-                const filter = cat.dataset.cat;
-                document.querySelectorAll('.faq-group').forEach(g => {
-                    g.style.display = (filter === 'all' || g.dataset.cat === filter) ? 'block' : 'none';
+
+            // 2. Mobile Menu Toggle
+            const navHamburger = document.getElementById('nav-hamburger');
+            // Assume mobile menu logic is similar to your main site, 
+            // adding a basic handler here for the hamburger if needed
+            navHamburger?.addEventListener('click', () => {
+                navHamburger.classList.toggle('open');
+                // trigger mobile menu overlay logic
+            });
+
+            // 3. Announcement Bar Close
+            document.getElementById('ann-close')?.addEventListener('click', function () {
+                const bar = document.getElementById('ann-bar');
+                if (bar) {
+                    bar.style.transition = 'height 0.3s ease, padding 0.3s ease';
+                    bar.style.height = '0px';
+                    bar.style.padding = '0px';
+                    setTimeout(() => bar.remove(), 300);
+                }
+            });
+
+            // 4. FAQ Accordion Logic
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const item = question.parentElement;
+                    const isActive = item.classList.contains('active');
+
+                    // Close all currently open items
+                    document.querySelectorAll('.faq-item').forEach(i => {
+                        i.classList.remove('active');
+                    });
+
+                    // Toggle the clicked one
+                    if (!isActive) {
+                        item.classList.add('active');
+                    }
                 });
             });
-        });
-        // Search
-        document.getElementById('faq-search')?.addEventListener('input', function () {
-            const q = this.value.trim().toLowerCase();
-            if (!q) { document.querySelectorAll('.faq-item').forEach(i => i.style.display = 'block'); return; }
-            document.querySelectorAll('.faq-item').forEach(item => {
-                const text = item.querySelector('.faq-question-text').textContent.toLowerCase() + item.querySelector('.faq-answer').textContent.toLowerCase();
-                item.style.display = text.includes(q) ? 'block' : 'none';
+
+            // 5. FAQ Category Filtering
+            const catLinks = document.querySelectorAll('.faq-cat-link');
+            const faqGroups = document.querySelectorAll('.faq-group');
+
+            catLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    // Update active state on buttons
+                    catLinks.forEach(btn => btn.classList.remove('active'));
+                    link.classList.add('active');
+
+                    const target = link.getAttribute('data-target');
+
+                    // Filter groups
+                    faqGroups.forEach(group => {
+                        if (target === 'all' || group.id === target) {
+                            group.style.display = 'block';
+                            // Smooth scroll into view if not on mobile
+                            if (window.innerWidth > 900 && target !== 'all') {
+                                const yOffset = -120;
+                                const y = group.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                                window.scrollTo({ top: y, behavior: 'smooth' });
+                            }
+                        } else {
+                            group.style.display = 'none';
+                        }
+                    });
+
+                    // Clear search when changing category
+                    document.getElementById('faq-search-input').value = '';
+                    filterFAQs('');
+                });
             });
+
+            // 6. FAQ Search Logic
+            const searchInput = document.getElementById('faq-search-input');
+            const noResultsState = document.getElementById('faq-no-results');
+
+            function filterFAQs(query) {
+                const lowerQuery = query.toLowerCase().trim();
+                let anyVisible = false;
+
+                // If searching, ensure we are in "All Questions" mode temporarily
+                if (lowerQuery.length > 0) {
+                    faqGroups.forEach(g => g.style.display = 'block');
+                } else {
+                    // Re-trigger the active category tab
+                    const activeCat = document.querySelector('.faq-cat-link.active');
+                    if (activeCat) activeCat.click();
+                    return;
+                }
+
+                faqGroups.forEach(group => {
+                    let groupHasVisibleItems = false;
+                    const items = group.querySelectorAll('.faq-item');
+
+                    items.forEach(item => {
+                        const qText = item.querySelector('.faq-question span').textContent.toLowerCase();
+                        const aText = item.querySelector('.faq-answer').textContent.toLowerCase();
+
+                        if (qText.includes(lowerQuery) || aText.includes(lowerQuery)) {
+                            item.style.display = 'block';
+                            groupHasVisibleItems = true;
+                            anyVisible = true;
+
+                            // Optionally expand items that match the search
+                            if (lowerQuery.length > 2 && qText.includes(lowerQuery)) {
+                                item.classList.add('active');
+                            }
+                        } else {
+                            item.style.display = 'none';
+                            item.classList.remove('active');
+                        }
+                    });
+
+                    // Hide the whole group if no items match inside it
+                    if (groupHasVisibleItems) {
+                        group.style.display = 'block';
+                    } else {
+                        group.style.display = 'none';
+                    }
+                });
+
+                // Show/Hide "No Results" state
+                if (!anyVisible && lowerQuery.length > 0) {
+                    noResultsState.style.display = 'block';
+                } else {
+                    noResultsState.style.display = 'none';
+                }
+            }
+
+            searchInput.addEventListener('input', (e) => {
+                filterFAQs(e.target.value);
+            });
+
+            document.getElementById('faq-search-btn')?.addEventListener('click', () => {
+                filterFAQs(searchInput.value);
+            });
+
         });
-        const cart = JSON.parse(localStorage.getItem('heelsup_cart') || '[]');
-        document.getElementById('cart-count').textContent = cart.reduce((s, i) => s + i.qty, 0);
-        document.getElementById('cart-open-btn')?.addEventListener('click', () => { document.getElementById('cart-drawer').classList.add('open'); document.getElementById('cart-backdrop').classList.add('open'); });
-        document.getElementById('cart-close-btn')?.addEventListener('click', () => { document.getElementById('cart-drawer').classList.remove('open'); document.getElementById('cart-backdrop').classList.remove('open'); });
-        document.getElementById('cart-backdrop')?.addEventListener('click', () => { document.getElementById('cart-drawer').classList.remove('open'); document.getElementById('cart-backdrop').classList.remove('open'); });
     </script>
+</body>
 
-
-  <script src="/js/wishlist.js"></script>
-</body></html>
+</html>
