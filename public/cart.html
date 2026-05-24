@@ -1494,14 +1494,14 @@
     /* ── RENDER CART ── */
     function renderCart() {
       const itemsWrap = $('cart-items-wrap');
-      const count = cart.reduce((s, i) => s + (i.quantity || 1), 0);
+      const count = cart.reduce((s, i) => s + (i.qty || 1), 0);
 
       $('cart-subtitle').textContent = `${count} item${count > 1 ? 's' : ''} in your bag`;
 
       itemsWrap.innerHTML = cart.map((item, i) => {
         const img = esc(item.image || item.image_url || '');
         const price = item.price || 0;
-        const qty = item.quantity || 1;
+        const qty = item.qty || 1;
         const total = price * qty;
 
         return `
@@ -1513,12 +1513,12 @@
               <div class="cart-item-qty">
                 <span class="qty-label">Qty</span>
                 <div class="qty-control">
-                  <button class="qty-btn" onclick="updateQty(${i}, -1)"><i class="fa-solid fa-minus" style="font-size:.65rem"></i></button>
-                  <span class="qty-num">${qty}</span>
-                  <button class="qty-btn" onclick="updateQty(${i}, 1)"><i class="fa-solid fa-plus" style="font-size:.65rem"></i></button>
+                  <button class="qty-btn" onclick="updateQty('${item.key}', ${item.qty - 1})"><i class="fa-solid fa-minus" style="font-size:.65rem"></i></button>
+                  <span class="qty-num">${item.qty}</span>
+                  <button class="qty-btn" onclick="updateQty('${item.key}', ${item.qty + 1})"><i class="fa-solid fa-plus" style="font-size:.65rem"></i></button>
                 </div>
               </div>
-              <button class="cart-item-remove" onclick="removeItem(${i})">
+              <button class="cart-item-remove" onclick="removeItem('${item.key}')">
                 <i class="fa-solid fa-trash"></i> Remove
               </button>
             </div>
@@ -1534,9 +1534,9 @@
 
     /* ── UPDATE SUMMARY ── */
     function updateSummary() {
-      const subtotal = cart.reduce((s, i) => s + (i.price * (i.quantity || 1)), 0);
-      const freeShipThresh = 79900; // ₹799.00
-      const shipping = subtotal >= freeShipThresh ? 0 : 6000; // ₹60
+      const subtotal = cart.reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
+      const freeShipThresh = 799; // ₹799.00
+      const shipping = subtotal >= freeShipThresh ? 0 : 49; // ₹60
       const total = subtotal - couponDiscount + shipping;
 
       $('summary-subtotal').textContent = fmt(subtotal);
@@ -1554,40 +1554,27 @@
     }
 
     /* ── UPDATE QTY ── */
-    window.updateQty = function (idx, delta) {
-      try {
-        if (typeof HeelsUpCart !== 'undefined') {
-          HeelsUpCart.updateQty(idx, delta);
-          cart = HeelsUpCart.getCart();
-        } else {
-          cart[idx].quantity = Math.max(1, (cart[idx].quantity || 1) + delta);
-        }
-        renderCart();
-      } catch (e) {
-        console.error('Update qty error:', e);
-      }
-    };
+    window.updateQty = function (key, newQty) {
+    if (typeof HeelsUpCart !== 'undefined') {
+        HeelsUpCart.updateQty(key, newQty);
+        cart = HeelsUpCart.getCart();
+    }
+    renderCart();
+};
 
     /* ── REMOVE ITEM ── */
-    window.removeItem = function (idx) {
-      try {
-        if (typeof HeelsUpCart !== 'undefined') {
-          HeelsUpCart.removeItem(idx);
-          cart = HeelsUpCart.getCart();
-        } else {
-          cart.splice(idx, 1);
-        }
-
-        if (cart.length === 0) {
-          location.reload();
-        } else {
-          renderCart();
-          toast('Item removed from bag', 'info');
-        }
-      } catch (e) {
-        console.error('Remove item error:', e);
-      }
-    };
+    window.removeItem = function (key) {
+    if (typeof HeelsUpCart !== 'undefined') {
+        HeelsUpCart.removeItem(key);
+        cart = HeelsUpCart.getCart();
+    }
+    if (cart.length === 0) {
+        location.reload();
+    } else {
+        renderCart();
+        toast('Item removed from bag', 'info');
+    }
+};
 
     /* ── APPLY COUPON ── */
     window.applyCoupon = function () {
@@ -1596,7 +1583,7 @@
       const msgEl = $('coupon-msg');
 
       if (code === 'HEELS10') {
-        const subtotal = cart.reduce((s, i) => s + (i.price * (i.quantity || 1)), 0);
+        const subtotal = cart.reduce((s, i) => s + (i.price * (i.qty || 1)), 0);
         couponDiscount = Math.round(subtotal * 0.1);
         successEl.style.display = 'flex';
         msgEl.textContent = `Coupon "${code}" applied! 10% discount`;
