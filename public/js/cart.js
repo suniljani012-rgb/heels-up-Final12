@@ -4,7 +4,7 @@
  */
 (function () {
     const CART_KEY = 'heelsup_cart';
-    const FREE_SHIP_THRESHOLD = 499;
+    const FREE_SHIP_THRESHOLD = 799;
 
     function getCart() {
         try { 
