@@ -1227,7 +1227,7 @@
     /* ── INITIALIZATION ── */
     document.addEventListener('DOMContentLoaded', async () => {
       let cart = [];
-      try { if (typeof HeelsUpCart !== 'undefined') cart = HeelsUpCart.getItems(); } catch (e) { }
+      try { if (typeof HeelsUpCart !== 'undefined') cart = HeelsUpCart.getCart(); } catch (e) { }
 
       if (!cart || !cart.length) {
         $('checkout-main').style.display = 'none';
@@ -1267,7 +1267,7 @@
     /* ── SUMMARY CALCULATION ── */
     function calculateAndRenderSummary() {
       let subtotal = 0;
-      try { if (typeof HeelsUpCart !== 'undefined') subtotal = HeelsUpCart.getTotal(); } catch (e) { }
+      try { if (typeof HeelsUpCart !== 'undefined') subtotal = HeelsUpCart.getSubtotal(); } catch (e) { }
 
       // Prevent negative subtotal
       subtotal = Math.max(0, subtotal);
@@ -1379,7 +1379,7 @@
 
       try {
         let subtotal = 0;
-        if (typeof HeelsUpCart !== 'undefined') subtotal = HeelsUpCart.getTotal();
+        if (typeof HeelsUpCart !== 'undefined') subtotal = HeelsUpCart.getSubtotal();
 
         let discount = 0;
 
@@ -1468,7 +1468,7 @@
         }
 
         let cart = [];
-        if (typeof HeelsUpCart !== 'undefined') cart = HeelsUpCart.getItems();
+        if (typeof HeelsUpCart !== 'undefined') cart = HeelsUpCart.getCart();
 
         const orderItems = cart.map(item => ({
           productId: item.id,
