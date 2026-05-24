@@ -116,6 +116,7 @@
             line-height: 1.6;
             color: var(--text-b);
             background: var(--bg);
+            overflow-x: hidden;
         }
 
         h1,
@@ -312,6 +313,102 @@
         .nav-link.active {
             color: var(--primary);
             background: rgba(192, 57, 43, .06);
+        }
+
+        /* ─── DROPDOWN CSS FIXED ─── */
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-item:hover>.nav-link i.fa-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        .nav-link i {
+            font-size: 10px;
+            opacity: 0.6;
+            transition: transform var(--t);
+        }
+
+        .nav-drop {
+            position: absolute;
+            top: calc(100% + 15px);
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            min-width: 260px;
+            padding: 10px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: all var(--t);
+            z-index: var(--z-drop);
+        }
+
+        .nav-item:hover .nav-drop {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .nav-drop-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-b);
+            transition: all var(--t);
+        }
+
+        .nav-drop-link:hover {
+            background: var(--bg2);
+            color: var(--primary);
+        }
+
+        .nav-drop-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--bg2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-m);
+            flex-shrink: 0;
+            transition: all var(--t);
+            font-size: 16px;
+        }
+
+        .nav-drop-link:hover .nav-drop-icon {
+            background: var(--blush);
+            color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .nav-drop-text strong {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: var(--font-head);
+            color: var(--text-h);
+        }
+
+        .nav-drop-text span {
+            font-size: 11px;
+            color: var(--text-pale);
+        }
+
+        .nav-drop-sep {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
         }
 
         .nav-actions {
@@ -526,7 +623,7 @@
             transition: all var(--t);
         }
 
-        /* Cart & Search Basic Overlays (Hidden by default, triggered via JS) */
+        /* Cart & Search Overlays */
         .cart-bd {
             position: fixed;
             inset: 0;
@@ -952,7 +1049,7 @@
                 gap: 32px;
             }
 
-            /* Mobile Swipeable Sidebar Tabs */
+            /* Mobile Swipeable Sidebar Tabs - Fixed Overflow Issue */
             .faq-sidebar {
                 position: relative;
                 top: 0;
@@ -966,7 +1063,7 @@
                 border-radius: 0;
                 background: transparent;
                 box-shadow: none;
-                width: calc(100% + 32px);
+                margin-right: -16px;
                 margin-left: -16px;
                 padding-left: 16px;
                 padding-right: 16px;
@@ -1039,7 +1136,7 @@
             }
 
             .faq-cta {
-                padding: 40px 20px;
+                padding: 32px 16px;
             }
 
             .faq-cta-title {
@@ -1049,6 +1146,7 @@
             .faq-cta-btns {
                 flex-direction: column;
                 width: 100%;
+                gap: 12px;
             }
 
             .faq-cta-btns .btn {
@@ -1087,10 +1185,13 @@
             }
         }
 
+        /* ─── FOOTER LOGO CSS FIXED ─── */
         .footer-logo-wrap img {
-            height: 38px;
-            filter: grayscale(1) invert(1) brightness(1.5);
+            height: 42px;
+            mix-blend-mode: screen;
+            filter: grayscale(1);
             margin-bottom: 16px;
+            opacity: 0.95;
         }
 
         .footer-tagline {
