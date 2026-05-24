@@ -915,7 +915,14 @@ async function initiateOrder(request, env) {
   });
   if (!created.ok) return json({ error: created.error }, 400);
   const amountPaise = Math.round(Number(created.order.total_amount) * 100);
-  const basicAuth = btoa(`${rzpKeyId}:${rzpKeySecret}`);
+    
+    if (amountPaise === 0) {
+      await env.DB.prepare("UPDATE orders SET payment_status='paid', order_status='confirmed', paid_at=?, updated_at=? WHERE id=?").bind(nowIso(), nowIso(), created.order.id).run();
+      if (couponCode) await env.DB.prepare("UPDATE coupons SET used_count=used_count+1 WHERE code=?").bind(couponCode).run();
+      return json({ ok: true, key: "free_order", order: { id: created.order.id, orderNumber: created.order.order_number, amount: 0, discount: discountAmount } });
+    }
+
+    const basicAuth = btoa(`${rzpKeyId}:${rzpKeySecret}`);
   const rzpRes = await fetch("https://api.razorpay.com/v1/orders", {
     method: "POST",
     headers: { Authorization: `Basic ${basicAuth}`, "content-type": "application/json" },
@@ -923,7 +930,7 @@ async function initiateOrder(request, env) {
   });
   if (!rzpRes.ok) {
     const t = await rzpRes.text();
-    return json({ error: "Payment gateway error. Please try again.", detail: t }, 502);
+    return json({ error: "Payment gateway error: " + t, detail: t }, 502);
   }
   const rzpOrder = await rzpRes.json();
   await env.DB.prepare("UPDATE orders SET razorpay_order_id=?, updated_at=? WHERE id=?").bind(rzpOrder.id, nowIso(), created.order.id).run();
