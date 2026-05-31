@@ -1,0 +1,8 @@
+node_modules/
+.dev.vars
+.wrangler/
+*.cjs
+test_api.js
+scratch_query.js
+reset.sql
+update_db.js
