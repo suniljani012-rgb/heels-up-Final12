@@ -16,7 +16,11 @@ async function getSetting(env, key, fallback = '') {
 
 async function generateOrderNumber(env) {
     const today = new Date();
-    const prefix = `HU-${today.getUTCFullYear()}${String(today.getUTCMonth() + 1).padStart(2, "0")}${String(today.getUTCDate()).padStart(2, "0")}`;
+    const prefix = `HU-${today.getUTCFullYear()}`;
+    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM online_orders WHERE order_number LIKE ?").bind(`${prefix}%`).first();
+    const seq = String((row?.c || 0) + 1).padStart(4, "0");
+    return `${prefix}${seq}`;
+}${String(today.getUTCMonth() + 1).padStart(2, "0")}${String(today.getUTCDate()).padStart(2, "0")}`;
     const row = await env.DB.prepare("SELECT COUNT(*) as c FROM online_orders WHERE order_number LIKE ?").bind(`${prefix}-%`).first();
     const seq = String((row?.c || 0) + 1).padStart(4, "0");
     const rand = Math.floor(1000 + Math.random() * 9000);
@@ -116,7 +120,7 @@ async function restoreSizeStock(env, orderId) {
     // Restore stock for all items in an order (used on cancellation)
     try {
         const items = await env.DB.prepare(
-            "SELECT product_id, quantity, size_label FROM order_items WHERE order_id=?"
+            "SELECT product_id, quantity, size_label FROM online_order_items WHERE order_id=?"
         ).bind(orderId).all();
         for (const item of (items.results || [])) {
             if (!item.product_id) continue;
@@ -187,25 +191,18 @@ export async function createOrderRecord(env, input) {
     const source = String(input.source || "online");
 
     const result = await env.DB.prepare(
-        `INSERT INTO online_orders (order_number, user_id, customer_name, customer_email, customer_phone,
-         address_line1, address_line2, city, state, pincode, country, delivery_method, coupon_code,
-         payment_method, payment_status, order_status, subtotal_amount, shipping_amount, discount_amount,
-         total_amount, notes, source, created_at, updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        `INSERT INTO online_orders (order_number, online_customer_id, delivery_address, subtotal, delivery_charge, discount, total, payment_method, payment_status, status, notes, created_at, updated_at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ).bind(
-        orderNumber, input.userId, customerName, customerEmail, customerPhone,
-        finalAddressLine1, addressLine2, finalCity, finalState, finalPincode, country,
-        String(input.deliveryMethod || "standard"), input.couponCode || null,
-        input.paymentMethod, input.paymentStatus, input.orderStatus,
-        subtotalAmount, shippingAmount, discountAmount,
-        totalAmount, String(input.notes || "").trim(), source, createdAt, createdAt
+        orderNumber, input.userId, JSON.stringify({line1: finalAddressLine1, line2: addressLine2, city: finalCity, state: finalState, pincode: finalPincode, country: country}),
+        subtotalAmount * 100, shippingAmount * 100, discountAmount * 100, totalAmount * 100, input.paymentMethod, input.paymentStatus, input.orderStatus, String(input.notes || "").trim(), createdAt, createdAt
     ).run();
 
     const orderId = result.meta?.last_row_id;
     for (const item of items) {
         await env.DB.prepare(
-            "INSERT INTO order_items (order_id, product_id, product_name, product_sku, quantity, unit_price, line_total, size_label, image_url, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)"
-        ).bind(orderId, item.productId, item.name, item.sku, item.qty, item.unitPrice, item.lineTotal, item.size, item.image, createdAt).run();
+            "INSERT INTO online_order_items (order_id, product_id, product_code, product_name, color, size, quantity, unit_price, total_price) VALUES (?,?,?,?,?,?,?,?,?)"
+        ).bind(orderId, item.productId, item.sku, item.name, '', item.size || 'Default', item.qty, Math.round(item.unitPrice * 100), Math.round(item.lineTotal * 100)).run();
         // Deduct stock per size
         if (item.productId) {
             await deductSizeStock(env, item.productId, item.size, item.qty);
@@ -390,15 +387,15 @@ export async function ordersRouter(request, env) {
             const limit = Math.min(50, parseInt(params.get('limit') || '10'));
             const offset = (page - 1) * limit;
 
-            const countRow = await env.DB.prepare('SELECT COUNT(*) as cnt FROM online_orders WHERE user_id = ?').bind(user.id).first();
+            const countRow = await env.DB.prepare('SELECT COUNT(*) as cnt FROM online_orders WHERE online_customer_id = ?').bind(user.id).first();
             const ordersRes = await env.DB.prepare(
-                `SELECT * FROM online_orders WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`
+                `SELECT * FROM online_orders WHERE online_customer_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`
             ).bind(user.id, limit, offset).all();
 
             const orders = [];
             for (const o of (ordersRes.results || [])) {
                 const itemsRes = await env.DB.prepare(
-                    `SELECT product_name, image_url, size_label, quantity, unit_price FROM order_items WHERE order_id = ? LIMIT 4`
+                    `SELECT product_name, image_url, size_label, quantity, unit_price FROM online_order_items WHERE order_id = ? LIMIT 4`
                 ).bind(o.id).all();
                 const items = (itemsRes.results || []).map(it => ({
                     name: it.product_name,
@@ -440,9 +437,9 @@ export async function ordersRouter(request, env) {
         if (authErr) return authErr;
         const id = parseInt(path.match(/(\d+)/)?.[1]);
         try {
-            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ? AND user_id = ?').bind(id, user.id).first();
+            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ? AND online_customer_id = ?').bind(id, user.id).first();
             if (!order) return notFound('Order not found');
-            const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(id).all();
+            const itemsRes = await env.DB.prepare('SELECT * FROM online_order_items WHERE order_id = ?').bind(id).all();
             const items = (itemsRes.results || []).map(formatItem);
             return ok(formatOrder(order, items));
         } catch (e) {
@@ -456,7 +453,7 @@ export async function ordersRouter(request, env) {
         if (authErr) return authErr;
         const id = parseInt(path.match(/(\d+)/)?.[1]);
         try {
-            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ? AND user_id = ?').bind(id, user.id).first();
+            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ? AND online_customer_id = ?').bind(id, user.id).first();
             if (!order) return notFound('Order not found');
 
             if (order.order_status !== 'delivered')
@@ -560,7 +557,7 @@ export async function ordersRouter(request, env) {
         try {
             const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ?').bind(id).first();
             if (!order) return notFound('Order not found');
-            const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(id).all();
+            const itemsRes = await env.DB.prepare('SELECT * FROM online_order_items WHERE order_id = ?').bind(id).all();
             const items = (itemsRes.results || []).map(formatItem);
             return ok(formatOrder(order, items));
         } catch (e) {

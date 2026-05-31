@@ -235,9 +235,15 @@ export async function authRouter(request, env) {
 
             const hashed = await hashPassword(password);
             const now = nowIso();
-            const result = await env.DB.prepare(
-                'INSERT INTO online_customers (first_name, last_name, email, phone, password_hash, role, email_verified, staff_permissions, created_at, updated_at) VALUES (?, ?, ?, ?, ?, \'customer\', 1, \'[]\', ?, ?)'
-            ).bind(firstName, lastName, email, phone || null, hashed, now, now).run();
+            const maxRow = await env.DB.prepare('SELECT MAX(id) as m FROM online_customers').first();
+            const nextId = (maxRow?.m || 0) + 1;
+            const customerId = `OC-${String(nextId).padStart(4, '0')}`;
+            const maxRow = await env.DB.prepare('SELECT MAX(id) as m FROM online_customers').first();
+                const nextId = (maxRow?.m || 0) + 1;
+                const customerId = `OC-${String(nextId).padStart(4, '0')}`;
+                const result = await env.DB.prepare(
+                    "INSERT INTO online_customers (customer_id, first_name, last_name, email, password_hash, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?)"
+                ).bind(customerId, fname, lname, email, hash, now, now).run();
 
             const userId = result.meta?.last_row_id;
             const user = await env.DB.prepare('SELECT * FROM online_customers WHERE id = ?').bind(userId).first();
@@ -568,9 +574,12 @@ export async function authRouter(request, env) {
                 const fname = data.given_name || data.name || 'Google User';
                 const lname = data.family_name || '';
 
+                const maxRow = await env.DB.prepare('SELECT MAX(id) as m FROM online_customers').first();
+                const nextId = (maxRow?.m || 0) + 1;
+                const customerId = `OC-${String(nextId).padStart(4, '0')}`;
                 const result = await env.DB.prepare(
-                    "INSERT INTO online_customers (first_name, last_name, email, password_hash, role, email_verified, staff_permissions, created_at, updated_at) VALUES (?, ?, ?, ?, 'customer', 1, '[]', ?, ?)"
-                ).bind(fname, lname, email, hash, now, now).run();
+                    "INSERT INTO online_customers (customer_id, first_name, last_name, email, password_hash, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?)"
+                ).bind(customerId, fname, lname, email, hash, now, now).run();
 
                 const userId = result.meta?.last_row_id;
                 user = await env.DB.prepare('SELECT * FROM online_customers WHERE id=?').bind(userId).first();
