@@ -65,7 +65,7 @@ export async function paymentRouter(request, env) {
 
     // Update order with razorpay details
     await env.DB.prepare(
-      "UPDATE orders SET payment_status='paid', order_status='confirmed', razorpay_order_id=?, razorpay_payment_id=?, razorpay_signature=?, paid_at=?, updated_at=? WHERE id=?"
+      "UPDATE online_orders SET payment_status='paid', order_status='confirmed', razorpay_order_id=?, razorpay_payment_id=?, razorpay_signature=?, paid_at=?, updated_at=? WHERE id=?"
     ).bind(razorpay_order_id, razorpay_payment_id, razorpay_signature, paidAt, paidAt, orderId).run();
 
     // Insert payment record
@@ -118,11 +118,11 @@ export async function paymentRouter(request, env) {
 
     const localOrderId = parseInt(body.orderId || 0);
     if (localOrderId) {
-      const order = await env.DB.prepare("SELECT * FROM orders WHERE id=?").bind(localOrderId).first();
+      const order = await env.DB.prepare("SELECT * FROM online_orders WHERE id=?").bind(localOrderId).first();
       if (order) {
         if (order.payment_status === 'paid') return err("Already paid", 400);
         await env.DB.prepare("DELETE FROM order_items WHERE order_id=?").bind(localOrderId).run();
-        await env.DB.prepare("DELETE FROM orders WHERE id=?").bind(localOrderId).run();
+        await env.DB.prepare("DELETE FROM online_orders WHERE id=?").bind(localOrderId).run();
       }
     }
 
@@ -143,7 +143,7 @@ export async function paymentRouter(request, env) {
       const rzpOrderId = event.payload?.payment?.entity?.order_id;
       if (rzpOrderId) {
         await env.DB.prepare(
-          "UPDATE orders SET payment_status='failed', order_status='cancelled', updated_at=datetime('now') WHERE razorpay_order_id = ?"
+          "UPDATE online_orders SET payment_status='failed', order_status='cancelled', updated_at=datetime('now') WHERE razorpay_order_id = ?"
         ).bind(rzpOrderId).run();
       }
     }

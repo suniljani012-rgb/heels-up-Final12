@@ -17,7 +17,7 @@ async function getSetting(env, key, fallback = '') {
 async function generateOrderNumber(env) {
     const today = new Date();
     const prefix = `HU-${today.getUTCFullYear()}${String(today.getUTCMonth() + 1).padStart(2, "0")}${String(today.getUTCDate()).padStart(2, "0")}`;
-    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM orders WHERE order_number LIKE ?").bind(`${prefix}-%`).first();
+    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM online_orders WHERE order_number LIKE ?").bind(`${prefix}-%`).first();
     const seq = String((row?.c || 0) + 1).padStart(4, "0");
     const rand = Math.floor(1000 + Math.random() * 9000);
     return `${prefix}-${seq}-${rand}`;
@@ -56,7 +56,7 @@ function formatOrder(o, items = null) {
         subtotal_amount: o.subtotal_amount || 0,
         discount_amount: o.discount_amount || 0,
         shipping_amount: o.shipping_amount || 0,
-        tax_amount: o.tax_amount || 0,
+        
         total_amount: o.total_amount || 0,
         coupon_code: o.coupon_code || null,
         tracking_number: o.tracking_number || null,
@@ -181,16 +181,15 @@ export async function createOrderRecord(env, input) {
     const shipCharge = Number(await getSetting(env, "shipping_standard_charge", "49")) || 49;
     const shippingAmount = subtotalAmount >= freeShipAbove ? 0 : shipCharge;
     const discountAmount = Number(input.discountAmount || 0);
-    const taxAmount = Number(input.taxAmount || 0);
-    const totalAmount = Math.max(0, Number((subtotalAmount + shippingAmount + taxAmount - discountAmount).toFixed(2)));
+        const totalAmount = Math.max(0, Number((subtotalAmount + shippingAmount - discountAmount).toFixed(2)));
     const orderNumber = input.orderNumber || await generateOrderNumber(env);
     const createdAt = new Date().toISOString();
     const source = String(input.source || "online");
 
     const result = await env.DB.prepare(
-        `INSERT INTO orders (order_number, user_id, customer_name, customer_email, customer_phone,
+        `INSERT INTO online_orders (order_number, user_id, customer_name, customer_email, customer_phone,
          address_line1, address_line2, city, state, pincode, country, delivery_method, coupon_code,
-         payment_method, payment_status, order_status, subtotal_amount, shipping_amount, tax_amount, discount_amount,
+         payment_method, payment_status, order_status, subtotal_amount, shipping_amount, discount_amount,
          total_amount, notes, source, created_at, updated_at)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     ).bind(
@@ -198,7 +197,7 @@ export async function createOrderRecord(env, input) {
         finalAddressLine1, addressLine2, finalCity, finalState, finalPincode, country,
         String(input.deliveryMethod || "standard"), input.couponCode || null,
         input.paymentMethod, input.paymentStatus, input.orderStatus,
-        subtotalAmount, shippingAmount, taxAmount, discountAmount,
+        subtotalAmount, shippingAmount, discountAmount,
         totalAmount, String(input.notes || "").trim(), source, createdAt, createdAt
     ).run();
 
@@ -213,7 +212,7 @@ export async function createOrderRecord(env, input) {
         }
     }
 
-    return { ok: true, order: { id: orderId, order_number: orderNumber, total_amount: totalAmount, subtotal_amount: subtotalAmount, shipping_amount: shippingAmount, tax_amount: taxAmount, discount_amount: discountAmount } };
+    return { ok: true, order: { id: orderId, order_number: orderNumber, total_amount: totalAmount, subtotal_amount: subtotalAmount, shipping_amount: shippingAmount: taxAmount, discount_amount: discountAmount } };
 }
 
 // ── MAIN ROUTER ──────────────────────────────────────────────────────────────
@@ -287,8 +286,7 @@ export async function ordersRouter(request, env) {
             const freeShipAbove = Number(await getSetting(env, "shipping_free_above", "799")) || 799;
             const shipCharge = Number(await getSetting(env, "shipping_standard_charge", "49")) || 49;
             const shippingAmount = subtotalAmount >= freeShipAbove ? 0 : shipCharge;
-            const taxAmount = 0;
-            const totalAmount = Math.max(0, Number((subtotalAmount + shippingAmount + taxAmount - discountAmount).toFixed(2)));
+                        const totalAmount = Math.max(0, Number((subtotalAmount + shippingAmount - discountAmount).toFixed(2)));
 
             const orderNumber = await generateOrderNumber(env);
 
@@ -362,7 +360,6 @@ export async function ordersRouter(request, env) {
                 discountAmount,
                 subtotalAmount,
                 shippingAmount,
-                taxAmount,
                 totalAmount,
                 orderNumber
             };
@@ -393,9 +390,9 @@ export async function ordersRouter(request, env) {
             const limit = Math.min(50, parseInt(params.get('limit') || '10'));
             const offset = (page - 1) * limit;
 
-            const countRow = await env.DB.prepare('SELECT COUNT(*) as cnt FROM orders WHERE user_id = ?').bind(user.id).first();
+            const countRow = await env.DB.prepare('SELECT COUNT(*) as cnt FROM online_orders WHERE user_id = ?').bind(user.id).first();
             const ordersRes = await env.DB.prepare(
-                `SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`
+                `SELECT * FROM online_orders WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`
             ).bind(user.id, limit, offset).all();
 
             const orders = [];
@@ -428,7 +425,7 @@ export async function ordersRouter(request, env) {
         try {
             const order = await env.DB.prepare(
                 `SELECT order_number, order_status, payment_status, tracking_number, tracking_url, shipped_at, delivered_at, created_at
-                 FROM orders WHERE order_number = ?`
+                 FROM online_orders WHERE order_number = ?`
             ).bind(orderNumber.toUpperCase()).first();
             if (!order) return notFound('Order not found');
             return ok(order);
@@ -443,7 +440,7 @@ export async function ordersRouter(request, env) {
         if (authErr) return authErr;
         const id = parseInt(path.match(/(\d+)/)?.[1]);
         try {
-            const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').bind(id, user.id).first();
+            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ? AND user_id = ?').bind(id, user.id).first();
             if (!order) return notFound('Order not found');
             const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(id).all();
             const items = (itemsRes.results || []).map(formatItem);
@@ -459,7 +456,7 @@ export async function ordersRouter(request, env) {
         if (authErr) return authErr;
         const id = parseInt(path.match(/(\d+)/)?.[1]);
         try {
-            const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').bind(id, user.id).first();
+            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ? AND user_id = ?').bind(id, user.id).first();
             if (!order) return notFound('Order not found');
 
             if (order.order_status !== 'delivered')
@@ -477,7 +474,7 @@ export async function ordersRouter(request, env) {
             if (!reason?.trim()) return error('Exchange reason is required', 400);
 
             await env.DB.prepare(
-                `UPDATE orders SET order_status = 'exchange_requested', exchange_reason = ?, exchange_product = ?, updated_at = datetime('now') WHERE id = ?`
+                `UPDATE online_orders SET order_status = 'exchange_requested', exchange_reason = ?, exchange_product = ?, updated_at = datetime('now') WHERE id = ?`
             ).bind(reason.trim(), exchange_product || null, id).run();
 
             return ok(null, 'Exchange request submitted successfully');
@@ -514,9 +511,9 @@ export async function ordersRouter(request, env) {
 
             const whereSQL = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
-            const countRow = await env.DB.prepare(`SELECT COUNT(*) as cnt FROM orders ${whereSQL}`).bind(...binds).first();
+            const countRow = await env.DB.prepare(`SELECT COUNT(*) as cnt FROM online_orders ${whereSQL}`).bind(...binds).first();
             const ordersRes = await env.DB.prepare(
-                `SELECT * FROM orders ${whereSQL} ORDER BY id DESC LIMIT ? OFFSET ?`
+                `SELECT * FROM online_orders ${whereSQL} ORDER BY id DESC LIMIT ? OFFSET ?`
             ).bind(...binds, limit, offset).all();
 
             const total = countRow?.cnt || 0;
@@ -546,7 +543,7 @@ export async function ordersRouter(request, env) {
              SUM(CASE WHEN payment_status = 'paid' THEN total_amount ELSE 0 END) as revenue,
              SUM(discount_amount) as total_discount,
              COUNT(DISTINCT user_id) as unique_customers
-           FROM orders`
+           FROM online_orders`
             ).first();
 
             return ok(stats);
@@ -561,7 +558,7 @@ export async function ordersRouter(request, env) {
         if (authErr) return authErr;
         const id = parseInt(path.match(/(\d+)/)?.[1]);
         try {
-            const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
+            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ?').bind(id).first();
             if (!order) return notFound('Order not found');
             const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(id).all();
             const items = (itemsRes.results || []).map(formatItem);
@@ -582,7 +579,7 @@ export async function ordersRouter(request, env) {
             if (!status) return error('Status is required', 400);
 
             // Get current status before updating
-            const currentOrder = await env.DB.prepare('SELECT order_status FROM orders WHERE id = ?').bind(id).first();
+            const currentOrder = await env.DB.prepare('SELECT order_status FROM online_orders WHERE id = ?').bind(id).first();
 
             const sets = ['order_status = ?', "updated_at = datetime('now')"];
             const binds = [status];
@@ -603,14 +600,14 @@ export async function ordersRouter(request, env) {
 
             binds.push(id);
 
-            await env.DB.prepare(`UPDATE orders SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
+            await env.DB.prepare(`UPDATE online_orders SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
 
             // Restore stock if order is being cancelled (and wasn't already cancelled)
             if (status === 'cancelled' && currentOrder?.order_status !== 'cancelled') {
                 await restoreSizeStock(env, id);
             }
 
-            const updated = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
+            const updated = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ?').bind(id).first();
             return ok(formatOrder(updated), 'Order status updated');
         } catch (e) {
             console.error('Update status error:', e);
@@ -630,7 +627,7 @@ export async function ordersRouter(request, env) {
 
             const status = action === 'approve' ? 'exchange_approved' : 'exchange_rejected';
             await env.DB.prepare(
-                `UPDATE orders SET order_status = ?, updated_at = datetime('now') WHERE id = ?`
+                `UPDATE online_orders SET order_status = ?, updated_at = datetime('now') WHERE id = ?`
             ).bind(status, id).run();
 
             return ok(null, `Exchange request ${action}d`);

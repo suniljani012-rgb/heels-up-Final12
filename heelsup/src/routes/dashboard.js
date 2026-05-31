@@ -870,7 +870,7 @@ function buildOrderModalBody(o, razorpayLocked) {
       <div class="amounts-grid">
         <div class="amount-row"><span>Subtotal</span><strong>${fmtRs(o.subtotal_amount || 0)}</strong></div>
         <div class="amount-row"><span>Shipping</span><strong>${fmtRs(o.shipping_amount || 0)}</strong></div>
-        ${o.tax_amount ? `<div class="amount-row"><span>Tax (GST)</span><strong>${fmtRs(o.tax_amount)}</strong></div>` : ''}
+        
         ${o.discount_amount > 0 ? `<div class="amount-row discount"><span>Discount ${o.coupon_code ? `<span class="badge badge-confirmed" style="margin-left:4px">${esc(o.coupon_code)}</span>` : ''}</span><strong>-${fmtRs(o.discount_amount)}</strong></div>` : ''}
         <div class="amount-row total" style="grid-column:1/-1"><span>Total</span><strong>${fmtRs(o.total_amount || 0)}</strong></div>
       </div>
@@ -1066,8 +1066,8 @@ function printInvoiceData(o) {
     win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice — ${esc(o.order_number || '#' + o.id)}</title>
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Open Sans',Arial,sans-serif;font-size:13px;color:#1E1E2C;padding:32px;background:#fff}.inv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #F29F67}.brand{font-size:1.8rem;font-weight:800;color:#F29F67}.brand small{display:block;font-size:.65rem;font-weight:400;color:#64748B;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}.inv-meta{text-align:right}.inv-meta h2{font-size:1.1rem;font-weight:700;margin-bottom:4px}.inv-meta p{font-size:.78rem;color:#64748B;margin-bottom:2px}.inv-body{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}.inv-sec h3{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:8px}.inv-sec p{font-size:.85rem;line-height:1.6}table{width:100%;border-collapse:collapse;margin-bottom:16px}thead th{text-align:left;padding:8px 10px;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#64748B;background:#F8FAFC;border-bottom:2px solid #E4E8F0}tbody td{padding:10px;font-size:.83rem;border-bottom:1px solid #F5F7FA}.totals{margin-left:auto;width:260px}.total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:.83rem;border-bottom:1px solid #F5F7FA}.total-row.grand{font-weight:800;font-size:1rem;color:#F29F67;border-top:2px solid #F29F67;border-bottom:none;padding-top:8px;margin-top:4px}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #E4E8F0;text-align:center;font-size:.72rem;color:#94A3B8}@media print{body{padding:16px}}</style>
 </head><body>
-<div class="inv-header"><div><div class="brand">HeelsUp<small>Ladies Footwear & Bags · Jodhpur, Rajasthan</small></div><div style="font-size:.75rem;color:#64748B;margin-top:8px">GSTIN: 08XXXXX0000X1Z5</div></div>
-<div class="inv-meta"><h2>TAX INVOICE</h2><p><strong>${esc(o.order_number || '#' + o.id)}</strong></p><p>Date: ${fmtDate(o.created_at, true)}</p><p style="margin-top:6px"><strong>${(o.order_status || 'Placed').toUpperCase()}</strong></p></div></div>
+<div class="inv-header"><div><div class="brand">HeelsUp<small>Ladies Footwear & Bags · Jodhpur, Rajasthan</small></div><div style="font-size:.75rem;color:#64748B;margin-top:8px"></div></div>
+<div class="inv-meta"><h2>INVOICE</h2><p><strong>${esc(o.order_number || '#' + o.id)}</strong></p><p>Date: ${fmtDate(o.created_at, true)}</p><p style="margin-top:6px"><strong>${(o.order_status || 'Placed').toUpperCase()}</strong></p></div></div>
 <div class="inv-body">
 <div class="inv-sec"><h3>Bill To</h3><p><strong>${esc(o.customer_name || 'Customer')}</strong><br>${esc(o.customer_email || '')}<br>${esc(o.customer_phone || '')}</p></div>
 <div class="inv-sec"><h3>Ship To</h3><p>${esc(o.address_line1 || '')}${o.address_line2 ? ', ' + esc(o.address_line2) : ''}<br>${[o.city, o.state, o.pincode].filter(Boolean).map(esc).join(', ')}<br>${esc(o.country || 'India')}</p></div>
@@ -1080,7 +1080,7 @@ ${items.length ? items.map((it, i) => `<tr><td>${i + 1}</td><td>${esc(it.product
 <div class="totals">
 <div class="total-row"><span>Subtotal</span><span>₹${Number(o.subtotal_amount || 0).toLocaleString('en-IN')}</span></div>
 <div class="total-row"><span>Shipping</span><span>₹${Number(o.shipping_amount || 0).toLocaleString('en-IN')}</span></div>
-${o.tax_amount ? `<div class="total-row"><span>GST</span><span>₹${Number(o.tax_amount).toLocaleString('en-IN')}</span></div>` : ''}
+
 ${o.discount_amount > 0 ? `<div class="total-row" style="color:#34B1AA"><span>Discount${o.coupon_code ? ' (' + esc(o.coupon_code) + ')' : ''}</span><span>-₹${Number(o.discount_amount).toLocaleString('en-IN')}</span></div>` : ''}
 <div class="total-row grand"><span>TOTAL</span><span>₹${Number(o.total_amount || 0).toLocaleString('en-IN')}</span></div>
 </div>
@@ -1093,11 +1093,11 @@ ${o.discount_amount > 0 ? `<div class="total-row" style="color:#34B1AA"><span>Di
 
 function exportOrdersCSV() {
     if (!filteredOrders.length) { toast('No orders to export', 'info'); return; }
-    const headers = ['Order#', 'Date', 'Customer', 'Email', 'Phone', 'City', 'State', 'Pincode', 'Subtotal', 'Shipping', 'Discount', 'Tax', 'Total', 'Payment Method', 'Payment Status', 'Order Status', 'Razorpay Order ID', 'Razorpay Payment ID', 'Tracking#', 'Source', 'Coupon'];
+    const headers = ['Order#', 'Date', 'Customer', 'Email', 'Phone', 'City', 'State', 'Pincode', 'Subtotal', 'Shipping', 'Discount', 'Total', 'Payment Method', 'Payment Status', 'Order Status', 'Razorpay Order ID', 'Razorpay Payment ID', 'Tracking#', 'Source', 'Coupon'];
     const rows = filteredOrders.map(o => [
         o.order_number || o.id, fmtDate(o.created_at, true), o.customer_name || '', o.customer_email || '', o.customer_phone || '',
         o.city || '', o.state || '', o.pincode || '',
-        o.subtotal_amount || 0, o.shipping_amount || 0, o.discount_amount || 0, o.tax_amount || 0, o.total_amount || 0,
+        o.subtotal_amount || 0, o.shipping_amount || 0, o.discount_amount || 0, o.0, o.total_amount || 0,
         o.payment_method || '', o.payment_status || '', o.order_status || '',
         o.razorpay_order_id || '', o.razorpay_payment_id || '',
         o.tracking_number || '', o.source || 'online', o.coupon_code || '',

@@ -230,17 +230,17 @@ export async function authRouter(request, env) {
             }
 
             // Check if email exists
-            const existing = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+            const existing = await env.DB.prepare('SELECT id FROM online_customers WHERE email = ?').bind(email).first();
             if (existing) return error('An account with this email already exists', 409);
 
             const hashed = await hashPassword(password);
             const now = nowIso();
             const result = await env.DB.prepare(
-                'INSERT INTO users (first_name, last_name, email, phone, password_hash, role, email_verified, staff_permissions, created_at, updated_at) VALUES (?, ?, ?, ?, ?, \'customer\', 1, \'[]\', ?, ?)'
+                'INSERT INTO online_customers (first_name, last_name, email, phone, password_hash, role, email_verified, staff_permissions, created_at, updated_at) VALUES (?, ?, ?, ?, ?, \'customer\', 1, \'[]\', ?, ?)'
             ).bind(firstName, lastName, email, phone || null, hashed, now, now).run();
 
             const userId = result.meta?.last_row_id;
-            const user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
+            const user = await env.DB.prepare('SELECT * FROM online_customers WHERE id = ?').bind(userId).first();
             const mapped = mapUser(user);
 
             const token = await signJWT({ id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name }, env.JWT_SECRET);
@@ -267,9 +267,16 @@ export async function authRouter(request, env) {
             const attempts = parseInt(await env.KV.get(rateLimitKey) || '0');
             if (attempts >= 5) return error('Too many login attempts. Try after 1 minute.', 429);
 
-            const user = await env.DB.prepare(
-                'SELECT * FROM users WHERE email = ?'
-            ).bind(email).first();
+                        let user = await env.DB.prepare("SELECT *, 'admin' as role FROM admins WHERE email = ?").bind(email).first();
+            let tableName = 'admins';
+            if (!user) {
+                user = await env.DB.prepare("SELECT *, 'staff' as role FROM staff WHERE email = ?").bind(email).first();
+                tableName = 'staff';
+            }
+            if (!user) {
+                user = await env.DB.prepare("SELECT *, 'customer' as role FROM online_customers WHERE email = ?").bind(email).first();
+                tableName = 'online_customers';
+            }
 
             if (!user || !(await verifyPassword(password, user.password_hash))) {
                 await env.KV.put(rateLimitKey, String(attempts + 1), { expirationTtl: 60 });
@@ -345,7 +352,7 @@ export async function authRouter(request, env) {
 
             // ── Normal login (customer) or admin fallback if OTP email failed ──
             const now = nowIso();
-            await env.DB.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').bind(now, user.id).run();
+            await env.DB.prepare(`UPDATE ${tableName} SET last_login_at = ? WHERE id = ?`).bind(now, user.id).run();
             user.last_login_at = now;
 
             const token = await signJWT(
@@ -402,11 +409,20 @@ export async function authRouter(request, env) {
             await env.KV.delete(otpKey);
             await env.KV.delete(`otp_resend:admin_login:${email}`);
 
-            const user = await env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email).first();
+                        let user = await env.DB.prepare("SELECT *, 'admin' as role FROM admins WHERE email = ?").bind(email).first();
+            let tableName = 'admins';
+            if (!user) {
+                user = await env.DB.prepare("SELECT *, 'staff' as role FROM staff WHERE email = ?").bind(email).first();
+                tableName = 'staff';
+            }
+            if (!user) {
+                user = await env.DB.prepare("SELECT *, 'customer' as role FROM online_customers WHERE email = ?").bind(email).first();
+                tableName = 'online_customers';
+            }
             if (!user || user.is_blocked) return unauthorized('Account not accessible.');
 
             const now = nowIso();
-            await env.DB.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').bind(now, user.id).run();
+            await env.DB.prepare(`UPDATE ${tableName} SET last_login_at = ? WHERE id = ?`).bind(now, user.id).run();
 
             const mapped = mapUser(user);
             const token = await signJWT(
@@ -434,9 +450,13 @@ export async function authRouter(request, env) {
         const { user, error: authError } = await requireAuth(request, env);
         if (authError) return authError;
 
-        const dbUser = await env.DB.prepare(
-            'SELECT * FROM users WHERE id = ?'
-        ).bind(user.id).first();
+                let dbUser = await env.DB.prepare("SELECT *, 'admin' as role FROM admins WHERE id = ?").bind(user.id).first();
+        if (!dbUser || dbUser.role !== user.role) {
+            dbUser = await env.DB.prepare("SELECT *, 'staff' as role FROM staff WHERE id = ?").bind(user.id).first();
+        }
+        if (!dbUser || dbUser.role !== user.role) {
+            dbUser = await env.DB.prepare("SELECT *, 'customer' as role FROM online_customers WHERE id = ?").bind(user.id).first();
+        }
 
         if (!dbUser) return unauthorized('User not found');
         return ok({ user: mapUser(dbUser) });
@@ -459,7 +479,7 @@ export async function authRouter(request, env) {
             const email = normalizeEmail(body?.email);
             if (!email) return error('Email is required', 400);
 
-            const user = await env.DB.prepare('SELECT id FROM users WHERE email=?').bind(email).first();
+            const user = await env.DB.prepare('SELECT id FROM online_customers WHERE email=?').bind(email).first();
             if (!user) return ok({ email }, 'If this email exists, an OTP has been sent.');
 
             const hourAgo = new Date(Date.now() - 3600000).toISOString();
@@ -498,9 +518,9 @@ export async function authRouter(request, env) {
             if (!otpResult.ok) return error(otpResult.error, 400);
 
             const hash = await hashPassword(password);
-            await env.DB.prepare('UPDATE users SET password_hash=?, updated_at=? WHERE email=?').bind(hash, nowIso(), email).run();
+            await env.DB.prepare('UPDATE online_customers SET password_hash=?, updated_at=? WHERE email=?').bind(hash, nowIso(), email).run();
 
-            const user = await env.DB.prepare('SELECT id FROM users WHERE email=?').bind(email).first();
+            const user = await env.DB.prepare('SELECT id FROM online_customers WHERE email=?').bind(email).first();
             if (user) {
                 // Revoke active sessions
                 await env.DB.prepare('UPDATE sessions SET revoked=1 WHERE user_id=?').bind(user.id).run();
@@ -538,7 +558,7 @@ export async function authRouter(request, env) {
             }
 
             const email = normalizeEmail(data.email);
-            let user = await env.DB.prepare('SELECT * FROM users WHERE email=?').bind(email).first();
+            let user = await env.DB.prepare('SELECT * FROM online_customers WHERE email=?').bind(email).first();
 
             const now = nowIso();
             if (!user) {
@@ -549,20 +569,20 @@ export async function authRouter(request, env) {
                 const lname = data.family_name || '';
 
                 const result = await env.DB.prepare(
-                    "INSERT INTO users (first_name, last_name, email, password_hash, role, email_verified, staff_permissions, created_at, updated_at) VALUES (?, ?, ?, ?, 'customer', 1, '[]', ?, ?)"
+                    "INSERT INTO online_customers (first_name, last_name, email, password_hash, role, email_verified, staff_permissions, created_at, updated_at) VALUES (?, ?, ?, ?, 'customer', 1, '[]', ?, ?)"
                 ).bind(fname, lname, email, hash, now, now).run();
 
                 const userId = result.meta?.last_row_id;
-                user = await env.DB.prepare('SELECT * FROM users WHERE id=?').bind(userId).first();
+                user = await env.DB.prepare('SELECT * FROM online_customers WHERE id=?').bind(userId).first();
             } else if (!user.email_verified) {
-                await env.DB.prepare('UPDATE users SET email_verified=1, updated_at=? WHERE id=?').bind(now, user.id).run();
+                await env.DB.prepare('UPDATE online_customers SET email_verified=1, updated_at=? WHERE id=?').bind(now, user.id).run();
                 user.email_verified = 1;
             }
 
             if (user.is_blocked) return error('Your account has been suspended. Contact support.', 403);
 
             // Update last login
-            await env.DB.prepare('UPDATE users SET last_login_at=? WHERE id=?').bind(now, user.id).run();
+            await env.DB.prepare('UPDATE online_customers SET last_login_at=? WHERE id=?').bind(now, user.id).run();
             user.last_login_at = now;
 
             const mapped = mapUser(user);
@@ -584,17 +604,17 @@ export async function authRouter(request, env) {
             const { name, email, password, secret } = await request.json();
             if (secret !== env.ADMIN_SECRET) return unauthorized('Invalid secret');
 
-            const existing = await env.DB.prepare('SELECT id FROM users WHERE role = \'admin\' LIMIT 1').first();
+            const existing = await env.DB.prepare('SELECT id FROM online_customers WHERE role = \'admin\' LIMIT 1').first();
             if (existing) return error('Admin already exists', 409);
 
             const hashed = await hashPassword(password);
             const now = nowIso();
             const result = await env.DB.prepare(
-                'INSERT INTO users (first_name, last_name, email, password_hash, role, email_verified, staff_permissions, created_at, updated_at) VALUES (?, \'\', ?, ?, \'admin\', 1, \'[]\', ?, ?)'
+                'INSERT INTO online_customers (first_name, last_name, email, password_hash, role, email_verified, staff_permissions, created_at, updated_at) VALUES (?, \'\', ?, ?, \'admin\', 1, \'[]\', ?, ?)'
             ).bind(name, email.toLowerCase().trim(), hashed, now, now).run();
 
             const userId = result.meta?.last_row_id;
-            const user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
+            const user = await env.DB.prepare('SELECT * FROM online_customers WHERE id = ?').bind(userId).first();
             const mapped = mapUser(user);
 
             const token = await signJWT({ id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name }, env.JWT_SECRET);
@@ -618,10 +638,10 @@ export async function authRouter(request, env) {
             if (!firstName) return error('First Name is required');
 
             await env.DB.prepare(
-                'UPDATE users SET first_name = ?, last_name = ?, phone = ?, updated_at = ? WHERE id = ?'
+                'UPDATE online_customers SET first_name = ?, last_name = ?, phone = ?, updated_at = ? WHERE id = ?'
             ).bind(firstName, lastName, phone, nowIso(), user.id).run();
 
-            const updatedUser = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(user.id).first();
+            const updatedUser = await env.DB.prepare('SELECT * FROM online_customers WHERE id = ?').bind(user.id).first();
             return ok({ user: mapUser(updatedUser) }, 'Profile updated successfully');
         } catch (e) {
             console.error('Profile update error:', e);
@@ -641,13 +661,13 @@ export async function authRouter(request, env) {
             if (!current || !newPass) return error('Current and new passwords are required');
             if (newPass.length < 8) return error('New password must be at least 8 characters');
 
-            const dbUser = await env.DB.prepare('SELECT password_hash FROM users WHERE id = ?').bind(user.id).first();
+            const dbUser = await env.DB.prepare('SELECT password_hash FROM online_customers WHERE id = ?').bind(user.id).first();
             if (!dbUser || !(await verifyPassword(current, dbUser.password_hash))) {
                 return error('Current password is incorrect');
             }
 
             const hash = await hashPassword(newPass);
-            await env.DB.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?').bind(hash, nowIso(), user.id).run();
+            await env.DB.prepare('UPDATE online_customers SET password_hash = ?, updated_at = ? WHERE id = ?').bind(hash, nowIso(), user.id).run();
 
             return ok(null, 'Password changed successfully');
         } catch (e) {

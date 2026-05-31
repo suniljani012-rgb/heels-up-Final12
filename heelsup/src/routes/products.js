@@ -53,7 +53,7 @@ function mapProduct(p, sizeStock = []) {
     sold_count: Number(p.sold_count || 0),
     sales: Number(p.sold_count || 0),
     sales_count: Number(p.sold_count || 0),
-    gst_percent: Number(p.gst_percent || 0),
+    
     category_id: p.category_id || null,
     description: p.description || "",
     sizes: sizes,
