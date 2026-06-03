@@ -1,2 +1,0 @@
--- MOVED to scripts/fixes/get_product.sql
--- This was a scratch/debug query and does not belong in migrations.

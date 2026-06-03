@@ -1,2 +1,0 @@
--- MOVED to schema/seeds/insert_defaults.sql
--- Seed data does not belong in migrations; use schema/seeds/ for data seeding scripts.

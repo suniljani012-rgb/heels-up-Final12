@@ -1,2 +1,0 @@
--- MOVED to scripts/fixes/list_tables.sql
--- This was a scratch/debug query and does not belong in migrations.

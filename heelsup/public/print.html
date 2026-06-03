@@ -4,60 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HeelsUp Print System</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
-        
-        body { font-family: 'Outfit', sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
-        .print-ui-wrapper { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h2 { text-align: center; font-family: 'Playfair Display', serif; }
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
-        button { padding: 10px 16px; background: #000; color: #fff; border: none; cursor: pointer; border-radius: 4px; font-family: 'Outfit', sans-serif; font-weight: 500; }
-        button:hover { background: #333; }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 200px; font-family: 'Outfit', sans-serif; }
-        
-        #print-container { display: none; background: white; }
-        
-        /* ─── PRINT STYLES ───────────────────────────────── */
-        @media print {
-            body { background: white; padding: 0; margin: 0; }
-            .no-print, .print-ui-wrapper { display: none !important; }
-            #print-container { display: block !important; width: 100%; }
-            @page { margin: 0; }
-
-            /* A4 Online Invoice */
-            .template-a4 { width: 210mm; min-height: 297mm; padding: 20mm; margin: 0 auto; box-sizing: border-box; }
-            
-            /* Thermal Offline Receipt (A5 equivalent or 80mm width roll) */
-            .template-thermal { width: 80mm; padding: 5mm; margin: 0 auto; font-size: 12px; }
-            
-            /* 4x6 Packing Slip */
-            .template-4x6 { width: 101.6mm; height: 152.4mm; padding: 10mm; margin: 0 auto; box-sizing: border-box; }
-            
-            /* Shipping Label */
-            .template-label { width: 101.6mm; height: 152.4mm; padding: 10mm; margin: 0 auto; border: 2px solid #000; box-sizing: border-box; }
-
-            .header { text-align: center; margin-bottom: 20px; }
-            .header img { max-width: 150px; }
-            .header h1 { margin: 5px 0; font-size: 24px; font-family: 'Playfair Display', serif; }
-            .details { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 14px; }
-            .details div { width: 48%; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px; }
-            table th, table td { border-bottom: 1px solid #ddd; padding: 8px 4px; text-align: left; }
-            table th { font-weight: 600; border-top: 1px solid #000; border-bottom: 1px solid #000; }
-            .totals { text-align: right; font-size: 14px; }
-            .totals p { margin: 4px 0; }
-            .totals strong { font-size: 16px; }
-            .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #555; border-top: 1px dashed #ccc; padding-top: 10px; }
-
-            /* Thermal specific adjustments */
-            .template-thermal .header img { max-width: 100px; }
-            .template-thermal .header h1 { font-size: 18px; }
-            .template-thermal .details { flex-direction: column; font-size: 12px; }
-            .template-thermal .details div { width: 100%; margin-bottom: 10px; }
-            .template-thermal table { font-size: 12px; }
-            .template-thermal .footer { font-size: 10px; margin-top: 20px; }
-        }
-    </style>
+    
+    <link rel="stylesheet" href="/css/customer-theme.css">
+    <link rel="stylesheet" href="/css/pages/print.css">
 </head>
 <body>
     <div class="print-ui-wrapper no-print">
