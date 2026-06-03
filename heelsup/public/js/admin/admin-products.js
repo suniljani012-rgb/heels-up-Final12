@@ -41,7 +41,7 @@
 
         // ── LOAD ──────────────────────────────────────────────────────────────────
         async function loadProducts() {
-            $('tableBody').innerHTML = '<tr><td colspan="8"><div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading products...</div></td></tr>';
+            $('tableBody').innerHTML = '<tr><td colspan="9"><div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading products...</div></td></tr>';
             try {
                 const t0 = performance.now();
                 const res = await HeelsUpAuth.api('/api/admin/products');
@@ -54,7 +54,7 @@
                 applyFilters();
             } catch (e) {
                 toast('Failed to load products: ' + (e.message || 'Network error'), 'error');
-                $('tableBody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);opacity:1"></i><h3 style="color:var(--danger)">Failed to load</h3><p>Check connection and retry.</p><button class="btn btn-sm btn-outline" onclick="loadProducts()" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Retry</button></div></td></tr>`;
+                $('tableBody').innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);opacity:1"></i><h3 style="color:var(--danger)">Failed to load</h3><p>Check connection and retry.</p><button class="btn btn-sm btn-outline" onclick="loadProducts()" style="margin-top:12px"><i class="fa-solid fa-arrows-rotate"></i> Retry</button></div></td></tr>`;
             }
         }
 
@@ -131,7 +131,7 @@
             $('pgInfo').innerHTML = `Showing <strong>${page.length ? start + 1 : 0}–${Math.min(start + pageSize, filtered.length)}</strong> of <strong>${filtered.length}</strong> products`;
 
             if (!page.length) {
-                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-box-open"></i><h3>No products found</h3><p>Try adjusting your search or filters.</p></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-box-open"></i><h3>No products found</h3><p>Try adjusting your search or filters.</p></div></td></tr>`;
                 renderPagination();
                 return;
             }
@@ -142,6 +142,7 @@
                 const mrp = parseFloat(p.mrp) || 0;
                 const act = isActive(p);
                 const selected = selectedIds.has(p.id);
+                const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
 
                 // Stock color
                 let sColor = 'var(--teal)', sLabel = `${stock} units`;
@@ -174,6 +175,12 @@
         <div style="font-weight:700">${fmtRs(price)}</div>
         ${mrp > price ? `<div class="td-sub" style="text-decoration:line-through">${fmtRs(mrp)}</div>
         <span class="discount-ribbon">-${disc}%</span>` : ''}
+      </td>
+      <td>
+        <button class="action-btn ${showMrp ? 'success' : ''}" title="${showMrp ? 'MRP visible — click to hide' : 'MRP hidden — click to show'}" onclick="toggleMrpVisibility(${p.id},${showMrp})" style="font-size:.75rem;padding:4px 8px;border-radius:20px;gap:4px">
+          <i class="fa-solid ${showMrp ? 'fa-tag' : 'fa-tag-slash'}"></i>
+          <span>${showMrp ? 'Visible' : 'Hidden'}</span>
+        </button>
       </td>
       <td>
         <div class="stock-wrap">
@@ -288,6 +295,7 @@
             $('fStock').value = p.stock || 0; $('fVariants').value = (p.sizes || []).join(',') || p.variants || '';
             $('fDesc').value = p.description || ''; $('fImageUrl').value = p.image_url || '';
             $('fActive').checked = isActive(p); $('fFeatured').checked = !!p.is_featured;
+            if ($('fShowMrp')) $('fShowMrp').checked = p.show_mrp !== false && p.show_mrp !== 0;
             $('imgPreviewWrap').innerHTML = p.image_url ? `<img src="${esc(p.image_url)}" class="img-preview">` : '';
             $('productModal').classList.add('show');
         }
@@ -353,7 +361,8 @@
                     sizes: $('fVariants').value.split(',').map(s => s.trim()).filter(Boolean),
                     image_url: allImages[0] || '', images: allImages,
                     is_active: publish ? ($('fActive').checked ? 1 : 0) : 0,
-                    is_featured: $('fFeatured').checked ? 1 : 0
+                    is_featured: $('fFeatured').checked ? 1 : 0,
+                    show_mrp: $('fShowMrp') ? ($('fShowMrp').checked ? 1 : 0) : 1
                 };
 
                 let saved;
@@ -391,6 +400,21 @@
                 toast(`Product ${currentlyActive ? 'deactivated' : 'activated'}`);
                 updateKPIs(); applyFilters();
             } catch (e) { toast(e.message || 'Failed', 'error'); }
+        }
+
+        // ── TOGGLE MRP VISIBILITY ──────────────────────────────────────────────────
+        async function toggleMrpVisibility(id, currentlyVisible) {
+            const newVal = currentlyVisible ? false : true;
+            try {
+                await HeelsUpAuth.api(`/api/admin/products/${id}/mrp-visibility`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ show_mrp: newVal })
+                });
+                const p = allProducts.find(x => x.id === id);
+                if (p) p.show_mrp = newVal ? 1 : 0;
+                toast(`MRP is now ${newVal ? 'visible' : 'hidden'} for customers`);
+                applyFilters();
+            } catch (e) { toast(e.message || 'Failed to toggle MRP', 'error'); }
         }
 
         // ── DELETE ────────────────────────────────────────────────────────────────

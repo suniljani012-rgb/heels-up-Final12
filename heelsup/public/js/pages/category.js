@@ -190,7 +190,8 @@
             const img = getImg(p) || FALLBACK_IMG;
             const price = Number(p.price) || 0;
             const mrp = Number(p.mrp || p.original_price) || 0;
-            const disc = mrp && price < mrp ? Math.round(100 - (price / mrp) * 100) : 0;
+            const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
+            const disc = showMrp && mrp && price < mrp ? Math.round(100 - (price / mrp) * 100) : 0;
             const rating = Math.round(Number(p.rating || p.avg_rating || 4.5));
             const stars = '★'.repeat(Math.min(rating, 5)) + '☆'.repeat(Math.max(0, 5 - rating));
             const rc = p.review_count || p.reviews_count || 0;
@@ -227,7 +228,7 @@
           <div class="prod-rating"><span class="prod-stars">${stars}</span><span class="prod-rc">${rc ? '(' + rc + ')' : ''}</span></div>
           <div class="prod-price">
             <span class="price-now">${fmtPrice(price)}</span>
-            ${mrp && disc > 0 ? `<span class="price-was">${fmtPrice(mrp)}</span><span class="price-off">-${disc}%</span>` : ''}
+            ${mrp && showMrp && disc > 0 ? `<span class="price-was">${fmtPrice(mrp)}</span><span class="price-off">-${disc}%</span>` : ''}
           </div>
         </div>
       </div>`;

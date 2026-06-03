@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -227,6 +227,7 @@
                                     <th>Product</th>
                                     <th>Category</th>
                                     <th>Price</th>
+                                    <th>MRP Visible</th>
                                     <th>Stock</th>
                                     <th>Sales</th>
                                     <th>Status</th>
@@ -235,7 +236,7 @@
                             </thead>
                             <tbody id="tableBody">
                                 <tr>
-                                    <td colspan="8">
+                                    <td colspan="9">
                                         <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading products...
                                         </div>
                                     </td>
@@ -328,6 +329,12 @@
                     <div class="form-check">
                         <input type="checkbox" id="fFeatured">
                         <label for="fFeatured">Featured product</label>
+                    </div>
+                    <div class="form-check" style="margin-top:8px">
+                        <input type="checkbox" id="fShowMrp" checked>
+                        <label for="fShowMrp">Show MRP (original price) to customers
+                            <span style="font-size:.75rem;color:var(--muted);display:block;margin-top:2px">When enabled, the strikethrough original price is visible on product pages &amp; listing cards</span>
+                        </label>
                     </div>
                 </div>
             </div>

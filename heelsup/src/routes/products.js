@@ -41,6 +41,7 @@ function mapProduct(p, sizeStock = []) {
     price: Number(p.price),
     original_price: p.original_price ? Number(p.original_price) : null,
     mrp: p.original_price ? Number(p.original_price) : null,
+    show_mrp: p.show_mrp !== undefined ? !!p.show_mrp : true,
     stock: effectiveStock,
     active: !!p.active,
     is_active: !!p.active,
@@ -358,12 +359,13 @@ export async function productsRouter(request, env) {
             if (!name || !sku || !price) return error('Name, SKU and price are required');
 
             const result = await env.DB.prepare(
-                `INSERT INTO products (name, sku, category, description, price, original_price, stock, active, featured, is_new, is_trending, sizes_json, images_json, brand, tags, meta_title, meta_description, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *`
+                `INSERT INTO products (name, sku, category, description, price, original_price, stock, active, featured, is_new, is_trending, show_mrp, sizes_json, images_json, brand, tags, meta_title, meta_description, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *`
             ).bind(
                 name, sku, category || null, description || null,
                 parseFloat(price), mrp ? parseFloat(mrp) : null,
                 parseInt(stock || 0), is_featured ? 1 : 0, is_new ? 1 : 0, is_trending ? 1 : 0,
+                body.show_mrp !== false ? 1 : 0,
                 JSON.stringify(sizes || []), JSON.stringify(images || []),
                 brand || null, JSON.stringify(tags || []),
                 meta_title || null, meta_desc || null
@@ -399,10 +401,11 @@ export async function productsRouter(request, env) {
 
             await env.DB.prepare(
                 `UPDATE products SET name=?, category=?, description=?, price=?, original_price=?,
-         sizes_json=?, images_json=?, brand=?, tags=?, is_new=?, is_trending=?, featured=?,
+         show_mrp=?, sizes_json=?, images_json=?, brand=?, tags=?, is_new=?, is_trending=?, featured=?,
          meta_title=?, meta_description=?, updated_at=datetime('now') WHERE id=?`
             ).bind(
                 name, category || null, description || null, parseFloat(price), mrp ? parseFloat(mrp) : null,
+                body.show_mrp !== false ? 1 : 0,
                 JSON.stringify(sizes || []), JSON.stringify(images || []),
                 brand || null, JSON.stringify(tags || []),
                 is_new ? 1 : 0, is_trending ? 1 : 0, is_featured ? 1 : 0,
@@ -477,6 +480,10 @@ export async function productsRouter(request, env) {
                 updates.push("is_trending=?");
                 binds.push(body.is_trending ? 1 : 0);
             }
+            if (body.show_mrp !== undefined) {
+                updates.push("show_mrp=?");
+                binds.push(body.show_mrp ? 1 : 0);
+            }
 
             // Log legacy stock change
             if (body.stock !== undefined && !body.size_stock) {
@@ -506,6 +513,32 @@ export async function productsRouter(request, env) {
         } catch (e) {
             console.error('PATCH product error:', e);
             return serverError('Failed to patch product');
+        }
+    }
+
+    // PATCH /api/products/:id/mrp-visibility — admin only: toggle MRP display to customers
+    if (path.match(/^\/\d+\/mrp-visibility$/) && method === 'PATCH') {
+        const { error: authError } = await requireAdmin(request, env);
+        if (authError) return authError;
+        const id = parseInt(path.split('/')[1]);
+        try {
+            const body = await request.json();
+            const showMrp = body.show_mrp !== undefined ? (body.show_mrp ? 1 : 0) : null;
+            if (showMrp === null) return error('show_mrp (boolean) is required', 400);
+
+            await env.DB.prepare(
+                "UPDATE products SET show_mrp=?, updated_at=datetime('now') WHERE id=?"
+            ).bind(showMrp, id).run();
+
+            const product = await env.DB.prepare(
+                "SELECT p.*, c.id as category_id FROM products p LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category) WHERE p.id=?"
+            ).bind(id).first();
+            if (!product) return notFound('Product not found');
+            const sizeStockRows = await fetchSizeStock(env, id);
+            return ok(mapProduct(product, sizeStockRows), showMrp ? 'MRP is now visible to customers' : 'MRP is now hidden from customers');
+        } catch (e) {
+            console.error('MRP visibility toggle error:', e);
+            return serverError('Failed to update MRP visibility');
         }
     }
 

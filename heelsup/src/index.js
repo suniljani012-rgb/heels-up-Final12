@@ -57,6 +57,7 @@ export default {
         pathNormalized === "/api/banners" ||
         pathNormalized === "/api/categories" ||
         pathNormalized === "/api/settings" ||
+        pathNormalized === "/api/settings/public" ||
         pathNormalized === "/api/products" ||
         pathNormalized === "/api/reviews" ||
         pathNormalized === "/api/search" ||

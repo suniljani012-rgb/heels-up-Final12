@@ -226,7 +226,8 @@
 
         function createCard(p) {
             const img = esc(getImg(p));
-            const disc = p.original_price && p.price < p.original_price ? Math.round(100 - (p.price / p.original_price) * 100) : 0;
+            const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
+            const disc = showMrp && p.original_price && p.price < p.original_price ? Math.round(100 - (p.price / p.original_price) * 100) : 0;
             const rating = Math.round(Number(p.rating) || 4.5);
             const stars = '★'.repeat(Math.min(rating, 5)) + '☆'.repeat(Math.max(5 - rating, 0));
             const rc = Number(p.review_count || p.reviews || 0) || Math.floor(Math.random() * 80) + 18;
@@ -252,7 +253,7 @@
             <div class="list-footer">
               <div class="prod-price">
                 <span class="price-now">${fmt(p.price)}</span>
-                ${p.original_price ? `<span class="price-was">${fmt(p.original_price)}</span><span class="price-off">-${disc}%</span>` : ''}
+                ${p.original_price && showMrp ? `<span class="price-was">${fmt(p.original_price)}</span><span class="price-off">-${disc}%</span>` : ''}
               </div>
               <div class="list-actions">
                 <button class="prod-wish-btn" onclick="toggleWish(${id},this)" style="position:static;backdrop-filter:none;" aria-label="Wishlist">
@@ -298,7 +299,7 @@
           </div>
           <div class="prod-price">
             <span class="price-now">${fmt(p.price)}</span>
-            ${p.original_price ? `<span class="price-was">${fmt(p.original_price)}</span><span class="price-off">-${disc}%</span>` : ''}
+            ${p.original_price && showMrp ? `<span class="price-was">${fmt(p.original_price)}</span><span class="price-off">-${disc}%</span>` : ''}
           </div>
         </div>
       </article>`;

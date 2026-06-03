@@ -174,7 +174,8 @@
     function makeCard(p) {
       const imgs = Array.isArray(p.images) ? p.images : [p.image_url];
       const img = esc(imgs[0] || 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=70');
-      const disc = p.original_price && p.price < p.original_price ? Math.round(100 - (p.price / p.original_price) * 100) : 0;
+      const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
+      const disc = showMrp && p.original_price && p.price < p.original_price ? Math.round(100 - (p.price / p.original_price) * 100) : 0;
       const rating = Math.round(Number(p.rating) || 4.5);
       const rc = Number(p.review_count || p.reviews || 0);
       const slug = encPath(p.slug || p.id);
@@ -192,7 +193,7 @@
       return `
         <article class="prod-card" aria-label="${name}">
           <div class="prod-img-wrap">
-            <a href="/product.html?id=">
+            <a href="/product.html?id=${id}">
               <img src="${img}" alt="${name}" loading="lazy">
             </a>
             <div class="prod-card-badges">
@@ -205,16 +206,16 @@
             </button>
             <div class="prod-hover-actions">
               <button onclick="quickAdd(${id})" class="prod-action-btn pab-primary"><i class="fa-solid fa-bag-shopping"></i> Add</button>
-              <a href="/product.html?id=" class="prod-action-btn pab-outline"><i class="fa-solid fa-eye"></i> View</a>
+              <a href="/product.html?id=${id}" class="prod-action-btn pab-outline"><i class="fa-solid fa-eye"></i> View</a>
             </div>
           </div>
           <div class="prod-body">
             <div class="prod-cat">${cat}</div>
-            <h3 class="prod-name"><a href="/product.html?id=">${name}</a></h3>
+            <h3 class="prod-name"><a href="/product.html?id=${id}">${name}</a></h3>
             <div class="prod-rating"><span class="prod-stars">${stars}</span> <span class="prod-rc">(${rc})</span></div>
             <div class="prod-price">
               <span class="price-now">${fmt(p.price)}</span>
-              ${p.original_price ? `<span class="price-was">${fmt(p.original_price)}</span> <span class="price-off">-${disc}%</span>` : ''}
+              ${p.original_price && showMrp ? `<span class="price-was">${fmt(p.original_price)}</span> <span class="price-off">-${disc}%</span>` : ''}
             </div>
           </div>
         </article>`;

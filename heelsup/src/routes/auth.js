@@ -344,14 +344,22 @@ export async function authRouter(request, env) {
 
             // ── Normal login (customer) or admin fallback if OTP email failed ──
             const now = nowIso();
-            await env.DB.prepare(`UPDATE ${tableName} SET last_login_at = ? WHERE id = ?`).bind(now, user.id).run();
+            await env.DB.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').bind(now, user.id).run();
             user.last_login_at = now;
+
+            // Admin/staff get 8-hour sessions (configurable); customers get 30-day persistent sessions
+            let tokenExpiry = 86400 * 30; // 30 days default for customers
+            if (isAdminUser) {
+                const timeoutHours = parseInt(await getSetting(env, 'session_timeout_hours', '8'));
+                tokenExpiry = (isNaN(timeoutHours) || timeoutHours < 1 ? 8 : timeoutHours) * 3600;
+            }
 
             const token = await signJWT(
                 { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name },
-                env.JWT_SECRET
+                env.JWT_SECRET,
+                tokenExpiry
             );
-            return ok({ token, user: mapped }, 'Login successful');
+            return ok({ token, user: mapped, expiresIn: tokenExpiry }, 'Login successful');
         } catch (e) {
             console.error('Login error:', e);
             return serverError('Login failed');
@@ -401,27 +409,32 @@ export async function authRouter(request, env) {
             await env.KV.delete(otpKey);
             await env.KV.delete(`otp_resend:admin_login:${email}`);
 
-                        const user = await env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
-            const tableName = 'users';
+            const user = await env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email).first();
             if (!user || user.is_blocked) return unauthorized('Account not accessible.');
 
             const now = nowIso();
-            await env.DB.prepare(`UPDATE ${tableName} SET last_login_at = ? WHERE id = ?`).bind(now, user.id).run();
+            await env.DB.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').bind(now, user.id).run();
 
             const mapped = mapUser(user);
+
+            // Use configurable session timeout for admin/staff (default 8 hours)
+            const timeoutHours = parseInt(await getSetting(env, 'session_timeout_hours', '8'));
+            const tokenExpiry = (isNaN(timeoutHours) || timeoutHours < 1 ? 8 : timeoutHours) * 3600;
+
             const token = await signJWT(
                 { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name },
-                env.JWT_SECRET
+                env.JWT_SECRET,
+                tokenExpiry
             );
 
-            // Log successful admin login to activity_log if table exists
+            // Log successful admin login to audit log
             try {
                 await env.DB.prepare(
-                    "INSERT OR IGNORE INTO activity_log (admin_id, action, entity, details, created_at) VALUES (?, 'login', 'auth', '2FA login successful', ?)"
+                    "INSERT OR IGNORE INTO admin_audit_logs (admin_id, action, details, created_at) VALUES (?, 'admin_login', '2FA login successful', ?)"
                 ).bind(mapped.id, now).run();
-            } catch (_) { /* activity_log may not exist */ }
+            } catch (_) { /* audit log insert error */ }
 
-            return ok({ token, user: mapped }, 'Login successful');
+            return ok({ token, user: mapped, expiresIn: tokenExpiry }, 'Login successful');
         } catch (e) {
             console.error('Admin verify OTP error:', e);
             return serverError('OTP verification failed');

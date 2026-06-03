@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -217,12 +217,31 @@
                             class="fa-solid fa-filter-circle-xmark"></i> Clear</button>
                 </div>
 
+                <!-- BULK ACTION BAR -->
+                <div class="bulk-bar" id="bulkBar" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:linear-gradient(135deg,var(--primary),#c2185b);border-radius:10px;margin-bottom:12px;color:#fff">
+                    <i class="fa-solid fa-check-square"></i>
+                    <span id="bulkCount">0 selected</span>
+                    <select id="bulkStatusSelect" class="filter-select" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);min-width:160px">
+                        <option value="">— Change Status —</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="out_for_delivery">Out for Delivery</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                    <input type="text" id="bulkTracking" class="filter-select" placeholder="Tracking # (optional)" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);min-width:160px">
+                    <button class="btn btn-sm" style="background:#fff;color:var(--primary);font-weight:700" onclick="bulkUpdateOrders()"><i class="fa-solid fa-bolt"></i> Apply to Selected</button>
+                    <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;margin-left:auto" onclick="clearBulkSelection()"><i class="fa-solid fa-xmark"></i> Clear</button>
+                </div>
+
                 <!-- TABLE -->
                 <div class="card">
                     <div class="tbl-scroll">
                         <table>
                             <thead>
                                 <tr>
+                                    <th style="width:40px"><input type="checkbox" id="selectAllOrders" onchange="toggleSelectAllOrders(this)" style="accent-color:var(--primary)"></th>
                                     <th>Order</th>
                                     <th>Date</th>
                                     <th>Customer</th>
@@ -235,7 +254,7 @@
                             </thead>
                             <tbody id="ordersTbody">
                                 <tr>
-                                    <td colspan="8">
+                                    <td colspan="9">
                                         <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading orders…
                                         </div>
                                     </td>

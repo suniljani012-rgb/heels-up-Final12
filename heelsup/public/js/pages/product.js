@@ -274,7 +274,8 @@
 
       // Price
       $('info-price').textContent = fmt(p.price);
-      if (p.original_price && p.original_price > p.price) {
+      const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
+      if (showMrp && p.original_price && p.original_price > p.price) {
         $('info-orig-price').textContent = fmt(p.original_price);
         $('info-orig-price').style.display = '';
         const disc = Math.round((1 - p.price / p.original_price) * 100);
@@ -298,7 +299,7 @@
 
       // Gallery
       const images = getImages(p);
-      renderGallery(images, p.stock === 0, p.is_new, p.original_price && p.original_price > p.price ? Math.round((1 - p.price / p.original_price) * 100) : 0);
+      renderGallery(images, p.stock === 0, p.is_new, showMrp && p.original_price && p.original_price > p.price ? Math.round((1 - p.price / p.original_price) * 100) : 0);
 
       // OOS Check
       if (p.stock === 0) {
@@ -558,7 +559,8 @@
     function buildProductCard(p) {
       const imgs = Array.isArray(p.images) ? p.images : [p.image_url || FALLBACK_IMAGES[0]];
       const img = esc(imgs[0] || FALLBACK_IMAGES[0]);
-      const disc = p.original_price && p.original_price > p.price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+      const showMrpCard = p.show_mrp !== false && p.show_mrp !== 0;
+      const disc = showMrpCard && p.original_price && p.original_price > p.price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
       const slug = encPath(p.slug || p.id);
 
       return `
@@ -585,7 +587,7 @@
             <div class="prod-rating"><span class="prod-stars">${buildStarsHTML(p.rating || 4.5)}</span> <span class="prod-rc">(${p.review_count || 0})</span></div>
             <div class="prod-price">
               <span class="price-now">${fmt(p.price)}</span>
-              ${p.original_price ? `<span class="price-was">${fmt(p.original_price)}</span>` : ''}
+              ${p.original_price && showMrpCard ? `<span class="price-was">${fmt(p.original_price)}</span>` : ''}
             </div>
           </div>
         </article>`;

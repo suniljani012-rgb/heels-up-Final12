@@ -20,6 +20,7 @@
         // ── STATE ─────────────────────────────────────────────────────────────────────
         let allOrders = [], filteredOrders = [], activeTab = 'all', currentPg = 1;
         let currentOrderData = null;
+        let selectedOrderIds = new Set();
         const PAGE_SIZE = 20;
         const cache = {};
 
@@ -123,7 +124,7 @@
                 toast(`${allOrders.length} orders loaded in ${ms}ms`, 'success');
             } catch (e) {
                 toast('Failed to load orders: ' + (e.message || 'Network error'), 'error');
-                $('ordersTbody').innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);opacity:1"></i><p style="color:var(--danger)">Failed to load. <button class="btn btn-sm btn-outline" onclick="loadOrders()" style="margin-left:8px"><i class="fa-solid fa-arrows-rotate"></i> Retry</button></p></div></td></tr>`;
+                $('ordersTbody').innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger);opacity:1"></i><p style="color:var(--danger)">Failed to load. <button class="btn btn-sm btn-outline" onclick="loadOrders()" style="margin-left:8px"><i class="fa-solid fa-arrows-rotate"></i> Retry</button></p></div></td></tr>`;
             } finally {
                 if (btn) { btn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> Refresh'; btn.disabled = false; }
             }
@@ -227,7 +228,7 @@
             const page = filteredOrders.slice(start, start + PAGE_SIZE);
 
             if (!filteredOrders.length) {
-                tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="fa-solid fa-bag-shopping"></i><p>No orders match your filters</p></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-bag-shopping"></i><p>No orders match your filters</p></div></td></tr>`;
                 pgInfo.textContent = 'Showing 0 orders'; pgEl.innerHTML = ''; return;
             }
 
@@ -237,7 +238,11 @@
                 const src = (o.source || 'online').toLowerCase();
                 const srcBadge = src === 'pos' ? '<span class="source-badge source-pos">POS</span>' : '<span class="source-badge source-online">Online</span>';
                 const razorLock = isRazorpayOrder(o) ? '<i class="fa-solid fa-lock" style="color:var(--purple);font-size:.65rem;margin-left:4px" title="Razorpay Verified"></i>' : '';
-                return `<tr onclick="openOrderModal(${o.id})" title="View Order">
+                const isSelected = selectedOrderIds.has(o.id);
+                return `<tr onclick="openOrderModal(${o.id})" title="View Order" style="${isSelected ? 'background:rgba(225,29,72,.06)' : ''}">
+      <td onclick="event.stopPropagation()">
+        <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleOrderSelect(${o.id}, this)" style="accent-color:var(--primary)">
+      </td>
       <td>
         <div class="td-name" style="color:var(--blue)">${esc(o.order_number || '#' + o.id)}</div>
         ${razorLock ? `<div class="td-sub">${razorLock} Razorpay</div>` : ''}
@@ -656,7 +661,79 @@
             toast(`Exported ${filteredOrders.length} orders`, 'success');
         }
 
-        // ── INIT ──────────────────────────────────────────────────────────────────────
+        // ── BULK ORDER SELECTION & UPDATE ──────────────────────────────────────────
+        function toggleOrderSelect(id, cb) {
+            if (cb.checked) selectedOrderIds.add(id);
+            else selectedOrderIds.delete(id);
+            updateBulkBar();
+        }
+
+        function toggleSelectAllOrders(cb) {
+            const start = (currentPg - 1) * PAGE_SIZE;
+            const page = filteredOrders.slice(start, start + PAGE_SIZE);
+            page.forEach(o => { if (cb.checked) selectedOrderIds.add(o.id); else selectedOrderIds.delete(o.id); });
+            renderTable();
+            updateBulkBar();
+        }
+
+        function updateBulkBar() {
+            const bar = $('bulkBar');
+            const count = selectedOrderIds.size;
+            if (count > 0) {
+                bar.style.display = 'flex';
+                $('bulkCount').textContent = `${count} order${count !== 1 ? 's' : ''} selected`;
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        function clearBulkSelection() {
+            selectedOrderIds.clear();
+            const allCb = $('selectAllOrders');
+            if (allCb) allCb.checked = false;
+            renderTable();
+            updateBulkBar();
+        }
+
+        async function bulkUpdateOrders() {
+            if (!selectedOrderIds.size) { toast('No orders selected', 'warning'); return; }
+            const status = $('bulkStatusSelect').value;
+            if (!status) { toast('Please select a status to apply', 'warning'); return; }
+            const tracking = ($('bulkTracking').value || '').trim();
+
+            if (status === 'cancelled' && !confirm(`Cancel ${selectedOrderIds.size} orders? Stock will be restored.`)) return;
+
+            try {
+                const payload = { ids: Array.from(selectedOrderIds), status };
+                if (tracking) payload.tracking_number = tracking;
+
+                const res = await HeelsUpAuth.api('/api/admin/orders/bulk-update', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                toast(`${res.updated || selectedOrderIds.size} orders updated to "${status}"`, 'success');
+                if (res.failed > 0) toast(`${res.failed} orders failed to update`, 'warning');
+
+                // Update local state
+                for (const id of selectedOrderIds) {
+                    const idx = allOrders.findIndex(x => x.id === id);
+                    if (idx > -1) {
+                        allOrders[idx].order_status = status;
+                        if (tracking) allOrders[idx].tracking_number = tracking;
+                    }
+                }
+
+                clearBulkSelection();
+                updateKPIs();
+                updateTabCounts();
+                applyFilters();
+            } catch (e) {
+                toast('Bulk update failed: ' + (e.message || 'Server error'), 'error');
+            }
+        }
+
+        // ── INIT ───────────────────────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             const orderId = params.get('id');

@@ -665,5 +665,78 @@ export async function ordersRouter(request, env) {
         }
     }
 
+    // ── POST /api/orders/admin/bulk-update ───────────────────────────────────
+    // Bulk update status for multiple orders at once
+    if (path === '/admin/bulk-update' && method === 'POST') {
+        const { error: authErr } = await requireAdmin(request, env);
+        if (authErr) return authErr;
+        try {
+            const body = await request.json();
+            const ids = Array.isArray(body.ids) ? body.ids.map(Number).filter(n => !isNaN(n) && n > 0) : [];
+            const status = String(body.status || '').trim();
+            const trackingNumber = body.tracking_number !== undefined ? String(body.tracking_number || '') : undefined;
+            const trackingUrl = body.tracking_url !== undefined ? String(body.tracking_url || '') : undefined;
+
+            if (!ids.length) return error('ids array is required and must not be empty', 400);
+            if (!status) return error('status is required', 400);
+
+            const VALID_STATUSES = ['placed', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered', 'cancelled', 'exchange_requested', 'exchange_approved', 'exchange_rejected'];
+            if (!VALID_STATUSES.includes(status)) {
+                return error(`Invalid status. Valid values: ${VALID_STATUSES.join(', ')}`, 400);
+            }
+
+            const sets = ["order_status = ?", "updated_at = datetime('now')"];
+            const baseBinds = [status];
+
+            if (status === 'confirmed') sets.push("confirmed_at = datetime('now')");
+            if (status === 'shipped') sets.push("shipped_at = datetime('now')");
+            if (status === 'out_for_delivery') sets.push("out_for_delivery_at = datetime('now')");
+            if (status === 'delivered') sets.push("delivered_at = datetime('now')");
+            if (status === 'cancelled') sets.push("cancelled_at = datetime('now')");
+
+            if (trackingNumber !== undefined) {
+                sets.push('tracking_number = ?');
+                baseBinds.push(trackingNumber);
+            }
+            if (trackingUrl !== undefined) {
+                sets.push('tracking_url = ?');
+                baseBinds.push(trackingUrl);
+            }
+
+            let updated = 0;
+            const errors = [];
+
+            for (const id of ids) {
+                try {
+                    // Check current status for stock restoration
+                    const current = await env.DB.prepare('SELECT order_status FROM orders WHERE id = ?').bind(id).first();
+                    if (!current) { errors.push({ id, error: 'Not found' }); continue; }
+
+                    await env.DB.prepare(
+                        `UPDATE orders SET ${sets.join(', ')} WHERE id = ?`
+                    ).bind(...baseBinds, id).run();
+
+                    // Restore stock for newly cancelled orders
+                    if (status === 'cancelled' && current.order_status !== 'cancelled') {
+                        await restoreSizeStock(env, id);
+                    }
+
+                    updated++;
+                } catch (err) {
+                    errors.push({ id, error: err.message || 'Update failed' });
+                }
+            }
+
+            return ok({
+                updated,
+                failed: errors.length,
+                errors: errors.length ? errors : undefined
+            }, `${updated} order(s) updated to "${status}"`);
+        } catch (e) {
+            console.error('Bulk update error:', e);
+            return serverError('Bulk update failed');
+        }
+    }
+
     return error('Route not found', 404);
 }
