@@ -1,800 +1,1874 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HeelsUp Admin — Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HeelsUp Admin — Dashboard</title>
 
-  
-    <link rel="stylesheet" href="/css/admin-theme.css">
-    <link rel="stylesheet" href="/css/admin/admin.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
+        rel="stylesheet" />
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+        /* ============================================================
+        ADMIN.HTML — DASHBOARD PAGE SPECIFIC STYLES
+        (These extend style.css, not override it)
+     ============================================================ */
+
+        body {
+            background: var(--admin-bg);
+        }
+
+        /* ---- SIDEBAR LOGO WORDMARK ---- */
+        .sidebar-brand {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--color-white);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-brand span {
+            color: var(--color-primary);
+        }
+
+        .sidebar-version {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* ---- REVENUE CHART (CSS SVG Line) ---- */
+        .revenue-chart-svg {
+            width: 100%;
+            height: 180px;
+            display: block;
+        }
+
+        /* ---- DONUT CHART COLORS ---- */
+        .donut-ring-1 {
+            stroke: var(--color-primary);
+        }
+
+        .donut-ring-2 {
+            stroke: var(--color-accent);
+        }
+
+        .donut-ring-3 {
+            stroke: var(--color-info);
+        }
+
+        .donut-ring-4 {
+            stroke: var(--color-success);
+        }
+
+        /* ---- MINI BAR CHART ---- */
+        .mini-bar-wrap {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 40px;
+        }
+
+        .mini-bar {
+            flex: 1;
+            border-radius: 3px 3px 0 0;
+            background: var(--color-primary-light);
+            transition: background var(--transition-fast);
+        }
+
+        .mini-bar.active {
+            background: var(--color-primary);
+        }
+
+        /* ---- INLINE QUICK ACTIONS ---- */
+        .quick-action-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--space-3);
+        }
+
+        .quick-action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: var(--space-4) var(--space-3);
+            background: var(--color-white);
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: var(--text-xs);
+            font-weight: var(--font-semibold);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .quick-action-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+            background: var(--color-primary-glow);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-gold);
+        }
+
+        .quick-action-btn i {
+            font-size: 1.3rem;
+        }
+
+        /* ---- ACTIVITY FEED ---- */
+        .activity-item {
+            display: flex;
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-dot-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            padding-top: 4px;
+        }
+
+        .activity-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .activity-line {
+            width: 2px;
+            flex: 1;
+            background: var(--border-color);
+            margin-top: 4px;
+            min-height: 24px;
+        }
+
+        .activity-item:last-child .activity-line {
+            display: none;
+        }
+
+        .activity-text {
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .activity-text strong {
+            font-weight: var(--font-semibold);
+        }
+
+        .activity-time {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* ---- TOP CUSTOMERS ---- */
+        .top-customer-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .top-customer-row:last-child {
+            border-bottom: none;
+        }
+
+        .tc-rank {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .tc-rank.gold {
+            color: #d4a017;
+        }
+
+        .tc-rank.silver {
+            color: #9e9e9e;
+        }
+
+        .tc-rank.bronze {
+            color: #c17c3c;
+        }
+
+        .tc-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tc-name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+        }
+
+        .tc-orders {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        .tc-amount {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            flex-shrink: 0;
+        }
+
+        /* ---- STOCK ALERTS ---- */
+        .stock-alert-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stock-alert-row:last-child {
+            border-bottom: none;
+        }
+
+        .stock-alert-img {
+            width: 38px;
+            height: 46px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+            flex-shrink: 0;
+            background: var(--color-light-3);
+            border: 1px solid var(--border-color);
+        }
+
+        .stock-alert-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .stock-alert-name {
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stock-alert-sku {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+        }
+
+        .stock-alert-qty {
+            font-size: var(--text-sm);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .qty-danger {
+            color: var(--color-error);
+        }
+
+        .qty-warn {
+            color: var(--color-warning);
+        }
+
+        /* ---- AREA CHART (polyline trick) ---- */
+        .chart-svg-wrap {
+            position: relative;
+            width: 100%;
+        }
+
+        .chart-svg-wrap svg {
+            display: block;
+            width: 100%;
+            height: 200px;
+            overflow: visible;
+        }
+
+        /* ---- WELCOME BANNER ---- */
+        .welcome-banner {
+            background: linear-gradient(120deg, var(--color-dark) 0%, #1a1008 60%, #2d1a05 100%);
+            border-radius: var(--admin-card-radius);
+            padding: var(--space-6) var(--space-8);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--space-6);
+            margin-bottom: var(--space-6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(201, 169, 110, 0.14) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .welcome-banner::after {
+            content: '';
+            position: absolute;
+            bottom: -60px;
+            left: 30%;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212, 69, 107, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .welcome-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        .welcome-greeting {
+            font-size: var(--text-xs);
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--color-primary-light);
+            margin-bottom: var(--space-1);
+        }
+
+        .welcome-name {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 300;
+            color: var(--color-white);
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+            margin-bottom: var(--space-2);
+        }
+
+        .welcome-name em {
+            font-style: italic;
+            color: var(--color-primary-light);
+        }
+
+        .welcome-meta {
+            font-size: var(--text-sm);
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .welcome-actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: var(--space-3);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        /* ---- CALENDAR HEATMAP ---- */
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 3px;
+            margin-top: var(--space-3);
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 3px;
+            background: var(--color-light-3);
+            transition: transform var(--transition-fast);
+            cursor: default;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.3);
+        }
+
+        .heatmap-cell.h1 {
+            background: rgba(201, 169, 110, 0.2);
+        }
+
+        .heatmap-cell.h2 {
+            background: rgba(201, 169, 110, 0.4);
+        }
+
+        .heatmap-cell.h3 {
+            background: rgba(201, 169, 110, 0.65);
+        }
+
+        .heatmap-cell.h4 {
+            background: var(--color-primary);
+        }
+
+        .heatmap-days {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-bottom: var(--space-1);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* ---- MOBILE SIDEBAR OVERLAY ---- */
+        .admin-sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-overlay);
+            z-index: calc(var(--z-sticky) - 1);
+            display: none;
+        }
+
+        .admin-sidebar-overlay.open {
+            display: block;
+        }
+
+        /* ---- PAGE TRANSITIONS ---- */
+        .admin-content {
+            animation: fadeInUp 0.4s ease forwards;
+        }
+
+        /* ---- NOTIFICATION PANEL WRAPPER ---- */
+        .notif-wrapper {
+            position: relative;
+        }
+
+        /* ---- SCROLLBAR for sidebar ---- */
+        .admin-sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .admin-sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        /* ---- CHART TOOLTIP ---- */
+        .chart-tooltip {
+            position: absolute;
+            background: var(--color-dark);
+            color: var(--color-white);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* ---- ORDER ACTIONS DROPDOWN ---- */
+        .order-actions-dd {
+            position: relative;
+        }
+
+        .order-dd-menu {
+            position: absolute;
+            right: 0;
+            top: calc(100% + 6px);
+            background: var(--color-white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            min-width: 160px;
+            z-index: 50;
+            display: none;
+            overflow: hidden;
+        }
+
+        .order-dd-menu.open {
+            display: block;
+            animation: fadeInDown 0.2s ease forwards;
+        }
+
+        .order-dd-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-4);
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        .order-dd-item:hover {
+            background: var(--color-light);
+            color: var(--color-primary);
+        }
+
+        .order-dd-item.danger:hover {
+            background: var(--color-error-light);
+            color: var(--color-error);
+        }
+
+        /* NEW: Custom Badge for Channels (Offline vs Online) */
+        .badge-channel {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 6px;
+        }
+
+        .badge-channel.offline {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+
+        .badge-channel.online {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .quick-action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .welcome-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quick-action-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .welcome-actions {
+                width: 100%;
+            }
+
+            .welcome-actions .btn {
+                flex: 1;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .quick-action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-  <!-- ══ AUTH GUARD ══ -->
-  <div id="authGuard">
-    <i class="fa-solid fa-shield-halved" style="font-size:3.5rem;color:var(--danger)"></i>
-    <h2 style="color:#fff;font-size:1.8rem;font-weight:700">Access Denied</h2>
-    <p style="color:#64748B;font-size:.9rem;text-align:center;max-width:320px">You don't have permission. Please log in
-      as admin.</p>
-    <a href="login.html?redirect=admin.html" class="btn btn-primary" style="margin-top:8px">
-      <i class="fa-solid fa-arrow-right-to-bracket"></i> Go to Login
-    </a>
-  </div>
+    <!-- ================================
+     ADMIN LAYOUT WRAPPER
+================================ -->
+    <div class="admin-layout">
 
-  <!-- ══ PROGRESS BAR ══ -->
-  <div id="nprogress" style="width:0"></div>
-
-  <!-- ══ TOAST ══ -->
-  <div class="toast-wrap" id="toastWrap"></div>
-
-  <!-- ══ MOBILE OVERLAY ══ -->
-  <div class="mob-overlay" id="mobOverlay" onclick="closeSidebar()"></div>
-
-  <div class="layout">
-
-    <!-- ══════════════════════════════════════════
-         SIDEBAR
-    ══════════════════════════════════════════ -->
-    <aside class="sidebar" id="sidebar">
-
-      <div class="sidebar-brand">
-        <div class="brand-logo">
-          <span id="logoFallback">H</span>
-          <img src="logo.png" alt="HeelsUp" style="width:44px;height:44px;object-fit:contain;display:none"
-            onload="this.style.display='block';document.getElementById('logoFallback').style.display='none'"
-            onerror="this.style.display='none'">
-        </div>
-        <div class="brand-text">
-          <strong>HeelsUp</strong>
-          <span>Admin Panel</span>
-        </div>
-      </div>
-
-      <nav class="sidebar-nav">
-        <div class="nav-section">Main</div>
-        <div class="nav-item active" data-sec="dashboard" onclick="navTo(this)">
-          <i class="fa-solid fa-gauge-high"></i> Dashboard
-        </div>
-
-        <div class="nav-section">Catalogue</div>
-        <div class="nav-item" data-sec="products" onclick="navTo(this)">
-          <i class="fa-solid fa-box"></i> Products
-        </div>
-        <a href="admin-categories.html" class="nav-item"><i class="fa-solid fa-layer-group"></i> Categories</a>
-        <a href="admin-collections.html" class="nav-item"><i class="fa-solid fa-swatchbook"></i> Collections</a>
-        <a href="admin-inventory.html" class="nav-item"><i class="fa-solid fa-warehouse"></i> Inventory</a>
-
-        <div class="nav-section">Sales &amp; Customers</div>
-        <div class="nav-item" data-sec="orders" onclick="navTo(this)">
-          <i class="fa-solid fa-bag-shopping"></i> Orders
-          <span class="nav-badge" id="ordersBadge" style="display:none">0</span>
-        </div>
-        <div class="nav-item" data-sec="customers" onclick="navTo(this)">
-          <i class="fa-solid fa-users"></i> Customers
-        </div>
-        <div class="nav-item" data-sec="coupons" onclick="navTo(this)">
-          <i class="fa-solid fa-ticket"></i> Coupons
-        </div>
-        <div class="nav-item" data-sec="reviews" onclick="navTo(this)">
-          <i class="fa-solid fa-star"></i> Reviews
-        </div>
-        <a href="admin-pos.html" class="nav-item"><i class="fa-solid fa-cash-register"></i> POS / Offline</a>
-
-        <div class="nav-section">Marketing</div>
-        <a href="admin-banners.html" class="nav-item"><i class="fa-solid fa-image"></i> Banners</a>
-        <a href="admin-blog.html" class="nav-item"><i class="fa-solid fa-newspaper"></i> Blog</a>
-        <a href="admin-pages.html" class="nav-item"><i class="fa-solid fa-file-lines"></i> Pages</a>
-        <a href="admin-notifications.html" class="nav-item"><i class="fa-solid fa-bell"></i> Notifications</a>
-
-        <div class="nav-section">Reports</div>
-        <a href="admin-reports.html" class="nav-item"><i class="fa-solid fa-chart-bar"></i> Reports</a>
-        <a href="admin-analytics.html" class="nav-item"><i class="fa-solid fa-chart-line"></i> Analytics</a>
-
-        <div class="nav-section">System</div>
-        <a href="admin-shipping.html" class="nav-item"><i class="fa-solid fa-truck-fast"></i> Shipping</a>
-        <a href="admin-taxes.html" class="nav-item"><i class="fa-solid fa-file-invoice-dollar"></i> Taxes</a>
-        <a href="admin-staff.html" class="nav-item"><i class="fa-solid fa-users-gear"></i> Staff</a>
-        <a href="admin-settings.html" class="nav-item"><i class="fa-solid fa-gear"></i> Settings</a>
-      </nav>
-
-      <div class="sidebar-footer">
-        <div class="s-user">
-          <div class="s-avatar" id="sAvatar">A</div>
-          <div>
-            <div class="s-name" id="sName">Admin</div>
-            <div class="s-role">Super Admin</div>
-          </div>
-        </div>
-        <button class="btn-logout" onclick="doLogout()">
-          <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-        </button>
-      </div>
-
-    </aside>
-
-    <!-- ══════════════════════════════════════════
-         MAIN AREA
-    ══════════════════════════════════════════ -->
-    <div class="main">
-
-      <!-- TOPBAR -->
-      <div class="topbar">
-        <button class="btn-menu" onclick="toggleSidebar()">
-          <i class="fa-solid fa-bars"></i>
-        </button>
-        <div class="topbar-title" id="topbarTitle">Dashboard</div>
-        <div class="topbar-right">
-          <button class="btn btn-sm btn-outline" onclick="refreshCurrent()">
-            <i class="fa-solid fa-rotate-right"></i> Refresh
-          </button>
-          <button class="btn btn-sm btn-outline" onclick="window.open('index.html','_blank')">
-            <i class="fa-solid fa-store"></i> Store
-          </button>
-        </div>
-      </div>
-
-      <div class="content">
-
-        <!-- ══════════════════════════════════════
-             DASHBOARD SECTION
-        ══════════════════════════════════════ -->
-        <div class="sec active" id="sec-dashboard">
-
-          <!-- Date Filter Bar -->
-          <div class="date-filter-bar">
-            <span class="dfb-label"><i class="fa-regular fa-calendar"></i> Period</span>
-            <button class="df-btn" onclick="setDays(7,this)">7 Days</button>
-            <button class="df-btn" onclick="setDays(10,this)">10 Days</button>
-            <button class="df-btn active" onclick="setDays(30,this)">30 Days</button>
-            <button class="df-btn" onclick="setDays(90,this)">3 Months</button>
-            <button class="df-btn" onclick="setDays(180,this)">6 Months</button>
-            <div class="df-sep"></div>
-            <div class="df-custom">
-              <input type="date" class="df-input" id="dfFrom">
-              <span style="font-size:.72rem;color:var(--muted)">to</span>
-              <input type="date" class="df-input" id="dfTo">
-              <button class="df-apply" onclick="applyCustomRange()">Apply</button>
-            </div>
-          </div>
-
-          <!-- Welcome Banner -->
-          <div class="welcome-banner">
-            <div class="welcome-text">
-              <h2>Welcome Back! 👋</h2>
-              <p id="dashDate">Loading…</p>
-            </div>
-            <div class="welcome-actions">
-              <button class="btn btn-sm btn-primary"
-                onclick="navTo(document.querySelector('[data-sec=products]'));setTimeout(openProductModal,120)">
-                <i class="fa-solid fa-plus"></i> Add Product
-              </button>
-              <button class="btn btn-sm"
-                style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)"
-                onclick="navTo(document.querySelector('[data-sec=orders]'))">
-                <i class="fa-solid fa-bag-shopping"></i> Orders
-              </button>
-            </div>
-          </div>
-
-          <!-- Stats Grid — rendered by dashboard.js renderStats() -->
-          <div class="stats-grid" id="statsGrid">
-            <div class="stat-card">
-              <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i></div>
-            </div>
-            <div class="stat-card">
-              <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i></div>
-            </div>
-            <div class="stat-card">
-              <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i></div>
-            </div>
-            <div class="stat-card">
-              <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i></div>
-            </div>
-          </div>
-
-          <!-- Order Pipeline -->
-          <div class="order-pipeline">
-            <div class="pipeline-header">
-              <div class="pipeline-title">Order Pipeline</div>
-              <span class="badge badge-placed" id="pipelineTotal">—</span>
-            </div>
-            <div class="pipeline-strip" id="pipelineStrip"></div>
-            <div class="pipeline-items" id="pipelineItems">
-              <div class="spinner-wrap" style="grid-column:1/-1">
-                <i class="fa-solid fa-spinner"></i>Loading…
-              </div>
-            </div>
-          </div>
-
-          <!-- Two-column: Recent Orders + Top Products -->
-          <div class="two-col">
-            <div class="card">
-              <div class="card-hd">
-                <div class="card-title">Recent Orders</div>
-                <button class="btn btn-sm btn-outline" onclick="navTo(document.querySelector('[data-sec=orders]'))">
-                  View All <i class="fa-solid fa-arrow-right" style="font-size:.7rem"></i>
+        <!-- ================================
+       SIDEBAR
+  ================================ -->
+        <aside class="admin-sidebar" id="admin-sidebar">
+            <!-- Logo -->
+            <div class="admin-sidebar-header">
+                <div class="admin-sidebar-logo">
+                    <div>
+                        <div class="sidebar-brand">Heels<span>Up</span></div>
+                        <div class="sidebar-version">Admin Panel v2.0</div>
+                    </div>
+                </div>
+                <!-- Collapse toggle (desktop) -->
+                <button class="admin-sidebar-toggle" id="sidebar-collapse-btn" title="Collapse sidebar"
+                    aria-label="Collapse sidebar">
+                    <i class="fa-solid fa-chevron-left" id="sidebar-toggle-icon"></i>
                 </button>
-              </div>
-              <div id="dashOrders">
-                <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading...</div>
-              </div>
             </div>
-            <div class="card">
-              <div class="card-hd">
-                <div class="card-title">Top Products</div>
-                <button class="btn btn-sm btn-outline" onclick="navTo(document.querySelector('[data-sec=products]'))">
-                  View All <i class="fa-solid fa-arrow-right" style="font-size:.7rem"></i>
-                </button>
-              </div>
-              <div id="dashProducts">
-                <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading...</div>
-              </div>
+
+            <!-- Navigation -->
+            <nav class="admin-nav" id="admin-nav">
+
+                <!-- MAIN -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Main</div>
+                    <a href="admin.html" class="admin-nav-link active">
+                        <i class="fa-solid fa-grid-2 nav-icon"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-analytics.html" class="admin-nav-link">
+                        <i class="fa-solid fa-chart-line nav-icon"></i>
+                        <span>Analytics</span>
+                    </a>
+                    <a href="admin-reports.html" class="admin-nav-link">
+                        <i class="fa-solid fa-chart-bar nav-icon"></i>
+                        <span>Reports</span>
+                    </a>
+                </div>
+
+                <!-- CATALOGUE -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Catalogue</div>
+                    <a href="admin-products.html" class="admin-nav-link">
+                        <i class="fa-solid fa-shoe-prints nav-icon"></i>
+                        <span>Products</span>
+                        <span class="admin-nav-badge">350</span>
+                    </a>
+                    <a href="admin-categories.html" class="admin-nav-link">
+                        <i class="fa-solid fa-tags nav-icon"></i>
+                        <span>Categories</span>
+                    </a>
+                    <a href="admin-inventory.html" class="admin-nav-link">
+                        <i class="fa-solid fa-boxes-stacked nav-icon"></i>
+                        <span>Inventory</span>
+                        <span class="admin-nav-badge" style="background:var(--color-warning)">7</span>
+                    </a>
+                    <a href="admin-collections.html" class="admin-nav-link">
+                        <i class="fa-solid fa-layer-group nav-icon"></i>
+                        <span>Collections</span>
+                    </a>
+                </div>
+
+                <!-- SALES -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Sales</div>
+
+                    <a href="admin-orders.html" class="admin-nav-link">
+                        <i class="fa-solid fa-bag-shopping nav-icon"></i>
+                        <span>Orders</span>
+                        <span class="admin-nav-badge">12</span>
+                    </a>
+
+                    <a href="admin-customers.html" class="admin-nav-link">
+                        <i class="fa-solid fa-users nav-icon"></i>
+                        <span>Customers</span>
+                    </a>
+
+                    <a href="admin-coupons.html" class="admin-nav-link">
+                        <i class="fa-solid fa-ticket nav-icon"></i>
+                        <span>Coupons</span>
+                    </a>
+
+                    <a href="admin-reviews.html" class="admin-nav-link">
+                        <i class="fa-solid fa-star nav-icon"></i>
+                        <span>Reviews</span>
+                        <span class="admin-nav-badge" style="background:var(--color-success)">4</span>
+                    </a>
+
+                    <!-- Offline Sales Entry -->
+                    <a href="admin-offline-sales.html" class="admin-nav-link">
+                        <i class="fa-solid fa-cash-register nav-icon"></i>
+                        <span>Offline Sales</span>
+                    </a>
+                </div>
+
+                <!-- CONTENT -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Content</div>
+                    <a href="admin-banners.html" class="admin-nav-link">
+                        <i class="fa-solid fa-image nav-icon"></i>
+                        <span>Banners</span>
+                    </a>
+                    <a href="admin-blog.html" class="admin-nav-link">
+                        <i class="fa-solid fa-pen-nib nav-icon"></i>
+                        <span>Blog</span>
+                    </a>
+                    <a href="admin-pages.html" class="admin-nav-link">
+                        <i class="fa-solid fa-file-lines nav-icon"></i>
+                        <span>Pages</span>
+                    </a>
+                </div>
+
+                <!-- SETTINGS -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">System</div>
+                    <a href="admin-settings.html" class="admin-nav-link">
+                        <i class="fa-solid fa-gear nav-icon"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="admin-staff.html" class="admin-nav-link">
+                        <i class="fa-solid fa-user-shield nav-icon"></i>
+                        <span>Staff Accounts</span>
+                    </a>
+                    <a href="index.html" class="admin-nav-link"
+                        style="margin-top:var(--space-4);border-top:1px solid rgba(255,255,255,0.06);padding-top:var(--space-4)">
+                        <i class="fa-solid fa-arrow-up-right-from-square nav-icon"></i>
+                        <span>View Store</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- User Footer -->
+            <div class="admin-sidebar-footer">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar">A</div>
+                    <div>
+                        <div class="admin-user-name">Admin User</div>
+                        <div class="admin-user-role">Super Admin</div>
+                    </div>
+                    <a href="admin-settings.html#profile"
+                        style="margin-left:auto;color:rgba(255,255,255,0.3);font-size:0.85rem;transition:color 0.2s"
+                        title="Edit profile">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </a>
+                </div>
             </div>
+        </aside>
+
+        <!-- Sidebar mobile overlay -->
+        <div class="admin-sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- ================================
+       MAIN CONTENT
+  ================================ -->
+        <main class="admin-main" id="admin-main">
+
+            <!-- ================================
+         TOPBAR
+    ================================ -->
+            <header class="admin-topbar">
+                <!-- Left: hamburger + title -->
+                <div style="display:flex;align-items:center;gap:var(--space-4)">
+                    <button class="nav-icon-btn" id="sidebar-toggle-mobile" aria-label="Toggle sidebar"
+                        style="background:var(--color-light);border:1px solid var(--border-color)">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="admin-page-title">Dashboard</div>
+                </div>
+
+                <!-- Center: search -->
+                <div class="admin-search" style="flex:1;max-width:380px;margin:0 var(--space-6)">
+                    <i class="fa-solid fa-magnifying-glass admin-search-icon"></i>
+                    <input type="text" placeholder="Search orders, products, customers…" id="admin-search-input"
+                        autocomplete="off" />
+                </div>
+
+                <!-- Right: actions -->
+                <div class="admin-topbar-actions">
+                    <!-- Date range -->
+                    <div style="display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--color-light);border:1px solid var(--border-color);border-radius:var(--radius-pill);font-size:var(--text-xs);font-weight:600;color:var(--text-secondary);cursor:pointer;white-space:nowrap;transition:all var(--transition-fast)"
+                        id="date-range-btn">
+                        <i class="fa-regular fa-calendar" style="color:var(--color-primary)"></i>
+                        <span id="date-range-label">May 2025</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size:8px;opacity:0.5"></i>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="notif-wrapper">
+                        <button class="admin-notif-btn" id="notif-btn" aria-label="Notifications">
+                            <i class="fa-regular fa-bell"></i>
+                            <span class="admin-notif-dot"></span>
+                        </button>
+                        <!-- Notification Panel -->
+                        <div class="notif-panel" id="notif-panel" style="display:none">
+                            <div class="notif-header">
+                                <span class="notif-title">Notifications</span>
+                                <span class="notif-mark-all" id="mark-all-read">Mark all read</span>
+                            </div>
+                            <div class="notif-item unread">
+                                <div class="notif-item-icon stat-icon-blue"><i class="fa-solid fa-bag-shopping"
+                                        style="font-size:1rem;color:var(--color-info)"></i></div>
+                                <div class="notif-item-body">
+                                    <div class="notif-item-text"><strong>New Order</strong> — #ORD-1042 received from
+                                        Priya Sharma</div>
+                                    <div class="notif-item-time">2 minutes ago</div>
+                                </div>
+                                <div class="notif-unread-dot"></div>
+                            </div>
+                            <div class="notif-item unread">
+                                <div class="notif-item-icon stat-icon-red"><i class="fa-solid fa-triangle-exclamation"
+                                        style="font-size:1rem;color:var(--color-error)"></i></div>
+                                <div class="notif-item-body">
+                                    <div class="notif-item-text"><strong>Low Stock Alert</strong> — "Stiletto Block
+                                        Heel" only 3 left</div>
+                                    <div class="notif-item-time">18 minutes ago</div>
+                                </div>
+                                <div class="notif-unread-dot"></div>
+                            </div>
+                            <div class="notif-item unread">
+                                <div class="notif-item-icon stat-icon-green"><i class="fa-solid fa-star"
+                                        style="font-size:1rem;color:var(--color-success)"></i></div>
+                                <div class="notif-item-body">
+                                    <div class="notif-item-text"><strong>New Review</strong> — 5★ review added by Sneha
+                                        Patel</div>
+                                    <div class="notif-item-time">1 hour ago</div>
+                                </div>
+                                <div class="notif-unread-dot"></div>
+                            </div>
+                            <div class="notif-item">
+                                <div class="notif-item-icon stat-icon-gold"><i class="fa-solid fa-rotate-left"
+                                        style="font-size:1rem;color:var(--color-primary)"></i></div>
+                                <div class="notif-item-body">
+                                    <div class="notif-item-text">Return request #RET-089 approved by Anita Mehra</div>
+                                    <div class="notif-item-time">3 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="notif-item">
+                                <div class="notif-item-icon stat-icon-blue"><i class="fa-brands fa-whatsapp"
+                                        style="font-size:1rem;color:var(--color-info)"></i></div>
+                                <div class="notif-item-body">
+                                    <div class="notif-item-text">WhatsApp message from +91 9876XXXXXX — product enquiry
+                                    </div>
+                                    <div class="notif-item-time">5 hours ago</div>
+                                </div>
+                            </div>
+                            <div
+                                style="padding:var(--space-3) var(--space-5);text-align:center;border-top:1px solid var(--border-color)">
+                                <a href="admin-notifications.html"
+                                    style="font-size:var(--text-xs);font-weight:600;color:var(--color-primary)">View All
+                                    Notifications</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile avatar -->
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--color-dark);font-size:14px;cursor:pointer;box-shadow:var(--shadow-gold)"
+                        title="My Profile">A</div>
+                </div>
+            </header>
+
+            <!-- ================================
+         CONTENT AREA
+    ================================ -->
+            <div class="admin-content">
+
+                <!-- WELCOME BANNER -->
+                <div class="welcome-banner">
+                    <div class="welcome-text">
+                        <div class="welcome-greeting">Good Morning 👋</div>
+                        <div class="welcome-name">Welcome back, <em>Admin!</em></div>
+                        <div class="welcome-meta">
+                            <i class="fa-regular fa-clock" style="color:var(--color-primary);margin-right:5px"></i>
+                            Thursday, 7 May 2026 &nbsp;·&nbsp;
+                            <span style="color:var(--color-success);font-weight:600"><i class="fa-solid fa-circle"
+                                    style="font-size:7px;vertical-align:middle"></i> Store is Live</span>
+                            &nbsp;·&nbsp; Last updated: just now
+                        </div>
+                    </div>
+                    <div class="welcome-actions">
+                        <!-- NEW OFFLINE SALE BUTTON ADDED HERE -->
+                        <a href="javascript:void(0)" class="btn btn-white btn-sm"
+                            style="background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2);color:#fff"
+                            onclick="showToast('success', 'Offline Sale', 'Offline sale entry point opened.')">
+                            <i class="fa-solid fa-store"></i> Add Offline Sale
+                        </a>
+                        <a href="admin-products.html?action=new" class="btn btn-primary">
+                            <i class="fa-solid fa-plus"></i> Add Product
+                        </a>
+                        <a href="admin-orders.html" class="btn btn-white btn-sm"
+                            style="background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2);color:#fff">
+                            <i class="fa-solid fa-bag-shopping"></i> View Orders
+                        </a>
+                    </div>
+                </div>
+
+                <!-- QUICK ACTIONS -->
+                <div class="quick-action-grid" style="margin-bottom:var(--space-6)">
+                    <a href="admin-products.html?action=new" class="quick-action-btn">
+                        <i class="fa-solid fa-plus" style="color:var(--color-primary)"></i>
+                        Add Product
+                    </a>
+                    <a href="admin-orders.html?filter=pending" class="quick-action-btn">
+                        <i class="fa-solid fa-bag-shopping" style="color:var(--color-warning)"></i>
+                        Pending Orders
+                    </a>
+                    <a href="admin-coupons.html?action=new" class="quick-action-btn">
+                        <i class="fa-solid fa-ticket" style="color:var(--color-accent)"></i>
+                        New Coupon
+                    </a>
+                    <a href="admin-inventory.html?filter=low" class="quick-action-btn">
+                        <i class="fa-solid fa-boxes-stacked" style="color:var(--color-error)"></i>
+                        Low Stock
+                    </a>
+                </div>
+
+                <!-- ---- KPI STAT CARDS ---- -->
+                <div class="grid grid-4" style="margin-bottom:var(--space-6)">
+
+                    <!-- Total Revenue (UPDATED TO SHOW ONLINE/OFFLINE SPLIT) -->
+                    <div class="stat-card">
+                        <div>
+                            <div class="stat-label">Total Revenue</div>
+                            <div class="stat-value" style="display: flex; flex-direction: column;">
+                                ₹4.8L
+                                <!-- NEW: SPLIT SALES LINE -->
+                                <span
+                                    style="font-size: 10px; font-weight: 600; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em;">
+                                    <i class="fa-solid fa-globe" style="color:var(--color-info)"></i> 3.5L &nbsp;|&nbsp;
+                                    <i class="fa-solid fa-store" style="color:var(--color-primary)"></i> 1.3L
+                                </span>
+                            </div>
+                            <div class="stat-change up" style="margin-top: 6px;">
+                                <i class="fa-solid fa-arrow-trend-up"></i> +18.4% vs last month
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-3)">
+                            <div class="stat-card-icon stat-icon-gold"><i class="fa-solid fa-indian-rupee-sign"></i>
+                            </div>
+                            <div class="mini-bar-wrap">
+                                <div class="mini-bar" style="height:40%"></div>
+                                <div class="mini-bar" style="height:55%"></div>
+                                <div class="mini-bar" style="height:45%"></div>
+                                <div class="mini-bar" style="height:70%"></div>
+                                <div class="mini-bar" style="height:60%"></div>
+                                <div class="mini-bar" style="height:85%"></div>
+                                <div class="mini-bar active" style="height:100%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Orders -->
+                    <div class="stat-card">
+                        <div>
+                            <div class="stat-label">Total Orders</div>
+                            <div class="stat-value" style="display: flex; flex-direction: column;">
+                                1,284
+                                <!-- NEW: SPLIT ORDERS LINE -->
+                                <span
+                                    style="font-size: 10px; font-weight: 600; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em;">
+                                    <i class="fa-solid fa-globe" style="color:var(--color-info)"></i> 890 &nbsp;|&nbsp;
+                                    <i class="fa-solid fa-store" style="color:var(--color-primary)"></i> 394
+                                </span>
+                            </div>
+                            <div class="stat-change up" style="margin-top: 6px;">
+                                <i class="fa-solid fa-arrow-trend-up"></i> +12.1% vs last month
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-3)">
+                            <div class="stat-card-icon stat-icon-blue"><i class="fa-solid fa-bag-shopping"></i></div>
+                            <div class="mini-bar-wrap">
+                                <div class="mini-bar" style="height:50%"></div>
+                                <div class="mini-bar" style="height:65%"></div>
+                                <div class="mini-bar" style="height:55%"></div>
+                                <div class="mini-bar" style="height:75%"></div>
+                                <div class="mini-bar" style="height:65%"></div>
+                                <div class="mini-bar" style="height:80%"></div>
+                                <div class="mini-bar active" style="height:95%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customers -->
+                    <div class="stat-card">
+                        <div>
+                            <div class="stat-label">New Customers</div>
+                            <div class="stat-value">347</div>
+                            <div class="stat-change up">
+                                <i class="fa-solid fa-arrow-trend-up"></i> +9.7% vs last month
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-3)">
+                            <div class="stat-card-icon stat-icon-green"><i class="fa-solid fa-users"></i></div>
+                            <div class="mini-bar-wrap">
+                                <div class="mini-bar" style="height:45%"></div>
+                                <div class="mini-bar" style="height:60%"></div>
+                                <div class="mini-bar" style="height:50%"></div>
+                                <div class="mini-bar" style="height:68%"></div>
+                                <div class="mini-bar" style="height:55%"></div>
+                                <div class="mini-bar" style="height:78%"></div>
+                                <div class="mini-bar active" style="height:90%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Avg Order Value -->
+                    <div class="stat-card">
+                        <div>
+                            <div class="stat-label">Avg. Order Value</div>
+                            <div class="stat-value">₹847</div>
+                            <div class="stat-change down">
+                                <i class="fa-solid fa-arrow-trend-down"></i> -3.2% vs last month
+                            </div>
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-3)">
+                            <div class="stat-card-icon stat-icon-purple"><i class="fa-solid fa-chart-simple"></i></div>
+                            <div class="mini-bar-wrap">
+                                <div class="mini-bar" style="height:80%"></div>
+                                <div class="mini-bar" style="height:75%"></div>
+                                <div class="mini-bar" style="height:90%"></div>
+                                <div class="mini-bar" style="height:70%"></div>
+                                <div class="mini-bar" style="height:85%"></div>
+                                <div class="mini-bar" style="height:72%"></div>
+                                <div class="mini-bar active" style="height:68%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ---- MAIN CHARTS ROW ---- -->
+                <div class="grid grid-3" style="margin-bottom:var(--space-6)">
+
+                    <!-- Revenue Chart (spans 2 cols) -->
+                    <div class="admin-card" style="grid-column:span 2">
+                        <div class="admin-card-header">
+                            <div class="admin-card-title">
+                                <div class="admin-card-title-icon"><i class="fa-solid fa-chart-line"></i></div>
+                                Revenue Overview
+                            </div>
+                            <div class="admin-card-actions">
+                                <div class="chart-period">
+                                    <button class="chart-period-btn" data-period="7d">7D</button>
+                                    <button class="chart-period-btn active" data-period="30d">30D</button>
+                                    <button class="chart-period-btn" data-period="3m">3M</button>
+                                    <button class="chart-period-btn" data-period="1y">1Y</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="admin-card-body">
+                            <div
+                                style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--space-5);flex-wrap:wrap;gap:var(--space-3)">
+                                <div>
+                                    <div
+                                        style="font-size:var(--text-xs);color:var(--text-muted);font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">
+                                        This Period</div>
+                                    <div
+                                        style="font-family:var(--font-display);font-size:2.2rem;font-weight:300;color:var(--text-primary);letter-spacing:-0.02em;line-height:1">
+                                        ₹4,83,<span style="color:var(--color-primary);font-style:italic">240</span>
+                                    </div>
+                                    <div
+                                        style="font-size:var(--text-xs);color:var(--color-success);font-weight:600;margin-top:4px;display:flex;align-items:center;gap:4px">
+                                        <i class="fa-solid fa-arrow-trend-up"></i> +18.4% from last month
+                                    </div>
+                                </div>
+                                <div class="chart-legend">
+                                    <div class="legend-item">
+                                        <div class="legend-line" style="background:var(--color-primary)"></div> Total
+                                        Revenue
+                                    </div>
+                                    <div class="legend-item">
+                                        <div class="legend-line" style="background:var(--color-accent);opacity:0.6">
+                                        </div> Online Sales
+                                    </div>
+                                    <!-- NEW: OFFLINE SALES LEGEND ADDED HERE -->
+                                    <div class="legend-item">
+                                        <div class="legend-line" style="background:var(--color-info);opacity:0.8">
+                                        </div> Offline Sales
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- SVG Line Chart -->
+                            <div class="chart-svg-wrap">
+                                <svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg"
+                                    preserveAspectRatio="none">
+                                    <defs>
+                                        <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#c9a96e" stop-opacity="0.25" />
+                                            <stop offset="100%" stop-color="#c9a96e" stop-opacity="0" />
+                                        </linearGradient>
+                                        <linearGradient id="ordGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#d4456b" stop-opacity="0.15" />
+                                            <stop offset="100%" stop-color="#d4456b" stop-opacity="0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- Grid lines -->
+                                    <line x1="0" y1="160" x2="600" y2="160" stroke="#f0ede8" stroke-width="1" />
+                                    <line x1="0" y1="120" x2="600" y2="120" stroke="#f0ede8" stroke-width="1" />
+                                    <line x1="0" y1="80" x2="600" y2="80" stroke="#f0ede8" stroke-width="1" />
+                                    <line x1="0" y1="40" x2="600" y2="40" stroke="#f0ede8" stroke-width="1" />
+                                    <!-- Total Revenue area fill -->
+                                    <path
+                                        d="M0,130 C30,125 60,110 100,100 C140,90 170,115 210,95 C250,75 280,60 320,55 C360,50 390,70 430,50 C470,30 510,40 550,25 L550,200 L0,200 Z"
+                                        fill="url(#revGrad)" />
+                                    <!-- Total Revenue line -->
+                                    <path
+                                        d="M0,130 C30,125 60,110 100,100 C140,90 170,115 210,95 C250,75 280,60 320,55 C360,50 390,70 430,50 C470,30 510,40 550,25"
+                                        fill="none" stroke="#c9a96e" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <!-- Online Sales area fill -->
+                                    <path
+                                        d="M0,150 C30,145 60,140 100,135 C140,130 170,140 210,130 C250,120 280,125 320,115 C360,105 390,115 430,105 C470,95 510,100 550,90 L550,200 L0,200 Z"
+                                        fill="url(#ordGrad)" />
+                                    <!-- Online Sales line -->
+                                    <path
+                                        d="M0,150 C30,145 60,140 100,135 C140,130 170,140 210,130 C250,120 280,125 320,115 C360,105 390,115 430,105 C470,95 510,100 550,90"
+                                        fill="none" stroke="#d4456b" stroke-width="1.5" stroke-dasharray="5,3"
+                                        stroke-linecap="round" />
+
+                                    <!-- NEW: OFFLINE SALES LINE (Mocked SVG Line) -->
+                                    <path
+                                        d="M0,180 C30,175 60,170 100,165 C140,160 170,170 210,165 C250,155 280,160 320,150 C360,140 390,150 430,140 C470,130 510,135 550,125"
+                                        fill="none" stroke="var(--color-info)" stroke-width="1.5" stroke-dasharray="2,2"
+                                        stroke-linecap="round" />
+
+                                    <!-- Dots on revenue line -->
+                                    <circle cx="100" cy="100" r="4" fill="var(--color-primary)" stroke="white"
+                                        stroke-width="2" />
+                                    <circle cx="210" cy="95" r="4" fill="var(--color-primary)" stroke="white"
+                                        stroke-width="2" />
+                                    <circle cx="320" cy="55" r="4" fill="var(--color-primary)" stroke="white"
+                                        stroke-width="2" />
+                                    <circle cx="430" cy="50" r="4" fill="var(--color-primary)" stroke="white"
+                                        stroke-width="2" />
+                                    <circle cx="550" cy="25" r="5" fill="var(--color-primary)" stroke="white"
+                                        stroke-width="2.5" />
+                                </svg>
+                            </div>
+                            <!-- X-axis labels -->
+                            <div class="line-chart-labels" style="padding:0 2px">
+                                <span>01
+                                    May</span><span>05</span><span>10</span><span>15</span><span>20</span><span>25</span><span>Today</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sales by Category donut -->
+                    <div class="admin-card">
+                        <div class="admin-card-header">
+                            <div class="admin-card-title">
+                                <div class="admin-card-title-icon"><i class="fa-solid fa-chart-pie"></i></div>
+                                Sales by Category
+                            </div>
+                        </div>
+                        <div class="admin-card-body" style="display:flex;flex-direction:column;align-items:center">
+                            <!-- Donut Chart -->
+                            <div class="donut-chart" style="width:150px;height:150px;margin-bottom:var(--space-5)">
+                                <svg viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- bg ring -->
+                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#f4f0ea" stroke-width="3.8" />
+                                    <!-- heels: 42% -->
+                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#c9a96e" stroke-width="3.8"
+                                        stroke-dasharray="42 58" stroke-linecap="round" transform="rotate(-90 18 18)" />
+                                    <!-- bags: 28% (offset 42) -->
+                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#d4456b" stroke-width="3.8"
+                                        stroke-dasharray="28 72" stroke-linecap="round" transform="rotate(61 18 18)" />
+                                    <!-- sandals: 18% (offset 70) -->
+                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#2563eb" stroke-width="3.8"
+                                        stroke-dasharray="18 82" stroke-linecap="round" transform="rotate(172 18 18)" />
+                                    <!-- flats: 12% (offset 88) -->
+                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#2d8a4e" stroke-width="3.8"
+                                        stroke-dasharray="12 88" stroke-linecap="round" transform="rotate(237 18 18)" />
+                                </svg>
+                                <div class="donut-center">
+                                    <div class="donut-center-value">₹4.8L</div>
+                                    <div class="donut-center-label">Total</div>
+                                </div>
+                            </div>
+                            <!-- Legend -->
+                            <div style="width:100%">
+                                <div class="category-stat-row">
+                                    <span class="cat-stat-icon">👠</span>
+                                    <div class="cat-stat-info">
+                                        <div class="cat-stat-name">Heels <span class="cat-stat-pct">42%</span></div>
+                                        <div class="cat-stat-bar">
+                                            <div class="cat-stat-fill" style="width:42%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="category-stat-row">
+                                    <span class="cat-stat-icon">👜</span>
+                                    <div class="cat-stat-info">
+                                        <div class="cat-stat-name">Bags <span class="cat-stat-pct">28%</span></div>
+                                        <div class="cat-stat-bar">
+                                            <div class="cat-stat-fill"
+                                                style="width:28%;background:linear-gradient(90deg,var(--color-accent),var(--color-accent-light))">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="category-stat-row">
+                                    <span class="cat-stat-icon">👡</span>
+                                    <div class="cat-stat-info">
+                                        <div class="cat-stat-name">Sandals <span class="cat-stat-pct">18%</span></div>
+                                        <div class="cat-stat-bar">
+                                            <div class="cat-stat-fill"
+                                                style="width:18%;background:linear-gradient(90deg,var(--color-info),#60a5fa)">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="category-stat-row">
+                                    <span class="cat-stat-icon">🥿</span>
+                                    <div class="cat-stat-info">
+                                        <div class="cat-stat-name">Flats <span class="cat-stat-pct">12%</span></div>
+                                        <div class="cat-stat-bar">
+                                            <div class="cat-stat-fill"
+                                                style="width:12%;background:linear-gradient(90deg,var(--color-success),#5cb87a)">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ---- ORDERS TABLE + SIDE WIDGETS ---- -->
+                <div class="grid grid-3" style="margin-bottom:var(--space-6)">
+
+                    <!-- Recent Orders Table (spans 2) -->
+                    <div class="admin-table-wrap" style="grid-column:span 2">
+                        <div class="admin-table-header">
+                            <div class="admin-table-title">Recent Orders</div>
+                            <div class="admin-table-toolbar">
+                                <div class="admin-search" style="min-width:180px">
+                                    <i class="fa-solid fa-magnifying-glass admin-search-icon"></i>
+                                    <input type="text" placeholder="Search orders…" />
+                                </div>
+                                <select class="form-select"
+                                    style="width:130px;padding:7px 32px 7px 12px;font-size:12px">
+                                    <option>All Status</option>
+                                    <option>Pending</option>
+                                    <option>Processing</option>
+                                    <option>Shipped</option>
+                                    <option>Delivered</option>
+                                </select>
+                                <a href="admin-orders.html" class="btn btn-sm btn-secondary">View All</a>
+                            </div>
+                        </div>
+                        <div style="overflow-x:auto">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" class="table-checkbox" id="select-all-orders" /></th>
+                                        <th class="sortable sorted">Order ID <i
+                                                class="fa-solid fa-arrow-down sort-icon"></i></th>
+                                        <th class="sortable">Customer</th>
+                                        <th class="sortable">Items</th>
+                                        <th class="sortable">Amount</th>
+                                        <th class="sortable">Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-tbody">
+                                    <!-- Rows injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="admin-table-footer">
+                            <div class="table-page-info">Showing <strong>1–10</strong> of <strong>1,284</strong> orders
+                            </div>
+                            <div class="pagination" style="margin:0">
+                                <button class="page-btn" disabled><i class="fa-solid fa-chevron-left"
+                                        style="font-size:10px"></i></button>
+                                <button class="page-btn active">1</button>
+                                <button class="page-btn">2</button>
+                                <button class="page-btn">3</button>
+                                <span class="page-ellipsis">…</span>
+                                <button class="page-btn">128</button>
+                                <button class="page-btn"><i class="fa-solid fa-chevron-right"
+                                        style="font-size:10px"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: stock alerts + top customers -->
+                    <div style="display:flex;flex-direction:column;gap:var(--space-5)">
+
+                        <!-- Low Stock Alerts -->
+                        <div class="admin-card">
+                            <div class="admin-card-header">
+                                <div class="admin-card-title">
+                                    <div class="admin-card-title-icon" style="background:var(--color-error-light)"><i
+                                            class="fa-solid fa-triangle-exclamation"
+                                            style="color:var(--color-error)"></i></div>
+                                    Low Stock Alerts
+                                </div>
+                                <a href="admin-inventory.html?filter=low"
+                                    style="font-size:var(--text-xs);color:var(--color-primary);font-weight:600">View
+                                    All</a>
+                            </div>
+                            <div class="admin-card-body" style="padding-top:var(--space-2)">
+                                <div class="stock-alert-row">
+                                    <img src="https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=80&q=80&auto=format&fit=crop"
+                                        class="stock-alert-img" alt="" />
+                                    <div class="stock-alert-info">
+                                        <div class="stock-alert-name">Stiletto Block Heel</div>
+                                        <div class="stock-alert-sku">SKU: HU-HLS-042</div>
+                                    </div>
+                                    <div class="stock-alert-qty qty-danger">3 left</div>
+                                </div>
+                                <div class="stock-alert-row">
+                                    <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=80&q=80&auto=format&fit=crop"
+                                        class="stock-alert-img" alt="" />
+                                    <div class="stock-alert-info">
+                                        <div class="stock-alert-name">Classic Tote – Tan</div>
+                                        <div class="stock-alert-sku">SKU: HU-BAG-017</div>
+                                    </div>
+                                    <div class="stock-alert-qty qty-warn">8 left</div>
+                                </div>
+                                <div class="stock-alert-row">
+                                    <img src="https://images.unsplash.com/photo-1522163182402-834f871fd851?w=80&q=80&auto=format&fit=crop"
+                                        class="stock-alert-img" alt="" />
+                                    <div class="stock-alert-info">
+                                        <div class="stock-alert-name">Rose Gold Sandals</div>
+                                        <div class="stock-alert-sku">SKU: HU-SND-028</div>
+                                    </div>
+                                    <div class="stock-alert-qty qty-warn">5 left</div>
+                                </div>
+                                <div class="stock-alert-row">
+                                    <img src="https://images.unsplash.com/photo-1554141220-83411835a60b?w=80&q=80&auto=format&fit=crop"
+                                        class="stock-alert-img" alt="" />
+                                    <div class="stock-alert-info">
+                                        <div class="stock-alert-name">Mini Sling Crossbody</div>
+                                        <div class="stock-alert-sku">SKU: HU-BAG-031</div>
+                                    </div>
+                                    <div class="stock-alert-qty qty-danger">2 left</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Customers -->
+                        <div class="admin-card">
+                            <div class="admin-card-header">
+                                <div class="admin-card-title">
+                                    <div class="admin-card-title-icon"><i class="fa-solid fa-crown"
+                                            style="color:var(--color-primary)"></i></div>
+                                    Top Customers
+                                </div>
+                                <a href="admin-customers.html?sort=spending"
+                                    style="font-size:var(--text-xs);color:var(--color-primary);font-weight:600">View
+                                    All</a>
+                            </div>
+                            <div class="admin-card-body" style="padding-top:var(--space-2)">
+                                <div class="top-customer-row">
+                                    <div class="tc-rank gold">🥇</div>
+                                    <div class="admin-table-avatar">P</div>
+                                    <div class="tc-info">
+                                        <div class="tc-name">Priya Sharma</div>
+                                        <div class="tc-orders">14 orders</div>
+                                    </div>
+                                    <div class="tc-amount">₹12,840</div>
+                                </div>
+                                <div class="top-customer-row">
+                                    <div class="tc-rank silver">🥈</div>
+                                    <div class="admin-table-avatar"
+                                        style="background:rgba(212,69,107,0.1);color:var(--color-accent)">S</div>
+                                    <div class="tc-info">
+                                        <div class="tc-name">Sneha Patel</div>
+                                        <div class="tc-orders">11 orders</div>
+                                    </div>
+                                    <div class="tc-amount">₹9,420</div>
+                                </div>
+                                <div class="top-customer-row">
+                                    <div class="tc-rank bronze">🥉</div>
+                                    <div class="admin-table-avatar"
+                                        style="background:rgba(37,99,235,0.1);color:var(--color-info)">R</div>
+                                    <div class="tc-info">
+                                        <div class="tc-name">Ritu Agarwal</div>
+                                        <div class="tc-orders">9 orders</div>
+                                    </div>
+                                    <div class="tc-amount">₹7,650</div>
+                                </div>
+                                <div class="top-customer-row">
+                                    <div class="tc-rank" style="color:var(--text-muted)">4</div>
+                                    <div class="admin-table-avatar"
+                                        style="background:rgba(45,138,78,0.1);color:var(--color-success)">A</div>
+                                    <div class="tc-info">
+                                        <div class="tc-name">Anita Mehra</div>
+                                        <div class="tc-orders">8 orders</div>
+                                    </div>
+                                    <div class="tc-amount">₹6,880</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ---- BOTTOM ROW: activity + order heatmap + quick stats ---- -->
+                <div class="grid grid-3" style="margin-bottom:var(--space-6)">
+
+                    <!-- Activity Feed -->
+                    <div class="admin-card">
+                        <div class="admin-card-header">
+                            <div class="admin-card-title">
+                                <div class="admin-card-title-icon"><i class="fa-solid fa-bolt"></i></div>
+                                Live Activity
+                            </div>
+                            <span class="status-badge status-active" style="font-size:10px">● Live</span>
+                        </div>
+                        <div class="admin-card-body" id="activity-feed">
+                            <!-- injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Weekly Sales Bar Chart -->
+                    <div class="admin-card">
+                        <div class="admin-card-header">
+                            <div class="admin-card-title">
+                                <div class="admin-card-title-icon"><i class="fa-solid fa-chart-bar"></i></div>
+                                Weekly Sales
+                            </div>
+                            <div style="font-size:var(--text-xs);color:var(--text-muted)">This week</div>
+                        </div>
+                        <div class="admin-card-body">
+                            <div style="margin-bottom:var(--space-4)">
+                                <div
+                                    style="font-family:var(--font-display);font-size:1.8rem;font-weight:300;color:var(--text-primary);letter-spacing:-0.02em">
+                                    ₹68,<span style="color:var(--color-primary);font-style:italic">420</span></div>
+                                <div
+                                    style="font-size:var(--text-xs);color:var(--color-success);font-weight:600;margin-top:3px">
+                                    <i class="fa-solid fa-arrow-trend-up"></i> +14.2% vs last week
+                                </div>
+                            </div>
+                            <div class="bar-chart" style="height:130px">
+                                <div class="bar-chart-bar" style="height:50%">
+                                    <div class="bar-chart-label">Mon</div>
+                                    <div class="bar-chart-value">₹7.2K</div>
+                                </div>
+                                <div class="bar-chart-bar" style="height:70%">
+                                    <div class="bar-chart-label">Tue</div>
+                                    <div class="bar-chart-value">₹9.8K</div>
+                                </div>
+                                <div class="bar-chart-bar" style="height:55%">
+                                    <div class="bar-chart-label">Wed</div>
+                                    <div class="bar-chart-value">₹7.8K</div>
+                                </div>
+                                <div class="bar-chart-bar" style="height:85%">
+                                    <div class="bar-chart-label">Thu</div>
+                                    <div class="bar-chart-value">₹12K</div>
+                                </div>
+                                <div class="bar-chart-bar" style="height:75%">
+                                    <div class="bar-chart-label">Fri</div>
+                                    <div class="bar-chart-value">₹10.5K</div>
+                                </div>
+                                <div class="bar-chart-bar bar-accent" style="height:95%">
+                                    <div class="bar-chart-label">Sat</div>
+                                    <div class="bar-chart-value">₹13.4K</div>
+                                </div>
+                                <div class="bar-chart-bar bar-accent" style="height:65%">
+                                    <div class="bar-chart-label">Sun</div>
+                                    <div class="bar-chart-value">₹7.7K</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Heatmap + mini stats -->
+                    <div class="admin-card">
+                        <div class="admin-card-header">
+                            <div class="admin-card-title">
+                                <div class="admin-card-title-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                                Order Heatmap
+                            </div>
+                            <div style="font-size:var(--text-xs);color:var(--text-muted)">Last 91 days</div>
+                        </div>
+                        <div class="admin-card-body">
+                            <div class="heatmap-days">
+                                <span>Apr</span><span></span><span></span><span></span><span></span><span></span><span></span>
+                                <span></span><span></span><span>May</span><span></span><span></span><span></span>
+                            </div>
+                            <div class="heatmap-grid" id="heatmap-grid">
+                                <!-- Injected by JS -->
+                            </div>
+                            <div
+                                style="display:flex;align-items:center;gap:6px;margin-top:var(--space-3);font-size:10px;color:var(--text-muted)">
+                                <span>Less</span>
+                                <div style="width:10px;height:10px;border-radius:2px;background:var(--color-light-3)">
+                                </div>
+                                <div style="width:10px;height:10px;border-radius:2px;background:rgba(201,169,110,0.25)">
+                                </div>
+                                <div style="width:10px;height:10px;border-radius:2px;background:rgba(201,169,110,0.5)">
+                                </div>
+                                <div style="width:10px;height:10px;border-radius:2px;background:var(--color-primary)">
+                                </div>
+                                <span>More</span>
+                            </div>
+                            <!-- Mini stats below heatmap -->
+                            <div
+                                style="margin-top:var(--space-5);border-top:1px solid var(--border-color);padding-top:var(--space-4)">
+                                <div class="mini-stat">
+                                    <div class="mini-stat-icon stat-icon-gold"><i class="fa-solid fa-fire"></i></div>
+                                    <div class="mini-stat-body">
+                                        <div class="mini-stat-label">Best Day</div>
+                                        <div class="mini-stat-value">Saturday (₹13.4K)</div>
+                                    </div>
+                                </div>
+                                <div class="mini-stat">
+                                    <div class="mini-stat-icon stat-icon-blue"><i class="fa-solid fa-clock"></i></div>
+                                    <div class="mini-stat-body">
+                                        <div class="mini-stat-label">Peak Hour</div>
+                                        <div class="mini-stat-value">7 PM – 9 PM</div>
+                                    </div>
+                                </div>
+                                <div class="mini-stat">
+                                    <div class="mini-stat-icon stat-icon-green"><i class="fa-solid fa-repeat"></i></div>
+                                    <div class="mini-stat-body">
+                                        <div class="mini-stat-label">Repeat Rate</div>
+                                        <div class="mini-stat-value">38.4%</div>
+                                    </div>
+                                    <div class="mini-stat-trend up">+4.1%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ---- PRODUCTS TABLE ---- -->
+                <div class="admin-table-wrap" style="margin-bottom:var(--space-6)">
+                    <div class="admin-table-header">
+                        <div class="admin-table-title">Top Selling Products</div>
+                        <div class="admin-table-toolbar">
+                            <a href="admin-products.html" class="btn btn-sm btn-ghost">View All Products</a>
+                            <a href="admin-products.html?action=new" class="btn btn-sm btn-primary"><i
+                                    class="fa-solid fa-plus"></i> Add Product</a>
+                        </div>
+                    </div>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" class="table-checkbox" /></th>
+                                <th class="sortable sorted">Product <i class="fa-solid fa-arrow-down sort-icon"></i>
+                                </th>
+                                <th class="sortable">Category</th>
+                                <th class="sortable">Price</th>
+                                <th class="sortable">Stock</th>
+                                <th class="sortable">Sales</th>
+                                <th class="sortable">Revenue</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-tbody">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                    <div class="admin-table-footer">
+                        <div class="table-page-info">Showing <strong>1–5</strong> of <strong>350</strong> products</div>
+                        <a href="admin-products.html"
+                            style="font-size:var(--text-sm);color:var(--color-primary);font-weight:600">View all
+                            products →</a>
+                    </div>
+                </div>
+
+            </div><!-- /admin-content -->
+        </main><!-- /admin-main -->
+    </div><!-- /admin-layout -->
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- ================================
+     JAVASCRIPT
+================================ -->
+    <script>
+        // ========= DEMO DATA (UPDATED WITH CHANNELS) =========
+        const ORDERS = [
+            { id: 'ORD-1042', customer: 'Priya Sharma', loc: 'Jodhpur', items: 2, amount: 1798, date: '07 May, 10:24', status: 'pending', channel: 'online' },
+            { id: 'ORD-1041', customer: 'Sneha Patel', loc: 'Jaipur', items: 1, amount: 1299, date: '07 May, 09:55', status: 'processing', channel: 'offline' },
+            { id: 'ORD-1040', customer: 'Ritu Agarwal', loc: 'Delhi', items: 3, amount: 2496, date: '07 May, 09:12', status: 'shipped', channel: 'online' },
+            { id: 'ORD-1039', customer: 'Anita Mehra', loc: 'Udaipur', items: 1, amount: 799, date: '06 May, 18:40', status: 'delivered', channel: 'online' },
+            { id: 'ORD-1038', customer: 'Kavya Singh', loc: 'Mumbai', items: 2, amount: 1698, date: '06 May, 16:20', status: 'delivered', channel: 'offline' },
+            { id: 'ORD-1037', customer: 'Divya Sharma', loc: 'Jodhpur', items: 1, amount: 549, date: '06 May, 14:05', status: 'cancelled', channel: 'online' },
+            { id: 'ORD-1036', customer: 'Pooja Jain', loc: 'Jaipur', items: 3, amount: 3297, date: '06 May, 12:30', status: 'shipped', channel: 'online' },
+            { id: 'ORD-1035', customer: 'Meera Gupta', loc: 'Ahmedabad', items: 1, amount: 649, date: '06 May, 10:50', status: 'processing', channel: 'offline' },
+        ];
+
+        const PRODUCTS = [
+            { img: 'https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=100&q=80&auto=format&fit=crop', name: 'Stiletto Block Heel Pumps', sku: 'HU-HLS-042', category: 'Heels', price: 899, stock: 3, sales: 284, revenue: 255116, status: 'active' },
+            { img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=100&q=80&auto=format&fit=crop', name: 'Classic Tote Bag – Tan', sku: 'HU-BAG-017', category: 'Bags', price: 1299, stock: 8, sales: 203, revenue: 263697, status: 'active' },
+            { img: 'https://images.unsplash.com/photo-1554141220-83411835a60b?w=100&q=80&auto=format&fit=crop', name: 'Mini Sling Crossbody Bag', sku: 'HU-BAG-031', category: 'Bags', price: 899, stock: 2, sales: 191, revenue: 171709, status: 'active' },
+            { img: 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=100&q=80&auto=format&fit=crop', name: 'Rose Gold Strappy Sandals', sku: 'HU-SND-028', category: 'Sandals', price: 649, stock: 5, sales: 178, revenue: 115622, status: 'active' },
+            { img: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=100&q=80&auto=format&fit=crop', name: 'Embroidered Juttis (Flats)', sku: 'HU-FLT-009', category: 'Flats', price: 549, stock: 24, sales: 145, revenue: 79605, status: 'active' },
+        ];
+
+        const ACTIVITIES = [
+            { icon: 'fa-bag-shopping', color: 'var(--color-info)', dot: 'var(--color-info)', text: '<strong>New Order</strong> #ORD-1042 from Priya Sharma — ₹1,798', time: '2 mins ago' },
+            { icon: 'fa-heart', color: 'var(--color-accent)', dot: 'var(--color-accent)', text: '<strong>Wishlist</strong> — Kavya Singh added "Wedge Ankle Strap Heels"', time: '8 mins ago' },
+            { icon: 'fa-star', color: 'var(--color-primary)', dot: 'var(--color-primary)', text: '<strong>5★ Review</strong> — Sneha Patel reviewed "Classic Tote Bag"', time: '22 mins ago' },
+            { icon: 'fa-rotate-left', color: 'var(--color-warning)', dot: 'var(--color-warning)', text: '<strong>Return Request</strong> — Divya Sharma for Order #ORD-1037', time: '1 hr ago' },
+            { icon: 'fa-user-plus', color: 'var(--color-success)', dot: 'var(--color-success)', text: '<strong>New Customer</strong> — Meera Gupta registered from Ahmedabad', time: '1.5 hrs ago' },
+            { icon: 'fa-tag', color: 'var(--color-primary)', dot: 'var(--color-primary)', text: 'Coupon <strong>HEELS10</strong> used 12 times today', time: '2 hrs ago' },
+        ];
+
+        const STATUS_LABELS = {
+            pending: { label: 'Pending', cls: 'status-pending' },
+            processing: { label: 'Processing', cls: 'status-processing' },
+            shipped: { label: 'Shipped', cls: 'status-shipped' },
+            delivered: { label: 'Delivered', cls: 'status-delivered' },
+            cancelled: { label: 'Cancelled', cls: 'status-cancelled' },
+        };
+
+        // ========= RENDER ORDERS (UPDATED TO SHOW CHANNEL BADGE) =========
+        function renderOrders() {
+            const tbody = document.getElementById('orders-tbody');
+            tbody.innerHTML = ORDERS.map(o => {
+                const st = STATUS_LABELS[o.status];
+                // NEW: Logic for Online / Offline Badge
+                const channelBadge = o.channel === 'offline'
+                    ? '<span class="badge-channel offline"><i class="fa-solid fa-store"></i> Offline</span>'
+                    : '<span class="badge-channel online"><i class="fa-solid fa-globe"></i> Online</span>';
+
+                return `
+      <tr>
+        <td><input type="checkbox" class="table-checkbox" /></td>
+        <td>
+            <span style="font-weight:600;color:var(--color-primary)">${o.id}</span>
+            ${channelBadge}
+        </td>
+        <td>
+          <div class="admin-table-name">${o.customer}</div>
+          <div class="admin-table-sub"><i class="fa-solid fa-location-dot" style="font-size:9px"></i> ${o.loc}</div>
+        </td>
+        <td><span style="font-size:var(--text-sm)">${o.items} item${o.items > 1 ? 's' : ''}</span></td>
+        <td><span class="admin-table-name">₹${o.amount.toLocaleString('en-IN')}</span></td>
+        <td><span style="font-size:var(--text-xs);color:var(--text-muted)">${o.date}</span></td>
+        <td><span class="status-badge ${st.cls}">${st.label}</span></td>
+        <td>
+          <div class="admin-table-actions">
+            <button class="table-action-btn" title="View order"><i class="fa-regular fa-eye"></i></button>
+            <button class="table-action-btn" title="Edit order"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button class="table-action-btn danger" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
           </div>
+        </td>
+      </tr>`;
+            }).join('');
+        }
 
-        </div><!-- /sec-dashboard -->
-
-
-        <!-- ══════════════════════════════════════
-             PRODUCTS SECTION
-        ══════════════════════════════════════ -->
-        <div class="sec" id="sec-products">
-          <div class="card">
-            <div class="card-hd">
-              <div class="card-title">Products</div>
-              <button class="btn btn-sm btn-primary" onclick="openProductModal()">
-                <i class="fa-solid fa-plus"></i> Add Product
-              </button>
-            </div>
-            <!-- Filter bar -->
-            <div class="filter-bar"
-              style="margin-bottom:0;border-radius:0;border:none;border-bottom:1px solid var(--border);box-shadow:none">
-              <div class="search-wrap">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" class="search-input" id="productSearch" placeholder="Search products…"
-                  oninput="filterProducts()">
-              </div>
-              <select class="filter-select" id="catFilter" onchange="filterProducts()">
-                <option value="">All Categories</option>
-                <option>Heels</option>
-                <option>Sandals</option>
-                <option>Wedges</option>
-                <option>Flats</option>
-                <option>Bags</option>
-                <option>Accessories</option>
-              </select>
-              <select class="filter-select" id="statusFilter2" onchange="filterProducts()">
-                <option value="">All Status</option>
-                <option value="1">Active</option>
-                <option value="0">Inactive</option>
-              </select>
-            </div>
-            <div class="tbl-scroll">
-              <table style="min-width:800px">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>MRP</th>
-                    <th>Stock</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="productsTableBody">
-                  <tr>
-                    <td colspan="7">
-                      <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading products…</div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="card-ft">
-              <div class="pg-info" id="productsPgInfo">—</div>
-              <div class="pagination" id="productsPagination"></div>
-            </div>
-          </div>
-        </div><!-- /sec-products -->
-
-
-        <!-- ══════════════════════════════════════
-             ORDERS SECTION
-        ══════════════════════════════════════ -->
-        <div class="sec" id="sec-orders">
-
-          <!-- Hero Banner -->
-          <div class="hero-banner">
+        // ========= RENDER PRODUCTS =========
+        function renderProducts() {
+            const tbody = document.getElementById('products-tbody');
+            tbody.innerHTML = PRODUCTS.map(p => {
+                const stockCls = p.stock <= 3 ? 'qty-danger' : p.stock <= 10 ? 'qty-warn' : 'text-success';
+                return `
+      <tr>
+        <td><input type="checkbox" class="table-checkbox" /></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:12px">
+            <img src="${p.img}" class="admin-table-img" alt="${p.name}" />
             <div>
-              <div class="hero-title">
-                Order Management
-                <i class="fa-solid fa-bag-shopping"
-                  style="font-size:1.2rem;color:var(--primary);vertical-align:middle;margin-left:4px"></i>
-              </div>
-              <div class="hero-sub" id="ordersHeroSub">Loading orders…</div>
-            </div>
-            <div class="hero-actions">
-              <button class="btn btn-sm btn-dark" onclick="exportOrdersCSV()">
-                <i class="fa-solid fa-file-csv"></i> CSV
-              </button>
-              <button class="btn btn-sm btn-primary" id="ordersRefreshBtn" onclick="loadOrders(true)">
-                <i class="fa-solid fa-arrows-rotate"></i> Refresh
-              </button>
-              <a href="admin-orders.html" class="btn btn-sm btn-outline"
-                style="color:#0b0b0b;border-color:rgba(255,255,255,.3)">
-                <i class="fa-solid fa-external-link-alt"></i> Full Page
-              </a>
+              <div class="admin-table-name">${p.name}</div>
+              <div class="admin-table-sub">${p.sku}</div>
             </div>
           </div>
-
-          <!-- KPI Cards -->
-          <div class="kpi-grid">
-            <div class="kpi-card c-blue">
-              <div class="kpi-icon c-blue"><i class="fa-solid fa-bag-shopping"></i></div>
-              <div>
-                <div class="kpi-label">Total Orders</div>
-                <div class="kpi-val" id="oKpiTotal">—</div>
-                <div class="kpi-sub">All time</div>
-              </div>
-            </div>
-            <div class="kpi-card c-gold">
-              <div class="kpi-icon c-gold"><i class="fa-solid fa-clock"></i></div>
-              <div>
-                <div class="kpi-label">Unfulfilled</div>
-                <div class="kpi-val" id="oKpiUnfulfilled">—</div>
-                <div class="kpi-sub">Need action</div>
-              </div>
-            </div>
-            <div class="kpi-card c-teal">
-              <div class="kpi-icon c-teal"><i class="fa-solid fa-circle-check"></i></div>
-              <div>
-                <div class="kpi-label">Delivered</div>
-                <div class="kpi-val" id="oKpiDelivered">—</div>
-                <div class="kpi-sub">Completed</div>
-              </div>
-            </div>
-            <div class="kpi-card c-orange">
-              <div class="kpi-icon c-orange"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-              <div>
-                <div class="kpi-label">Revenue</div>
-                <div class="kpi-val" id="oKpiRevenue">—</div>
-                <div class="kpi-sub">Paid orders</div>
-              </div>
-            </div>
-            <div class="kpi-card c-red">
-              <div class="kpi-icon c-red"><i class="fa-solid fa-ban"></i></div>
-              <div>
-                <div class="kpi-label">Cancelled</div>
-                <div class="kpi-val" id="oKpiCancelled">—</div>
-                <div class="kpi-sub">Total cancels</div>
-              </div>
-            </div>
+        </td>
+        <td><span class="badge badge-gold">${p.category}</span></td>
+        <td><span class="admin-table-name">₹${p.price.toLocaleString('en-IN')}</span></td>
+        <td><span class="stock-indicator"><span class="stock-dot" style="background:${p.stock <= 3 ? 'var(--color-error)' : p.stock <= 10 ? 'var(--color-warning)' : 'var(--color-success)'}"></span><span class="stock-qty ${stockCls}">${p.stock}</span></span></td>
+        <td><span style="font-weight:600;color:var(--text-primary)">${p.sales}</span></td>
+        <td><span class="admin-table-name">₹${p.revenue.toLocaleString('en-IN')}</span></td>
+        <td><span class="status-badge status-active">Active</span></td>
+        <td>
+          <div class="admin-table-actions">
+            <button class="table-action-btn" title="View"><i class="fa-regular fa-eye"></i></button>
+            <button class="table-action-btn" title="Edit"><i class="fa-regular fa-pen-to-square"></i></button>
+            <button class="table-action-btn danger" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
           </div>
+        </td>
+      </tr>`;
+            }).join('');
+        }
 
-          <!-- Tab Strip -->
-          <div class="tab-strip" id="ordersTabStrip">
-            <button class="tab-btn active" onclick="setOrderTab('all',this)">All Orders <span class="tab-cnt"
-                id="otcAll">0</span></button>
-            <button class="tab-btn" onclick="setOrderTab('unfulfilled',this)">Unfulfilled <span class="tab-cnt"
-                id="otcUnfulfilled">0</span></button>
-            <button class="tab-btn" onclick="setOrderTab('payment_pending',this)">Pmt Pending <span class="tab-cnt"
-                id="otcPending">0</span></button>
-            <button class="tab-btn" onclick="setOrderTab('placed',this)">Placed <span class="tab-cnt"
-                id="otcPlaced">0</span></button>
-            <button class="tab-btn" onclick="setOrderTab('confirmed',this)">Confirmed <span class="tab-cnt"
-                id="otcConfirmed">0</span></button>
-            <button class="tab-btn" onclick="setOrderTab('shipped',this)">Shipped <span class="tab-cnt"
-                id="otcShipped">0</span></button>
-            <button class="tab-btn" onclick="setOrderTab('out_for_delivery',this)">Out for Delivery <span
-                class="tab-cnt" id="otcOfd">0</span></button>
-            <button class="tab-btn" onclick="setOrderTab('delivered',this)">Delivered <span class="tab-cnt"
-                id="otcDelivered">0</span></button>
-            <button class="tab-btn" onclick="setOrderTab('cancelled',this)">Cancelled <span class="tab-cnt"
-                id="otcCancelled">0</span></button>
-            <button class="tab-btn" onclick="setOrderTab('exchange',this)">Exchange <span class="tab-cnt"
-                id="otcExchange">0</span></button>
-          </div>
-
-          <!-- Filter Bar -->
-          <div class="filter-bar">
-            <div class="search-wrap">
-              <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" class="search-input" id="ordersSearch" placeholder="Order#, Customer, Phone, Email…"
-                oninput="applyOrderFilters()">
-            </div>
-            <select class="filter-select" id="oPayFilter" onchange="applyOrderFilters()">
-              <option value="">All Payments</option>
-              <option value="paid">Paid</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
-            </select>
-            <select class="filter-select" id="oMethodFilter" onchange="applyOrderFilters()">
-              <option value="">All Methods</option>
-              <option value="razorpay">Razorpay / UPI</option>
-              <option value="cod">COD</option>
-              <option value="pos">POS</option>
-            </select>
-            <select class="filter-select" id="oSourceFilter" onchange="applyOrderFilters()">
-              <option value="">All Sources</option>
-              <option value="online">Online</option>
-              <option value="pos">POS / Offline</option>
-            </select>
-            <input type="date" class="date-input" id="oDateFrom" onchange="applyOrderFilters()" title="From Date">
-            <input type="date" class="date-input" id="oDateTo" onchange="applyOrderFilters()" title="To Date">
-            <button class="btn btn-sm btn-outline" onclick="clearOrderFilters()">
-              <i class="fa-solid fa-filter-circle-xmark"></i> Clear
-            </button>
-          </div>
-
-          <!-- Orders Table -->
-          <div class="card">
-            <div class="tbl-scroll">
-              <table style="min-width:900px">
-                <thead>
-                  <tr>
-                    <th>Order</th>
-                    <th>Date</th>
-                    <th>Customer</th>
-                    <th>Amount</th>
-                    <th>Payment</th>
-                    <th>Source</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="ordersTbody">
-                  <tr>
-                    <td colspan="8">
-                      <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading orders…</div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="card-ft">
-              <div class="pg-info" id="ordersPgInfo">Showing 0 orders</div>
-              <div class="pagination" id="ordersPagination"></div>
-            </div>
-          </div>
-
-        </div><!-- /sec-orders -->
-
-
-        <!-- ══════════════════════════════════════
-             CUSTOMERS SECTION
-        ══════════════════════════════════════ -->
-        <div class="sec" id="sec-customers">
-          <div class="card">
-            <div class="card-hd">
-              <div class="card-title">Customers</div>
-            </div>
-            <div class="filter-bar"
-              style="margin-bottom:0;border-radius:0;border:none;border-bottom:1px solid var(--border);box-shadow:none">
-              <div class="search-wrap">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="text" class="search-input" id="customerSearch" placeholder="Search name or email…"
-                  oninput="filterCustomers()">
-              </div>
-              <select class="filter-select" id="roleFilter" onchange="filterCustomers()">
-                <option value="">All Roles</option>
-                <option value="customer">Customer</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div class="tbl-scroll">
-              <table style="min-width:700px">
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Phone</th>
-                    <th>Joined</th>
-                    <th>Orders</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="customersTableBody">
-                  <tr>
-                    <td colspan="6">
-                      <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading…</div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="card-ft">
-              <div class="pg-info" id="customersPgInfo">—</div>
-              <div class="pagination" id="customersPagination"></div>
-            </div>
-          </div>
-        </div><!-- /sec-customers -->
-
-
-        <!-- ══════════════════════════════════════
-             COUPONS SECTION
-        ══════════════════════════════════════ -->
-        <div class="sec" id="sec-coupons">
-          <div class="card">
-            <div class="card-hd">
-              <div class="card-title">Coupons &amp; Offers</div>
-              <button class="btn btn-sm btn-primary" onclick="openCouponModal()">
-                <i class="fa-solid fa-plus"></i> Add Coupon
-              </button>
-            </div>
-            <div class="tbl-scroll">
-              <table style="min-width:800px">
-                <thead>
-                  <tr>
-                    <th>Code</th>
-                    <th>Type</th>
-                    <th>Value</th>
-                    <th>Min Order</th>
-                    <th>Uses</th>
-                    <th>Expires</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="couponsTableBody">
-                  <tr>
-                    <td colspan="8">
-                      <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading…</div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div><!-- /sec-coupons -->
-
-
-        <!-- ══════════════════════════════════════
-             REVIEWS SECTION
-        ══════════════════════════════════════ -->
-        <div class="sec" id="sec-reviews">
-          <div class="card">
-            <div class="card-hd">
-              <div class="card-title">Product Reviews</div>
-              <select class="filter-select" id="reviewStatusFilter" onchange="loadReviews()" style="width:auto">
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
-            <div class="tbl-scroll">
-              <table style="min-width:700px">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Customer</th>
-                    <th>Rating</th>
-                    <th>Review</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="reviewsTableBody">
-                  <tr>
-                    <td colspan="6">
-                      <div class="spinner-wrap"><i class="fa-solid fa-spinner"></i>Loading…</div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div><!-- /sec-reviews -->
-
-      </div><!-- /content -->
-    </div><!-- /main -->
-  </div><!-- /layout -->
-
-
-  <!-- ══════════════════════════════════════════════════
-       ORDER DETAIL MODAL
-  ══════════════════════════════════════════════════ -->
-  <div class="modal-overlay" id="orderDetailModal">
-    <div class="modal wide">
-      <div class="modal-header">
+        // ========= RENDER ACTIVITY =========
+        function renderActivity() {
+            const feed = document.getElementById('activity-feed');
+            feed.innerHTML = ACTIVITIES.map(a => `
+      <div class="activity-item">
+        <div class="activity-dot-wrap">
+          <div class="activity-dot" style="background:${a.dot}"></div>
+          <div class="activity-line"></div>
+        </div>
         <div>
-          <div class="modal-title" id="orderModalTitle">Order Details</div>
-          <div id="orderModalSubtitle" style="font-size:.75rem;color:var(--muted);margin-top:2px"></div>
+          <div class="activity-text">${a.text}</div>
+          <div class="activity-time"><i class="fa-regular fa-clock" style="font-size:9px"></i> ${a.time}</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn btn-sm btn-outline" onclick="printOrderInvoice()" title="Print Invoice">
-            <i class="fa-solid fa-print"></i> Invoice
-          </button>
-          <button class="modal-close" onclick="closeOrderModal()">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+      </div>`).join('');
+        }
+
+        // ========= RENDER HEATMAP =========
+        function renderHeatmap() {
+            const grid = document.getElementById('heatmap-grid');
+            const levels = ['', 'h1', 'h2', 'h3', 'h4'];
+            let html = '';
+            for (let i = 0; i < 91; i++) {
+                const l = levels[Math.floor(Math.random() * 5)];
+                html += `<div class="heatmap-cell ${l}" title="Day ${i + 1}: ${Math.floor(Math.random() * 30)} orders"></div>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        // ========= SIDEBAR =========
+        function initSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const main = document.getElementById('admin-main');
+            const overlay = document.getElementById('sidebar-overlay');
+            const collapseBtn = document.getElementById('sidebar-collapse-btn');
+            const toggleIcon = document.getElementById('sidebar-toggle-icon');
+            const mobileToggle = document.getElementById('sidebar-toggle-mobile');
+
+            // Desktop collapse
+            collapseBtn?.addEventListener('click', () => {
+                sidebar.classList.toggle('mini');
+                if (sidebar.classList.contains('mini')) {
+                    main.style.marginLeft = '70px';
+                    toggleIcon.className = 'fa-solid fa-chevron-right';
+                } else {
+                    main.style.marginLeft = 'var(--admin-sidebar-width)';
+                    toggleIcon.className = 'fa-solid fa-chevron-left';
+                }
+            });
+
+            // Mobile toggle
+            mobileToggle?.addEventListener('click', () => {
+                sidebar.classList.add('open');
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            });
+
+            overlay?.addEventListener('click', () => {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+            });
+        }
+
+        // ========= NOTIFICATIONS =========
+        function initNotifications() {
+            const btn = document.getElementById('notif-btn');
+            const panel = document.getElementById('notif-panel');
+            const markAll = document.getElementById('mark-all-read');
+
+            btn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = panel.style.display !== 'none';
+                panel.style.display = isOpen ? 'none' : 'block';
+            });
+
+            markAll?.addEventListener('click', () => {
+                document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+                document.querySelectorAll('.notif-unread-dot').forEach(el => el.remove());
+                document.querySelector('.admin-notif-dot')?.remove();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!btn?.contains(e.target) && !panel?.contains(e.target)) {
+                    panel.style.display = 'none';
+                }
+            });
+        }
+
+        // ========= CHART PERIOD =========
+        function initChartPeriod() {
+            document.querySelectorAll('.chart-period-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.closest('.chart-period').querySelectorAll('.chart-period-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    showToast('info', 'Chart Updated', `Showing data for: ${btn.dataset.period}`);
+                });
+            });
+        }
+
+        // ========= DATE RANGE LABEL =========
+        function initDateRange() {
+            const btn = document.getElementById('date-range-btn');
+            const now = new Date();
+            document.getElementById('date-range-label').textContent =
+                now.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+            btn?.addEventListener('click', () => showToast('info', 'Date Picker', 'Date range picker coming soon!'));
+        }
+
+        // ========= SELECT ALL ORDERS =========
+        function initSelectAll() {
+            document.getElementById('select-all-orders')?.addEventListener('change', function () {
+                document.querySelectorAll('#orders-tbody .table-checkbox').forEach(cb => cb.checked = this.checked);
+            });
+        }
+
+        // ========= TOAST =========
+        function showToast(type, title, message) {
+            const container = document.getElementById('toast-container');
+            const id = 'toast-' + Date.now();
+            const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+            container.insertAdjacentHTML('beforeend', `
+      <div class="toast toast-${type}" id="${id}">
+        <i class="fa-solid ${icons[type] || icons.info} toast-icon"></i>
+        <div class="toast-body">
+          <div class="toast-title">${title}</div>
+          <div class="toast-message">${message}</div>
         </div>
-      </div>
-      <div class="modal-body" id="orderModalBody">Loading...</div>
-      <div class="modal-footer">
-        <button class="btn btn-sm btn-outline" onclick="closeOrderModal()">Close</button>
-        <button class="btn btn-sm btn-primary" id="btnSaveOrder" onclick="saveOrderUpdate()">
-          <i class="fa-solid fa-check"></i> Save Changes
-        </button>
-      </div>
-    </div>
-  </div>
+        <button class="toast-close" onclick="document.getElementById('${id}').remove()">✕</button>
+      </div>`);
+            setTimeout(() => document.getElementById(id)?.remove(), 4000);
+        }
 
+        // ========= LIVE ACTIVITY SIMULATION =========
+        function simulateLiveActivity() {
+            const newActivities = [
+                { icon: 'fa-bag-shopping', color: 'var(--color-info)', dot: 'var(--color-info)', text: '<strong>New Order</strong> #ORD-1043 — Pooja Jain, ₹2,198 (Online)', time: 'just now' },
+                { icon: 'fa-store', color: 'var(--color-primary)', dot: 'var(--color-primary)', text: '<strong>Offline Sale</strong> #ORD-1044 — Store walk-in, ₹1,299', time: 'just now' },
+            ];
+            let i = 0;
+            setInterval(() => {
+                const feed = document.getElementById('activity-feed');
+                const a = newActivities[i % newActivities.length];
+                const newItem = document.createElement('div');
+                newItem.className = 'activity-item';
+                newItem.style.animation = 'fadeInDown 0.4s ease forwards';
+                newItem.innerHTML = `
+        <div class="activity-dot-wrap">
+          <div class="activity-dot" style="background:${a.dot}"></div>
+          <div class="activity-line"></div>
+        </div>
+        <div>
+          <div class="activity-text">${a.text}</div>
+          <div class="activity-time"><i class="fa-regular fa-clock" style="font-size:9px"></i> ${a.time}</div>
+        </div>`;
+                feed.insertBefore(newItem, feed.firstChild);
+                if (feed.children.length > 8) feed.removeChild(feed.lastChild);
+                i++;
+            }, 12000);
+        }
 
-  <!-- ══════════════════════════════════════════════════
-       PRODUCT MODAL
-  ══════════════════════════════════════════════════ -->
-  <div class="product-modal-bd" id="productModalBd">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title" id="productModalTitle">Add New Product</div>
-        <button class="modal-close" onclick="closeProductModal()"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal-body">
-        <!-- NOTE: no <form> submit action — handled by saveProduct(event) in dashboard.js -->
-        <form id="productForm" onsubmit="saveProduct(event)">
-          <div class="form-grid">
-            <div class="form-field full">
-              <label class="form-label">Product Name *</label>
-              <input type="text" class="form-input" name="name" required placeholder="e.g. Block Heel Sandals">
-            </div>
-            <div class="form-field">
-              <label class="form-label">SKU</label>
-              <input type="text" class="form-input" name="sku" placeholder="HU-001">
-            </div>
-            <div class="form-field">
-              <label class="form-label">Category</label>
-              <select class="form-select" name="category">
-                <option>Heels</option>
-                <option>Sandals</option>
-                <option>Wedges</option>
-                <option>Flats</option>
-                <option>Bags</option>
-                <option>Accessories</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label class="form-label">Price ₹ *</label>
-              <input type="number" class="form-input" name="price" required min="0" placeholder="899">
-            </div>
-            <div class="form-field">
-              <label class="form-label">MRP ₹</label>
-              <input type="number" class="form-input" name="mrp" min="0" placeholder="1499">
-            </div>
-            <div class="form-field">
-              <label class="form-label">Stock Qty</label>
-              <input type="number" class="form-input" name="stock" min="0" value="0">
-            </div>
-            <div class="form-field full">
-              <label class="form-label">Description</label>
-              <textarea class="form-input form-textarea" name="description"
-                placeholder="Short product description…"></textarea>
-            </div>
-            <div class="form-field full">
-              <label class="form-label">Image URL</label>
-              <input type="url" class="form-input" name="image_url" placeholder="https://…">
-            </div>
-            <div class="form-field full">
-              <label class="form-label">Sizes (comma separated)</label>
-              <input type="text" class="form-input" name="sizes" placeholder="36,37,38,39,40,41">
-            </div>
-            <div class="form-field full">
-              <div class="form-check">
-                <input type="checkbox" name="featured" id="chkFeatured">
-                <label for="chkFeatured">Featured Product</label>
-              </div>
-              <div class="form-check">
-                <input type="checkbox" name="is_new" id="chkNew">
-                <label for="chkNew">New Arrival</label>
-              </div>
-              <div class="form-check">
-                <input type="checkbox" name="active" id="chkActive" checked>
-                <label for="chkActive">Active (visible in store)</label>
-              </div>
-            </div>
-          </div>
-          <!-- Error display — shown by dashboard.js on save failure -->
-          <div id="productFormError" style="display:none" class="error-state">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span id="productFormErrorMsg"></span>
-          </div>
-          <div class="modal-footer" style="padding:14px 0 0;margin-top:14px">
-            <button type="button" class="btn btn-outline btn-sm" onclick="closeProductModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary btn-sm" id="saveProductBtn">
-              <i class="fa-solid fa-floppy-disk"></i> Save Product
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+        // ========= ADMIN SEARCH =========
+        function initAdminSearch() {
+            document.getElementById('admin-search-input')?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.target.value.trim()) {
+                    showToast('info', 'Search', `Searching for "${e.target.value.trim()}"...`);
+                }
+            });
+        }
 
+        // ========= INIT =========
+        document.addEventListener('DOMContentLoaded', () => {
+            renderOrders();
+            renderProducts();
+            renderActivity();
+            renderHeatmap();
+            initSidebar();
+            initNotifications();
+            initChartPeriod();
+            initDateRange();
+            initSelectAll();
+            initAdminSearch();
+            simulateLiveActivity();
+        });
+    </script>
 
-  <!-- ══════════════════════════════════════════════════
-       COUPON MODAL
-  ══════════════════════════════════════════════════ -->
-  <div class="coupon-modal-bd" id="couponModalBd">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="modal-title" id="couponModalTitle">Add Coupon</div>
-        <button class="modal-close" onclick="closeCouponModal()"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal-body">
-        <form id="couponForm" onsubmit="saveCoupon(event)">
-          <div class="form-grid">
-            <div class="form-field full">
-              <label class="form-label">Coupon Code *</label>
-              <input type="text" class="form-input" name="code" required placeholder="HEELS10"
-                style="text-transform:uppercase;font-family:monospace">
-            </div>
-            <div class="form-field">
-              <label class="form-label">Discount Type</label>
-              <select class="form-select" name="type">
-                <option value="percent">Percentage (%)</option>
-                <option value="flat">Flat Amount (₹)</option>
-              </select>
-            </div>
-            <div class="form-field">
-              <label class="form-label">Value *</label>
-              <input type="number" class="form-input" name="value" required min="0" placeholder="10">
-            </div>
-            <div class="form-field">
-              <label class="form-label">Min Order (₹)</label>
-              <input type="number" class="form-input" name="min_order" min="0" placeholder="0" value="0">
-            </div>
-            <div class="form-field">
-              <label class="form-label">Max Discount (₹)</label>
-              <input type="number" class="form-input" name="max_discount" min="0" placeholder="Unlimited">
-            </div>
-            <div class="form-field">
-              <label class="form-label">Max Uses</label>
-              <input type="number" class="form-input" name="max_uses" min="0" placeholder="Unlimited">
-            </div>
-            <div class="form-field full">
-              <label class="form-label">Expires At</label>
-              <input type="datetime-local" class="form-input" name="expires_at">
-            </div>
-            <div class="form-field full">
-              <label class="form-label">Description</label>
-              <textarea class="form-input form-textarea" name="description" style="min-height:56px"
-                placeholder="Short description…"></textarea>
-            </div>
-            <div class="form-field full">
-              <div class="form-check">
-                <input type="checkbox" name="active" id="chkCouponActive" checked>
-                <label for="chkCouponActive">Active</label>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer" style="padding:14px 0 0;margin-top:14px">
-            <button type="button" class="btn btn-outline btn-sm" onclick="closeCouponModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary btn-sm" id="saveCouponBtn">
-              <i class="fa-solid fa-floppy-disk"></i> Save Coupon
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ══════════════════════════════════════════════════
-       SCRIPTS
-       Load order: HeelsUpAuth first → then dashboard.js
-       NO inline 
-  <script src="js/admin/dashboard.js"></script>
-
-    <script defer src="/js/admin/admin.js"></script>
 </body>
 
 </html>

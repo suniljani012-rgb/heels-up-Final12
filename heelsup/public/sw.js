@@ -3,7 +3,7 @@
 // public/sw.js
 // ============================================================
 
-const CACHE_NAME = 'heelsup-v2'; // Bumped: JS files reorganized (2025-06)
+const CACHE_NAME = 'heelsup-v1';
 const OFFLINE_URL = '/offline.html';
 
 // ── Files to cache immediately on install ─────────────────────
@@ -14,19 +14,13 @@ const STATIC_ASSETS = [
     '/cart.html',
     '/wishlist.html',
     '/style.css',
-    // Core JS (new locations)
-    '/js/core/config.js',
-    '/js/core/api-client.js',
-    // Feature JS
-    '/js/cart.js',
-    '/js/wishlist.js',
-    '/js/razorpay.js',
+    '/app-auth.js',
     '/js/api.js',
+    '/js/cart.js',
     '/js/auth.js',
     '/js/ui.js',
     '/logo.png',
     '/manifest.json',
-    '/sitemap.xml',
 ];
 
 // ── Install: pre-cache static assets ─────────────────────────

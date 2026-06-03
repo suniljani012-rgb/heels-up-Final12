@@ -1,213 +1,96 @@
-<!DOCTYPE html><html lang="en"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-  <!-- SEO -->
-  <title>Track Your Order – HeelsUp</title>
-  <meta name="description" content="Track your HeelsUp order in real-time. Enter your Order ID or phone number to see live delivery status, courier details and estimated delivery date.">
-  <meta name="robots" content="noindex,follow">
-  <link rel="canonical" href="https://heelsup.in/track">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEELS UP | Official Luxury Store</title>
+    <link rel="stylesheet" href="storefront-premium.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  
-    <link rel="stylesheet" href="/css/customer-theme.css">
-    <link rel="stylesheet" href="/css/pages/order-tracking.css">
 </head>
-
 <body>
-    <div id="navbar"></div>
-
-  <!-- ═══ TOAST ═══ -->
-  
-
-  
-  
-
-  
-
-  <!-- ═══ MOBILE MENU ═══ -->
-  
-
-  <!-- ═══ BREADCRUMB ═══ -->
-  <div class="breadcrumb">
-    <div class="container">
-      <ol class="breadcrumb-list" itemscope="" itemtype="https://schema.org/BreadcrumbList">
-        <li itemprop="itemListElement" itemscope="" itemtype="https://schema.org/ListItem">
-          <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
-          <meta itemprop="position" content="1">
-        </li>
-        <li><i class="fa-solid fa-chevron-right breadcrumb-sep"></i></li>
-        <li itemprop="itemListElement" itemscope="" itemtype="https://schema.org/ListItem">
-          <span class="active" itemprop="name">Track Order</span>
-          <meta itemprop="position" content="2">
-        </li>
-      </ol>
-    </div>
-  </div>
-
-  <!-- ═══ PAGE HEADER ═══ -->
-  <div class="page-header">
-    <div class="container">
-      <div class="ph-inner">
-        <div class="ph-label">
-          <i class="fa-solid fa-location-dot"></i> Real-Time Tracking
+    
+    <nav class="store-nav">
+        <div class="nav-logo"><a href="index.html">HEELS UP</a></div>
+        <div class="nav-links">
+            <a href="shop.html">Shop All</a>
+            <a href="shop.html?category=heels">Heels</a>
+            <a href="shop.html?category=flats">Flats</a>
+            <a href="lookbook.html">Lookbook</a>
         </div>
-        <h1 class="ph-title">Track Your Order</h1>
-        <p class="ph-sub">Enter your Order ID or registered phone number to see live delivery status</p>
-      </div>
-    </div>
-  </div>
+        <div class="nav-icons">
+            <a href="search.html"><i class="fa-solid fa-magnifying-glass"></i></a>
+            <a href="profile.html"><i class="fa-regular fa-user"></i></a>
+            <a href="cart.html"><i class="fa-solid fa-bag-shopping"></i></a>
+        </div>
+    </nav>
 
-  <!-- ═══ MAIN CONTENT ═══ -->
-  <main class="track-page">
-    <div class="container">
-      <div class="track-grid">
+    <main class="store-main" style="padding-top: var(--nav-height)">
+        <div class="container section-padding">
+            
+  <!-- NAVBAR (copy from any existing page) -->
 
-        <!-- LEFT: Search + Results -->
-        <div>
-
-          <!-- Search Card -->
-          <div class="search-card">
-            <div class="sc-head">
-              <div class="sc-head-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
-              <div>
-                <div class="sc-head-title">Find Your Order</div>
-                <div class="sc-head-sub">Use Order ID (e.g. ORD-1234-AB5C) or phone number</div>
-              </div>
-            </div>
-            <div class="sc-body">
-              <div class="sc-form">
-                <div class="sc-input-wrap">
-                  <input type="text" class="sc-input" id="order-id-inp" placeholder="Order ID — e.g. ORD-1234-AB5C" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Order ID">
-                  <i class="fa-solid fa-hashtag sc-input-icon" id="inp-icon-1"></i>
-                </div>
-                <div class="sc-or">or</div>
-                <div class="sc-input-wrap">
-                  <input type="tel" class="sc-input" id="phone-inp" placeholder="Registered Phone Number — 10 digits" autocomplete="tel" maxlength="10" aria-label="Phone number">
-                  <i class="fa-solid fa-phone sc-input-icon" id="inp-icon-2"></i>
-                </div>
-                <button class="btn btn-primary btn-pill sc-btn" id="track-btn" onclick="handleTrack()">
-                  <i class="fa-solid fa-magnifying-glass"></i> Track Order
-                </button>
-                <p class="sc-example">
-                  Your Order ID is in your confirmation message. You can also track from <a href="/orders">My
-                    Orders</a>.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Results Area -->
-          <div id="result-area">
-            <!-- Initial empty state -->
-            <div class="state-box" id="initial-state">
-              <span class="state-icon"><i class="fa-solid fa-box-open" style="color:var(--warm-gray)"></i></span>
-              <div class="state-title">Enter Your Order Details</div>
-              <p class="state-sub">Enter your Order ID or registered phone number to check the live status of your
-                order.</p>
-            </div>
-          </div>
-
-        </div><!-- /left -->
-
-        <!-- RIGHT: Sidebar -->
-        <div>
-
-          <!-- Support -->
-          <div class="support-card">
-            <div class="supp-title">Need Help?</div>
-            <div class="supp-desc">Facing an issue with your order? We are here to help — please reach out via WhatsApp
-              or email.</div>
-            <div class="supp-btns">
-              
-              <a href="mailto:support@heelsup.in" class="supp-btn mail">
-                <i class="fa-solid fa-envelope"></i> Email Support
-              </a>
-            </div>
-          </div>
-
-          <!-- Tips -->
-          <div class="tips-card">
-            <div class="tips-title">
-              <i class="fa-solid fa-lightbulb"></i> Helpful Tips
-            </div>
-            <div class="tip-item">
-              <span class="tip-num">1</span>
-              <span>Order ID is provided in your confirmation SMS/email — format: <strong>ORD-XXXX-XXXX</strong></span>
-            </div>
-            <div class="tip-item">
-              <span class="tip-num">2</span>
-              <span>Use the exact phone number provided during checkout.</span>
-            </div>
-            <div class="tip-item">
-              <span class="tip-num">3</span>
-              <span>Delivery takes 3–8 working days depending on your location.</span>
-            </div>
-            <div class="tip-item">
-              <span class="tip-num">4</span>
-              <span>An unboxing video is required for exchanges — please contact us within 48 hours of delivery.</span>
-            </div>
-          </div>
-
-        </div><!-- /right -->
-
-      </div><!-- /grid -->
-    </div>
+  <main>
+    <!-- TODO: Ye cheezein banani hain:
+      1. Search bar — Order ID ya phone number se track karo
+      2. Order info card — Order date, items, total amount
+      3. Tracking timeline/stepper — Placed > Confirmed > Packed > Shipped > Delivered
+      4. Estimated delivery date
+      5. Courier details (name + tracking number + link)
+    -->
+    <p style="text-align:center; padding: 4rem; font-family: var(--font-body); color: var(--text-muted);">
+      order-tracking.html — Abhi khaali hai, code likhna baaki hai.
+    </p>
   </main>
 
-  <!-- ═══ FOOTER ═══ -->
-  
+  <!-- FOOTER (copy from any existing page) -->
 
-  <!-- ═══ FLOATING ═══ -->
-  
-  
+        </div>
+    </main>
+    
+    <footer class="store-footer">
+        <div class="container footer-grid">
+            <div>
+                <h3 class="nav-logo" style="margin-bottom:1rem">HEELS UP</h3>
+                <p style="color:var(--color-text-muted); font-size:0.9rem; max-width:300px">Crafting the world's most elegant, comfortable, and striking luxury footwear.</p>
+            </div>
+            <div>
+                <div class="footer-heading">Shop</div>
+                <div class="footer-links">
+                    <a href="shop.html">New Arrivals</a>
+                    <a href="shop.html?category=heels">Stilettos</a>
+                    <a href="shop.html?category=wedges">Wedges</a>
+                    <a href="shop.html?category=flats">Flats</a>
+                </div>
+            </div>
+            <div>
+                <div class="footer-heading">Help</div>
+                <div class="footer-links">
+                    <a href="contact.html">Contact Us</a>
+                    <a href="shipping-info.html">Shipping</a>
+                    <a href="returns.html">Returns</a>
+                    <a href="faq.html">FAQ</a>
+                </div>
+            </div>
+            <div>
+                <div class="footer-heading">Legal</div>
+                <div class="footer-links">
+                    <a href="policy.html">Privacy Policy</a>
+                    <a href="policy.html">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+        <div class="container" style="border-top:1px solid var(--color-border); padding-top:2rem; display:flex; justify-content:space-between; color:var(--color-text-muted); font-size:0.875rem">
+            <div>© 2026 Heels Up. All rights reserved.</div>
+            <div style="display:flex; gap:1rem">
+                <i class="fa-brands fa-instagram"></i>
+                <i class="fa-brands fa-tiktok"></i>
+                <i class="fa-brands fa-pinterest"></i>
+            </div>
+        </div>
+    </footer>
 
-  <!-- ═══════════════════════════════════════════
-     SCRIPTS
-═══════════════════════════════════════════ -->
-    
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-  
-    
-
-
-
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-
-    <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer=""></script>
-    <script src="/js/core/api-client.js" defer=""></script>
-    <script src="/js/core/common-ui.js" defer=""></script>
-    
-    <!-- State and Operations -->
-    <script src="/js/cart.js" defer=""></script>
-    <script src="/js/wishlist.js" defer=""></script>
-    
-    <!-- Page Controller -->
-    <script src="/js/pages/order-tracking.js" defer=""></script>
-<footer class="footer"></footer></body></html>
+</body>
+</html>

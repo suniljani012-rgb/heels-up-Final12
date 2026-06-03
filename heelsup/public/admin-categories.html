@@ -1,162 +1,428 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Categories â€” HeelsUp Admin</title>
+    <title>HeelsUp Admin — Categories</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
         rel="stylesheet" />
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    
-    <link rel="stylesheet" href="/css/admin-theme.css">
-    <link rel="stylesheet" href="/css/admin/admin-categories.css">
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+        body {
+            background: var(--admin-bg);
+        }
+
+        .sidebar-brand {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--color-white);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-brand span {
+            color: var(--color-primary);
+        }
+
+        .sidebar-version {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .cat-image {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius-circle);
+            object-fit: cover;
+            border: 2px solid var(--border-color);
+        }
+
+        .cat-desc {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="mob-overlay" id="mobOverlay" onclick="closeSidebar()"></div>
-    <div class="toast-wrap" id="toastWrap"></div>
-
-    <div class="wrap">
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-brand">
-                <div class="sidebar-logo">H</div>
-                <div>
-                    <div style="font-size:.87rem;font-weight:700;color:#f1f5f9">HeelsUp</div>
-                    <div style="font-size:.62rem;color:#64748b;text-transform:uppercase;letter-spacing:.1em">Admin Panel
+    <div class="admin-layout">
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar" id="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-sidebar-logo">
+                    <div>
+                        <div class="sidebar-brand">Heels<span>Up</span></div>
+                        <div class="sidebar-version">Admin Panel v2.0</div>
                     </div>
                 </div>
+                <button class="admin-sidebar-toggle" id="sidebar-collapse-btn" title="Collapse sidebar">
+                    <i class="fa-solid fa-chevron-left" id="sidebar-toggle-icon"></i>
+                </button>
             </div>
-            <nav class="sidebar-nav">
-                <div class="nav-label">Main</div>
-                <a class="nav-item" href="admin.html"><i class="fa-solid fa-gauge"></i> Dashboard</a>
-                <div class="nav-label">Catalogue</div>
-                <a class="nav-item" href="admin-products.html"><i class="fa-solid fa-box"></i> Products</a>
-                <a class="nav-item active" href="admin-categories.html"><i class="fa-solid fa-layer-group"></i>
-                    Categories</a>
-                <a class="nav-item" href="admin-collections.html"><i class="fa-solid fa-swatchbook"></i> Collections</a>
-                <a class="nav-item" href="admin-inventory.html"><i class="fa-solid fa-warehouse"></i> Inventory</a>
-                <div class="nav-label">Sales & Customers</div>
-                <a class="nav-item" href="admin-orders.html"><i class="fa-solid fa-bag-shopping"></i> Orders</a>
-                <a class="nav-item" href="admin-customers.html"><i class="fa-solid fa-users"></i> Customers</a>
-                <a class="nav-item" href="admin-coupons.html"><i class="fa-solid fa-ticket"></i> Coupons</a>
-                <a class="nav-item" href="admin-reviews.html"><i class="fa-solid fa-star"></i> Reviews</a>
-                <a class="nav-item" href="admin-orders.html?tab=exchange"><i class="fa-solid fa-rotate-left"></i> Exchanges</a>
-                <a class="nav-item" href="admin-pos.html"><i class="fa-solid fa-cash-register"></i> POS / Offline
-                    Sales</a>
-                <div class="nav-label">Marketing & Content</div>
-                <a class="nav-item" href="admin-banners.html"><i class="fa-solid fa-image"></i> Banners</a>
-                <a class="nav-item" href="admin-blog.html"><i class="fa-solid fa-newspaper"></i> Blog</a>
-                <a class="nav-item" href="admin-pages.html"><i class="fa-solid fa-file-lines"></i> Pages</a>
-                <a class="nav-item" href="admin-notifications.html"><i class="fa-solid fa-bell"></i> Notifications</a>
-                <div class="nav-label">Reports</div>
-                <a class="nav-item" href="admin-reports.html"><i class="fa-solid fa-chart-bar"></i> Reports</a>
-                <a class="nav-item" href="admin-analytics.html"><i class="fa-solid fa-chart-line"></i> Analytics</a>
-                <div class="nav-label">System</div>
-                <a class="nav-item" href="admin-shipping.html"><i class="fa-solid fa-truck-fast"></i> Shipping</a>
-                <a class="nav-item" href="admin-taxes.html"><i class="fa-solid fa-file-invoice-dollar"></i> Taxes</a>
-                <a class="nav-item" href="admin-staff.html"><i class="fa-solid fa-users-gear"></i> Staff</a>
-                <a class="nav-item" href="admin-settings.html"><i class="fa-solid fa-gear"></i> Settings</a>
+
+            <nav class="admin-nav" id="admin-nav">
+                <!-- MAIN -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Main</div>
+                    <a href="admin.html" class="admin-nav-link">
+                        <i class="fa-solid fa-grid-2 nav-icon"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="admin-analytics.html" class="admin-nav-link">
+                        <i class="fa-solid fa-chart-line nav-icon"></i>
+                        <span>Analytics</span>
+                    </a>
+                    <a href="admin-reports.html" class="admin-nav-link">
+                        <i class="fa-solid fa-chart-bar nav-icon"></i>
+                        <span>Reports</span>
+                    </a>
+                </div>
+
+                <!-- CATALOGUE -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Catalogue</div>
+                    <a href="admin-products.html" class="admin-nav-link">
+                        <i class="fa-solid fa-shoe-prints nav-icon"></i>
+                        <span>Products</span>
+                        <span class="admin-nav-badge">350</span>
+                    </a>
+                    <a href="admin-categories.html" class="admin-nav-link active">
+                        <i class="fa-solid fa-tags nav-icon"></i>
+                        <span>Categories</span>
+                    </a>
+                    <a href="admin-inventory.html" class="admin-nav-link">
+                        <i class="fa-solid fa-boxes-stacked nav-icon"></i>
+                        <span>Inventory</span>
+                        <span class="admin-nav-badge" style="background:var(--color-warning)">7</span>
+                    </a>
+                    <a href="admin-collections.html" class="admin-nav-link">
+                        <i class="fa-solid fa-layer-group nav-icon"></i>
+                        <span>Collections</span>
+                    </a>
+                </div>
+
+                <!-- SALES -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Sales</div>
+                    <a href="admin-orders.html" class="admin-nav-link">
+                        <i class="fa-solid fa-bag-shopping nav-icon"></i>
+                        <span>Orders</span>
+                        <span class="admin-nav-badge">12</span>
+                    </a>
+                    <a href="admin-customers.html" class="admin-nav-link">
+                        <i class="fa-solid fa-users nav-icon"></i>
+                        <span>Customers</span>
+                    </a>
+                    <a href="admin-coupons.html" class="admin-nav-link">
+                        <i class="fa-solid fa-ticket nav-icon"></i>
+                        <span>Coupons</span>
+                    </a>
+                    <a href="admin-reviews.html" class="admin-nav-link">
+                        <i class="fa-solid fa-star nav-icon"></i>
+                        <span>Reviews</span>
+                        <span class="admin-nav-badge" style="background:var(--color-success)">4</span>
+                    </a>
+                </div>
+
+                <!-- CONTENT -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Content</div>
+                    <a href="admin-banners.html" class="admin-nav-link">
+                        <i class="fa-solid fa-image nav-icon"></i>
+                        <span>Banners</span>
+                    </a>
+                    <a href="admin-blog.html" class="admin-nav-link">
+                        <i class="fa-solid fa-pen-nib nav-icon"></i>
+                        <span>Blog</span>
+                    </a>
+                    <a href="admin-pages.html" class="admin-nav-link">
+                        <i class="fa-solid fa-file-lines nav-icon"></i>
+                        <span>Pages</span>
+                    </a>
+                </div>
+
+                <!-- SETTINGS -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">System</div>
+                    <a href="admin-settings.html" class="admin-nav-link">
+                        <i class="fa-solid fa-gear nav-icon"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="admin-staff.html" class="admin-nav-link">
+                        <i class="fa-solid fa-user-shield nav-icon"></i>
+                        <span>Staff Accounts</span>
+                    </a>
+                    <a href="index.html" class="admin-nav-link"
+                        style="margin-top:var(--space-4);border-top:1px solid rgba(255,255,255,0.06);padding-top:var(--space-4)">
+                        <i class="fa-solid fa-arrow-up-right-from-square nav-icon"></i>
+                        <span>View Store</span>
+                    </a>
+                </div>
             </nav>
-            <div class="sidebar-footer">
-                <div class="sidebar-user">
-                    <div class="s-avatar" id="s-avatar">A</div>
+
+            <div class="admin-sidebar-footer">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar">A</div>
                     <div>
-                        <div class="s-name" id="s-name">Admin</div>
-                        <div class="s-role">Super Admin</div>
+                        <div class="admin-user-name">Admin User</div>
+                        <div class="admin-user-role">Super Admin</div>
                     </div>
-                </div><button class="btn-logout" onclick="doLogout()"><i
-                        class="fa-solid fa-arrow-right-from-bracket"></i> Logout</button>
+                </div>
             </div>
         </aside>
 
-        <div class="main">
-            <div class="topbar"><button class="btn-menu" id="menuBtn" onclick="toggleSidebar()"><i
-                        class="fa-solid fa-bars"></i></button>
-                <div class="topbar-title">Product Categories</div>
-                <div class="topbar-right"><button class="btn btn-sm btn-outline"
-                        onclick="window.open('index.html','_blank')"><i class="fa-solid fa-store"></i> View
-                        Store</button></div>
-            </div>
-            <div class="content">
-                <div class="page-header">
-                    <div class="page-header-left">
+        <!-- Sidebar mobile overlay -->
+        <div class="admin-sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- MAIN CONTENT -->
+        <main class="admin-main" id="admin-main">
+            <!-- TOPBAR -->
+            <header class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:var(--space-4)">
+                    <button class="nav-icon-btn" id="sidebar-toggle-mobile"
+                        style="background:var(--color-light);border:1px solid var(--border-color)">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="admin-page-title">Categories</div>
+                </div>
+
+                <div class="admin-search" style="flex:1;max-width:380px;margin:0 var(--space-6)">
+                    <i class="fa-solid fa-magnifying-glass admin-search-icon"></i>
+                    <input type="text" placeholder="Search categories..." autocomplete="off" />
+                </div>
+
+                <div class="admin-topbar-actions">
+                    <button class="admin-notif-btn" aria-label="Notifications">
+                        <i class="fa-regular fa-bell"></i>
+                    </button>
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--color-dark);font-size:14px;cursor:pointer;box-shadow:var(--shadow-gold)"
+                        title="My Profile">A</div>
+                </div>
+            </header>
+
+            <div class="admin-content">
+                <!-- Page Header -->
+                <div class="admin-page-header">
+                    <div class="admin-page-header-left">
                         <h2>Product Categories</h2>
                         <p>Organize your products into categories to help customers find them easily.</p>
-                    </div><button class="btn btn-primary" onclick="openCategoryModal()"><i class="fa-solid fa-plus"></i>
-                        Add Category</button>
-                </div>
-                <div class="card">
-                    <div class="filter-bar">
-                        <div class="search-wrap"><i class="fa-solid fa-magnifying-glass"></i><input type="text"
-                                class="search-input" id="catSearch" placeholder="Search categories..."
-                                oninput="filterCategories()"></div><select class="filter-select" id="statusFilter"
-                            onchange="filterCategories()">
-                            <option value="">All Status</option>
-                            <option value="1">Active</option>
-                            <option value="0">Inactive</option>
-                        </select>
                     </div>
+                    <button class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Category</button>
+                </div>
+
+                <!-- Table -->
+                <div class="admin-table-wrap">
                     <div style="overflow-x:auto">
-                        <table>
+                        <table class="admin-table">
                             <thead>
                                 <tr>
+                                    <th><input type="checkbox" class="table-checkbox" id="selectAll" /></th>
                                     <th>Image</th>
-                                    <th>Category Name</th>
+                                    <th class="sortable sorted">Category Name <i
+                                            class="fa-solid fa-arrow-down sort-icon"></i></th>
                                     <th>Products Count</th>
                                     <th>Sales Share</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="categoriesTableBody">
+                            <tbody>
+                                <!-- Heels -->
                                 <tr>
-                                    <td colspan="6">
-                                        <div class="loading-spinner"><i class="fa-solid fa-spinner"></i>Loading
-                                            categories...</div>
+                                    <td><input type="checkbox" class="table-checkbox" /></td>
+                                    <td>
+                                        <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=100&q=80&auto=format&fit=crop"
+                                            class="cat-image" alt="Heels">
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name">Heels</div>
+                                        <div class="cat-desc">Stilettos, block heels, wedges & more</div>
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name">142</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:600; color:var(--color-primary)">42%</div>
+                                    </td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <div class="admin-table-actions">
+                                            <button class="table-action-btn" title="Edit"><i
+                                                    class="fa-regular fa-pen-to-square"></i></button>
+                                            <button class="table-action-btn danger" title="Delete"><i
+                                                    class="fa-regular fa-trash-can"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Bags -->
+                                <tr>
+                                    <td><input type="checkbox" class="table-checkbox" /></td>
+                                    <td>
+                                        <img src="https://images.unsplash.com/photo-1584916201218-f4242ceb4809?w=100&q=80&auto=format&fit=crop"
+                                            class="cat-image" alt="Bags">
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name">Bags & Purses</div>
+                                        <div class="cat-desc">Totes, slings, clutches and bridal bags</div>
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name">86</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:600; color:var(--color-accent)">28%</div>
+                                    </td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <div class="admin-table-actions">
+                                            <button class="table-action-btn" title="Edit"><i
+                                                    class="fa-regular fa-pen-to-square"></i></button>
+                                            <button class="table-action-btn danger" title="Delete"><i
+                                                    class="fa-regular fa-trash-can"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Sandals -->
+                                <tr>
+                                    <td><input type="checkbox" class="table-checkbox" /></td>
+                                    <td>
+                                        <img src="https://images.unsplash.com/photo-1562183241-b937e95585b6?w=100&q=80&auto=format&fit=crop"
+                                            class="cat-image" alt="Sandals">
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name">Sandals</div>
+                                        <div class="cat-desc">Everyday casuals and party wear sandals</div>
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name">65</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:600; color:var(--color-info)">18%</div>
+                                    </td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <div class="admin-table-actions">
+                                            <button class="table-action-btn" title="Edit"><i
+                                                    class="fa-regular fa-pen-to-square"></i></button>
+                                            <button class="table-action-btn danger" title="Delete"><i
+                                                    class="fa-regular fa-trash-can"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Flats -->
+                                <tr>
+                                    <td><input type="checkbox" class="table-checkbox" /></td>
+                                    <td>
+                                        <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=100&q=80&auto=format&fit=crop"
+                                            class="cat-image" alt="Flats">
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name">Flats & Juttis</div>
+                                        <div class="cat-desc">Comfortable ethnic and western flats</div>
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name">45</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:600; color:var(--color-success)">12%</div>
+                                    </td>
+                                    <td><span class="status-badge status-active">Active</span></td>
+                                    <td>
+                                        <div class="admin-table-actions">
+                                            <button class="table-action-btn" title="Edit"><i
+                                                    class="fa-regular fa-pen-to-square"></i></button>
+                                            <button class="table-action-btn danger" title="Delete"><i
+                                                    class="fa-regular fa-trash-can"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Accessories (Draft) -->
+                                <tr>
+                                    <td><input type="checkbox" class="table-checkbox" /></td>
+                                    <td>
+                                        <div class="cat-image"
+                                            style="background:var(--color-light-3); display:flex; align-items:center; justify-content:center; color:var(--text-muted); border:none;">
+                                            <i class="fa-regular fa-image"></i></div>
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name text-muted">Accessories</div>
+                                        <div class="cat-desc">Shoe care, insoles, and add-ons</div>
+                                    </td>
+                                    <td>
+                                        <div class="admin-table-name">12</div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight:600; color:var(--text-muted)">0%</div>
+                                    </td>
+                                    <td><span class="status-badge status-draft">Draft</span></td>
+                                    <td>
+                                        <div class="admin-table-actions">
+                                            <button class="table-action-btn" title="Edit"><i
+                                                    class="fa-regular fa-pen-to-square"></i></button>
+                                            <button class="table-action-btn danger" title="Delete"><i
+                                                    class="fa-regular fa-trash-can"></i></button>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="pagination" id="categoriesPagination"></div>
                 </div>
+
             </div>
-        </div>
+        </main>
     </div>
 
-    <div class="modal-backdrop" id="categoryModal">
-        <div class="modal">
-            <div class="modal-header">
-                <div class="modal-title" id="modalTitle">Add New Category</div><button class="modal-close"
-                    onclick="closeCategoryModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form id="categoryForm" onsubmit="saveCategory(event)">
-                <div class="form-field"><label class="form-label">Category Name *</label><input type="text"
-                        class="form-input" name="name" required placeholder="e.g. Heels"></div>
-                <div class="form-field"><label class="form-label">Slug (URL)</label><input type="text"
-                        class="form-input" name="slug" placeholder="e.g. heels (auto-generated if empty)"></div>
-                <div class="form-field"><label class="form-label">Description</label><textarea class="form-textarea"
-                        name="description" placeholder="Brief description of the category..."></textarea></div>
-                <div class="form-field"><label class="form-label">Cover Image URL</label><input type="url"
-                        class="form-input" name="image_url" placeholder="https://..."></div>
-                <div class="form-field" style="flex-direction: row; align-items: center; gap: 10px; margin-top: 10px;">
-                    <input type="checkbox" name="active" id="chkActive" checked
-                        style="width:16px;height:16px;accent-color:var(--gold);"><label for="chkActive"
-                        style="font-size: .87rem; color: var(--text);">Active (Visible in store)</label></div>
-                <div class="modal-footer"><button type="button" class="btn btn-outline"
-                        onclick="closeCategoryModal()">Cancel</button><button type="submit" class="btn btn-primary"
-                        id="saveCategoryBtn"><i class="fa-solid fa-floppy-disk"></i> Save Category</button></div>
-            </form>
-        </div>
-    </div>
+    <!-- Scripts -->
+    <script>
+        const sidebar = document.getElementById('admin-sidebar');
+        const main = document.getElementById('admin-main');
+        const overlay = document.getElementById('sidebar-overlay');
 
-    <script src="js/core/config.js"></script>
-    <script src="js/core/api-client.js"></script>
-  <script src="js/admin/enterprise.js"></script>
-    
-    <script defer src="/js/admin/admin-categories.js"></script>
+        document.getElementById('sidebar-collapse-btn')?.addEventListener('click', () => {
+            sidebar.classList.toggle('mini');
+            main.style.marginLeft = sidebar.classList.contains('mini') ? '70px' : 'var(--admin-sidebar-width)';
+            document.getElementById('sidebar-toggle-icon').className = sidebar.classList.contains('mini') ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left';
+        });
+
+        document.getElementById('sidebar-toggle-mobile')?.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            overlay.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        });
+
+        overlay?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+            document.body.style.overflow = '';
+        });
+
+        document.getElementById('selectAll')?.addEventListener('change', function (e) {
+            const checkboxes = document.querySelectorAll('tbody .table-checkbox');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+        });
+    </script>
 </body>
 
 </html>

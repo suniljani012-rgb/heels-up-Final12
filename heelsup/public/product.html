@@ -1,414 +1,1353 @@
-<html lang="en"><head></head><body>﻿
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Detail – HeelsUp</title>
+    <meta name="description"
+        content="Shop ladies footwear & bags at HeelsUp. Premium quality heels, sandals, flats and bags at affordable prices." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .product-detail-section {
+            padding: 60px 0 90px;
+            background: var(--bg-page);
+        }
 
+        .product-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: start;
+        }
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-  <meta name="theme-color" content="#E8CCC5">
+        /* Gallery */
+        .gallery-main {
+            border-radius: 20px;
+            overflow: hidden;
+            aspect-ratio: 4/5;
+            background: var(--color-light-3);
+            position: relative;
+            cursor: zoom-in;
+        }
 
-  <!-- ═══ PRIMARY SEO ═══ -->
-  <title id="page-title">Product – HeelsUp | Premium Ladies Footwear</title>
-  <meta name="description" content="Shop premium ladies footwear &amp; bags at HeelsUp. Free shipping above ₹799.">
-  <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
+        .gallery-main img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
 
-  <!-- ═══ PRECONNECT & FONTS ═══ -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        .gallery-main:hover img {
+            transform: scale(1.07);
+        }
 
-  
-    <link rel="stylesheet" href="/css/customer-theme.css">
-    <link rel="stylesheet" href="/css/pages/product.css">
+        .gallery-thumbs {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
 
+        .gallery-thumb {
+            width: 72px;
+            height: 88px;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            flex-shrink: 0;
+        }
 
+        .gallery-thumb.active,
+        .gallery-thumb:hover {
+            border-color: var(--color-primary);
+        }
 
-    <div id="navbar"></div>
+        .gallery-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-  <!-- ═══ TOAST CONTAINER ═══ -->
-  
+        /* Product Info */
+        .product-detail-info {
+            position: sticky;
+            top: 90px;
+        }
 
-  
-    
-  
+        .product-detail-cat {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--color-primary);
+            margin-bottom: 10px;
+        }
 
-  <!-- ═══ MOBILE MENU ═══ -->
-  
+        .product-detail-name {
+            font-family: var(--font-heading);
+            font-size: clamp(1.6rem, 3vw, 2.4rem);
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 14px;
+        }
 
-  <!-- ═══ SEARCH OVERLAY ═══ -->
-  <div class="search-overlay" id="search-overlay" role="search" aria-label="Product search">
-    <div class="container">
-      <div class="search-wrap">
-        <span class="search-kicker">What are you looking for?</span>
-        <div class="search-field">
-          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          <input type="search" class="search-input-el" id="search-inp" placeholder="heels, bags, sandals…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search">
-          <button class="search-cls" id="search-close-btn" aria-label="Close search">
-            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-          </button>
+        .product-detail-rating {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .pd-stars {
+            color: var(--color-primary);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+        }
+
+        .pd-rating-num {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .pd-reviews {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .product-detail-price {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .pd-price {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .pd-original {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .pd-discount {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            background: var(--color-accent);
+            padding: 4px 12px;
+            border-radius: 100px;
+        }
+
+        .product-detail-divider {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 20px 0;
+        }
+
+        /* Size Selector */
+        .pd-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .size-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .size-option {
+            min-width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border-color);
+            background: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            transition: all 0.2s;
+        }
+
+        .size-option:hover,
+        .size-option.selected {
+            border-color: var(--color-primary);
+            color: var(--color-primary-dark);
+            background: var(--color-primary-glow);
+        }
+
+        .size-option.unavailable {
+            opacity: 0.35;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        /* Color Selector */
+        .color-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .color-option {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .color-option.selected,
+        .color-option:hover {
+            border-color: var(--color-primary);
+            transform: scale(1.15);
+        }
+
+        /* Qty + Cart */
+        .pd-qty-cart {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .pd-qty {
+            display: flex;
+            align-items: center;
+            border: 1.5px solid var(--border-color);
+            border-radius: 100px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .pd-qty-btn {
+            width: 44px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+        }
+
+        .pd-qty-btn:hover {
+            color: var(--color-primary);
+        }
+
+        .pd-qty-val {
+            min-width: 36px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .pd-cart-btn {
+            flex: 1;
+            padding: 0 24px;
+            height: 52px;
+            background: var(--color-dark);
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.25s;
+        }
+
+        .pd-cart-btn:hover {
+            background: var(--color-primary);
+            color: var(--color-dark);
+        }
+
+        .pd-wish-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 1.5px solid var(--border-color);
+            background: #fff;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .pd-wish-btn:hover,
+        .pd-wish-btn.active {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+            background: #fff5f7;
+        }
+
+        /* Trust badges */
+        .pd-trust {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .pd-trust-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .pd-trust-item i {
+            color: var(--color-primary);
+            font-size: 0.95rem;
+        }
+
+        /* Accordion */
+        .pd-accordion {
+            border-top: 1px solid var(--border-color);
+        }
+
+        .pd-acc-item {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .pd-acc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            user-select: none;
+        }
+
+        .pd-acc-header i {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            transition: transform 0.3s;
+        }
+
+        .pd-acc-item.open .pd-acc-header i {
+            transform: rotate(180deg);
+        }
+
+        .pd-acc-body {
+            display: none;
+            padding-bottom: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.75;
+        }
+
+        .pd-acc-item.open .pd-acc-body {
+            display: block;
+        }
+
+        /* Related Products */
+        .related-section {
+            padding: 70px 0 90px;
+            background: var(--color-light);
+        }
+
+        /* Reviews Section */
+        .reviews-section {
+            padding: 70px 0;
+            background: #fff;
+        }
+
+        .review-summary {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            padding: 32px;
+            background: var(--color-light);
+            border-radius: 20px;
+            margin-bottom: 36px;
+        }
+
+        .review-big-num {
+            font-family: var(--font-display);
+            font-size: 5rem;
+            font-weight: 300;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .review-big-stars {
+            color: var(--color-primary);
+            font-size: 1.3rem;
+            letter-spacing: 3px;
+            margin-bottom: 6px;
+        }
+
+        .review-big-count {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .review-bars {
+            flex: 1;
+        }
+
+        .r-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .r-bar-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            width: 18px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .r-bar-track {
+            flex: 1;
+            height: 6px;
+            background: var(--color-light-3);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .r-bar-fill {
+            height: 100%;
+            background: var(--color-primary);
+            border-radius: 100px;
+        }
+
+        .r-bar-count {
+            font-size: 11px;
+            color: var(--text-muted);
+            width: 24px;
+            flex-shrink: 0;
+        }
+
+        /* Share */
+        .pd-share {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .pd-share-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .pd-share-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .pd-share-btn:hover {
+            border-color: var(--color-primary);
+            color: var(--color-primary);
+        }
+
+        @media(max-width:768px) {
+            .product-detail-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+
+            .product-detail-info {
+                position: static;
+            }
+
+            .review-summary {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOPBAR -->
+    <div class="topbar" id="topbar">
+        <div class="topbar-marquee">
+            <span class="topbar-text">🎉 <strong>NEW ARRIVALS</strong> — Summer Collection is Live!</span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🚚 FREE Shipping on orders above <strong>₹499</strong></span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🏷️ Use code <strong>HEELS10</strong> for 10% off</span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🎉 <strong>NEW ARRIVALS</strong> — Summer Collection is Live!</span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🚚 FREE Shipping on orders above <strong>₹499</strong></span>
         </div>
-        <div class="search-res" id="search-res" role="listbox" aria-label="Search results"></div>
-        <p class="search-hint-txt">Press <kbd style="background:rgba(255,255,255,.1);padding:2px 7px;border-radius:4px;font-size:11px">Enter</kbd> to
-          search &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,.1);padding:2px 7px;border-radius:4px;font-size:11px">Esc</kbd> to close
-        </p>
-      </div>
+        <button class="topbar-close" id="topbar-close">✕</button>
     </div>
-  </div>
 
-  <!-- ═══ CART BACKDROP & DRAWER ═══ -->
-  <div class="cart-bd" id="cart-bd" aria-hidden="true"></div>
-  
-
-  <!-- ============================
-   BREADCRUMB
-   ============================ -->
-  <div class="breadcrumb-wrap">
-    <div class="container">
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/">Home</a>
-        <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right"></i></span>
-        <a href="/shop.html">Shop</a>
-        <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right"></i></span>
-        <span id="breadcrumb-cat"><a href="/shop.html" id="breadcrumb-cat-link">Category</a></span>
-        <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right"></i></span>
-        <span class="breadcrumb-current" id="breadcrumb-name">Loading…</span>
-      </nav>
-    </div>
-  </div>
-
-  <!-- ============================
-   PRODUCT DETAIL
-   ============================ -->
-  <section class="product-section">
-    <div class="container">
-
-      <!-- Loading State Skeleton -->
-      <div id="product-loading" class="skeleton-wrap">
-        <div class="skeleton-layout">
-          <div>
-            <div class="skel" style="aspect-ratio:4/5;border-radius:16px;margin-bottom:16px"></div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-              <div class="skel" style="aspect-ratio:1;border-radius:10px"></div>
-              <div class="skel" style="aspect-ratio:1;border-radius:10px"></div>
-              <div class="skel" style="aspect-ratio:1;border-radius:10px"></div>
-              <div class="skel" style="aspect-ratio:1;border-radius:10px"></div>
-            </div>
-          </div>
-          <div>
-            <div class="skel" style="height:14px;width:80px;margin-bottom:14px"></div>
-            <div class="skel" style="height:36px;margin-bottom:10px"></div>
-            <div class="skel" style="height:36px;width:60%;margin-bottom:18px"></div>
-            <div class="skel" style="height:20px;width:160px;margin-bottom:18px"></div>
-            <div class="skel" style="height:50px;margin-bottom:14px"></div>
-            <div class="skel" style="height:20px;margin-bottom:8px"></div>
-            <div class="skel" style="height:20px;margin-bottom:8px"></div>
-            <div class="skel" style="height:20px;width:70%;margin-bottom:24px"></div>
-            <div class="skel" style="height:54px;border-radius:12px;margin-bottom:12px"></div>
-            <div class="skel" style="height:50px;border-radius:12px"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Product Content (Hidden initially) -->
-      <div id="product-content" class="product-layout" style="display:none">
-
-        <!-- LEFT: Image Gallery -->
-        <div class="product-gallery">
-          <div class="gallery-main" id="gallery-main">
-            <img id="gallery-main-img" src="" alt="Product" loading="eager">
-            <div class="gallery-badges" id="gallery-badges"></div>
-            <div class="oos-overlay" id="oos-overlay" style="display:none">Out of Stock</div>
-          </div>
-          <div class="gallery-thumbs" id="gallery-thumbs"></div>
-        </div>
-
-        <!-- RIGHT: Product Info -->
-        <div class="product-info">
-          <span class="product-cat-label" id="info-cat">Category</span>
-          <h1 class="product-title" id="info-name">Product Name</h1>
-
-          <div class="product-rating-row">
-            <div class="stars" id="info-stars"></div>
-            <span class="rating-val" id="info-rating-val">4.8</span>
-            <span class="rating-sep">·</span>
-            <span class="rating-count" id="info-rating-count">0 Reviews</span>
-          </div>
-
-          <div class="product-price-row">
-            <span class="price-big" id="info-price">₹0</span>
-            <span class="price-orig" id="info-orig-price" style="display:none">₹0</span>
-            <span class="price-off-badge" id="info-discount-badge" style="display:none">0% OFF</span>
-          </div>
-
-          <p class="product-desc" id="info-desc">Loading product description…</p>
-
-          <hr class="product-divider">
-
-          <!-- Size Selector -->
-          <div class="size-header">
-            <span class="size-label">Select Size</span>
-            <a href="/size-guide.html" class="size-guide-link" target="_blank">
-              <i class="fa-solid fa-ruler"></i> Size Guide
-            </a>
-          </div>
-          <div class="size-grid" id="size-grid">
-            <!-- Sizes rendered dynamically from product data with per-size stock -->
-            <span style="color:var(--text-pale);font-size:13px">Loading sizes…</span>
-          </div>
-          <div id="size-stock-note" style="font-size:12px;color:var(--text-m);margin-top:6px;min-height:18px;display:none"></div>
-
-          <!-- Quantity -->
-          <div class="qty-row">
-            <span class="qty-label">Quantity</span>
-            <div class="qty-control">
-              <button class="qty-btn" id="qty-minus" aria-label="Decrease quantity"><i class="fa-solid fa-minus"></i></button>
-              <span class="qty-num" id="qty-num">1</span>
-              <button class="qty-btn" id="qty-plus" aria-label="Increase quantity"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-
-          <!-- CTA Buttons -->
-          <div class="product-cta">
-            <div class="product-cta-row">
-              <button class="btn-add-cart" id="btn-add-cart">
-                <i class="fa-solid fa-bag-shopping"></i> Add to Bag
-              </button>
-              <button class="btn-wishlist" id="btn-wishlist" aria-label="Add to Wishlist" title="Add to Wishlist">
-                <i class="fa-regular fa-heart" id="wishlist-icon"></i>
-              </button>
-            </div>
-            <button class="btn-buy-now" id="btn-buy-now">
-              <i class="fa-solid fa-bolt"></i> Buy Now
-            </button>
-          </div>
-
-          <!-- Trust Row -->
-          <div class="trust-row">
-            <div class="trust-row-item"><i class="fa-solid fa-truck-fast"></i> Free Ship ₹799+</div>
-            <div class="trust-row-item"><i class="fa-solid fa-rotate-left"></i> 7-day Return</div>
-            <div class="trust-row-item"><i class="fa-solid fa-shield-halved"></i> 100% Authentic</div>
-          </div>
-
-          <!-- Share Row -->
-          <div class="share-row">
-            <span class="share-label">Share:</span>
-            <a class="share-btn wa" id="share-wa" href="#" target="_blank" rel="noopener" aria-label="Share on WhatsApp">
-              <i class="fa-brands fa-whatsapp"></i>
-            </a>
-            <a class="share-btn" href="https://instagram.com/heel_s_up" target="_blank" rel="noopener" aria-label="Instagram">
-              <i class="fa-brands fa-instagram"></i>
-            </a>
-            <button class="share-btn" id="copy-link-btn" aria-label="Copy link" title="Copy product link">
-              <i class="fa-solid fa-link"></i>
-            </button>
-          </div>
-
-          <!-- Accordions -->
-          <div class="accordion">
-            <div class="accordion-item open">
-              <button class="accordion-header" type="button">
-                Product Details <i class="fa-solid fa-chevron-down accordion-icon"></i>
-              </button>
-              <div class="accordion-body" id="acc-details">
-                <ul>
-                  <li>Upper Material: Premium Synthetic Leather</li>
-                  <li>Sole: Non-slip TPR</li>
-                  <li>Heel Height: 3.5 inches</li>
-                  <li>Closure: Buckle strap</li>
-                  <li>Care: Wipe with dry cloth</li>
-                  <li>Country of Origin: India</li>
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="navbar-inner">
+                <a href="index.html" class="navbar-logo">
+                    <img src="logo.png" alt="HeelsUp Logo" onerror="this.style.display='none'" />
+                    <span class="navbar-logo-text">Heels<span>Up</span></span>
+                </a>
+                <ul class="navbar-menu" id="nav-menu">
+                    <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                    <li class="nav-item">
+                        <a href="shop.html" class="nav-link">Shop <i class="fa-solid fa-chevron-down"
+                                style="font-size:9px;opacity:0.6"></i></a>
+                        <div class="nav-dropdown">
+                            <a href="category.html?cat=heels"><span class="nav-dropdown-icon">👠</span> Heels</a>
+                            <a href="category.html?cat=flats"><span class="nav-dropdown-icon">🥿</span> Flats</a>
+                            <a href="category.html?cat=sandals"><span class="nav-dropdown-icon">👡</span> Sandals</a>
+                            <a href="category.html?cat=wedges"><span class="nav-dropdown-icon">👢</span> Wedges</a>
+                            <a href="category.html?cat=bags"><span class="nav-dropdown-icon">👜</span> Bags</a>
+                            <a href="category.html?cat=clutches"><span class="nav-dropdown-icon">👝</span> Clutches</a>
+                        </div>
+                    </li>
+                    <li class="nav-item"><a href="category.html?cat=new" class="nav-link">New Arrivals</a></li>
+                    <li class="nav-item"><a href="category.html?cat=sale" class="nav-link"
+                            style="color:var(--color-accent)"><i class="fa-solid fa-fire" style="font-size:0.8rem"></i>
+                            Sale</a></li>
+                    <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
+                    <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
                 </ul>
-              </div>
+                <div class="navbar-actions">
+                    <button class="nav-icon-btn" id="search-toggle-btn" aria-label="Search"><i
+                            class="fa-solid fa-magnifying-glass"></i></button>
+                    <a href="wishlist.html" class="nav-icon-btn" aria-label="Wishlist"><i
+                            class="fa-regular fa-heart"></i><span class="nav-badge" id="wishlist-count"
+                            style="display:none">0</span></a>
+                    <a href="profile.html" class="nav-icon-btn" aria-label="Account"><i
+                            class="fa-regular fa-user"></i></a>
+                    <button class="nav-icon-btn" id="cart-open-btn" aria-label="Cart"><i
+                            class="fa-solid fa-bag-shopping"></i><span class="nav-badge"
+                            id="cart-count">0</span></button>
+                    <button class="navbar-hamburger" id="hamburger-btn" aria-label="Menu"><span
+                            class="hamburger-line"></span><span class="hamburger-line"></span><span
+                            class="hamburger-line"></span></button>
+                </div>
             </div>
-            <div class="accordion-item">
-              <button class="accordion-header" type="button">
-                Shipping &amp; Delivery <i class="fa-solid fa-chevron-down accordion-icon"></i>
-              </button>
-              <div class="accordion-body">
-                <ul>
-                  <li>Free shipping on orders above ₹799</li>
-                  <li>Standard delivery: 3–5 business days</li>
-                  <li>Express delivery: 1–2 business days (₹99 extra)</li>
-                  <li>Cash on Delivery available across India</li>
-                  <li>Order tracking via SMS and email</li>
-                </ul>
-              </div>
+        </div>
+    </nav>
+
+    <!-- MOBILE MENU -->
+    <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu-backdrop" id="mobile-backdrop"></div>
+        <div class="mobile-menu-panel">
+            <div class="mobile-menu-header">
+                <span class="navbar-logo-text">Heels<span style="color:var(--color-primary)">Up</span></span>
+                <button id="mobile-menu-close"
+                    style="font-size:1.3rem;color:var(--text-muted);cursor:pointer;background:none;border:none">✕</button>
             </div>
-            <div class="accordion-item">
-              <button class="accordion-header" type="button">
-                Returns &amp; Exchanges <i class="fa-solid fa-chevron-down accordion-icon"></i>
-              </button>
-              <div class="accordion-body">
-                <ul>
-                  <li>7-day easy return policy</li>
-                  <li>Item must be unused and in original packaging</li>
-                  <li>Exchanges available for size issues</li>
-                  <li>Initiate return via WhatsApp or email</li>
-                  <li>Refund processed in 5–7 business days</li>
-                </ul>
-              </div>
+            <div class="mobile-menu-body">
+                <a href="index.html">🏠 Home</a>
+                <a href="shop.html">🛍️ Shop All</a>
+                <a href="category.html?cat=heels">👠 Heels</a>
+                <a href="category.html?cat=flats">🥿 Flats</a>
+                <a href="category.html?cat=sandals">👡 Sandals</a>
+                <a href="category.html?cat=bags">👜 Bags</a>
+                <a href="category.html?cat=new">✨ New Arrivals</a>
+                <a href="category.html?cat=sale" style="color:var(--color-accent)">🔥 Sale</a>
+                <a href="about.html">📄 About Us</a>
+                <a href="contact.html">📞 Contact</a>
+                <hr style="border:none;border-top:1px solid var(--border-color);margin:12px 0" />
+                <a href="login.html">👤 Login</a>
+                <a href="register.html">📝 Register</a>
             </div>
-            <div class="accordion-item">
-              <button class="accordion-header" type="button">
-                Size Guide <i class="fa-solid fa-chevron-down accordion-icon"></i>
-              </button>
-              <div class="accordion-body">
-                <p style="margin-bottom:8px;font-weight:600;color:var(--text-h)">Our shoes are true to size. For the
-                  best fit:</p>
-                <ul>
-                  <li>Size 36 → UK 3 → US 6 → Foot length: 23 cm</li>
-                  <li>Size 37 → UK 4 → US 7 → Foot length: 23.7 cm</li>
-                  <li>Size 38 → UK 5 → US 8 → Foot length: 24.4 cm</li>
-                  <li>Size 39 → UK 6 → US 9 → Foot length: 25.1 cm</li>
-                  <li>Size 40 → UK 7 → US 10 → Foot length: 25.8 cm</li>
-                  <li>Size 41 → UK 8 → US 11 → Foot length: 26.5 cm</li>
-                </ul>
-              </div>
+        </div>
+    </div>
+
+    <!-- SEARCH OVERLAY -->
+    <div class="search-overlay" id="search-overlay">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" class="search-input" id="search-input" placeholder="Search for heels, bags, sandals…"
+                autocomplete="off" />
+            <button class="search-close" id="search-close-btn">✕</button>
+        </div>
+    </div>
+
+    <!-- BREADCRUMB -->
+    <div style="background:#fff;border-bottom:1px solid var(--border-color)">
+        <div class="container">
+            <nav class="breadcrumb">
+                <span class="breadcrumb-item"><a href="index.html">Home</a></span>
+                <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right" style="font-size:9px"></i></span>
+                <span class="breadcrumb-item"><a href="shop.html">Shop</a></span>
+                <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right" style="font-size:9px"></i></span>
+                <span class="breadcrumb-item"><a href="category.html?cat=heels" id="bc-cat">Heels</a></span>
+                <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right" style="font-size:9px"></i></span>
+                <span class="breadcrumb-item active" id="bc-name">Stiletto Block Heel Pumps</span>
+            </nav>
+        </div>
+    </div>
+
+    <!-- PRODUCT DETAIL -->
+    <section class="product-detail-section">
+        <div class="container">
+            <div class="product-detail-grid">
+
+                <!-- LEFT: Gallery -->
+                <div>
+                    <div class="gallery-main" id="gallery-main">
+                        <img id="gallery-main-img"
+                            src="https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=800&q=80&auto=format&fit=crop"
+                            alt="Product Image" />
+                    </div>
+                    <div class="gallery-thumbs" id="gallery-thumbs">
+                        <div class="gallery-thumb active"
+                            data-img="https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=400&q=80&auto=format&fit=crop">
+                            <img src="https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=400&q=80&auto=format&fit=crop"
+                                alt="Thumb 1" />
+                        </div>
+                        <div class="gallery-thumb"
+                            data-img="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80&auto=format&fit=crop">
+                            <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80&auto=format&fit=crop"
+                                alt="Thumb 2" />
+                        </div>
+                        <div class="gallery-thumb"
+                            data-img="https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&q=80&auto=format&fit=crop">
+                            <img src="https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&q=80&auto=format&fit=crop"
+                                alt="Thumb 3" />
+                        </div>
+                        <div class="gallery-thumb"
+                            data-img="https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=400&q=80&auto=format&fit=crop">
+                            <img src="https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=400&q=80&auto=format&fit=crop"
+                                alt="Thumb 4" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Info -->
+                <div class="product-detail-info">
+                    <div class="product-detail-cat" id="pd-cat">Heels</div>
+                    <h1 class="product-detail-name" id="pd-name">Stiletto Block Heel Pumps</h1>
+                    <div class="product-detail-rating">
+                        <span class="pd-stars">★★★★★</span>
+                        <span class="pd-rating-num">4.8</span>
+                        <span class="pd-reviews">(124 reviews)</span>
+                        <span style="font-size:12px;color:var(--color-success);font-weight:600;margin-left:8px"><i
+                                class="fa-solid fa-circle-check"></i> In Stock</span>
+                    </div>
+                    <div class="product-detail-price">
+                        <span class="pd-price" id="pd-price">₹899</span>
+                        <span class="pd-original" id="pd-original">₹1,499</span>
+                        <span class="pd-discount" id="pd-discount">40% OFF</span>
+                    </div>
+                    <p style="font-size:14px;color:var(--text-secondary);line-height:1.75;margin-bottom:20px"
+                        id="pd-desc">Premium quality block heel pumps designed for all-day comfort. Perfect for office,
+                        parties, and special occasions. Made with vegan leather upper and cushioned insole for lasting
+                        comfort.</p>
+
+                    <hr class="product-detail-divider" />
+
+                    <!-- Size -->
+                    <div>
+                        <div class="pd-section-title">Select Size <a href="#size-guide"
+                                style="color:var(--color-primary);font-size:11px;font-weight:600;text-decoration:underline;margin-left:8px;text-transform:none">Size
+                                Guide</a></div>
+                        <div class="size-options" id="size-options">
+                            <button class="size-option" data-size="36">36</button>
+                            <button class="size-option" data-size="37">37</button>
+                            <button class="size-option selected" data-size="38">38</button>
+                            <button class="size-option" data-size="39">39</button>
+                            <button class="size-option" data-size="40">40</button>
+                            <button class="size-option unavailable" data-size="41">41</button>
+                        </div>
+                    </div>
+
+                    <!-- Color -->
+                    <div>
+                        <div class="pd-section-title">Color: <span id="color-label"
+                                style="color:var(--text-primary);font-weight:600;text-transform:none">Nude</span></div>
+                        <div class="color-options">
+                            <div class="color-option selected" data-color="Nude" style="background:#e8c9a0"
+                                title="Nude"></div>
+                            <div class="color-option" data-color="Black" style="background:#1a1a1a" title="Black"></div>
+                            <div class="color-option" data-color="Rose Gold" style="background:#c9a96e"
+                                title="Rose Gold"></div>
+                            <div class="color-option" data-color="Red" style="background:#c0392b" title="Red"></div>
+                        </div>
+                    </div>
+
+                    <hr class="product-detail-divider" />
+
+                    <!-- Qty + Cart -->
+                    <div class="pd-qty-cart">
+                        <div class="pd-qty">
+                            <button class="pd-qty-btn" id="qty-minus"><i class="fa-solid fa-minus"
+                                    style="font-size:0.75rem"></i></button>
+                            <span class="pd-qty-val" id="qty-val">1</span>
+                            <button class="pd-qty-btn" id="qty-plus"><i class="fa-solid fa-plus"
+                                    style="font-size:0.75rem"></i></button>
+                        </div>
+                        <button class="pd-cart-btn" id="add-to-cart-btn">
+                            <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+                        </button>
+                        <button class="pd-wish-btn" id="wishlist-btn" title="Add to Wishlist">
+                            <i class="fa-regular fa-heart"></i>
+                        </button>
+                    </div>
+                    <a href="checkout.html" class="btn btn-secondary btn-full" style="margin-bottom:16px">
+                        <i class="fa-solid fa-bolt"></i> Buy Now
+                    </a>
+
+                    <!-- Trust Badges -->
+                    <div class="pd-trust">
+                        <span class="pd-trust-item"><i class="fa-solid fa-truck-fast"></i> Free shipping ₹499+</span>
+                        <span class="pd-trust-item"><i class="fa-solid fa-rotate-left"></i> 7-day returns</span>
+                        <span class="pd-trust-item"><i class="fa-solid fa-shield-halved"></i> 100% Authentic</span>
+                        <span class="pd-trust-item"><i class="fa-brands fa-whatsapp"></i> WhatsApp support</span>
+                    </div>
+
+                    <!-- Share -->
+                    <div class="pd-share">
+                        <span class="pd-share-label">Share:</span>
+                        <a href="#" class="pd-share-btn" title="Share on WhatsApp"><i
+                                class="fa-brands fa-whatsapp"></i></a>
+                        <a href="#" class="pd-share-btn" title="Share on Instagram"><i
+                                class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="pd-share-btn" title="Share on Facebook"><i
+                                class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="pd-share-btn" title="Copy Link"><i class="fa-solid fa-link"></i></a>
+                    </div>
+
+                    <!-- Accordion -->
+                    <div class="pd-accordion" style="margin-top:24px">
+                        <div class="pd-acc-item open">
+                            <div class="pd-acc-header">Product Details <i class="fa-solid fa-chevron-down"></i></div>
+                            <div class="pd-acc-body">
+                                <ul style="padding-left:16px;list-style:disc">
+                                    <li>Block heel height: 3.5 inches</li>
+                                    <li>Material: Vegan leather upper</li>
+                                    <li>Insole: Extra cushioned memory foam</li>
+                                    <li>Sole: Anti-slip rubber</li>
+                                    <li>Closure: Slip-on / back strap</li>
+                                    <li>Occasion: Office, Party, Casual</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="pd-acc-item">
+                            <div class="pd-acc-header">Shipping & Delivery <i class="fa-solid fa-chevron-down"></i>
+                            </div>
+                            <div class="pd-acc-body">
+                                Free shipping on orders above ₹499. Jodhpur mein same-day delivery available. India-wide
+                                delivery in 3–5 business days. Track your order in the My Orders section.
+                            </div>
+                        </div>
+                        <div class="pd-acc-item">
+                            <div class="pd-acc-header">Return Policy <i class="fa-solid fa-chevron-down"></i></div>
+                            <div class="pd-acc-body">
+                                7-day hassle-free returns. Size ya design pasand na aaye toh WhatsApp karo — no
+                                questions asked. Exchange ya full refund available. <a href="policy/returns.html"
+                                    style="color:var(--color-primary)">Read full policy →</a>
+                            </div>
+                        </div>
+                        <div class="pd-acc-item" id="size-guide">
+                            <div class="pd-acc-header">Size Guide <i class="fa-solid fa-chevron-down"></i></div>
+                            <div class="pd-acc-body">
+                                <table style="width:100%;font-size:12px;border-collapse:collapse">
+                                    <thead>
+                                        <tr style="background:var(--color-light)">
+                                            <th
+                                                style="padding:8px;text-align:left;border-bottom:1px solid var(--border-color)">
+                                                EU Size</th>
+                                            <th
+                                                style="padding:8px;text-align:left;border-bottom:1px solid var(--border-color)">
+                                                UK Size</th>
+                                            <th
+                                                style="padding:8px;text-align:left;border-bottom:1px solid var(--border-color)">
+                                                Foot Length (cm)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">36
+                                            </td>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">3
+                                            </td>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">22.5
+                                                cm</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">37
+                                            </td>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">4
+                                            </td>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">23.5
+                                                cm</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">38
+                                            </td>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">5
+                                            </td>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">24.5
+                                                cm</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">39
+                                            </td>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">6
+                                            </td>
+                                            <td style="padding:7px 8px;border-bottom:1px solid var(--border-color)">25.0
+                                                cm</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:7px 8px">40</td>
+                                            <td style="padding:7px 8px">7</td>
+                                            <td style="padding:7px 8px">25.5 cm</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
+    </section>
 
-      <!-- Error State -->
-      <div id="product-error" style="display:none; text-align:center; padding:80px 0">
-        <i class="fa-solid fa-face-frown" style="font-size:3rem;margin-bottom:16px;color:var(--text-m)"></i>
-        <h2 style="font-family:var(--font-head);margin-bottom:12px;color:var(--text-h);font-size:2rem">Product Not Found
-        </h2>
-        <p style="color:var(--text-m);margin-bottom:24px;font-size:14.5px">The product you're looking for doesn't exist
-          or may have been removed.</p>
-        <a href="/shop.html" class="btn btn-primary">Browse All Products</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================
-   REVIEWS SECTION
-   ============================ -->
-  <section class="reviews-section" id="reviews-section" style="display:none">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-label">What Customers Say</span>
-        <h2>Customer <em>Reviews</em></h2>
-      </div>
-      <div class="reviews-layout">
-
-        <!-- Rating Summary -->
-        <div class="rating-summary">
-          <div class="rating-big" id="rev-rating-big">4.8</div>
-          <div class="rating-big-stars" id="rev-stars-big"></div>
-          <div class="rating-count-text" id="rev-count-text">Based on 0 reviews</div>
-          <div class="rating-bars" id="rev-bars"></div>
+    <!-- REVIEWS -->
+    <section class="reviews-section">
+        <div class="container">
+            <div class="section-header" style="text-align:left;margin-bottom:32px">
+                <span class="section-label">Customer Reviews</span>
+                <h2 style="margin-top:8px">What Customers <em
+                        style="font-family:var(--font-display);font-style:italic;font-weight:400">Say</em></h2>
+            </div>
+            <div class="review-summary">
+                <div style="text-align:center;flex-shrink:0">
+                    <div class="review-big-num">4.8</div>
+                    <div class="review-big-stars">★★★★★</div>
+                    <div class="review-big-count">124 Reviews</div>
+                </div>
+                <div class="review-bars" style="flex:1">
+                    <div class="r-bar-row"><span class="r-bar-label">5</span>
+                        <div class="r-bar-track">
+                            <div class="r-bar-fill" style="width:78%"></div>
+                        </div><span class="r-bar-count">97</span>
+                    </div>
+                    <div class="r-bar-row"><span class="r-bar-label">4</span>
+                        <div class="r-bar-track">
+                            <div class="r-bar-fill" style="width:15%"></div>
+                        </div><span class="r-bar-count">19</span>
+                    </div>
+                    <div class="r-bar-row"><span class="r-bar-label">3</span>
+                        <div class="r-bar-track">
+                            <div class="r-bar-fill" style="width:5%"></div>
+                        </div><span class="r-bar-count">6</span>
+                    </div>
+                    <div class="r-bar-row"><span class="r-bar-label">2</span>
+                        <div class="r-bar-track">
+                            <div class="r-bar-fill" style="width:1%"></div>
+                        </div><span class="r-bar-count">1</span>
+                    </div>
+                    <div class="r-bar-row"><span class="r-bar-label">1</span>
+                        <div class="r-bar-track">
+                            <div class="r-bar-fill" style="width:1%"></div>
+                        </div><span class="r-bar-count">1</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary"
+                    onclick="document.getElementById('write-review').scrollIntoView({behavior:'smooth'})">Write a
+                    Review</button>
+            </div>
+            <div id="reviews-list">
+                <div class="review-card">
+                    <div class="review-header">
+                        <div>
+                            <div class="reviewer-name">Priya Sharma</div>
+                            <div class="review-date">April 28, 2025</div>
+                        </div>
+                        <span style="color:var(--color-primary);font-size:0.85rem">★★★★★</span>
+                    </div>
+                    <p class="review-body">"Quality ekdum amazing hai! Photos ke exactly same product mila. Comfort bhi
+                        bahut achha hai — poora din wear kiya, koi problem nahi. Definitely recommend karungi!"</p>
+                    <div class="review-verified"><i class="fa-solid fa-circle-check"></i> Verified Purchase · Size 38
+                    </div>
+                </div>
+                <div class="review-card">
+                    <div class="review-header">
+                        <div>
+                            <div class="reviewer-name">Anita Mehra</div>
+                            <div class="review-date">April 15, 2025</div>
+                        </div>
+                        <span style="color:var(--color-primary);font-size:0.85rem">★★★★★</span>
+                    </div>
+                    <p class="review-body">"Shadi mein pehni thi — sabne poocha kahan se li! Heel height perfect hai, na
+                        zyada na kam. Packaging bhi bahut cute thi. HeelsUp se hi lete rahenge!"</p>
+                    <div class="review-verified"><i class="fa-solid fa-circle-check"></i> Verified Purchase · Size 37
+                    </div>
+                </div>
+                <div class="review-card">
+                    <div class="review-header">
+                        <div>
+                            <div class="reviewer-name">Ritu Agarwal</div>
+                            <div class="review-date">March 30, 2025</div>
+                        </div>
+                        <span style="color:var(--color-primary);font-size:0.85rem">★★★★☆</span>
+                    </div>
+                    <p class="review-body">"Very good quality. Delivery thodi late hui lekin product ekdum on point.
+                        Size thodi badi lagi initially but adjust ho gayi. Overall 4/5 stars!"</p>
+                    <div class="review-verified"><i class="fa-solid fa-circle-check"></i> Verified Purchase · Size 39
+                    </div>
+                </div>
+            </div>
+            <!-- Write Review Form -->
+            <div id="write-review"
+                style="margin-top:40px;background:var(--color-light);border-radius:20px;padding:32px">
+                <h3 style="font-family:var(--font-heading);font-size:1.3rem;margin-bottom:20px">Write a Review</h3>
+                <div style="margin-bottom:16px">
+                    <label class="form-label">Your Rating</label>
+                    <div style="display:flex;gap:6px;font-size:1.6rem;cursor:pointer" id="star-rating">
+                        <span class="star-select" data-val="1" style="color:var(--color-light-3)">★</span>
+                        <span class="star-select" data-val="2" style="color:var(--color-light-3)">★</span>
+                        <span class="star-select" data-val="3" style="color:var(--color-light-3)">★</span>
+                        <span class="star-select" data-val="4" style="color:var(--color-light-3)">★</span>
+                        <span class="star-select" data-val="5" style="color:var(--color-light-3)">★</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Name <span class="required">*</span></label><input
+                            type="text" class="form-input" placeholder="Your name" /></div>
+                    <div class="form-group"><label class="form-label">Size Worn</label><input type="text"
+                            class="form-input" placeholder="e.g. 38" /></div>
+                </div>
+                <div class="form-group"><label class="form-label">Review <span
+                            class="required">*</span></label><textarea class="form-input form-textarea"
+                        placeholder="Share your experience with this product…" rows="4"></textarea></div>
+                <button class="btn btn-primary" onclick="submitReview()"><i class="fa-solid fa-paper-plane"></i> Submit
+                    Review</button>
+            </div>
         </div>
+    </section>
 
-        <!-- Review Cards -->
-        <div>
-          <div class="review-cards" id="review-cards"></div>
-          <div class="write-review-wrap">
-            <button class="btn-review" id="write-review-btn">
-              <i class="fa-solid fa-pen"></i> Write a Review
-            </button>
-          </div>
+    <!-- RELATED PRODUCTS -->
+    <section class="related-section">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="section-label">You May Also Like</span>
+                <h2>Related <em style="font-family:var(--font-display);font-style:italic;font-weight:400">Products</em>
+                </h2>
+            </div>
+            <div class="products-grid" id="related-grid"
+                style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px">
+                <!-- Populated by JS -->
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ============================
-   RELATED PRODUCTS
-   ============================ -->
-  <section class="related-section" id="related-section" style="display:none">
-    <div class="container">
-      <div class="section-header" style="margin-bottom:40px;text-align:center;">
-        <span class="section-label">More to Love</span>
-        <h2 style="font-size: clamp(2rem, 4vw, 2.8rem); font-family:var(--font-head); font-weight:700; color:var(--text-h)">
-          You May Also <em style="font-style:italic; font-weight:300; color:var(--primary)">Like</em></h2>
-      </div>
-      <div class="related-grid" id="related-grid"></div>
-    </div>
-  </section>
-
-  <!-- ═══ FOOTER ═══ -->
-  
-
-  <!-- ═══ FLOATING ═══ -->
-  
-  
-
-  <!-- ============================
-   REVIEW MODAL
-   ============================ -->
-  <div class="modal-backdrop" id="review-modal">
-    <div class="modal-box">
-      <button class="modal-close" id="modal-close-btn" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
-      <h3 class="modal-title">Write a Review</h3>
-
-      <div class="modal-form-group">
-        <label>Your Rating</label>
-        <div class="modal-stars-pick" id="modal-stars">
-          <span class="star" data-val="1"><i class="fa-solid fa-star"></i></span>
-          <span class="star" data-val="2"><i class="fa-solid fa-star"></i></span>
-          <span class="star" data-val="3"><i class="fa-solid fa-star"></i></span>
-          <span class="star" data-val="4"><i class="fa-solid fa-star"></i></span>
-          <span class="star" data-val="5"><i class="fa-solid fa-star"></i></span>
+    <!-- CART DRAWER -->
+    <div class="cart-drawer-backdrop" id="cart-backdrop"></div>
+    <aside class="cart-drawer" id="cart-drawer">
+        <div class="cart-drawer-header">
+            <div style="display:flex;align-items:center;gap:12px">
+                <h3>My Cart</h3><span class="cart-count-badge" id="cart-drawer-count">0 items</span>
+            </div>
+            <button class="cart-close-btn" id="cart-close-btn">✕</button>
         </div>
-      </div>
+        <div class="cart-drawer-body" id="cart-body">
+            <div class="cart-empty">
+                <div class="cart-empty-icon">🛍️</div>
+                <div class="cart-empty-text">Your cart is empty</div>
+                <a href="shop.html" class="btn btn-primary" style="margin-top:12px">Shop Now</a>
+            </div>
+        </div>
+        <div class="cart-drawer-footer" id="cart-footer" style="display:none">
+            <div class="cart-summary-row"><span>Subtotal</span><span id="cart-subtotal">₹0</span></div>
+            <div class="cart-summary-row"><span>Shipping</span><span style="color:var(--color-success)">Free</span>
+            </div>
+            <div class="cart-summary-row cart-summary-total"><span>Total</span><span id="cart-total">₹0</span></div>
+            <a href="checkout.html" class="btn btn-primary btn-full" style="margin-top:14px"><i
+                    class="fa-solid fa-lock"></i> Proceed to Checkout</a>
+            <a href="cart.html" class="btn btn-ghost btn-full" style="margin-top:8px">View Full Cart</a>
+        </div>
+    </aside>
 
-      <div class="modal-form-group">
-        <label>Review Title</label>
-        <input type="text" id="review-title" placeholder="e.g. Amazing quality!" maxlength="80">
-      </div>
+    <div class="toast-container" id="toast-container"></div>
 
-      <div class="modal-form-group">
-        <label>Your Review</label>
-        <textarea id="review-body" placeholder="Share your experience with this product…" maxlength="500"></textarea>
-      </div>
+    <a href="https://wa.me/919xxxxxxxxx?text=Hello HeelsUp! I want to enquire about your products."
+        class="whatsapp-float" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp"></i></a>
+    <button class="scroll-top-btn" id="scroll-top"><i class="fa-solid fa-chevron-up"></i></button>
 
-      <button class="btn-submit-review" id="submit-review-btn">Submit Review</button>
-    </div>
-  </div>
+    <style>
+        .whatsapp-float {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 500;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #25D366;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+            transition: all 0.25s ease;
+            text-decoration: none
+        }
 
-  <!-- ============================
-   SCRIPTS
-   ============================ -->
-    
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-  
-    
+        .whatsapp-float:hover {
+            transform: scale(1.1) rotate(-5deg)
+        }
 
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 28px;
+            left: 28px;
+            z-index: 500;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #fff;
+            color: var(--text-primary);
+            border: 1.5px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.3s ease
+        }
 
+        .scroll-top-btn.visible {
+            opacity: 1;
+            transform: translateY(0)
+        }
+    </style>
 
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top grid grid-4">
+                <div>
+                    <div style="font-family:var(--font-display);font-size:1.6rem;color:#fff;margin-bottom:12px">
+                        Heels<span style="color:var(--color-primary)">Up</span></div>
+                    <p class="footer-tagline">Jodhpur se India tak — stylish ladies footwear &amp; bags ka sabse trusted
+                        naam.</p>
+                    <div class="footer-social">
+                        <a href="https://instagram.com/heelsup.in" class="footer-social-link" target="_blank"
+                            rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://facebook.com/heelsup.in" class="footer-social-link" target="_blank"
+                            rel="noopener"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://wa.me/919xxxxxxxxx" class="footer-social-link" target="_blank"
+                            rel="noopener"><i class="fa-brands fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div>
+                    <div class="footer-col-title">Quick Links</div>
+                    <ul class="footer-links">
+                        <li><a href="shop.html" class="footer-link">Shop All</a></li>
+                        <li><a href="category.html?cat=new" class="footer-link">New Arrivals</a></li>
+                        <li><a href="category.html?cat=sale" class="footer-link">Sale</a></li>
+                        <li><a href="about.html" class="footer-link">About Us</a></li>
+                        <li><a href="contact.html" class="footer-link">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">Categories</div>
+                    <ul class="footer-links">
+                        <li><a href="category.html?cat=heels" class="footer-link">👠 Heels</a></li>
+                        <li><a href="category.html?cat=flats" class="footer-link">🥿 Flats</a></li>
+                        <li><a href="category.html?cat=sandals" class="footer-link">👡 Sandals</a></li>
+                        <li><a href="category.html?cat=bags" class="footer-link">👜 Bags</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">Help</div>
+                    <ul class="footer-links">
+                        <li><a href="orders.html" class="footer-link">Track Order</a></li>
+                        <li><a href="policy/returns.html" class="footer-link">Return Policy</a></li>
+                        <li><a href="faq.html" class="footer-link">FAQs</a></li>
+                        <li><a href="policy/privacy.html" class="footer-link">Privacy Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2025 HeelsUp. All rights reserved. Made with ❤️ in Jodhpur.</p>
+                <div class="footer-bottom-links">
+                    <a href="policy/privacy.html">Privacy</a>
+                    <a href="policy/terms.html">Terms</a>
+                    <a href="policy/returns.html">Returns</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
-    <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer=""></script>
-    <script src="/js/core/api-client.js" defer=""></script>
-    <script src="/js/core/common-ui.js" defer=""></script>
-    
-    <!-- State and Operations -->
-    <script src="/js/cart.js" defer=""></script>
-    <script src="/js/wishlist.js" defer=""></script>
-    
-    <!-- Page Controller -->
-    <script src="/js/pages/product.js" defer=""></script>
-<footer class="footer"></footer></body></html>
+    <script>
+        const DEMO_PRODUCTS = [
+            { id: 1, name: 'Stiletto Block Heel Pumps', category: 'heels', price: 899, original_price: 1499, images: ['https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=500&q=80&auto=format&fit=crop'], is_new: true, is_trending: true, rating: 4.8, review_count: 124 },
+            { id: 2, name: 'Rose Gold Strappy Sandals', category: 'sandals', price: 649, original_price: 999, images: ['https://images.unsplash.com/photo-1522163182402-834f871fd851?w=500&q=80&auto=format&fit=crop'], is_trending: true, rating: 4.7, review_count: 89 },
+            { id: 3, name: 'Classic Tote Bag – Tan', category: 'bags', price: 1299, original_price: 1999, images: ['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80&auto=format&fit=crop'], is_new: true, rating: 4.9, review_count: 203 },
+            { id: 4, name: 'Embroidered Juttis (Flats)', category: 'flats', price: 549, original_price: 849, images: ['https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=500&q=80&auto=format&fit=crop'], rating: 4.6, review_count: 67 },
+        ];
+
+        let cart = JSON.parse(localStorage.getItem('heelsup_cart') || '[]');
+        let wishlist = JSON.parse(localStorage.getItem('heelsup_wishlist') || '[]');
+        let qty = 1;
+        let selectedSize = '38';
+        let selectedColor = 'Nude';
+        let rating = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initNavbar();
+            initSearch();
+            initCart();
+            initScrollTop();
+            updateCartUI();
+            loadProductFromURL();
+            renderRelated();
+            initGallery();
+            initSizes();
+            initColors();
+            initQty();
+            initAccordion();
+            initStarRating();
+            initTopbar();
+            initScrollAnimations();
+        });
+
+        function initTopbar() { document.getElementById('topbar-close')?.addEventListener('click', () => { const tb = document.getElementById('topbar'); tb.style.height = '0'; tb.style.overflow = 'hidden'; tb.style.padding = '0' }); }
+
+        function initNavbar() {
+            const navbar = document.getElementById('navbar');
+            const hamburger = document.getElementById('hamburger-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const backdrop = document.getElementById('mobile-backdrop');
+            const closeBtn = document.getElementById('mobile-menu-close');
+            window.addEventListener('scroll', () => {
+                navbar.classList.toggle('scrolled', window.scrollY > 60);
+                document.getElementById('scroll-top').classList.toggle('visible', window.scrollY > 400);
+            });
+            hamburger?.addEventListener('click', () => { hamburger.classList.toggle('open'); mobileMenu.classList.toggle('open'); document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : ''; });
+            [backdrop, closeBtn].forEach(el => el?.addEventListener('click', () => { hamburger.classList.remove('open'); mobileMenu.classList.remove('open'); document.body.style.overflow = ''; }));
+        }
+
+        function initSearch() {
+            const overlay = document.getElementById('search-overlay');
+            const input = document.getElementById('search-input');
+            document.getElementById('search-toggle-btn')?.addEventListener('click', () => { overlay.classList.add('open'); document.body.style.overflow = 'hidden'; setTimeout(() => input.focus(), 300); });
+            document.getElementById('search-close-btn')?.addEventListener('click', () => { overlay.classList.remove('open'); document.body.style.overflow = ''; input.value = ''; });
+            overlay?.addEventListener('click', e => { if (e.target === overlay) { overlay.classList.remove('open'); document.body.style.overflow = ''; input.value = ''; } });
+            input?.addEventListener('keydown', e => { if (e.key === 'Enter' && input.value.trim()) window.location.href = `search.html?q=${encodeURIComponent(input.value.trim())}`; });
+        }
+
+        function loadProductFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const id = parseInt(params.get('id') || '1');
+            const p = DEMO_PRODUCTS.find(x => x.id === id) || DEMO_PRODUCTS[0];
+            document.getElementById('pd-name').textContent = p.name;
+            document.getElementById('pd-cat').textContent = p.category;
+            document.getElementById('pd-price').textContent = '₹' + p.price.toLocaleString('en-IN');
+            if (p.original_price) {
+                document.getElementById('pd-original').textContent = '₹' + p.original_price.toLocaleString('en-IN');
+                const disc = Math.round((1 - p.price / p.original_price) * 100);
+                document.getElementById('pd-discount').textContent = disc + '% OFF';
+            }
+            document.getElementById('gallery-main-img').src = p.images[0];
+            document.getElementById('bc-name').textContent = p.name;
+            document.getElementById('bc-cat').textContent = p.category;
+            document.getElementById('bc-cat').href = 'category.html?cat=' + p.category;
+            document.title = p.name + ' – HeelsUp';
+            // Wishlist state
+            if (wishlist.includes(p.id)) { document.getElementById('wishlist-btn').classList.add('active'); document.getElementById('wishlist-btn').innerHTML = '<i class="fa-solid fa-heart"></i>'; }
+            document.getElementById('add-to-cart-btn').addEventListener('click', () => { addToCart({ ...p, qty }); openCart(); });
+            document.getElementById('wishlist-btn').addEventListener('click', () => {
+                const btn = document.getElementById('wishlist-btn');
+                if (wishlist.includes(p.id)) { wishlist = wishlist.filter(x => x !== p.id); btn.classList.remove('active'); btn.innerHTML = '<i class="fa-regular fa-heart"></i>'; showToast('info', 'Removed', 'Removed from wishlist.'); }
+                else { wishlist.push(p.id); btn.classList.add('active'); btn.innerHTML = '<i class="fa-solid fa-heart"></i>'; showToast('success', '❤️ Saved!', 'Added to wishlist.'); }
+                localStorage.setItem('heelsup_wishlist', JSON.stringify(wishlist));
+                const wc = document.getElementById('wishlist-count'); wc.textContent = wishlist.length; wc.style.display = wishlist.length ? 'flex' : 'none';
+            });
+        }
+
+        function initGallery() {
+            document.querySelectorAll('.gallery-thumb').forEach(t => {
+                t.addEventListener('click', () => {
+                    document.querySelectorAll('.gallery-thumb').forEach(x => x.classList.remove('active'));
+                    t.classList.add('active');
+                    document.getElementById('gallery-main-img').src = t.dataset.img;
+                });
+            });
+        }
+
+        function initSizes() {
+            document.querySelectorAll('.size-option:not(.unavailable)').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.size-option').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    selectedSize = btn.dataset.size;
+                });
+            });
+        }
+
+        function initColors() {
+            document.querySelectorAll('.color-option').forEach(c => {
+                c.addEventListener('click', () => {
+                    document.querySelectorAll('.color-option').forEach(x => x.classList.remove('selected'));
+                    c.classList.add('selected');
+                    selectedColor = c.dataset.color;
+                    document.getElementById('color-label').textContent = selectedColor;
+                });
+            });
+        }
+
+        function initQty() {
+            document.getElementById('qty-minus').addEventListener('click', () => { if (qty > 1) { qty--; document.getElementById('qty-val').textContent = qty; } });
+            document.getElementById('qty-plus').addEventListener('click', () => { qty++; document.getElementById('qty-val').textContent = qty; });
+        }
+
+        function initAccordion() {
+            document.querySelectorAll('.pd-acc-header').forEach(h => {
+                h.addEventListener('click', () => { const item = h.parentElement; item.classList.toggle('open'); });
+            });
+        }
+
+        function initStarRating() {
+            const stars = document.querySelectorAll('.star-select');
+            stars.forEach(s => {
+                s.addEventListener('mouseenter', () => { const v = parseInt(s.dataset.val); stars.forEach((x, i) => { x.style.color = i < v ? 'var(--color-primary)' : 'var(--color-light-3)'; }); });
+                s.addEventListener('mouseleave', () => { stars.forEach((x, i) => { x.style.color = i < rating ? 'var(--color-primary)' : 'var(--color-light-3)'; }); });
+                s.addEventListener('click', () => { rating = parseInt(s.dataset.val); stars.forEach((x, i) => { x.style.color = i < rating ? 'var(--color-primary)' : 'var(--color-light-3)'; }); });
+            });
+        }
+
+        function submitReview() { if (!rating) { showToast('error', 'Rating Required', 'Please select a star rating.'); return; } showToast('success', '✅ Review Submitted!', 'Thank you for your review!'); }
+
+        function renderRelated() {
+            const grid = document.getElementById('related-grid');
+            if (!grid) return;
+            grid.innerHTML = DEMO_PRODUCTS.map(p => {
+                const disc = p.original_price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+                return `<div class="product-card" onclick="location.href='product.html?id=${p.id}'" style="cursor:pointer">
+            <div class="product-img-wrap" style="border-radius:16px 16px 0 0">
+                <img src="${p.images[0]}" alt="${p.name}" loading="lazy"/>
+                <div class="product-badges">${p.is_new ? '<span class="badge badge-new">New</span>' : ''}${disc >= 20 ? `<span class="badge badge-sale">-${disc}%</span>` : ''}</div>
+                <button class="product-quick-add" onclick="event.stopPropagation();addToCart(DEMO_PRODUCTS.find(x=>x.id==${p.id}));openCart()"><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
+            </div>
+            <div class="product-info">
+                <div class="product-category">${p.category}</div>
+                <a href="product.html?id=${p.id}" class="product-name">${p.name}</a>
+                <div class="product-price"><span class="price-current">₹${p.price.toLocaleString('en-IN')}</span>${p.original_price ? `<span class="price-original">₹${p.original_price.toLocaleString('en-IN')}</span>` : ''}</div>
+            </div>
+        </div>`;
+            }).join('');
+        }
+
+        function initScrollAnimations() {
+            const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); observer.unobserve(e.target); } }); }, { threshold: 0.12 });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        function initCart() {
+            document.getElementById('cart-open-btn')?.addEventListener('click', openCart);
+            document.getElementById('cart-close-btn')?.addEventListener('click', closeCart);
+            document.getElementById('cart-backdrop')?.addEventListener('click', closeCart);
+        }
+
+        function openCart() { document.getElementById('cart-drawer').classList.add('open'); document.getElementById('cart-backdrop').classList.add('open'); document.body.style.overflow = 'hidden'; }
+        function closeCart() { document.getElementById('cart-drawer').classList.remove('open'); document.getElementById('cart-backdrop').classList.remove('open'); document.body.style.overflow = ''; }
+
+        function addToCart(product) {
+            const existing = cart.find(i => i.id === product.id);
+            if (existing) existing.qty++;
+            else cart.push({ id: product.id, name: product.name, price: product.price, img: product.images?.[0], qty: product.qty || 1, category: product.category });
+            saveCart(); updateCartUI(); showToast('success', '✅ Added!', `${product.name} added to cart.`);
+        }
+
+        function saveCart() { localStorage.setItem('heelsup_cart', JSON.stringify(cart)); }
+
+        function updateCartUI() {
+            const count = cart.reduce((s, i) => s + i.qty, 0);
+            document.getElementById('cart-count').textContent = count;
+            document.getElementById('cart-drawer-count').textContent = `${count} item${count !== 1 ? 's' : ''}`;
+            renderCartItems();
+        }
+
+        function renderCartItems() {
+            const body = document.getElementById('cart-body');
+            const footer = document.getElementById('cart-footer');
+            if (!cart.length) { body.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛍️</div><div class="cart-empty-text">Your cart is empty</div><a href="shop.html" class="btn btn-primary" style="margin-top:12px">Shop Now</a></div>`; footer.style.display = 'none'; return; }
+            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+            body.innerHTML = cart.map(item => `<div class="cart-item"><div class="cart-item-img"><img src="${item.img || 'assets/placeholder.jpg'}" alt="${item.name}"/></div><div class="cart-item-body"><div class="cart-item-name">${item.name}</div><div class="cart-item-variant">${item.category}</div><div class="cart-item-price">₹${(item.price * item.qty).toLocaleString('en-IN')}</div><div class="qty-control"><button class="qty-btn" onclick="updateQty(${item.id},-1)">−</button><span class="qty-value">${item.qty}</span><button class="qty-btn" onclick="updateQty(${item.id},1)">+</button></div><div class="cart-item-remove" onclick="removeCartItem(${item.id})"><i class="fa-solid fa-trash-can"></i> Remove</div></div></div>`).join('');
+            document.getElementById('cart-subtotal').textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+            document.getElementById('cart-total').textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+            footer.style.display = 'block';
+        }
+
+        window.updateQty = function (id, delta) { const item = cart.find(i => i.id === id); if (!item) return; item.qty = Math.max(1, item.qty + delta); saveCart(); updateCartUI(); };
+        window.removeCartItem = function (id) { cart = cart.filter(i => i.id !== id); saveCart(); updateCartUI(); };
+
+        function initScrollTop() { document.getElementById('scroll-top')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' })); }
+
+        function showToast(type, title, message) {
+            const container = document.getElementById('toast-container');
+            const id = 'toast-' + Date.now();
+            const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+            container.insertAdjacentHTML('beforeend', `<div class="toast toast-${type}" id="${id}"><i class="fa-solid ${icons[type] || icons.info} toast-icon"></i><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-message">${message}</div></div><button class="toast-close" onclick="document.getElementById('${id}').remove()">✕</button></div>`);
+            setTimeout(() => document.getElementById(id)?.remove(), 4000);
+        }
+    </script>
+</body>
+
+</html>

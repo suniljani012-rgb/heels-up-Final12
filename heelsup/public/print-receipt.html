@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEELS UP | Official Luxury Store</title>
+    <link rel="stylesheet" href="storefront-premium.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+</head>
+<body>
+    
+    <nav class="store-nav">
+        <div class="nav-logo"><a href="index.html">HEELS UP</a></div>
+        <div class="nav-links">
+            <a href="shop.html">Shop All</a>
+            <a href="shop.html?category=heels">Heels</a>
+            <a href="shop.html?category=flats">Flats</a>
+            <a href="lookbook.html">Lookbook</a>
+        </div>
+        <div class="nav-icons">
+            <a href="search.html"><i class="fa-solid fa-magnifying-glass"></i></a>
+            <a href="profile.html"><i class="fa-regular fa-user"></i></a>
+            <a href="cart.html"><i class="fa-solid fa-bag-shopping"></i></a>
+        </div>
+    </nav>
+
+    <main class="store-main" style="padding-top: var(--nav-height)">
+        <div class="container section-padding">
+            
+  <div id="receipt-content">Loading...</div>
+  <script src="app-config.js"></script>
+  <script>
+    async function loadReceipt() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId = urlParams.get('id');
+      const isOffline = urlParams.get('type') === 'offline';
+      if(!orderId) { document.getElementById('receipt-content').innerHTML = 'No order ID provided'; return; }
+      
+      try {
+        const token = localStorage.getItem('heelsup_token');
+        let order;
+        
+        if (isOffline) {
+          const res = await fetch(HEELSUP_CONFIG.API_BASE + '/api/admin/offline-sales', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          const data = await res.json();
+          const sale = data.sales.find(s => String(s.id) === orderId || s.sale_number === orderId);
+          if (sale) {
+            order = {
+              id: sale.id,
+              order_number: sale.sale_number,
+              created_at: sale.created_at,
+              customer_name: sale.customer_name,
+              customer_phone: sale.customer_phone,
+              subtotal_amount: sale.subtotal,
+              discount_amount: sale.discount,
+              total_amount: sale.total,
+              items_json: JSON.stringify(sale.items || [])
+            };
+          }
+        } else {
+          const res = await fetch(HEELSUP_CONFIG.API_BASE + '/api/admin/orders', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          const data = await res.json();
+          order = data.orders.find(o => String(o.id) === orderId || o.order_number === orderId);
+        }
+        
+        if(!order) { document.getElementById('receipt-content').innerHTML = 'Order / Sale not found'; return; }
+
+        // Fetch store settings for receipt header
+        let siteName = 'HeelsUp';
+        let storeAddress = 'Jodhpur, Rajasthan';
+        let taxEnabled = false;
+        let gstin = '';
+
+        try {
+          const settingsRes = await fetch(HEELSUP_CONFIG.API_BASE + '/api/admin/settings', {
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+          if (settingsRes.ok) {
+            const settingsData = await settingsRes.json();
+            const dbSettings = settingsData.settings || {};
+            siteName = dbSettings.site_name || 'HeelsUp';
+            
+            const addrParts = [];
+            if (dbSettings.store_address) addrParts.push(dbSettings.store_address);
+            if (dbSettings.store_city) addrParts.push(dbSettings.store_city);
+            if (dbSettings.store_state) addrParts.push(dbSettings.store_state);
+            storeAddress = addrParts.join(', ') || 'Jodhpur, Rajasthan';
+
+            if (dbSettings.tax_settings_config) {
+              const parsedTax = JSON.parse(dbSettings.tax_settings_config);
+              taxEnabled = !!parsedTax.enabled;
+              gstin = parsedTax.gstin || '';
+            }
+          }
+        } catch (errSettings) {
+          console.error('Failed to load settings for receipt header', errSettings);
+        }
+        
+        let itemsHtml = '';
+        if(order.items_json) {
+          try {
+            const items = JSON.parse(order.items_json);
+            items.forEach(item => {
+              itemsHtml += `<div class="item-row">
+                <span style="flex:2">${item.name || item.product_name} x${item.qty||1}</span>
+                <span style="flex:1" class="text-right">₹${item.lineTotal || (item.price*(item.qty||1))}</span>
+              </div>`;
+            });
+          } catch(e){}
+        }
+
+        const html = `
+          <div class="text-center">
+            <h1>${siteName}</h1>
+            <p>${storeAddress}</p>
+            ${taxEnabled && gstin ? `<p>GSTIN: ${gstin}</p>` : ''}
+          </div>
+          <div class="line"></div>
+          <div><span class="bold">Order No:</span> ${order.order_number || order.id}</div>
+          <div><span class="bold">Date:</span> ${new Date(order.created_at).toLocaleString()}</div>
+          <div><span class="bold">Customer:</span> ${order.customer_name || 'Walk-in'}</div>
+          <div><span class="bold">Phone:</span> ${order.customer_phone || 'N/A'}</div>
+          <div class="line"></div>
+          <div class="item-row bold">
+            <span style="flex:2">Item</span>
+            <span style="flex:1" class="text-right">Amount</span>
+          </div>
+          ${itemsHtml}
+          <div class="line"></div>
+          <div class="item-row"><span>Subtotal:</span> <span class="text-right">₹${order.subtotal_amount || order.total_amount}</span></div>
+          <div class="item-row"><span>Discount:</span> <span class="text-right">₹${order.discount_amount || 0}</span></div>
+          <div class="line"></div>
+          <div class="item-row bold" style="font-size:16px;"><span>Total:</span> <span class="text-right">₹${order.total_amount}</span></div>
+          <div class="line"></div>
+          <div class="text-center" style="margin-top:20px;">
+            <p>Thank you for shopping with us!</p>
+            <p>Visit again: heelsup.in</p>
+          </div>
+        `;
+        document.getElementById('receipt-content').innerHTML = html;
+        setTimeout(() => window.print(), 500);
+      } catch(err) {
+        document.getElementById('receipt-content').innerHTML = 'Failed to load receipt: ' + err.message;
+      }
+    }
+    loadReceipt();
+  </script>
+
+        </div>
+    </main>
+    
+    <footer class="store-footer">
+        <div class="container footer-grid">
+            <div>
+                <h3 class="nav-logo" style="margin-bottom:1rem">HEELS UP</h3>
+                <p style="color:var(--color-text-muted); font-size:0.9rem; max-width:300px">Crafting the world's most elegant, comfortable, and striking luxury footwear.</p>
+            </div>
+            <div>
+                <div class="footer-heading">Shop</div>
+                <div class="footer-links">
+                    <a href="shop.html">New Arrivals</a>
+                    <a href="shop.html?category=heels">Stilettos</a>
+                    <a href="shop.html?category=wedges">Wedges</a>
+                    <a href="shop.html?category=flats">Flats</a>
+                </div>
+            </div>
+            <div>
+                <div class="footer-heading">Help</div>
+                <div class="footer-links">
+                    <a href="contact.html">Contact Us</a>
+                    <a href="shipping-info.html">Shipping</a>
+                    <a href="returns.html">Returns</a>
+                    <a href="faq.html">FAQ</a>
+                </div>
+            </div>
+            <div>
+                <div class="footer-heading">Legal</div>
+                <div class="footer-links">
+                    <a href="policy.html">Privacy Policy</a>
+                    <a href="policy.html">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+        <div class="container" style="border-top:1px solid var(--color-border); padding-top:2rem; display:flex; justify-content:space-between; color:var(--color-text-muted); font-size:0.875rem">
+            <div>© 2026 Heels Up. All rights reserved.</div>
+            <div style="display:flex; gap:1rem">
+                <i class="fa-brands fa-instagram"></i>
+                <i class="fa-brands fa-tiktok"></i>
+                <i class="fa-brands fa-pinterest"></i>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

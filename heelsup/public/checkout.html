@@ -1,315 +1,856 @@
-<html lang="en"><head></head><body>﻿
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout – HeelsUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .checkout-page {
+            padding: 48px 0 80px;
+            background: var(--bg-page);
+            min-height: 70vh
+        }
 
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 32px;
+            align-items: start
+        }
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-  <meta name="theme-color" content="#E8CCC5">
+        /* Steps */
+        .checkout-steps {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 36px;
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden
+        }
 
-  <!-- ═══ PRIMARY SEO ═══ -->
-  <title>Secure Checkout – HeelsUp | Premium Ladies Footwear</title>
-  <meta name="robots" content="noindex,nofollow">
+        .co-step {
+            flex: 1;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s
+        }
 
-  <!-- ═══ PRECONNECT & FONTS ═══ -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        .co-step:last-child {
+            border-right: none
+        }
 
-  
-    <link rel="stylesheet" href="/css/customer-theme.css">
-    <link rel="stylesheet" href="/css/pages/checkout.css">
+        .co-step.active {
+            color: var(--color-primary);
+            background: var(--color-primary-glow)
+        }
 
+        .co-step.done {
+            color: var(--color-success)
+        }
 
+        .co-step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: var(--color-light-3);
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s
+        }
 
-    <div id="navbar"></div>
+        .co-step.active .co-step-num {
+            background: var(--color-primary);
+            color: var(--color-dark)
+        }
 
-  <!-- ═══ TOAST CONTAINER ═══ -->
-  
+        .co-step.done .co-step-num {
+            background: var(--color-success);
+            color: #fff
+        }
 
-  <!-- ═══ SECURE NAVBAR ═══ -->
-  <nav class="checkout-nav" role="navigation" aria-label="Checkout navigation">
-    <div class="container checkout-nav-inner">
-      <a href="/" class="checkout-logo" aria-label="Return to HeelsUp Home">
-        <img src="/logo.png" alt="HeelsUp" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<span style=\'font-family:var(--font-head);font-size:1.6rem;font-weight:700;color:var(--ink)\'>Heels<span style=\'color:var(--primary)\'>Up</span></span>');">
-      </a>
-      <div class="secure-badge">
-        <i class="fa-solid fa-lock" aria-hidden="true"></i> <span>Secure Checkout</span>
-      </div>
-      <a href="/cart" class="back-cart">
-        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Return to Cart
-      </a>
+        /* Sections */
+        .co-section {
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 28px;
+            margin-bottom: 20px
+        }
+
+        .co-section-title {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .co-section-title i {
+            color: var(--color-primary);
+            font-size: 1rem
+        }
+
+        /* Payment methods */
+        .pay-option {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: all 0.2s
+        }
+
+        .pay-option:hover {
+            border-color: var(--color-primary);
+            background: var(--color-primary-glow)
+        }
+
+        .pay-option.selected {
+            border-color: var(--color-primary);
+            background: var(--color-primary-glow)
+        }
+
+        .pay-option input[type=radio] {
+            accent-color: var(--color-primary);
+            width: 16px;
+            height: 16px
+        }
+
+        .pay-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1
+        }
+
+        .pay-icons {
+            display: flex;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text-muted)
+        }
+
+        /* Order Summary Right */
+        .co-summary-box {
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 28px;
+            position: sticky;
+            top: 90px
+        }
+
+        .co-sum-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px
+        }
+
+        .co-sum-img {
+            width: 52px;
+            height: 64px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--color-light-3);
+            flex-shrink: 0;
+            position: relative
+        }
+
+        .co-sum-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover
+        }
+
+        .co-sum-qty {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 20px;
+            height: 20px;
+            background: var(--color-dark);
+            color: #fff;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .co-sum-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3
+        }
+
+        .co-sum-cat {
+            font-size: 11px;
+            color: var(--text-muted)
+        }
+
+        .co-sum-price {
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: auto;
+            flex-shrink: 0
+        }
+
+        .co-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 10px
+        }
+
+        .co-total-row {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            border-top: 1px solid var(--border-color);
+            padding-top: 14px;
+            margin-top: 6px;
+            display: flex;
+            justify-content: space-between
+        }
+
+        /* Success Modal */
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(13, 13, 13, 0.7);
+            z-index: 999;
+            display: none;
+            align-items: center;
+            justify-content: center
+        }
+
+        .success-overlay.show {
+            display: flex
+        }
+
+        .success-box {
+            background: #fff;
+            border-radius: 24px;
+            padding: 48px 40px;
+            text-align: center;
+            max-width: 480px;
+            width: 90%;
+            animation: scaleIn 0.4s ease
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0.85);
+                opacity: 0
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1
+            }
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 16px
+        }
+
+        .success-title {
+            font-family: var(--font-heading);
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 10px
+        }
+
+        @media(max-width:900px) {
+            .checkout-grid {
+                grid-template-columns: 1fr
+            }
+
+            .co-summary-box {
+                position: static
+            }
+        }
+
+        @media(max-width:560px) {
+            .checkout-steps {
+                flex-direction: column;
+                border-radius: 16px
+            }
+
+            .co-step {
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                width: 100%
+            }
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 500;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #25D366;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+            text-decoration: none;
+            transition: all 0.25s
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar" id="topbar">
+        <div class="topbar-marquee"><span class="topbar-text">🔒 Secure Checkout — <strong>SSL
+                    Encrypted</strong></span><span class="topbar-dot"></span><span class="topbar-text">💳 COD Available
+                | UPI | Cards | EMI</span><span class="topbar-dot"></span><span class="topbar-text">🔒 Secure Checkout —
+                <strong>SSL Encrypted</strong></span></div>
+        <button class="topbar-close" id="topbar-close">✕</button>
     </div>
-  </nav>
 
-  <!-- ═══ PROGRESS STEPS ═══ -->
-  <div class="steps-bar">
-    <div class="container steps-inner">
-      <div class="step-item done">
-        <div class="step-num"><i class="fa-solid fa-check"></i></div> <span>Bag</span>
-      </div>
-      <div class="step-line done"></div>
-      <div class="step-item active">
-        <div class="step-num">2</div> <span>Delivery &amp; Payment</span>
-      </div>
-      <div class="step-line"></div>
-      <div class="step-item">
-        <div class="step-num">3</div> <span>Confirmation</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ EMPTY STATE (Hidden by default) ═══ -->
-  <div class="container" id="empty-state" style="display:none;">
-    <div class="empty-cart-state">
-      <i class="fa-solid fa-cart-arrow-down" aria-hidden="true"></i>
-      <h2>Your Bag is Empty</h2>
-      <p>Looks like you haven't added anything to your cart yet. Let's fix that!</p>
-      <a href="/shop" class="btn-shop"><i class="fa-solid fa-shoe-prints"></i> Start Shopping</a>
-    </div>
-  </div>
-
-  <!-- ═══ MAIN CHECKOUT LAYOUT ═══ -->
-  <div class="container checkout-grid" id="checkout-main">
-
-    <!-- LEFT COLUMN: Forms -->
-    <div>
-      <!-- Contact Info -->
-      <div class="section-card">
-        <div class="section-header">
-          <h3><i class="fa-solid fa-user"></i> Contact Information</h3>
-        </div>
-        <div class="section-body">
-          <div class="form-row-2">
-            <div class="form-group">
-              <label for="c-name">Full Name <span class="req">*</span></label>
-              <input type="text" id="c-name" placeholder="E.g. Priya Sharma" autocomplete="name">
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="navbar-inner">
+                <a href="index.html" class="navbar-logo"><img src="logo.png" alt="HeelsUp"
+                        onerror="this.style.display='none'" /><span
+                        class="navbar-logo-text">Heels<span>Up</span></span></a>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)"><i
+                        class="fa-solid fa-lock" style="color:var(--color-primary)"></i> Secure Checkout</div>
+                <div class="navbar-actions">
+                    <a href="cart.html" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-left"></i> Back to
+                        Cart</a>
+                </div>
             </div>
-            <div class="form-group">
-              <label for="c-phone">Mobile Number <span class="req">*</span></label>
-              <input type="tel" id="c-phone" placeholder="10-digit mobile number" maxlength="10" autocomplete="tel" oninput="this.value=this.value.replace(/\D/g,'')">
+        </div>
+    </nav>
+
+    <section class="checkout-page">
+        <div class="container">
+            <div style="margin-bottom:24px">
+                <h1 style="font-family:var(--font-heading);font-size:1.8rem;font-weight:600">Checkout</h1>
+                <nav class="breadcrumb" style="padding:8px 0 0"><span class="breadcrumb-item"><a
+                            href="index.html">Home</a></span><span class="breadcrumb-sep"><i
+                            class="fa-solid fa-chevron-right" style="font-size:9px"></i></span><span
+                        class="breadcrumb-item"><a href="cart.html">Cart</a></span><span class="breadcrumb-sep"><i
+                            class="fa-solid fa-chevron-right" style="font-size:9px"></i></span><span
+                        class="breadcrumb-item active">Checkout</span></nav>
             </div>
-          </div>
-          <div class="form-group">
-            <label for="c-email">Email Address <span class="req">*</span></label>
-            <input type="email" id="c-email" placeholder="E.g. priya@example.com" autocomplete="email">
-          </div>
-        </div>
-      </div>
 
-      <!-- Delivery Address -->
-      <div class="section-card">
-        <div class="section-header">
-          <h3><i class="fa-solid fa-location-dot"></i> Delivery Address</h3>
-        </div>
-        <div class="section-body">
-          <!-- Saved Addresses Dropdown (Visible if user has saved addresses) -->
-          <div class="form-group" id="saved-address-group" style="display:none; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px dashed var(--border);">
-            <label for="saved-addresses">Use Saved Address</label>
-            <select id="saved-addresses" onchange="fillSavedAddress(this.value)">
-              <option value="">— Choose a saved address —</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="c-line1">Address Line 1 <span class="req">*</span></label>
-            <input type="text" id="c-line1" placeholder="House/Flat No., Building Name, Street" autocomplete="address-line1">
-          </div>
-          <div class="form-group">
-            <label for="c-line2">Address Line 2 (Optional)</label>
-            <input type="text" id="c-line2" placeholder="Area, Landmark, Sector" autocomplete="address-line2">
-          </div>
-
-          <div class="form-row-2">
-            <div class="form-group">
-              <label for="c-city">City <span class="req">*</span></label>
-              <input type="text" id="c-city" placeholder="E.g. Mumbai" autocomplete="address-level2">
+            <!-- Steps -->
+            <div class="checkout-steps">
+                <div class="co-step active" id="step-1-tab">
+                    <div class="co-step-num">1</div> <span>Delivery</span>
+                </div>
+                <div class="co-step" id="step-2-tab">
+                    <div class="co-step-num">2</div> <span>Payment</span>
+                </div>
+                <div class="co-step" id="step-3-tab">
+                    <div class="co-step-num">3</div> <span>Review</span>
+                </div>
             </div>
-            <div class="form-group">
-              <label for="c-pincode">Pincode <span class="req">*</span></label>
-              <input type="text" id="c-pincode" placeholder="6-digit pincode" maxlength="6" autocomplete="postal-code" oninput="this.value=this.value.replace(/\D/g,'')">
+
+            <div class="checkout-grid">
+                <div>
+                    <!-- STEP 1: Delivery -->
+                    <div id="step-1">
+                        <div class="co-section">
+                            <div class="co-section-title"><i class="fa-solid fa-user"></i> Contact Information</div>
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">First Name <span
+                                            class="required">*</span></label><input type="text" class="form-input"
+                                        id="fname" placeholder="Priya" /></div>
+                                <div class="form-group"><label class="form-label">Last Name <span
+                                            class="required">*</span></label><input type="text" class="form-input"
+                                        id="lname" placeholder="Sharma" /></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">Phone Number <span
+                                            class="required">*</span></label>
+                                    <div class="input-icon-wrap"><i class="fa-solid fa-phone input-icon"></i><input
+                                            type="tel" class="form-input" id="phone" placeholder="+91 98765 43210" />
+                                    </div>
+                                </div>
+                                <div class="form-group"><label class="form-label">Email Address</label>
+                                    <div class="input-icon-wrap"><i class="fa-solid fa-envelope input-icon"></i><input
+                                            type="email" class="form-input" id="email" placeholder="priya@email.com" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="co-section">
+                            <div class="co-section-title"><i class="fa-solid fa-location-dot"></i> Delivery Address
+                            </div>
+                            <div class="form-group"><label class="form-label">Full Address <span
+                                        class="required">*</span></label><textarea class="form-input form-textarea"
+                                    id="address" placeholder="House no., Street, Area…" rows="3"></textarea></div>
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">City <span
+                                            class="required">*</span></label><input type="text" class="form-input"
+                                        id="city" placeholder="Jodhpur" /></div>
+                                <div class="form-group"><label class="form-label">State <span
+                                            class="required">*</span></label>
+                                    <select class="form-select" id="state">
+                                        <option value="">Select State</option>
+                                        <option value="RJ" selected>Rajasthan</option>
+                                        <option value="DL">Delhi</option>
+                                        <option value="MH">Maharashtra</option>
+                                        <option value="GJ">Gujarat</option>
+                                        <option value="UP">Uttar Pradesh</option>
+                                        <option value="MP">Madhya Pradesh</option>
+                                        <option value="KA">Karnataka</option>
+                                        <option value="TN">Tamil Nadu</option>
+                                        <option value="WB">West Bengal</option>
+                                        <option value="PB">Punjab</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group"><label class="form-label">PIN Code <span
+                                            class="required">*</span></label><input type="text" class="form-input"
+                                        id="pin" placeholder="342001" maxlength="6" /></div>
+                                <div class="form-group"><label class="form-label">Landmark (Optional)</label><input
+                                        type="text" class="form-input" id="landmark"
+                                        placeholder="Near Metro, Mall etc." /></div>
+                            </div>
+                            <label class="form-check" style="margin-top:4px">
+                                <input type="checkbox" class="form-check-input" id="save-address" checked />
+                                <span class="form-check-label">Save this address for future orders</span>
+                            </label>
+                        </div>
+                        <div class="co-section">
+                            <div class="co-section-title"><i class="fa-solid fa-truck-fast"></i> Delivery Method</div>
+                            <div class="pay-option selected" onclick="selectDelivery(this,'standard')">
+                                <input type="radio" name="delivery" value="standard" checked />
+                                <div class="pay-label">Standard Delivery <span
+                                        style="font-size:12px;font-weight:400;color:var(--text-muted)">— 3 to 5 Business
+                                        Days</span></div>
+                                <span style="font-size:13px;font-weight:700;color:var(--color-success)">Free</span>
+                            </div>
+                            <div class="pay-option" onclick="selectDelivery(this,'express')">
+                                <input type="radio" name="delivery" value="express" />
+                                <div class="pay-label">Express Delivery <span
+                                        style="font-size:12px;font-weight:400;color:var(--text-muted)">— 1 to 2 Business
+                                        Days</span></div>
+                                <span style="font-size:13px;font-weight:700;color:var(--color-primary)">₹99</span>
+                            </div>
+                            <div class="pay-option" onclick="selectDelivery(this,'sameday')">
+                                <input type="radio" name="delivery" value="sameday" />
+                                <div class="pay-label">Same-Day Delivery <span
+                                        style="font-size:12px;font-weight:400;color:var(--text-muted)">— Jodhpur only
+                                        (order by 2 PM)</span></div>
+                                <span style="font-size:13px;font-weight:700;color:var(--color-primary)">₹49</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary btn-lg" style="width:100%" onclick="goToStep(2)">Continue to
+                            Payment <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+
+                    <!-- STEP 2: Payment -->
+                    <div id="step-2" style="display:none">
+                        <div class="co-section">
+                            <div class="co-section-title"><i class="fa-solid fa-credit-card"></i> Payment Method</div>
+                            <div class="pay-option selected" onclick="selectPay(this,'upi')">
+                                <input type="radio" name="payment" value="upi" checked />
+                                <div class="pay-label">UPI / Google Pay / PhonePe</div>
+                                <div class="pay-icons"><i class="fa-solid fa-mobile-screen-button"
+                                        style="font-size:1.2rem;color:var(--color-primary)"></i></div>
+                            </div>
+                            <div id="upi-details"
+                                style="padding:14px 18px;background:var(--color-light);border-radius:10px;margin-bottom:10px;font-size:13px">
+                                <label class="form-label" style="font-size:12px">Enter UPI ID</label>
+                                <input type="text" class="form-input" placeholder="yourname@upi"
+                                    style="margin-top:6px" />
+                            </div>
+                            <div class="pay-option" onclick="selectPay(this,'card')">
+                                <input type="radio" name="payment" value="card" />
+                                <div class="pay-label">Credit / Debit Card</div>
+                                <div class="pay-icons"><i class="fa-brands fa-cc-visa" style="font-size:1.4rem"></i><i
+                                        class="fa-brands fa-cc-mastercard" style="font-size:1.4rem"></i></div>
+                            </div>
+                            <div id="card-details"
+                                style="padding:14px 18px;background:var(--color-light);border-radius:10px;margin-bottom:10px;display:none">
+                                <div class="form-group"><label class="form-label" style="font-size:12px">Card
+                                        Number</label>
+                                    <div class="input-icon-wrap"><i
+                                            class="fa-solid fa-credit-card input-icon"></i><input type="text"
+                                            class="form-input" placeholder="1234 5678 9012 3456" maxlength="19" /></div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group"><label class="form-label" style="font-size:12px">Expiry
+                                            Date</label><input type="text" class="form-input" placeholder="MM/YY"
+                                            maxlength="5" /></div>
+                                    <div class="form-group"><label class="form-label" style="font-size:12px">CVV</label>
+                                        <div class="input-icon-wrap"><i class="fa-solid fa-lock input-icon"></i><input
+                                                type="password" class="form-input" placeholder="•••" maxlength="4" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group"><label class="form-label" style="font-size:12px">Name on
+                                        Card</label><input type="text" class="form-input" placeholder="As on card" />
+                                </div>
+                            </div>
+                            <div class="pay-option" onclick="selectPay(this,'cod')">
+                                <input type="radio" name="payment" value="cod" />
+                                <div class="pay-label">Cash on Delivery (COD)</div>
+                                <div class="pay-icons"><i class="fa-solid fa-indian-rupee-sign"
+                                        style="font-size:1.1rem;color:#2d8a4e"></i></div>
+                            </div>
+                            <div class="pay-option" onclick="selectPay(this,'emi')">
+                                <input type="radio" name="payment" value="emi" />
+                                <div class="pay-label">EMI <span
+                                        style="font-size:12px;font-weight:400;color:var(--text-muted)">— Available on
+                                        orders ₹1999+</span></div>
+                                <div class="pay-icons"><i class="fa-solid fa-calendar-check"
+                                        style="font-size:1.1rem;color:var(--color-primary)"></i></div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px">
+                            <button class="btn btn-ghost btn-lg" style="flex:1" onclick="goToStep(1)"><i
+                                    class="fa-solid fa-arrow-left"></i> Back</button>
+                            <button class="btn btn-primary btn-lg" style="flex:2" onclick="goToStep(3)">Review Order <i
+                                    class="fa-solid fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: Review -->
+                    <div id="step-3" style="display:none">
+                        <div class="co-section">
+                            <div class="co-section-title"><i class="fa-solid fa-check-circle"></i> Order Review</div>
+                            <div id="review-details" style="font-size:14px;color:var(--text-secondary);line-height:2">
+                                Loading...</div>
+                        </div>
+                        <div class="co-section"
+                            style="background:var(--color-dark);color:#fff;border-color:var(--color-dark)">
+                            <div style="font-size:1rem;font-weight:600;color:#fff;margin-bottom:6px"><i
+                                    class="fa-solid fa-shield-halved" style="color:var(--color-primary)"></i> Your order
+                                is safe & secure</div>
+                            <div style="font-size:13px;color:rgba(255,255,255,0.6)">SSL encrypted payment. COD
+                                available. 7-day hassle-free returns. WhatsApp support available 24/7.</div>
+                        </div>
+                        <div style="display:flex;gap:12px">
+                            <button class="btn btn-ghost btn-lg" style="flex:1" onclick="goToStep(2)"><i
+                                    class="fa-solid fa-arrow-left"></i> Back</button>
+                            <button class="btn btn-primary btn-lg" style="flex:2" onclick="placeOrder()"><i
+                                    class="fa-solid fa-lock"></i> Place Order</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Order Summary -->
+                <div class="co-summary-box">
+                    <div
+                        style="font-family:var(--font-heading);font-size:1.1rem;font-weight:600;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border-color)">
+                        Order Summary</div>
+                    <div id="co-items-list"></div>
+                    <div style="border-top:1px solid var(--border-color);padding-top:14px;margin-top:6px">
+                        <div class="co-row"><span>Subtotal</span><span id="co-subtotal">₹0</span></div>
+                        <div class="co-row"><span>Shipping</span><span style="color:var(--color-success)"
+                                id="co-shipping">Free</span></div>
+                        <div class="co-row"><span>Discount</span><span style="color:var(--color-success)"
+                                id="co-discount">-₹0</span></div>
+                        <div class="co-total-row"><span>Total</span><span id="co-total">₹0</span></div>
+                    </div>
+                    <div
+                        style="margin-top:16px;padding:12px;background:var(--color-light);border-radius:10px;font-size:12px;color:var(--text-muted);text-align:center">
+                        <i class="fa-solid fa-shield-halved" style="color:var(--color-primary)"></i> Secure checkout |
+                        SSL Encrypted
+                    </div>
+                    <div style="margin-top:14px;text-align:center">
+                        <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">We accept</div>
+                        <div
+                            style="font-size:1.4rem;display:flex;gap:8px;justify-content:center;color:var(--text-muted)">
+                            <i class="fa-brands fa-cc-visa"></i><i class="fa-brands fa-cc-mastercard"></i><i
+                                class="fa-solid fa-mobile-screen-button" style="font-size:1.2rem"></i><i
+                                class="fa-solid fa-indian-rupee-sign" style="font-size:1rem;margin-top:3px"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <div class="form-group">
-            <label for="c-state">State <span class="req">*</span></label>
-            <select id="c-state" autocomplete="address-level1">
-              <option value="">Select State</option>
-              <option value="Andaman and Nicobar Islands">Andaman and Nicobar Islands</option>
-              <option value="Andhra Pradesh">Andhra Pradesh</option>
-              <option value="Arunachal Pradesh">Arunachal Pradesh</option>
-              <option value="Assam">Assam</option>
-              <option value="Bihar">Bihar</option>
-              <option value="Chandigarh">Chandigarh</option>
-              <option value="Chhattisgarh">Chhattisgarh</option>
-              <option value="Dadra and Nagar Haveli">Dadra and Nagar Haveli</option>
-              <option value="Daman and Diu">Daman and Diu</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Goa">Goa</option>
-              <option value="Gujarat">Gujarat</option>
-              <option value="Haryana">Haryana</option>
-              <option value="Himachal Pradesh">Himachal Pradesh</option>
-              <option value="Jammu and Kashmir">Jammu and Kashmir</option>
-              <option value="Jharkhand">Jharkhand</option>
-              <option value="Karnataka">Karnataka</option>
-              <option value="Kerala">Kerala</option>
-              <option value="Ladakh">Ladakh</option>
-              <option value="Lakshadweep">Lakshadweep</option>
-              <option value="Madhya Pradesh">Madhya Pradesh</option>
-              <option value="Maharashtra">Maharashtra</option>
-              <option value="Manipur">Manipur</option>
-              <option value="Meghalaya">Meghalaya</option>
-              <option value="Mizoram">Mizoram</option>
-              <option value="Nagaland">Nagaland</option>
-              <option value="Odisha">Odisha</option>
-              <option value="Puducherry">Puducherry</option>
-              <option value="Punjab">Punjab</option>
-              <option value="Rajasthan">Rajasthan</option>
-              <option value="Sikkim">Sikkim</option>
-              <option value="Tamil Nadu">Tamil Nadu</option>
-              <option value="Telangana">Telangana</option>
-              <option value="Tripura">Tripura</option>
-              <option value="Uttar Pradesh">Uttar Pradesh</option>
-              <option value="Uttarakhand">Uttarakhand</option>
-              <option value="West Bengal">West Bengal</option>
-            </select>
-          </div>
-
-          <label class="save-address-lbl">
-            <input type="checkbox" id="save-address" checked="">
-            Save this information for next time
-          </label>
         </div>
-      </div>
+    </section>
 
-      <!-- Coupon Code -->
-      <div class="section-card">
-        <div class="section-header">
-          <h3><i class="fa-solid fa-ticket"></i> Apply Discount</h3>
+    <!-- Success Modal -->
+    <div class="success-overlay" id="success-overlay">
+        <div class="success-box">
+            <div class="success-icon">🎉</div>
+            <div class="success-title">Order Placed!</div>
+            <p style="color:var(--text-muted);margin-bottom:8px">Aapka order successfully place ho gaya hai!</p>
+            <p style="font-size:14px;color:var(--text-secondary);margin-bottom:24px">Order ID: <strong id="order-id"
+                    style="color:var(--color-primary)">#HU00001</strong><br />Confirmation SMS & WhatsApp message bheja
+                jayega.</p>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+                <a href="orders.html" class="btn btn-primary"><i class="fa-solid fa-box"></i> Track Order</a>
+                <a href="index.html" class="btn btn-ghost">Continue Shopping</a>
+            </div>
         </div>
-        <div class="section-body">
-          <div class="coupon-row">
-            <input type="text" id="coupon-input" placeholder="Enter promo code" autocomplete="off">
-            <button class="btn-apply" onclick="applyCoupon()">Apply</button>
-          </div>
-
-          <div class="coupon-success" id="coupon-success">
-            <i class="fa-solid fa-circle-check"></i> <span id="coupon-msg">Code applied!</span>
-            <button class="coupon-remove-btn" onclick="removeCoupon()">Remove</button>
-          </div>
-
-          <div class="coupon-hints">
-            Available:
-            <button class="coupon-hint-btn" onclick="applyCouponCode('HEELS10')">HEELS10</button>
-            <button class="coupon-hint-btn" onclick="applyCouponCode('WELCOME20')">WELCOME20</button>
-            <button class="coupon-hint-btn" onclick="applyCouponCode('FLAT100')">FLAT100</button>
-          </div>
-        </div>
-      </div>
     </div>
 
-    <!-- RIGHT COLUMN: Order Summary -->
-    <div class="order-summary">
-      <div class="summary-card">
-        <div class="summary-header">
-          <h3>Order Summary</h3>
-          <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
+    <div class="toast-container" id="toast-container"></div>
+    <a href="https://wa.me/919xxxxxxxxx" class="whatsapp-float" target="_blank"><i
+            class="fa-brands fa-whatsapp"></i></a>
+
+    <footer class="footer" style="margin-top:0">
+        <div class="container">
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2025 HeelsUp. All rights reserved. Secure checkout powered by SSL.</p>
+                <div class="footer-bottom-links"><a href="policy/privacy.html">Privacy</a><a
+                        href="policy/terms.html">Terms</a><a href="policy/returns.html">Returns</a></div>
+            </div>
         </div>
-        <div class="summary-body">
+    </footer>
 
-          <!-- Cart Items List -->
-          <div id="cart-items-list">
-            <!-- Populated by JS -->
-          </div>
+    <script src="app-config.js"></script>
+    <script src="app-auth.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        const API_BASE = HeelsUpAuth.API_BASE;
+        let cart = JSON.parse(localStorage.getItem('heelsup_cart') || '[]');
+        let currentStep = 1;
 
-          <div class="summary-divider"></div>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('topbar-close')?.addEventListener('click', () => { const tb = document.getElementById('topbar'); tb.style.height = '0'; tb.style.overflow = 'hidden'; tb.style.padding = '0'; });
+            window.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60));
+            renderSummary();
+            if (!cart.length) {
+                showToast('info', 'Cart Empty', 'No items in cart. Redirecting…');
+                setTimeout(() => location.href = 'shop.html', 2000);
+            }
+        });
 
-          <!-- Free Shipping Progress -->
-          <div class="free-shipping-text" id="shipping-bar-text">Calculating shipping...</div>
-          <div class="free-shipping-bar">
-            <div class="free-shipping-fill" id="shipping-bar-fill" style="width:0%"></div>
-          </div>
-
-          <div class="summary-divider"></div>
-
-          <!-- Price Breakdown -->
-          <div class="summary-row">
-            <span>Subtotal</span>
-            <span id="s-subtotal">₹0</span>
-          </div>
-          <div class="summary-row discount" id="discount-row">
-            <span>Discount Savings</span>
-            <span id="s-discount">-₹0</span>
-          </div>
-          <div class="summary-row">
-            <span>Shipping</span>
-            <span id="s-shipping">₹0</span>
-          </div>
-
-          <div class="summary-row total">
-            <span>Total</span>
-            <span id="s-total">₹0</span>
-          </div>
-
-          <!-- Secure Pay Button -->
-          <button class="btn-pay" id="btn-pay" onclick="initiatePayment()">
-            <i class="fa-solid fa-lock" aria-hidden="true"></i> Pay Securely
-          </button>
-
-          <!-- Trust Badges -->
-          <div class="trust-row">
-            <div class="trust-badge" title="256-bit SSL Encryption"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> SSL Secure</div>
-            <div class="trust-badge" title="Powered by Razorpay"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> Safe Payments</div>
-            <div class="trust-badge" title="Guaranteed Quality"><i class="fa-solid fa-medal" aria-hidden="true"></i>
-              100% Authentic</div>
-          </div>
-
+        function renderSummary() {
+            const list = document.getElementById('co-items-list');
+            list.innerHTML = cart.map(item => `
+        <div class="co-sum-item">
+            <div class="co-sum-img" style="position:relative"><img src="${item.img || ''}" alt="${item.name}"/><div class="co-sum-qty">${item.qty}</div></div>
+            <div style="flex:1"><div class="co-sum-name">${item.name}</div><div class="co-sum-cat">${item.category}</div></div>
+            <div class="co-sum-price">₹${(item.price * item.qty).toLocaleString('en-IN')}</div>
         </div>
-      </div>
-    </div>
+    `).join('');
+            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+            const discount = Math.round(subtotal * 0.0);
+            document.getElementById('co-subtotal').textContent = '₹' + subtotal.toLocaleString('en-IN');
+            document.getElementById('co-total').textContent = '₹' + subtotal.toLocaleString('en-IN');
+        }
 
-  </div>
+        function goToStep(n) {
+            if (n === 2 && !validateStep1()) return;
+            currentStep = n;
+            [1, 2, 3].forEach(i => {
+                document.getElementById('step-' + i).style.display = i === n ? 'block' : 'none';
+                const tab = document.getElementById('step-' + i + '-tab');
+                tab.classList.toggle('active', i === n);
+                tab.classList.toggle('done', i < n);
+                if (i < n) tab.querySelector('.co-step-num').innerHTML = '<i class="fa-solid fa-check" style="font-size:10px"></i>';
+                else if (i === n) tab.querySelector('.co-step-num').textContent = i;
+            });
+            if (n === 3) buildReviewDetails();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-  <!-- ═══ SCRIPTS ═══ -->
-    
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-  
-    
+        function validateStep1() {
+            const fields = [{ id: 'fname', label: 'First Name' }, { id: 'phone', label: 'Phone Number' }, { id: 'address', label: 'Address' }, { id: 'city', label: 'City' }, { id: 'state', label: 'State' }, { id: 'pin', label: 'PIN Code' }];
+            for (const f of fields) {
+                const el = document.getElementById(f.id);
+                if (!el || !el.value.trim()) { showToast('error', 'Required Field', `${f.label} is required.`); el?.focus(); return false; }
+            }
+            const pin = document.getElementById('pin').value;
+            if (!/^\d{6}$/.test(pin)) { showToast('error', 'Invalid PIN', 'Please enter a valid 6-digit PIN code.'); return false; }
+            return true;
+        }
 
+        function buildReviewDetails() {
+            const fname = document.getElementById('fname')?.value || '';
+            const lname = document.getElementById('lname')?.value || '';
+            const phone = document.getElementById('phone')?.value || '';
+            const address = document.getElementById('address')?.value || '';
+            const city = document.getElementById('city')?.value || '';
+            const pin = document.getElementById('pin')?.value || '';
+            const payMethod = document.querySelector('input[name=payment]:checked')?.value || 'upi';
+            const delivMethod = document.querySelector('input[name=delivery]:checked')?.value || 'standard';
+            const payLabels = { upi: 'UPI / Google Pay', card: 'Credit/Debit Card', cod: 'Cash on Delivery', emi: 'EMI' };
+            const delLabels = { standard: 'Standard (3-5 days) — Free', express: 'Express (1-2 days) — ₹99', sameday: 'Same-Day (Jodhpur) — ₹49' };
+            document.getElementById('review-details').innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div><strong style="color:var(--text-primary);display:block;margin-bottom:4px">Delivery Address</strong>${fname} ${lname}<br>${phone}<br>${address}<br>${city} — ${pin}</div>
+            <div><strong style="color:var(--text-primary);display:block;margin-bottom:4px">Delivery Method</strong>${delLabels[delivMethod] || delivMethod}<br><br><strong style="color:var(--text-primary);display:block;margin-bottom:4px">Payment Method</strong>${payLabels[payMethod] || payMethod}</div>
+        </div>
+    `;
+        }
 
+        function selectPay(el, type) {
+            document.querySelectorAll('.pay-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            el.querySelector('input[type=radio]').checked = true;
+            document.getElementById('upi-details').style.display = type === 'upi' ? 'block' : 'none';
+            document.getElementById('card-details').style.display = type === 'card' ? 'block' : 'none';
+        }
 
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
+        function selectDelivery(el, type) {
+            document.querySelectorAll('.pay-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            el.querySelector('input[type=radio]').checked = true;
+        }
 
-    <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer=""></script>
-    <script src="/js/core/api-client.js" defer=""></script>
-    <script src="/js/core/common-ui.js" defer=""></script>
-    
-    <!-- State and Operations -->
-    <script src="/js/cart.js" defer=""></script>
-    <script src="/js/wishlist.js" defer=""></script>
-    
-    <!-- Page Controller -->
-    <script src="/js/pages/checkout.js" defer=""></script>
-<footer class="footer"></footer></body></html>
+        function collectCheckoutPayload() {
+            const fname = document.getElementById('fname')?.value?.trim() || '';
+            const lname = document.getElementById('lname')?.value?.trim() || '';
+            const phone = document.getElementById('phone')?.value?.trim() || '';
+            const email = document.getElementById('email')?.value?.trim() || (HeelsUpAuth.getUser()?.email || '');
+            const address = document.getElementById('address')?.value?.trim() || '';
+            const city = document.getElementById('city')?.value?.trim() || '';
+            const state = document.getElementById('state')?.value?.trim() || '';
+            const pin = document.getElementById('pin')?.value?.trim() || '';
+            const deliveryMethod = document.querySelector('input[name=delivery]:checked')?.value || 'standard';
+            const paymentMethod = document.querySelector('input[name=payment]:checked')?.value || 'upi';
+
+            return {
+                paymentMethod,
+                deliveryMethod,
+                customer: {
+                    name: `${fname} ${lname}`.trim(),
+                    email,
+                    phone,
+                    addressLine1: address,
+                    addressLine2: '',
+                    city,
+                    state,
+                    pincode: pin,
+                    country: 'India'
+                },
+                items: cart.map(i => ({
+                    productId: i.id,
+                    name: i.name,
+                    qty: i.qty,
+                    price: i.price,
+                    image: i.img || '',
+                    size: i.size || '',
+                    sku: i.sku || ''
+                }))
+            };
+        }
+
+        function finalizeOrderSuccess(orderNumber) {
+            document.getElementById('order-id').textContent = orderNumber || 'Order Confirmed';
+            document.getElementById('success-overlay').classList.add('show');
+            localStorage.removeItem('heelsup_cart');
+        }
+
+        async function placeOrder() {
+            if (!validateStep1()) return;
+            const payload = collectCheckoutPayload();
+            if (!payload.customer.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.customer.email)) {
+                showToast('error', 'Email Required', 'Valid email required for order confirmation.');
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="placeOrder()"]');
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                if (payload.paymentMethod === 'cod') {
+                    const data = await HeelsUpAuth.api('/api/orders/cod', {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    finalizeOrderSuccess(data.orderNumber || `#HU-${data.orderId}`);
+                    return;
+                }
+
+                const orderData = await HeelsUpAuth.api('/api/payments/razorpay/order', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                const rz = new Razorpay({
+                    key: orderData.key,
+                    amount: orderData.razorpayOrder.amount,
+                    currency: orderData.razorpayOrder.currency,
+                    name: 'HeelsUp',
+                    description: `Order ${orderData.order.orderNumber}`,
+                    order_id: orderData.razorpayOrder.id,
+                    prefill: {
+                        name: payload.customer.name,
+                        email: payload.customer.email,
+                        contact: payload.customer.phone
+                    },
+                    handler: async function (response) {
+                        try {
+                            const verify = await HeelsUpAuth.api('/api/payments/razorpay/verify', {
+                                method: 'POST',
+                                body: JSON.stringify({
+                                    orderId: orderData.order.id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature
+                                })
+                            });
+                            finalizeOrderSuccess(verify.orderNumber || orderData.order.orderNumber);
+                        } catch (err) {
+                            showToast('error', 'Payment Verify Failed', err.message || 'Please contact support.');
+                        }
+                    }
+                });
+
+                rz.on('payment.failed', function (resp) {
+                    showToast('error', 'Payment Failed', resp?.error?.description || 'Payment failed. Try again.');
+                });
+                rz.open();
+            } catch (err) {
+                showToast('error', 'Order Failed', err.message || 'Unable to place order right now.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
+
+        function showToast(type, title, msg) {
+            const c = document.getElementById('toast-container'); const id = 't' + Date.now();
+            const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+            c.insertAdjacentHTML('beforeend', `<div class="toast toast-${type}" id="${id}"><i class="fa-solid ${icons[type] || 'fa-circle-info'} toast-icon"></i><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-message">${msg}</div></div><button class="toast-close" onclick="document.getElementById('${id}').remove()">✕</button></div>`);
+            setTimeout(() => document.getElementById(id)?.remove(), 5000);
+        }
+    </script>
+</body>
+
+</html>

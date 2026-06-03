@@ -2,489 +2,705 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Settings — HeelsUp Admin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  
-    <link rel="stylesheet" href="/css/admin-theme.css">
-    <link rel="stylesheet" href="/css/admin/admin-settings.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HeelsUp Admin — Settings</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
+        rel="stylesheet" />
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+        body {
+            background: var(--admin-bg);
+        }
+
+        .sidebar-brand {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--color-white);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-brand span {
+            color: var(--color-primary);
+        }
+
+        .sidebar-version {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* Settings Specific Layout */
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: var(--space-6);
+            align-items: flex-start;
+        }
+
+        .settings-nav {
+            background: var(--color-white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--admin-card-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-xs);
+            position: sticky;
+            top: calc(var(--admin-topbar-height) + var(--space-6));
+        }
+
+        .settings-nav-section {
+            padding: var(--space-4) var(--space-4) var(--space-2);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .settings-nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            font-size: var(--text-sm);
+            font-weight: var(--font-medium);
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+        }
+
+        .settings-nav-link:hover {
+            background: var(--color-light);
+            color: var(--color-primary);
+        }
+
+        .settings-nav-link.active {
+            background: var(--color-primary-glow);
+            color: var(--color-primary-dark);
+            border-left-color: var(--color-primary);
+            font-weight: var(--font-semibold);
+        }
+
+        .settings-nav-link .settings-nav-icon {
+            font-size: 0.95rem;
+            width: 18px;
+            text-align: center;
+        }
+
+        /* Settings Content Panels */
+        .settings-panel {
+            display: none;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        .settings-card {
+            background: var(--color-white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--admin-card-radius);
+            box-shadow: var(--shadow-xs);
+            margin-bottom: var(--space-6);
+            overflow: hidden;
+        }
+
+        .settings-card-header {
+            padding: var(--space-5) var(--space-6);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--color-light);
+        }
+
+        .settings-card-title {
+            font-family: var(--font-heading);
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .settings-card-desc {
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+        }
+
+        .settings-card-body {
+            padding: var(--space-6);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-5);
+            margin-bottom: var(--space-5);
+        }
+
+        .form-group-full {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-base);
+            font-size: var(--text-sm);
+            font-family: inherit;
+            transition: all 0.2s;
+            background: var(--color-white);
+        }
+
+        .form-control:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-glow);
+            outline: none;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: var(--space-6);
+            padding: var(--space-5) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .settings-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .settings-row-info {
+            flex: 1;
+        }
+
+        .settings-row-label {
+            font-size: var(--text-sm);
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: 3px;
+        }
+
+        .settings-row-desc {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .settings-row-control {
+            flex-shrink: 0;
+            min-width: 200px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* Toggles */
+        .toggle-input {
+            display: none;
+        }
+
+        .toggle-slider {
+            width: 44px;
+            height: 24px;
+            border-radius: var(--radius-pill);
+            background: var(--color-light-3);
+            border: 2px solid var(--border-color);
+            position: relative;
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+
+        .toggle-slider::after {
+            content: '';
+            position: absolute;
+            left: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            border-radius: var(--radius-circle);
+            background: var(--color-white);
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-base);
+        }
+
+        .toggle-input:checked+.toggle-slider {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+
+        .toggle-input:checked+.toggle-slider::after {
+            left: calc(100% - 18px);
+        }
+
+        /* Danger Zone */
+        .danger-zone {
+            border: 1.5px solid var(--color-error-light);
+            border-radius: var(--admin-card-radius);
+            padding: var(--space-6);
+            background: var(--color-error-light);
+        }
+
+        .danger-zone-title {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--color-error);
+            margin-bottom: var(--space-2);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .danger-zone-desc {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-4);
+        }
+
+        /* Sticky Save Bar */
+        .settings-save-bar {
+            position: sticky;
+            bottom: var(--space-6);
+            background: rgba(13, 13, 13, 0.9);
+            backdrop-filter: blur(10px);
+            padding: var(--space-4) var(--space-6);
+            border-radius: var(--radius-pill);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--color-white);
+            box-shadow: var(--shadow-xl);
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .settings-save-bar.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+    </style>
 </head>
 
 <body>
+    <div class="admin-layout">
+        <!-- SIDEBAR -->
+        <aside class="admin-sidebar" id="admin-sidebar">
+            <div class="admin-sidebar-header">
+                <div class="admin-sidebar-logo">
+                    <div>
+                        <div class="sidebar-brand">Heels<span>Up</span></div>
+                        <div class="sidebar-version">Admin Panel v2.0</div>
+                    </div>
+                </div>
+                <button class="admin-sidebar-toggle" id="sidebar-collapse-btn" title="Collapse sidebar">
+                    <i class="fa-solid fa-chevron-left" id="sidebar-toggle-icon"></i>
+                </button>
+            </div>
 
-  <!-- Progress Bar -->
-  <div id="nprogress" style="width:0"></div>
+            <nav class="admin-nav" id="admin-nav">
+                <!-- MAIN -->
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Main</div>
+                    <a href="admin.html" class="admin-nav-link"><i
+                            class="fa-solid fa-grid-2 nav-icon"></i><span>Dashboard</span></a>
+                    <a href="admin-analytics.html" class="admin-nav-link"><i
+                            class="fa-solid fa-chart-line nav-icon"></i><span>Analytics</span></a>
+                    <a href="admin-reports.html" class="admin-nav-link"><i
+                            class="fa-solid fa-chart-bar nav-icon"></i><span>Reports</span></a>
+                </div>
 
-  <!-- Toast -->
-  <div class="toast-wrap" id="toastWrap"></div>
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Catalogue</div>
+                    <a href="admin-products.html" class="admin-nav-link"><i
+                            class="fa-solid fa-shoe-prints nav-icon"></i><span>Products</span></a>
+                    <a href="admin-categories.html" class="admin-nav-link"><i
+                            class="fa-solid fa-tags nav-icon"></i><span>Categories</span></a>
+                    <a href="admin-inventory.html" class="admin-nav-link"><i
+                            class="fa-solid fa-boxes-stacked nav-icon"></i><span>Inventory</span></a>
+                    <a href="admin-collections.html" class="admin-nav-link"><i
+                            class="fa-solid fa-layer-group nav-icon"></i><span>Collections</span></a>
+                </div>
 
-  <!-- Mobile overlay -->
-  <div class="mob-overlay" id="mobOverlay" onclick="closeSidebar()"></div>
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">Sales</div>
+                    <a href="admin-orders.html" class="admin-nav-link"><i
+                            class="fa-solid fa-bag-shopping nav-icon"></i><span>Orders</span></a>
+                    <a href="admin-customers.html" class="admin-nav-link"><i
+                            class="fa-solid fa-users nav-icon"></i><span>Customers</span></a>
+                    <a href="admin-coupons.html" class="admin-nav-link"><i
+                            class="fa-solid fa-ticket nav-icon"></i><span>Coupons</span></a>
+                    <a href="admin-reviews.html" class="admin-nav-link"><i
+                            class="fa-solid fa-star nav-icon"></i><span>Reviews</span></a>
+                </div>
 
-  <!-- Confirm Modal -->
-  <div class="modal-bd" id="confirmModal">
-    <div class="modal">
-      <div class="modal-icon" id="confirmIcon"><i class="fa-solid fa-triangle-exclamation"
-          style="color:var(--rose)"></i></div>
-      <div class="modal-title" id="confirmTitle">Are you sure?</div>
-      <div class="modal-message" id="confirmMessage">This action cannot be undone.</div>
-      <div class="modal-actions">
-        <button class="btn btn-outline" onclick="closeConfirmModal()">Cancel</button>
-        <button class="btn btn-danger" id="confirmActionBtn">Yes, Proceed</button>
-      </div>
+                <div class="admin-nav-section">
+                    <div class="admin-nav-title">System</div>
+                    <a href="admin-settings.html" class="admin-nav-link active"><i
+                            class="fa-solid fa-gear nav-icon"></i><span>Settings</span></a>
+                    <a href="admin-staff.html" class="admin-nav-link"><i
+                            class="fa-solid fa-user-shield nav-icon"></i><span>Staff Accounts</span></a>
+                    <a href="index.html" class="admin-nav-link"
+                        style="margin-top:var(--space-4);border-top:1px solid rgba(255,255,255,0.06);padding-top:var(--space-4)"><i
+                            class="fa-solid fa-arrow-up-right-from-square nav-icon"></i><span>View Store</span></a>
+                </div>
+            </nav>
+
+            <div class="admin-sidebar-footer">
+                <div class="admin-user-info">
+                    <div class="admin-user-avatar">A</div>
+                    <div>
+                        <div class="admin-user-name">Admin User</div>
+                        <div class="admin-user-role">Super Admin</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="admin-sidebar-overlay" id="sidebar-overlay"></div>
+
+        <!-- MAIN CONTENT -->
+        <main class="admin-main" id="admin-main">
+            <!-- TOPBAR -->
+            <header class="admin-topbar">
+                <div style="display:flex;align-items:center;gap:var(--space-4)">
+                    <button class="nav-icon-btn" id="sidebar-toggle-mobile"
+                        style="background:var(--color-light);border:1px solid var(--border-color)">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="admin-page-title">Settings</div>
+                </div>
+
+                <div class="admin-topbar-actions">
+                    <button class="admin-notif-btn" aria-label="Notifications"><i
+                            class="fa-regular fa-bell"></i></button>
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--color-primary),var(--color-primary-dark));display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--color-dark);font-size:14px;cursor:pointer;box-shadow:var(--shadow-gold)"
+                        title="My Profile">A</div>
+                </div>
+            </header>
+
+            <div class="admin-content">
+                <!-- Page Header -->
+                <div class="admin-page-header">
+                    <div class="admin-page-header-left">
+                        <h2>Store Settings</h2>
+                        <p>Manage your store details, payments, shipping, and core configurations.</p>
+                    </div>
+                </div>
+
+                <div class="settings-layout">
+                    <!-- Nav Sidebar -->
+                    <div class="settings-nav">
+                        <div class="settings-nav-section">Store Management</div>
+                        <div class="settings-nav-link active" onclick="switchSettingTab('general', this)">
+                            <i class="fa-solid fa-store settings-nav-icon"></i> General
+                        </div>
+                        <div class="settings-nav-link" onclick="switchSettingTab('payments', this)">
+                            <i class="fa-solid fa-credit-card settings-nav-icon"></i> Payments
+                        </div>
+                        <div class="settings-nav-link" onclick="switchSettingTab('shipping', this)">
+                            <i class="fa-solid fa-truck settings-nav-icon"></i> Shipping & Delivery
+                        </div>
+                        <div class="settings-nav-link" onclick="switchSettingTab('taxes', this)">
+                            <i class="fa-solid fa-percent settings-nav-icon"></i> Taxes & Duties
+                        </div>
+
+                        <div class="settings-nav-section">Customer Experience</div>
+                        <div class="settings-nav-link" onclick="switchSettingTab('notifications', this)">
+                            <i class="fa-solid fa-envelope settings-nav-icon"></i> Notifications
+                        </div>
+                        <div class="settings-nav-link" onclick="switchSettingTab('checkout', this)">
+                            <i class="fa-solid fa-cart-shopping settings-nav-icon"></i> Checkout
+                        </div>
+                    </div>
+
+                    <!-- Content Panels -->
+                    <div class="settings-content">
+
+                        <!-- Panel: General -->
+                        <div id="general" class="settings-panel active">
+                            <!-- Store Details -->
+                            <div class="settings-card">
+                                <div class="settings-card-header">
+                                    <div class="settings-card-title">Store Details</div>
+                                    <div class="settings-card-desc">Your store's name, contact info, and industry.</div>
+                                </div>
+                                <div class="settings-card-body" onchange="showSaveBar()">
+                                    <div class="form-grid">
+                                        <div class="form-group-full">
+                                            <label class="form-label">Store Name</label>
+                                            <input type="text" class="form-control" value="HeelsUp" />
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Store Contact Email</label>
+                                            <input type="email" class="form-control" value="support@heelsup.in" />
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Sender Email (For customers)</label>
+                                            <input type="email" class="form-control" value="hello@heelsup.in" />
+                                        </div>
+                                        <div class="form-group-full">
+                                            <label class="form-label">Industry</label>
+                                            <select class="form-control">
+                                                <option selected>Fashion & Apparel</option>
+                                                <option>Beauty & Cosmetics</option>
+                                                <option>Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Store Address -->
+                            <div class="settings-card">
+                                <div class="settings-card-header">
+                                    <div class="settings-card-title">Store Address</div>
+                                    <div class="settings-card-desc">This address will appear on your invoices.</div>
+                                </div>
+                                <div class="settings-card-body" onchange="showSaveBar()">
+                                    <div class="form-grid">
+                                        <div class="form-group-full">
+                                            <label class="form-label">Legal Business Name</label>
+                                            <input type="text" class="form-control" value="HeelsUp Retail Pvt Ltd" />
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Phone</label>
+                                            <input type="text" class="form-control" value="+91 98765 43210" />
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Address</label>
+                                            <input type="text" class="form-control" value="45, Heritage Enclave" />
+                                        </div>
+                                        <div>
+                                            <label class="form-label">City</label>
+                                            <input type="text" class="form-control" value="Jodhpur" />
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Postal Code</label>
+                                            <input type="text" class="form-control" value="342001" />
+                                        </div>
+                                        <div>
+                                            <label class="form-label">State</label>
+                                            <select class="form-control">
+                                                <option selected>Rajasthan</option>
+                                                <option>Maharashtra</option>
+                                                <option>Delhi</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Country</label>
+                                            <select class="form-control" disabled>
+                                                <option selected>India</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Formats -->
+                            <div class="settings-card">
+                                <div class="settings-card-header">
+                                    <div class="settings-card-title">Standards & Formats</div>
+                                    <div class="settings-card-desc">Timezone, weight units, and order ID format.</div>
+                                </div>
+                                <div class="settings-card-body" onchange="showSaveBar()">
+                                    <div class="form-grid">
+                                        <div>
+                                            <label class="form-label">Timezone</label>
+                                            <select class="form-control">
+                                                <option selected>(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Unit System</label>
+                                            <select class="form-control">
+                                                <option selected>Metric (kg, cm)</option>
+                                                <option>Imperial (lb, in)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Order ID Prefix</label>
+                                            <input type="text" class="form-control" value="#ORD-" />
+                                        </div>
+                                        <div>
+                                            <label class="form-label">Order ID Suffix</label>
+                                            <input type="text" class="form-control" placeholder="Optional" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel: Payments -->
+                        <div id="payments" class="settings-panel">
+                            <div class="settings-card">
+                                <div class="settings-card-header">
+                                    <div class="settings-card-title">Payment Providers</div>
+                                    <div class="settings-card-desc">Accept payments on your store using third-party
+                                        providers.</div>
+                                </div>
+                                <div class="settings-card-body">
+                                    <div class="settings-row" style="padding-top:0;">
+                                        <div class="settings-row-info">
+                                            <div class="settings-row-label">Razorpay <span class="badge badge-success"
+                                                    style="margin-left:5px;">Active</span></div>
+                                            <div class="settings-row-desc">Accept UPI, Credit/Debit Cards, NetBanking,
+                                                and Wallets.</div>
+                                            <div style="display:flex; gap:5px; margin-top:8px;">
+                                                <i class="fa-brands fa-cc-visa"
+                                                    style="font-size:24px; color:#1434CB;"></i>
+                                                <i class="fa-brands fa-cc-mastercard"
+                                                    style="font-size:24px; color:#EB001B;"></i>
+                                            </div>
+                                        </div>
+                                        <div class="settings-row-control">
+                                            <button class="btn btn-white btn-sm"
+                                                onclick="alert('Opening Razorpay Configuration...')">Manage</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="settings-row">
+                                        <div class="settings-row-info">
+                                            <div class="settings-row-label">Cash on Delivery (COD)</div>
+                                            <div class="settings-row-desc">Allow customers to pay in cash upon delivery.
+                                                Currently disabled.</div>
+                                        </div>
+                                        <div class="settings-row-control">
+                                            <label>
+                                                <input type="checkbox" class="toggle-input" onchange="showSaveBar()">
+                                                <div class="toggle-slider"></div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel: Checkout -->
+                        <div id="checkout" class="settings-panel">
+                            <div class="settings-card">
+                                <div class="settings-card-header">
+                                    <div class="settings-card-title">Customer Contact Method</div>
+                                    <div class="settings-card-desc">Choose what contact methods customers can use to
+                                        check out.</div>
+                                </div>
+                                <div class="settings-card-body" onchange="showSaveBar()">
+                                    <div style="display:flex; flex-direction:column; gap:10px;">
+                                        <label style="display:flex; align-items:center; gap:8px;">
+                                            <input type="radio" name="checkout_contact"> Phone number only
+                                        </label>
+                                        <label style="display:flex; align-items:center; gap:8px;">
+                                            <input type="radio" name="checkout_contact"> Email only
+                                        </label>
+                                        <label style="display:flex; align-items:center; gap:8px;">
+                                            <input type="radio" name="checkout_contact" checked> Email or Phone number
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Save Bar -->
+            <div class="settings-save-bar" id="save-bar">
+                <div style="font-size:var(--text-sm); font-weight:600;">Unsaved changes</div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-white btn-sm" style="color:var(--color-dark);"
+                        onclick="hideSaveBar()">Discard</button>
+                    <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+                </div>
+            </div>
+
+        </main>
     </div>
-  </div>
 
-  <div class="wrap">
+    <!-- Scripts -->
+    <script>
+        const sidebar = document.getElementById('admin-sidebar');
+        const main = document.getElementById('admin-main');
+        const overlay = document.getElementById('sidebar-overlay');
+        const saveBar = document.getElementById('save-bar');
 
-    <!-- ══ SIDEBAR ══ -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-brand">
-        <div class="sb-logo-wrap">
-          <img src="logo.png" alt="HeelsUp Logo"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <span class="sb-logo-fallback" style="display:none">H</span>
-        </div>
-        <div>
-          <div class="sb-brand-text">HeelsUp</div>
-          <div class="sb-brand-sub">Admin Panel</div>
-        </div>
-      </div>
+        document.getElementById('sidebar-collapse-btn')?.addEventListener('click', () => {
+            sidebar.classList.toggle('mini');
+            main.style.marginLeft = sidebar.classList.contains('mini') ? '70px' : 'var(--admin-sidebar-width)';
+        });
 
-      <nav class="sidebar-nav">
-        <div class="nav-label">Main</div>
-        <a class="nav-item" href="admin.html"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+        document.getElementById('sidebar-toggle-mobile')?.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            overlay.classList.add('open');
+        });
 
-        <div class="nav-label">Catalogue</div>
-        <a class="nav-item" href="admin-products.html"><i class="fa-solid fa-box"></i> Products</a>
-        <a class="nav-item" href="admin-categories.html"><i class="fa-solid fa-layer-group"></i> Categories</a>
-        <a class="nav-item" href="admin-collections.html"><i class="fa-solid fa-swatchbook"></i> Collections</a>
-        <a class="nav-item" href="admin-inventory.html"><i class="fa-solid fa-warehouse"></i> Inventory</a>
+        overlay?.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('open');
+        });
 
-        <div class="nav-label">Sales & Customers</div>
-        <a class="nav-item" href="admin-orders.html"><i class="fa-solid fa-bag-shopping"></i> Orders</a>
-        <a class="nav-item" href="admin-customers.html"><i class="fa-solid fa-users"></i> Customers</a>
-        <a class="nav-item" href="admin-coupons.html"><i class="fa-solid fa-ticket"></i> Coupons</a>
-        <a class="nav-item" href="admin-reviews.html"><i class="fa-solid fa-star"></i> Reviews</a>
-        <a class="nav-item" href="admin-orders.html?tab=exchange"><i class="fa-solid fa-rotate-left"></i> Exchanges</a>
-        <a class="nav-item" href="admin-pos.html"><i class="fa-solid fa-cash-register"></i> POS / Offline Sales</a>
+        function switchSettingTab(tabId, element) {
+            document.querySelectorAll('.settings-nav-link').forEach(link => link.classList.remove('active'));
+            element.classList.add('active');
 
-        <div class="nav-label">Marketing & Content</div>
-        <a class="nav-item" href="admin-banners.html"><i class="fa-solid fa-image"></i> Banners</a>
-        <a class="nav-item" href="admin-blog.html"><i class="fa-solid fa-newspaper"></i> Blog</a>
-        <a class="nav-item" href="admin-pages.html"><i class="fa-solid fa-file-lines"></i> Pages</a>
-        <a class="nav-item" href="admin-notifications.html"><i class="fa-solid fa-bell"></i> Notifications</a>
+            document.querySelectorAll('.settings-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
 
-        <div class="nav-label">Reports</div>
-        <a class="nav-item" href="admin-reports.html"><i class="fa-solid fa-chart-pie"></i> Reports</a>
-        <a class="nav-item" href="admin-analytics.html"><i class="fa-solid fa-chart-line"></i> Analytics</a>
+            // Scroll to top of settings
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-        <div class="nav-label">System</div>
-        <a class="nav-item" href="admin-shipping.html"><i class="fa-solid fa-truck-fast"></i> Shipping</a>
-        <a class="nav-item" href="admin-taxes.html"><i class="fa-solid fa-file-invoice-dollar"></i> Taxes</a>
-        <a class="nav-item" href="admin-staff.html"><i class="fa-solid fa-users-gear"></i> Staff</a>
-        <a class="nav-item active" href="admin-settings.html"><i class="fa-solid fa-gear"></i> Settings</a>
-      </nav>
+        function showSaveBar() {
+            saveBar.classList.add('visible');
+        }
 
-      <div class="sidebar-footer">
-        <div class="sidebar-user">
-          <div class="s-avatar" id="s-avatar">A</div>
-          <div>
-            <div class="s-name" id="s-name">Admin</div>
-            <div class="s-role">Super Admin</div>
-          </div>
-        </div>
-        <button class="btn-logout" onclick="doLogout()">
-          <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
-        </button>
-      </div>
-    </aside>
+        function hideSaveBar() {
+            saveBar.classList.remove('visible');
+        }
 
-    <!-- ══ MAIN ══ -->
-    <main class="main">
-      <header class="topbar">
-        <button class="btn-menu" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-        <div class="topbar-title">System Settings</div>
-        <div class="topbar-right">
-          <button class="btn btn-outline btn-sm" onclick="loadSettings()">
-            <i class="fa-solid fa-rotate-right"></i> Sync Live Data
-          </button>
-          <button class="btn btn-outline btn-sm" onclick="window.open('index.html','_blank')">
-            <i class="fa-solid fa-store"></i> View Store
-          </button>
-        </div>
-      </header>
-
-      <section class="content">
-        <div class="page-header">
-          <div>
-            <h2>Store Settings</h2>
-            <p>Manage integrations, security, authentication, and core business preferences securely.</p>
-          </div>
-        </div>
-
-        <div class="settings-grid">
-
-          <!-- Settings Nav -->
-          <div class="settings-nav">
-            <div class="settings-nav-item active" onclick="showPanel('razorpay',this)">
-              <i class="fa-solid fa-credit-card"></i> Razorpay
-            </div>
-            <div class="settings-nav-item" onclick="showPanel('otp',this)">
-              <i class="fa-solid fa-shield-halved"></i> OTP & Auth
-            </div>
-            <div class="settings-nav-item" onclick="showPanel('shipping',this)">
-              <i class="fa-solid fa-truck-fast"></i> Shipping Limits
-            </div>
-            <div class="settings-nav-item" onclick="showPanel('store',this)">
-              <i class="fa-solid fa-store"></i> Store Info
-            </div>
-            <div class="settings-nav-sep"></div>
-            <div class="settings-nav-item" onclick="showPanel('security',this)">
-              <i class="fa-solid fa-lock"></i> Security
-            </div>
-            <div class="settings-nav-item" onclick="showPanel('maintenance',this)">
-              <i class="fa-solid fa-wrench"></i> Maintenance
-            </div>
-          </div>
-
-          <!-- Panels Wrapper -->
-          <div id="panels-wrapper" style="display:none">
-
-            <!-- ── RAZORPAY ── -->
-            <div class="panel active" id="panel-razorpay">
-              <div class="alert alert-info">
-                <i class="fa-solid fa-circle-info"></i>
-                <div>Razorpay keys are stored securely. Obtain your live keys from
-                  <a href="https://dashboard.razorpay.com" target="_blank"
-                    style="color:#1d4ed8;font-weight:700;text-decoration:underline">
-                    Razorpay Dashboard → Settings → API Keys
-                  </a>.
-                </div>
-              </div>
-              <div class="card">
-                <div class="card-header">
-                  <h3><i class="fa-solid fa-key"></i> Razorpay Configuration</h3>
-                  <p>These credentials enable payment processing on the storefront checkout.</p>
-                </div>
-                <div class="card-body">
-                  <div class="form-group">
-                    <label class="form-label">Razorpay Key ID</label>
-                    <input type="text" class="form-input" id="razorpay_key_id"
-                      placeholder="rzp_live_xxxxxxxxxxxxxxxxxx" />
-                    <div class="form-hint">Must begin with <code>rzp_live_</code> or <code>rzp_test_</code></div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Razorpay Key Secret</label>
-                    <div class="input-group">
-                      <input type="password" class="form-input" id="razorpay_key_secret"
-                        placeholder="Enter secret key…" />
-                      <button class="btn btn-outline" type="button" onclick="toggleSecret('razorpay_key_secret',this)"
-                        style="padding:0 14px;flex-shrink:0">
-                        <i class="fa-regular fa-eye"></i>
-                      </button>
-                    </div>
-                    <div class="form-hint">Private server-side key required for verifying webhook signatures.</div>
-                  </div>
-                  <div class="form-group" style="max-width:280px">
-                    <label class="form-label">Operation Mode</label>
-                    <select class="form-select" id="razorpay_mode">
-                      <option value="live">🟢 Live Mode (Real Transactions)</option>
-                      <option value="test">🟡 Test Mode (Simulated Gateway)</option>
-                    </select>
-                  </div>
-                  <div id="rz-error" class="alert alert-danger" style="display:none;margin-top:10px">
-                    <i class="fa-solid fa-circle-exclamation"></i><span id="rz-error-msg"></span>
-                  </div>
-                  <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">
-                    <button class="btn btn-primary" onclick="saveSection('razorpay')" id="btn-save-razorpay">
-                      <i class="fa-solid fa-floppy-disk"></i> Save Configuration
-                    </button>
-                    <button class="btn btn-outline" onclick="testLiveAPI('razorpay')" id="btn-test-razorpay">
-                      <i class="fa-solid fa-plug-circle-check"></i> Test API Connection
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ── OTP / AUTH ── -->
-            <div class="panel" id="panel-otp">
-              <div class="card">
-                <div class="card-header">
-                  <h3><i class="fa-solid fa-envelope-open-text"></i> OTP Mailer Settings</h3>
-                  <p>Integrate Google Apps Script to handle outbound transactional emails for authentication.</p>
-                </div>
-                <div class="card-body">
-                  <div class="form-group">
-                    <label class="form-label">Apps Script Web App URL</label>
-                    <input type="url" class="form-input" id="otp_script_url"
-                      placeholder="https://script.google.com/macros/s/.../exec" />
-                    <div class="form-hint">Ensure the script is published to execute as you and accessible by 'Anyone'.
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Google OAuth Client ID</label>
-                    <input type="text" class="form-input" id="google_client_id"
-                      placeholder="e.g. 1234-xyz.apps.googleusercontent.com" />
-                    <div class="form-hint">Used for "Continue with Google" login. Leave blank to disable Google Auth.</div>
-                  </div>
-                  <div class="form-group" style="max-width:220px">
-                    <label class="form-label">OTP Expiry Timeline</label>
-                    <div class="input-group">
-                      <input type="number" class="form-input" id="otp_expiry_minutes" min="2" max="60"
-                        placeholder="10" />
-                      <span class="input-addon">Minutes</span>
-                    </div>
-                  </div>
-                  <div class="section-divider"></div>
-                  <div class="toggle-row">
-                    <div class="toggle-info">
-                      <h4>Mandatory Email Verification</h4>
-                      <p>Users must verify their email with an OTP before order checkout or account creation.</p>
-                    </div>
-                    <label class="toggle"><input type="checkbox" id="require_email_otp" />
-                      <div class="toggle-track"></div>
-                    </label>
-                  </div>
-                  <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">
-                    <button class="btn btn-primary" onclick="saveSection('otp')" id="btn-save-otp">
-                      <i class="fa-solid fa-floppy-disk"></i> Save Auth Rules
-                    </button>
-                    <button class="btn btn-outline" onclick="testLiveAPI('otp')" id="btn-test-otp">
-                      <i class="fa-solid fa-paper-plane"></i> Send Test Verification
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ── SHIPPING LIMITS ── -->
-            <div class="panel" id="panel-shipping">
-              <div class="card">
-                <div class="card-header">
-                  <h3><i class="fa-solid fa-truck-fast"></i> Order Shipping Defaults</h3>
-                  <p>Establish basic global shipping thresholds applied when complex zone rates aren't met.</p>
-                </div>
-                <div class="card-body">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Free Shipping Threshold</label>
-                      <div class="input-group">
-                        <span class="input-addon">₹</span>
-                        <input type="number" class="form-input" id="shipping_free_above" min="0" placeholder="499" />
-                      </div>
-                      <div class="form-hint">Carts exceeding this value get standard free shipping.</div>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Base Flat Rate Charge</label>
-                      <div class="input-group">
-                        <span class="input-addon">₹</span>
-                        <input type="number" class="form-input" id="shipping_standard_charge" min="0"
-                          placeholder="49" />
-                      </div>
-                      <div class="form-hint">Default delivery fee for sub-threshold orders.</div>
-                    </div>
-                  </div>
-                  <div style="margin-top:8px">
-                    <button class="btn btn-primary" onclick="saveSection('shipping')" id="btn-save-shipping">
-                      <i class="fa-solid fa-floppy-disk"></i> Update Thresholds
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ── STORE INFO ── -->
-            <div class="panel" id="panel-store">
-              <div class="card">
-                <div class="card-header">
-                  <h3><i class="fa-solid fa-store"></i> Brand & Business Data</h3>
-                  <p>Information displayed on storefront, invoice receipts, and automated email templates.</p>
-                </div>
-                <div class="card-body">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Store Registered Name</label>
-                      <input type="text" class="form-input" id="site_name" placeholder="e.g. HeelsUp Boutique" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Support Helpline</label>
-                      <input type="text" class="form-input" id="support_phone" placeholder="+91 99999 00000" />
-                    </div>
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Public Store Phone</label>
-                      <input type="text" class="form-input" id="store_phone" placeholder="+91 7891470935" />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Public Store Email</label>
-                      <input type="email" class="form-input" id="store_email" placeholder="support@heelsup.in" />
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Primary Support Email (Alerts)</label>
-                    <input type="email" class="form-input" id="site_email" placeholder="support@brand.com" />
-                    <div class="form-hint">Functions as the receiving address for system alerts and critical updates.</div>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Store Address</label>
-                    <textarea class="form-input" id="store_address" placeholder="Store physical address..." rows="2"></textarea>
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Footer Tagline</label>
-                    <input type="text" class="form-input" id="footer_tagline" placeholder="Premium ladies footwear & bags..." />
-                  </div>
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Instagram Link</label>
-                      <input type="url" class="form-input" id="social_instagram" placeholder="https://instagram.com/..." />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Facebook Link</label>
-                      <input type="url" class="form-input" id="social_facebook" placeholder="https://facebook.com/..." />
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Pinterest Link</label>
-                      <input type="url" class="form-input" id="social_pinterest" placeholder="https://pinterest.com/..." />
-                    </div>
-                  </div>
-                  <div id="store-error" class="alert alert-danger" style="display:none;margin-top:10px">
-                    <i class="fa-solid fa-circle-exclamation"></i><span id="store-error-msg"></span>
-                  </div>
-                  <div style="margin-top:16px">
-                    <button class="btn btn-primary" onclick="saveSection('store')" id="btn-save-store">
-                      <i class="fa-solid fa-floppy-disk"></i> Save Business Info
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ── SECURITY ── -->
-            <div class="panel" id="panel-security">
-              <div class="card">
-                <div class="card-header">
-                  <h3><i class="fa-solid fa-shield-halved"></i> System Security Policies</h3>
-                  <p>Configure brute-force protection and manage active authentications.</p>
-                </div>
-                <div class="card-body">
-                  <div class="form-row">
-                    <div class="form-group">
-                      <label class="form-label">Brute-Force Attempt Limit</label>
-                      <input type="number" class="form-input" id="max_login_attempts" min="3" max="20"
-                        placeholder="5" />
-                      <div class="form-hint">Failed attempts before IP/account temporary block.</div>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label">Block Duration</label>
-                      <div class="input-group">
-                        <input type="number" class="form-input" id="lockout_duration_minutes" min="5" max="1440"
-                          placeholder="30" />
-                        <span class="input-addon">Mins</span>
-                      </div>
-                      <div class="form-hint">Automatic unblock timeline.</div>
-                    </div>
-                  </div>
-                  <div style="margin-top:8px">
-                    <button class="btn btn-primary" onclick="saveSection('security')" id="btn-save-security">
-                      <i class="fa-solid fa-floppy-disk"></i> Save Security Policies
-                    </button>
-                  </div>
-
-                  <div class="section-divider" style="margin:24px 0"></div>
-                  <div
-                    style="font-size:.83rem;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px">
-                    <i class="fa-solid fa-triangle-exclamation" style="color:var(--rose)"></i>
-                    Emergency Actions
-                  </div>
-
-                  <div class="action-block">
-                    <div>
-                      <div class="action-block-title">Clear Active Sessions</div>
-                      <div class="action-block-sub">Immediately invalidate all active user tokens globally. This will
-                        log you out as well.</div>
-                    </div>
-                    <button class="btn btn-danger btn-sm" onclick="triggerAction('sessions')" style="flex-shrink:0">
-                      <i class="fa-solid fa-ban"></i> Terminate Sessions
-                    </button>
-                  </div>
-
-                  <div class="action-block">
-                    <div>
-                      <div class="action-block-title">Reset Rate Limits</div>
-                      <div class="action-block-sub">Clear the database cache of all locked accounts and blocked IPs.
-                      </div>
-                    </div>
-                    <button class="btn btn-outline btn-sm" onclick="triggerAction('locks')"
-                      style="flex-shrink:0;color:var(--rose);border-color:var(--rose)">
-                      <i class="fa-solid fa-unlock-keyhole"></i> Clear Blocklist
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ── MAINTENANCE ── -->
-            <div class="panel" id="panel-maintenance">
-              <div class="card">
-                <div class="card-header">
-                  <h3><i class="fa-solid fa-wrench"></i> Store Maintenance</h3>
-                  <p>Control public access during inventory updates or system upgrades.</p>
-                </div>
-                <div class="card-body">
-                  <div class="alert alert-warning">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
-                    <div><strong>Critical Impact:</strong> Enabling maintenance blocks all non-admin traffic and
-                      displays a "We'll be back soon" overlay. Active shopping carts may be lost.</div>
-                  </div>
-                  <div class="toggle-row"
-                    style="background:var(--surface-2);padding:18px;border-radius:var(--r-md);border:1px solid var(--border)">
-                    <div class="toggle-info">
-                      <h4 style="font-size:.9rem">Enable Maintenance Mode</h4>
-                      <p style="margin-top:3px">Take the entire storefront offline immediately.</p>
-                    </div>
-                    <label class="toggle" style="transform:scale(1.15)">
-                      <input type="checkbox" id="maintenance_mode" />
-                      <div class="toggle-track"></div>
-                    </label>
-                  </div>
-                  <div style="margin-top:20px">
-                    <button class="btn btn-primary" onclick="saveSection('maintenance')" id="btn-save-maintenance">
-                      <i class="fa-solid fa-power-off"></i> Apply System State
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div><!-- /panels-wrapper -->
-
-          <!-- Loading state -->
-          <div id="settings-loading" class="loading-card">
-            <div class="loading-spinner">
-              <i class="fa-solid fa-circle-notch"></i>
-              <div style="font-weight:700;color:var(--text);font-size:.85rem">Synchronizing Settings…</div>
-              <div style="font-size:.75rem;color:var(--muted)">Establishing secure connection to database</div>
-            </div>
-          </div>
-
-        </div><!-- /settings-grid -->
-      </section>
-    </main>
-  </div>
-
-  <script src="js/core/config.js"></script>
-  <script src="js/core/api-client.js"></script>
-  
-    <script defer src="/js/admin/admin-settings.js"></script>
+        function saveSettings() {
+            // Mock save
+            saveBar.innerHTML = `<div style="font-size:var(--text-sm); font-weight:600;"><i class="fa-solid fa-spinner fa-spin"></i> Saving...</div>`;
+            setTimeout(() => {
+                hideSaveBar();
+                setTimeout(() => {
+                    saveBar.innerHTML = `
+                    <div style="font-size:var(--text-sm); font-weight:600;">Unsaved changes</div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-white btn-sm" style="color:var(--color-dark);" onclick="hideSaveBar()">Discard</button>
+                        <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save</button>
+                    </div>`;
+                }, 500);
+            }, 1000);
+        }
+    </script>
 </body>
 
 </html>

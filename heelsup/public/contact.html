@@ -1,286 +1,814 @@
-<html lang="en"><head></head><body>﻿
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact Us – HeelsUp | WhatsApp, Email, Jodhpur</title>
+    <meta name="description"
+        content="HeelsUp se contact karo — WhatsApp, email ya form ke zariye. Jodhpur based customer support 24/7 available hai." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://heelsup.in/contact.html" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .contact-hero {
+            background: linear-gradient(135deg, var(--color-dark) 0%, #1a100a 60%, var(--color-dark) 100%);
+            padding: 80px 0 70px;
+            text-align: center;
+            position: relative;
+            overflow: hidden
+        }
 
+        .contact-hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            border: 1px solid rgba(201, 169, 110, .06);
+            pointer-events: none
+        }
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        .contact-hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 300;
+            color: #fff;
+            letter-spacing: -.02em;
+            margin-bottom: 12px
+        }
 
-  <!-- SEO -->
-  <title>Contact Us – HeelsUp | Jodhpur, Rajasthan</title>
-  <meta name="description" content="Contact HeelsUp — premium Indian ladies footwear. We typically respond within 2 hours. Reach us by WhatsApp, email or our contact form.">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://heelsup.in/contact.html">
+        .contact-hero h1 em {
+            font-style: italic;
+            color: var(--color-primary-light)
+        }
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        .contact-hero p {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, .55);
+            max-width: 500px;
+            margin: 0 auto
+        }
 
-  
-    <link rel="stylesheet" href="/css/customer-theme.css">
-    <link rel="stylesheet" href="/css/pages/contact.css">
+        .contact-main {
+            padding: 80px 0;
+            background: var(--bg-page)
+        }
 
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 60px;
+            align-items: start
+        }
 
+        .contact-info-card {
+            background: var(--color-dark);
+            border-radius: 24px;
+            padding: 40px;
+            position: sticky;
+            top: calc(var(--navbar-height) + 20px)
+        }
 
-    <div id="navbar"></div>
+        .contact-info-title {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px
+        }
 
-  <!-- ═══ TOAST ═══ -->
-  
+        .contact-info-sub {
+            font-size: 14px;
+            color: rgba(255, 255, 255, .5);
+            line-height: 1.7;
+            margin-bottom: 32px
+        }
 
-  
-  
+        .contact-method {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, .07)
+        }
 
-  
+        .contact-method:last-of-type {
+            border-bottom: none
+        }
 
-  <!-- ═══ MOBILE MENU ═══ -->
-  
+        .contact-method-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: var(--color-primary-glow);
+            border: 1px solid rgba(201, 169, 110, .2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--color-primary);
+            flex-shrink: 0;
+            transition: all .3s
+        }
 
-  <!-- ── Hero ── -->
-  <section class="contact-hero">
-    <div class="container">
-      <div class="contact-hero-label">
-        <i class="fa-solid fa-headset"></i> Support
-      </div>
-      <h1>Get In <em>Touch</em></h1>
-      <p>We typically respond within <strong style="color:#e8d5a5">2 hours</strong>. Whether it's an order query, size
-        advice, or just a hello — we are here for you!</p>
+        .contact-method:hover .contact-method-icon {
+            background: var(--color-primary);
+            color: var(--color-dark)
+        }
+
+        .contact-method-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .4);
+            margin-bottom: 4px
+        }
+
+        .contact-method-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-primary-light)
+        }
+
+        .contact-method-note {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .3);
+            margin-top: 2px
+        }
+
+        .social-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, .07)
+        }
+
+        .contact-form-wrap {
+            background: var(--color-white);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: var(--shadow-base);
+            border: 1px solid var(--border-color)
+        }
+
+        .contact-form-title {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 6px
+        }
+
+        .contact-form-sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 32px
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px
+        }
+
+        .contact-form .form-group {
+            margin-bottom: 20px
+        }
+
+        .contact-form .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--text-primary);
+            margin-bottom: 8px
+        }
+
+        .contact-form .form-input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--color-light);
+            border: 1.5px solid var(--border-color);
+            border-radius: 12px;
+            transition: all .25s;
+            font-family: inherit
+        }
+
+        .contact-form .form-input:focus,
+        .contact-form textarea:focus {
+            border-color: var(--color-primary);
+            background: var(--color-white);
+            box-shadow: 0 0 0 3px var(--color-primary-glow);
+            outline: none
+        }
+
+        .contact-form textarea {
+            min-height: 130px;
+            resize: vertical
+        }
+
+        .subject-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px
+        }
+
+        .subject-chip {
+            padding: 7px 14px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all .2s;
+            background: none
+        }
+
+        .subject-chip:hover,
+        .subject-chip.active {
+            border-color: var(--color-primary);
+            color: var(--color-primary-dark);
+            background: var(--color-primary-glow)
+        }
+
+        .form-success {
+            display: none;
+            text-align: center;
+            padding: 48px 24px
+        }
+
+        .form-success-icon {
+            font-size: 3rem;
+            margin-bottom: 16px
+        }
+
+        .form-success h3 {
+            font-family: var(--font-heading);
+            margin-bottom: 8px
+        }
+
+        .faq-section {
+            padding: 80px 0;
+            background: var(--color-light)
+        }
+
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px
+        }
+
+        .faq-item {
+            background: var(--color-white);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden
+        }
+
+        .faq-q {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            gap: 12px;
+            transition: background .2s
+        }
+
+        .faq-q:hover {
+            background: var(--color-light)
+        }
+
+        .faq-q i {
+            color: var(--color-primary);
+            flex-shrink: 0;
+            transition: transform .3s;
+            font-size: .9rem
+        }
+
+        .faq-item.open .faq-q i {
+            transform: rotate(180deg)
+        }
+
+        .faq-a {
+            padding: 0 24px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height .4s ease, padding .3s
+        }
+
+        .faq-item.open .faq-a {
+            max-height: 200px;
+            padding: 0 24px 20px
+        }
+
+        .faq-a p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.7
+        }
+
+        .map-section {
+            padding: 0 0 80px;
+            background: var(--color-light)
+        }
+
+        .map-frame {
+            border-radius: 20px;
+            overflow: hidden;
+            height: 320px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm)
+        }
+
+        .map-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            filter: sepia(.2) brightness(.95)
+        }
+
+        @media(max-width:900px) {
+            .contact-grid {
+                grid-template-columns: 1fr
+            }
+
+            .contact-info-card {
+                position: static
+            }
+        }
+
+        @media(max-width:600px) {
+            .form-row-2 {
+                grid-template-columns: 1fr
+            }
+
+            .faq-grid {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar" id="topbar">
+        <div class="topbar-marquee">
+            <span class="topbar-text">🎉 <strong>NEW ARRIVALS</strong> — Summer Collection is Live!</span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🚚 FREE Shipping on orders above <strong>₹499</strong></span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🏷️ Use code <strong>HEELS10</strong> for 10% off</span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🎉 <strong>NEW ARRIVALS</strong> — Summer Collection is Live!</span>
+            <span class="topbar-dot"></span>
+        </div>
+        <button class="topbar-close" id="topbar-close">✕</button>
     </div>
-  </section>
 
-  <!-- ── Main ── -->
-  <section class="contact-main">
-    <div class="container">
-      <div class="contact-grid">
-
-        <!-- ─ Info Sidebar ─ -->
-        <div class="contact-info-card">
-          <div class="contact-info-card-title">We'd Love to Help</div>
-          <p class="contact-info-card-sub">Reach out anytime. Our fastest response is via WhatsApp. We reply within 2
-            hours on business days.</p>
-
-          <div class="contact-method">
-            <div class="contact-method-icon">
-              <i class="fa-solid fa-location-dot"></i>
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="navbar-inner">
+                <a href="index.html" class="navbar-logo"><img src="logo.png" alt="HeelsUp Logo"
+                        onerror="this.style.display='none'" /><span
+                        class="navbar-logo-text">Heels<span>Up</span></span></a>
+                <ul class="navbar-menu">
+                    <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="shop.html" class="nav-link">Shop <i class="fa-solid fa-chevron-down"
+                                style="font-size:9px;opacity:.6"></i></a>
+                        <div class="nav-dropdown">
+                            <a href="category.html?cat=heels"><span class="nav-dropdown-icon">👠</span> Heels</a>
+                            <a href="category.html?cat=flats"><span class="nav-dropdown-icon">🥿</span> Flats</a>
+                            <a href="category.html?cat=sandals"><span class="nav-dropdown-icon">👡</span> Sandals</a>
+                            <a href="category.html?cat=wedges"><span class="nav-dropdown-icon">👢</span> Wedges</a>
+                            <a href="category.html?cat=bags"><span class="nav-dropdown-icon">👜</span> Bags</a>
+                            <a href="category.html?cat=clutches"><span class="nav-dropdown-icon">👝</span> Clutches</a>
+                        </div>
+                    </li>
+                    <li class="nav-item"><a href="category.html?cat=new" class="nav-link">New Arrivals</a></li>
+                    <li class="nav-item"><a href="category.html?cat=sale" class="nav-link"
+                            style="color:var(--color-accent)"><i class="fa-solid fa-fire" style="font-size:.8rem"></i>
+                            Sale</a></li>
+                    <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
+                    <li class="nav-item"><a href="contact.html" class="nav-link active">Contact</a></li>
+                </ul>
+                <div class="navbar-actions">
+                    <button class="nav-icon-btn" id="search-toggle-btn"><i
+                            class="fa-solid fa-magnifying-glass"></i></button>
+                    <a href="wishlist.html" class="nav-icon-btn"><i class="fa-regular fa-heart"></i><span
+                            class="nav-badge" id="wishlist-count" style="display:none">0</span></a>
+                    <a href="profile.html" class="nav-icon-btn"><i class="fa-regular fa-user"></i></a>
+                    <button class="nav-icon-btn" id="cart-open-btn"><i class="fa-solid fa-bag-shopping"></i><span
+                            class="nav-badge" id="cart-count">0</span></button>
+                    <button class="navbar-hamburger" id="hamburger-btn"><span class="hamburger-line"></span><span
+                            class="hamburger-line"></span><span class="hamburger-line"></span></button>
+                </div>
             </div>
-            <div>
-              <div class="contact-method-label">📍 Address</div>
-              <div class="contact-method-value">Jodhpur, Rajasthan, India</div>
-              <div class="contact-method-note">We ship pan-India</div>
-            </div>
-          </div>
-
-          <div class="contact-method">
-            <div class="contact-method-icon">
-              <i class="fa-brands fa-whatsapp"></i>
-            </div>
-            <div>
-              <div class="contact-method-label">📞 Phone / WhatsApp</div>
-              
-              <div class="contact-method-note">Usually replies within 30 mins</div>
-            </div>
-          </div>
-
-          <div class="contact-method">
-            <div class="contact-method-icon">
-              <i class="fa-solid fa-envelope"></i>
-            </div>
-            <div>
-              <div class="contact-method-label">📧 Email</div>
-              <a href="mailto:support@heelsup.in" class="contact-method-value">support@heelsup.in</a>
-              <div class="contact-method-note">Response within 24 hours</div>
-            </div>
-          </div>
-
-          <div class="contact-method">
-            <div class="contact-method-icon">
-              <i class="fa-regular fa-clock"></i>
-            </div>
-            <div>
-              <div class="contact-method-label">🕐 Support Hours</div>
-              <div class="contact-method-value">Mon – Sat: 9 AM – 7 PM IST</div>
-              <div class="contact-method-note">Sunday: 11 AM – 4 PM (WhatsApp only)</div>
-            </div>
-          </div>
-
-          <!-- Social -->
-          <div class="contact-social-row">
-            <a href="https://instagram.com/heelsup.in" class="contact-social-link" target="_blank" rel="noopener" aria-label="Instagram">
-              <i class="fa-brands fa-instagram"></i>
-            </a>
-            <a href="https://facebook.com/heelsup.in" class="contact-social-link" target="_blank" rel="noopener" aria-label="Facebook">
-              <i class="fa-brands fa-facebook-f"></i>
-            </a>
-            
-            <a href="https://pinterest.com/heelsup" class="contact-social-link" target="_blank" rel="noopener" aria-label="Pinterest">
-              <i class="fa-brands fa-pinterest-p"></i>
-            </a>
-          </div>
-
-          <!-- WhatsApp CTA -->
-          
         </div>
+    </nav>
 
-        <!-- ─ Contact Form ─ -->
-        <div class="contact-form-wrap">
-          <div id="form-container">
-            <div class="contact-form-title">Send Us a Message</div>
-            <p class="contact-form-sub">Fill out the form below and our team will get back to you within 2 hours on
-              business days.</p>
-
-            <form id="contact-form" novalidate="">
-              <div class="cf-form-row">
-                <div class="cf-group">
-                  <label class="cf-label" for="cf-name">Your Name <span class="cf-req">*</span></label>
-                  <input type="text" class="cf-input" id="cf-name" placeholder="Priya Sharma" autocomplete="name" required="">
-                </div>
-                <div class="cf-group">
-                  <label class="cf-label" for="cf-email">Email Address <span class="cf-req">*</span></label>
-                  <input type="email" class="cf-input" id="cf-email" placeholder="you@example.com" autocomplete="email" required="">
-                </div>
-              </div>
-
-              <div class="cf-form-row">
-                <div class="cf-group">
-                  <label class="cf-label" for="cf-phone">Phone Number</label>
-                  <input type="tel" class="cf-input" id="cf-phone" placeholder="+91 78914 70935" autocomplete="tel">
-                </div>
-                <div class="cf-group">
-                  <label class="cf-label" for="cf-subject">Subject <span class="cf-req">*</span></label>
-                  <select class="cf-select" id="cf-subject" required="">
-                    <option value="">Select subject…</option>
-                    <option value="Order Issue">Order Issue</option>
-                    <option value="Product Query">Product Query</option>
-                    <option value="Exchange">Exchange</option>
-                    <option value="Size Help">Size Help</option>
-                    <option value="Shipping Query">Shipping Query</option>
-                    <option value="Payment Issue">Payment Issue</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="cf-group">
-                <label class="cf-label" for="cf-message">Message <span class="cf-req">*</span></label>
-                <textarea class="cf-textarea" id="cf-message" placeholder="Tell us how we can help you…" required=""></textarea>
-              </div>
-
-              <button type="submit" class="btn btn-primary btn-lg" id="cf-submit" style="width:100%">
-                <i class="fa-solid fa-paper-plane"></i> Send Message
-              </button>
-            </form>
-
-            <!-- Quick WhatsApp hint -->
-            <div style="margin-top:20px;padding:16px 18px;background:var(--bg2);border-radius:14px;display:flex;align-items:center;gap:14px;border:1px solid var(--border)">
-              <i class="fa-brands fa-whatsapp" style="font-size:1.6rem;color:#25D366;flex-shrink:0"></i>
-              <div>
-                <div style="font-size:13px;font-weight:700;color:var(--text-h)">Need a faster response?</div>
-                <div style="font-size:12px;color:var(--text-m)">WhatsApp us directly: <a href="https://wa.me/917891470935" style="color:var(--primary);font-weight:700" target="_blank">+91
-                    78914 70935</a></div>
-              </div>
+    <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu-backdrop" id="mobile-backdrop"></div>
+        <div class="mobile-menu-panel">
+            <div class="mobile-menu-header"><span class="navbar-logo-text">Heels<span
+                        style="color:var(--color-primary)">Up</span></span><button id="mobile-menu-close"
+                    style="font-size:1.3rem;color:var(--text-muted);cursor:pointer;background:none;border:none">✕</button>
             </div>
-          </div>
-
-          <!-- Success State -->
-          <div class="form-success-state" id="form-success">
-            <div class="success-icon-circle">
-              <i class="fa-solid fa-check"></i>
+            <div class="mobile-menu-body">
+                <a href="index.html">🏠 Home</a><a href="shop.html">🛍️ Shop All</a><a href="category.html?cat=new">✨
+                    New Arrivals</a><a href="category.html?cat=sale" style="color:var(--color-accent)">🔥 Sale</a><a
+                    href="about.html">📄 About Us</a><a href="contact.html">📞 Contact</a>
+                <hr style="border:none;border-top:1px solid var(--border-color);margin:12px 0" />
+                <a href="profile.html">👤 My Account</a><a href="wishlist.html">❤️ Wishlist</a>
             </div>
-            <h3>Thank You!</h3>
-            <p style="color:var(--text-m);font-size:14px;line-height:1.7;max-width:360px;margin:0 auto 24px">
-              We have received your message and will get back to you shortly — typically within <strong>2
-                hours</strong>.<br>
-              For urgent queries, please WhatsApp us at 
-            </p>
-            <button class="btn btn-outline" onclick="resetContactForm()">Send Another Message</button>
-          </div>
         </div>
-
-      </div>
     </div>
-  </section>
-
-  <!-- ── FAQ Teaser ── -->
-  <section class="faq-teaser">
-    <div class="container">
-      <div class="faq-teaser-header reveal">
-        <span class="section-label">Common Questions</span>
-        <h2 class="ph-title" style="color:var(--text-h)">Frequently Asked <em style="font-family:var(--fd);font-style:italic;font-weight:300;color:var(--primary)">Questions</em></h2>
-      </div>
-
-      <div class="faq-cards reveal">
-        <div class="faq-card">
-          <div class="faq-card-q">How long does delivery take?</div>
-          <div class="faq-card-a">Standard delivery takes 5–7 business days pan-India. Express (2–3 days) and Same-Day
-            (Jodhpur only) options are also available. You will receive a tracking link via SMS/Email within 24 hours of
-            placing your order.</div>
-        </div>
-        <div class="faq-card">
-          <div class="faq-card-q">What is your exchange policy?</div>
-          <div class="faq-card-a">We offer a <strong>7-day hassle-free exchange</strong> policy. Please ensure the
-            product is unused and in its original packaging. Contact our support team via WhatsApp to initiate the
-            process, and we will arrange a smooth pickup for exchange.</div>
-        </div>
-        <div class="faq-card">
-          <div class="faq-card-q">What payment methods do you accept?</div>
-          <div class="faq-card-a">We accept all major Credit/Debit Cards, Net Banking, and UPI (Google Pay, PhonePe,
-            Paytm) through our secure payment gateway. EMI options are also available on orders above ₹1,999.</div>
-        </div>
-      </div>
-
-      <div class="faq-cta">
-        <a href="faq.html" class="btn btn-outline" style="margin-top:8px">
-          <i class="fa-solid fa-circle-question"></i> View All FAQs
-        </a>
-      </div>
+    <div class="search-overlay" id="search-overlay">
+        <div class="search-box"><i class="fa-solid fa-magnifying-glass search-icon"></i><input type="text"
+                class="search-input" id="search-input" placeholder="Search for heels, bags, sandals…"
+                autocomplete="off" /><button class="search-close" id="search-close-btn">✕</button></div>
     </div>
-  </section>
 
-  <!-- ── Footer ── -->
-  
+    <!-- HERO -->
+    <section class="contact-hero">
+        <div class="container">
+            <span class="section-label" style="margin-bottom:16px">We're Here For You</span>
+            <h1>Baat Karo <em>HeelsUp</em> Se</h1>
+            <p>Koi bhi sawaal ho — order, return, sizing ya sirf style advice — hum always available hain. Just reach
+                out!</p>
+        </div>
+    </section>
 
-  <!-- WA Float -->
-  
+    <!-- MAIN -->
+    <section class="contact-main">
+        <div class="container">
+            <div class="contact-grid">
 
-  <!-- Scroll Top -->
-    
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-  
-    
+                <!-- INFO SIDEBAR -->
+                <div class="contact-info-card">
+                    <div class="contact-info-title">Get In Touch</div>
+                    <p class="contact-info-sub">Sabse fast response WhatsApp par milta hai. Aap email bhi kar sakte ho
+                        ya neeche form bharo.</p>
 
+                    <div class="contact-method">
+                        <div class="contact-method-icon"><i class="fa-brands fa-whatsapp"></i></div>
+                        <div>
+                            <div class="contact-method-label">WhatsApp (Fastest)</div>
+                            <a href="https://wa.me/919xxxxxxxxx" class="contact-method-value" target="_blank"
+                                rel="noopener">+91 9XXXXXXXXX</a>
+                            <div class="contact-method-note">Usually responds within 30 mins</div>
+                        </div>
+                    </div>
 
+                    <div class="contact-method">
+                        <div class="contact-method-icon"><i class="fa-solid fa-envelope"></i></div>
+                        <div>
+                            <div class="contact-method-label">Email</div>
+                            <a href="mailto:hello@heelsup.in" class="contact-method-value">hello@heelsup.in</a>
+                            <div class="contact-method-note">Response within 24 hours</div>
+                        </div>
+                    </div>
 
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
+                    <div class="contact-method">
+                        <div class="contact-method-icon"><i class="fa-solid fa-location-dot"></i></div>
+                        <div>
+                            <div class="contact-method-label">Location</div>
+                            <div class="contact-method-value">Jodhpur, Rajasthan</div>
+                            <div class="contact-method-note">India — We ship nationwide</div>
+                        </div>
+                    </div>
 
-    <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer=""></script>
-    <script src="/js/core/api-client.js" defer=""></script>
-    <script src="/js/core/common-ui.js" defer=""></script>
-    
-    <!-- State and Operations -->
-    <script src="/js/cart.js" defer=""></script>
-    <script src="/js/wishlist.js" defer=""></script>
-    
-    <!-- Page Controller -->
-    <script src="/js/pages/contact.js" defer=""></script>
-<footer class="footer"></footer></body></html>
+                    <div class="contact-method">
+                        <div class="contact-method-icon"><i class="fa-solid fa-clock"></i></div>
+                        <div>
+                            <div class="contact-method-label">Support Hours</div>
+                            <div class="contact-method-value">Mon – Sat: 9am – 9pm</div>
+                            <div class="contact-method-note">Sunday: 11am – 6pm (WhatsApp only)</div>
+                        </div>
+                    </div>
+
+                    <div class="social-row">
+                        <a href="https://instagram.com/heelsup.in" class="footer-social-link" target="_blank"
+                            rel="noopener"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://facebook.com/heelsup.in" class="footer-social-link" target="_blank"
+                            rel="noopener"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://wa.me/919xxxxxxxxx" class="footer-social-link" target="_blank"
+                            rel="noopener"><i class="fa-brands fa-whatsapp"></i></a>
+                        <a href="https://pinterest.com/heelsup" class="footer-social-link" target="_blank"
+                            rel="noopener"><i class="fa-brands fa-pinterest-p"></i></a>
+                    </div>
+                </div>
+
+                <!-- CONTACT FORM -->
+                <div class="contact-form-wrap">
+                    <div id="form-container">
+                        <div class="contact-form-title">Send Us a Message</div>
+                        <p class="contact-form-sub">Koi bhi query hogi toh seedha message karo — hum jald se jald reply
+                            karenge.</p>
+
+                        <div class="form-group">
+                            <div
+                                style="font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-primary);margin-bottom:10px">
+                                Subject</div>
+                            <div class="subject-chips">
+                                <button type="button" class="subject-chip active" data-subject="Order Query">Order
+                                    Query</button>
+                                <button type="button" class="subject-chip"
+                                    data-subject="Return/Exchange">Return/Exchange</button>
+                                <button type="button" class="subject-chip" data-subject="Size Help">Size Help</button>
+                                <button type="button" class="subject-chip" data-subject="Product Info">Product
+                                    Info</button>
+                                <button type="button" class="subject-chip" data-subject="Other">Other</button>
+                            </div>
+                        </div>
+
+                        <form class="contact-form" id="contact-form" novalidate>
+                            <div class="form-row-2">
+                                <div class="form-group">
+                                    <label class="form-label">Your Name *</label>
+                                    <input type="text" class="form-input" id="cf-name" placeholder="Priya Sharma"
+                                        required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-input" id="cf-phone" placeholder="+91 9XXXXXXXXX" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" class="form-input" id="cf-email" placeholder="you@example.com"
+                                    required />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Order ID (if applicable)</label>
+                                <input type="text" class="form-input" id="cf-order" placeholder="HU-XXXXXXXX" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Message *</label>
+                                <textarea id="cf-msg" placeholder="Apni query detail mein likho — hum help karenge!"
+                                    required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full btn-lg" id="submit-btn">
+                                <i class="fa-solid fa-paper-plane"></i> Send Message
+                            </button>
+                        </form>
+
+                        <div
+                            style="margin-top:20px;padding:16px;background:var(--color-light);border-radius:12px;display:flex;align-items:center;gap:12px">
+                            <i class="fa-brands fa-whatsapp" style="font-size:1.4rem;color:#25D366"></i>
+                            <div>
+                                <div style="font-size:13px;font-weight:600">Fast response chahiye?</div>
+                                <div style="font-size:12px;color:var(--text-muted)">WhatsApp par directly message karo:
+                                    <a href="https://wa.me/919xxxxxxxxx"
+                                        style="color:var(--color-primary);font-weight:600">+91 9XXXXXXXXX</a></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-success" id="form-success">
+                        <div class="form-success-icon">🎉</div>
+                        <h3>Message Bhej Diya!</h3>
+                        <p style="color:var(--text-muted);font-size:14px;line-height:1.7">Shukriya! Humari team 24 hours
+                            mein reply karegi. WhatsApp par fast response ke liye: <a href="https://wa.me/919xxxxxxxxx"
+                                style="color:var(--color-primary)">+91 9XXXXXXXXX</a></p>
+                        <button type="button" class="btn btn-secondary" style="margin-top:20px"
+                            onclick="document.getElementById('form-success').style.display='none';document.getElementById('form-container').style.display='block'">Send
+                            Another Message</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section">
+        <div class="container">
+            <div class="section-header reveal" style="margin-bottom:48px">
+                <span class="section-label">Common Questions</span>
+                <h2>Frequently Asked <em
+                        style="font-family:var(--font-display);font-style:italic;font-weight:400">Questions</em></h2>
+            </div>
+            <div class="faq-grid reveal">
+                <div class="faq-item">
+                    <div class="faq-q">Shipping kitne din mein hogi? <i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="faq-a">
+                        <p>Jodhpur mein same-day delivery available hai. India-wide 3-5 business days mein delivery hoti
+                            hai. Order place karne ke 24 hours mein tracking number milega.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Return kaise karein? <i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="faq-a">
+                        <p>7 days ke andar WhatsApp par message karo. Product original condition mein hona chahiye. Hum
+                            pickup arrange karenge aur refund/exchange 5-7 days mein process ho jayega.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Size guide kahan hai? <i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="faq-a">
+                        <p>Har product page par size chart available hai. Confuse ho toh WhatsApp karo — hum aapko sahi
+                            size choose karne mein help karenge.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">COD available hai? <i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="faq-a">
+                        <p>Haan! Cash on Delivery available hai pan-India. UPI, credit/debit cards, aur EMI bhi accept
+                            karte hain orders above ₹1999.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Products authentic hain? <i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="faq-a">
+                        <p>100% guaranteed authentic products. Hum personally har product quality check karte hain
+                            before shipping. Kisi bhi issue par full refund milega.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Bulk order discount milega? <i class="fa-solid fa-chevron-down"></i></div>
+                    <div class="faq-a">
+                        <p>Haan! 5+ items ke orders par special discounts available hain. Bulk orders ke liye WhatsApp
+                            par contact karo — special pricing arrange karenge.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAP -->
+    <section class="map-section">
+        <div class="container">
+            <div class="map-frame">
+                <iframe
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d115070.61959258897!2d73.00443!3d26.23840!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x394017ec02bc68ab%3A0x1e855d1c52bd5742!2sJodhpur%2C%20Rajasthan!5e0!3m2!1sen!2sin!4v1699999999999!5m2!1sen!2sin"
+                    allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+                    title="HeelsUp - Jodhpur, Rajasthan"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top grid grid-4">
+                <div>
+                    <div style="font-family:var(--font-display);font-size:1.6rem;color:#fff;margin-bottom:12px">
+                        Heels<span style="color:var(--color-primary)">Up</span></div>
+                    <p class="footer-tagline">Jodhpur se India tak — stylish ladies footwear &amp; bags ka sabse trusted
+                        naam.</p>
+                    <div class="footer-social"><a href="https://instagram.com/heelsup.in" class="footer-social-link"
+                            target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a><a
+                            href="https://facebook.com/heelsup.in" class="footer-social-link" target="_blank"
+                            rel="noopener"><i class="fa-brands fa-facebook-f"></i></a><a
+                            href="https://wa.me/919xxxxxxxxx" class="footer-social-link" target="_blank"
+                            rel="noopener"><i class="fa-brands fa-whatsapp"></i></a></div>
+                </div>
+                <div>
+                    <div class="footer-col-title">Quick Links</div>
+                    <ul class="footer-links">
+                        <li><a href="shop.html" class="footer-link">Shop All</a></li>
+                        <li><a href="about.html" class="footer-link">About Us</a></li>
+                        <li><a href="contact.html" class="footer-link">Contact</a></li>
+                        <li><a href="faq.html" class="footer-link">FAQs</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">Categories</div>
+                    <ul class="footer-links">
+                        <li><a href="category.html?cat=heels" class="footer-link">👠 Heels</a></li>
+                        <li><a href="category.html?cat=flats" class="footer-link">🥿 Flats</a></li>
+                        <li><a href="category.html?cat=sandals" class="footer-link">👡 Sandals</a></li>
+                        <li><a href="category.html?cat=bags" class="footer-link">👜 Bags</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <div class="footer-col-title">Help</div>
+                    <ul class="footer-links">
+                        <li><a href="policy/returns.html" class="footer-link">Return Policy</a></li>
+                        <li><a href="policy/privacy.html" class="footer-link">Privacy Policy</a></li>
+                    </ul>
+                    <div style="margin-top:16px"><a href="https://wa.me/919xxxxxxxxx" class="footer-link"
+                            target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp"
+                                style="color:var(--color-primary)"></i> +91 9XXXXXXXXX</a><a
+                            href="mailto:hello@heelsup.in" class="footer-link" style="margin-top:8px"><i
+                                class="fa-solid fa-envelope" style="color:var(--color-primary)"></i>
+                            hello@heelsup.in</a></div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2025 HeelsUp. All rights reserved. Made with ❤️ in Jodhpur, Rajasthan.</p>
+                <div class="footer-bottom-links"><a href="policy/privacy.html">Privacy</a><a
+                        href="policy/terms.html">Terms</a><a href="policy/returns.html">Returns</a></div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="cart-drawer-backdrop" id="cart-backdrop"></div>
+    <aside class="cart-drawer" id="cart-drawer">
+        <div class="cart-drawer-header">
+            <div style="display:flex;align-items:center;gap:12px">
+                <h3>My Cart</h3><span class="cart-count-badge" id="cart-drawer-count">0 items</span>
+            </div><button class="cart-close-btn" id="cart-close-btn">✕</button>
+        </div>
+        <div class="cart-drawer-body" id="cart-body">
+            <div style="text-align:center;padding:60px 20px">
+                <div style="font-size:3rem;margin-bottom:12px">🛍️</div>
+                <div style="font-family:var(--font-heading);font-size:1.1rem;color:var(--text-muted)">Your cart is empty
+                </div>
+            </div>
+        </div>
+        <div class="cart-drawer-footer" id="cart-footer" style="display:none">
+            <div class="cart-summary-row"><span>Subtotal</span><span id="cart-subtotal">₹0</span></div>
+            <div class="cart-summary-row"><span>Shipping</span><span style="color:var(--color-success)">Free</span>
+            </div>
+            <div class="cart-summary-row cart-summary-total"><span>Total</span><span id="cart-total">₹0</span></div><a
+                href="checkout.html" class="btn btn-primary btn-full" style="margin-top:14px"><i
+                    class="fa-solid fa-lock"></i> Proceed to Checkout</a>
+        </div>
+    </aside>
+    <div class="toast-container" id="toast-container"></div>
+    <a href="https://wa.me/919xxxxxxxxx" class="whatsapp-float" target="_blank" rel="noopener noreferrer"
+        aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+    <button class="scroll-top-btn" id="scroll-top"><i class="fa-solid fa-chevron-up"></i></button>
+
+    <script src="app-config.js"></script>
+    <script src="app-auth.js"></script>
+    <script>
+        const CLOUDFLARE_WORKER_URL = HeelsUpAuth.API_BASE;
+        let cart = JSON.parse(localStorage.getItem('heelsup_cart') || '[]');
+        let wishlist = JSON.parse(localStorage.getItem('heelsup_wishlist') || '[]');
+        let activeSubject = 'Order Query';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTopbar(); initNavbar(); initSearch(); initCart(); initScrollTop(); initReveal();
+            updateCartUI(); updateWishlistUI();
+
+            document.querySelectorAll('.subject-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    document.querySelectorAll('.subject-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active'); activeSubject = chip.dataset.subject;
+                });
+            });
+
+            document.querySelectorAll('.faq-q').forEach(q => {
+                q.addEventListener('click', () => {
+                    const item = q.closest('.faq-item');
+                    const wasOpen = item.classList.contains('open');
+                    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+                    if (!wasOpen) item.classList.add('open');
+                });
+            });
+
+            document.getElementById('contact-form')?.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('cf-name').value.trim();
+                const email = document.getElementById('cf-email').value.trim();
+                const msg = document.getElementById('cf-msg').value.trim();
+                if (!name || !email || !msg) { showToast('error', 'Required Fields', 'Naam, email aur message required hai.'); return; }
+                const btn = document.getElementById('submit-btn');
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending…'; btn.disabled = true;
+                try {
+                    await fetch(`${CLOUDFLARE_WORKER_URL}/api/contact`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, phone: document.getElementById('cf-phone').value, order: document.getElementById('cf-order').value, subject: activeSubject, message: msg }) });
+                } catch { }
+                document.getElementById('form-container').style.display = 'none';
+                document.getElementById('form-success').style.display = 'block';
+            });
+        });
+
+        function initReveal() { const o = new IntersectionObserver(e => { e.forEach(el => { if (el.isIntersecting) { el.target.classList.add('revealed'); o.unobserve(el.target); } }); }, { threshold: .12, rootMargin: '0px 0px -40px 0px' }); document.querySelectorAll('.reveal').forEach(el => o.observe(el)); }
+        function initTopbar() { document.getElementById('topbar-close')?.addEventListener('click', () => { const tb = document.getElementById('topbar'); tb.style.height = '0'; tb.style.overflow = 'hidden'; tb.style.padding = '0'; }); }
+        function initNavbar() { const navbar = document.getElementById('navbar'); const hamburger = document.getElementById('hamburger-btn'); const mobileMenu = document.getElementById('mobile-menu'); window.addEventListener('scroll', () => { navbar.classList.toggle('scrolled', window.scrollY > 60); document.getElementById('scroll-top').classList.toggle('visible', window.scrollY > 400); }); hamburger?.addEventListener('click', () => { hamburger.classList.toggle('open'); mobileMenu.classList.toggle('open'); document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : ''; });[document.getElementById('mobile-backdrop'), document.getElementById('mobile-menu-close')].forEach(el => el?.addEventListener('click', () => { hamburger.classList.remove('open'); mobileMenu.classList.remove('open'); document.body.style.overflow = ''; })); }
+        function initSearch() { const overlay = document.getElementById('search-overlay'); const input = document.getElementById('search-input'); document.getElementById('search-toggle-btn')?.addEventListener('click', () => { overlay.classList.add('open'); document.body.style.overflow = 'hidden'; setTimeout(() => input.focus(), 300); }); document.getElementById('search-close-btn')?.addEventListener('click', () => { overlay.classList.remove('open'); document.body.style.overflow = ''; input.value = ''; }); overlay?.addEventListener('click', e => { if (e.target === overlay) { overlay.classList.remove('open'); document.body.style.overflow = ''; input.value = ''; } }); input?.addEventListener('keydown', e => { if (e.key === 'Enter' && input.value.trim()) window.location.href = `search.html?q=${encodeURIComponent(input.value.trim())}`; }); }
+        function initCart() { document.getElementById('cart-open-btn')?.addEventListener('click', openCart); document.getElementById('cart-close-btn')?.addEventListener('click', closeCart); document.getElementById('cart-backdrop')?.addEventListener('click', closeCart); }
+        function openCart() { document.getElementById('cart-drawer').classList.add('open'); document.getElementById('cart-backdrop').classList.add('open'); document.body.style.overflow = 'hidden'; }
+        function closeCart() { document.getElementById('cart-drawer').classList.remove('open'); document.getElementById('cart-backdrop').classList.remove('open'); document.body.style.overflow = ''; }
+        function updateCartUI() { const count = cart.reduce((s, i) => s + i.qty, 0); document.getElementById('cart-count').textContent = count; document.getElementById('cart-drawer-count').textContent = `${count} item${count !== 1 ? 's' : ''}`; renderCartItems(); }
+        function updateWishlistUI() { const wc = document.getElementById('wishlist-count'); if (wc) { wc.textContent = wishlist.length; wc.style.display = wishlist.length ? 'flex' : 'none'; } }
+        function renderCartItems() { const body = document.getElementById('cart-body'); const footer = document.getElementById('cart-footer'); if (!cart.length) { body.innerHTML = `<div style="text-align:center;padding:60px 20px"><div style="font-size:3rem;margin-bottom:12px">🛍️</div><div style="font-family:var(--font-heading);font-size:1.1rem;color:var(--text-muted)">Your cart is empty</div><a href="shop.html" class="btn btn-primary" style="margin-top:16px">Shop Now</a></div>`; footer.style.display = 'none'; return; } const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0); body.innerHTML = cart.map(item => `<div class="cart-item"><div class="cart-item-img"><img src="${item.img}" alt="${item.name}"/></div><div class="cart-item-body"><div class="cart-item-name">${item.name}</div><div class="cart-item-price">₹${(item.price * item.qty).toLocaleString('en-IN')}</div><div class="qty-control"><button class="qty-btn" onclick="updateQty(${item.id},-1)">−</button><span class="qty-value">${item.qty}</span><button class="qty-btn" onclick="updateQty(${item.id},1)">+</button></div><div class="cart-item-remove" onclick="removeCartItem(${item.id})"><i class="fa-solid fa-trash-can"></i> Remove</div></div></div>`).join(''); document.getElementById('cart-subtotal').textContent = `₹${subtotal.toLocaleString('en-IN')}`; document.getElementById('cart-total').textContent = `₹${subtotal.toLocaleString('en-IN')}`; footer.style.display = 'block'; }
+        window.updateQty = (id, delta) => { const item = cart.find(i => i.id === id); if (!item) return; item.qty = Math.max(1, item.qty + delta); localStorage.setItem('heelsup_cart', JSON.stringify(cart)); updateCartUI(); };
+        window.removeCartItem = id => { cart = cart.filter(i => i.id !== id); localStorage.setItem('heelsup_cart', JSON.stringify(cart)); updateCartUI(); };
+        function showToast(type, title, message) { const container = document.getElementById('toast-container'); const id = 'toast-' + Date.now(); const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' }; container.insertAdjacentHTML('beforeend', `<div class="toast toast-${type}" id="${id}"><i class="fa-solid ${icons[type]} toast-icon"></i><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-message">${message}</div></div><button class="toast-close" onclick="document.getElementById('${id}').remove()">✕</button></div>`); setTimeout(() => document.getElementById(id)?.remove(), 4000); }
+        function initScrollTop() { document.getElementById('scroll-top')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' })); }
+    </script>
+</body>
+
+</html>

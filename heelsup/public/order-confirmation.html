@@ -1,149 +1,140 @@
-<!DOCTYPE html><html lang="en"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-  <meta name="theme-color" content="#E8CCC5">
-  <title>Order Confirmed! – HeelsUp</title>
-  <meta name="robots" content="noindex,nofollow">
 
-  <!-- ═══ PRECONNECT & FONTS ═══ -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HEELS UP | Official Luxury Store</title>
+    <link rel="stylesheet" href="storefront-premium.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 
-  
-    <link rel="stylesheet" href="/css/customer-theme.css">
-    <link rel="stylesheet" href="/css/pages/order-confirmation.css">
 </head>
-
 <body>
-    <div id="navbar"></div>
-
-  
-
-  <!-- ═══ MOBILE MENU ═══ -->
-  
-
-  <!-- ═══ SEARCH OVERLAY ═══ -->
-  <div class="search-overlay" id="search-overlay">
-    <div class="container">
-      <div class="search-wrap">
-        <span class="search-kicker">What are you looking for?</span>
-        <div class="search-field">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="search" class="search-input-el" id="search-inp" placeholder="heels, bags, sandals…" autocomplete="off">
-          <button class="search-cls" id="search-close-btn" aria-label="Close search">
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+    
+    <nav class="store-nav">
+        <div class="nav-logo"><a href="index.html">HEELS UP</a></div>
+        <div class="nav-links">
+            <a href="shop.html">Shop All</a>
+            <a href="shop.html?category=heels">Heels</a>
+            <a href="shop.html?category=flats">Flats</a>
+            <a href="lookbook.html">Lookbook</a>
         </div>
-        <div class="search-res" id="search-res"></div>
-      </div>
-    </div>
+        <div class="nav-icons">
+            <a href="search.html"><i class="fa-solid fa-magnifying-glass"></i></a>
+            <a href="profile.html"><i class="fa-regular fa-user"></i></a>
+            <a href="cart.html"><i class="fa-solid fa-bag-shopping"></i></a>
+        </div>
+    </nav>
+
+    <main class="store-main" style="padding-top: var(--nav-height)">
+        <div class="container section-padding">
+            
+<div class="card" id="order-card">
+  <div class="card-top">
+    <div class="success-anim"><i class="fa-solid fa-check"></i></div>
+    <h1>Order Confirmed! 🎉</h1>
+    <p>Thank you! Your payment was successful and order is confirmed.</p>
   </div>
-
-  <!-- ═══════════════════════════════════════════════
-     MAIN SUCCESS CONTENT
-  ═══════════════════════════════════════════════ -->
-  <main class="success-main">
-    <div class="success-card" id="order-card">
-
-      <div class="sc-header">
-        <div class="success-icon-wrap">
-          <svg viewBox="0 0 24 24">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </div>
-        <h1>Order Confirmed!</h1>
-        <p>Thank you for shopping with HeelsUp. Your order has been placed successfully and is now being processed. A
-          confirmation email has been sent to your registered address.</p>
-      </div>
-
-      <div class="sc-body">
-        <div class="info-group">
-          <div class="info-row">
-            <span class="info-label"><i class="fa-solid fa-hashtag"></i> Order Number</span>
-            <span class="info-value" id="order-num">Loading…</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label"><i class="fa-regular fa-calendar"></i> Order Date</span>
-            <span class="info-value" id="order-date">Loading…</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label"><i class="fa-regular fa-credit-card"></i> Payment Status</span>
-            <span class="status-badge"><i class="fa-solid fa-circle-check"></i> Paid</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label"><i class="fa-solid fa-box-open"></i> Order Status</span>
-            <span class="status-badge" style="color:var(--text-b); background:var(--bg2); border:1px solid var(--border);" id="order-status">
-              <i class="fa-solid fa-spinner"></i> Processing
-            </span>
-          </div>
-          <div class="info-row">
-            <span class="info-label"><i class="fa-solid fa-truck-fast"></i> Est. Delivery</span>
-            <span class="info-value" id="est-delivery">3–5 Business Days</span>
-          </div>
-        </div>
-
-        <div class="total-box">
-          <span class="t-label">Amount Paid</span>
-          <span class="t-amount" id="order-total">₹—</span>
-        </div>
-
-        <div class="action-grid">
-          <a href="/orders.html" class="btn-act outline">
-            <i class="fa-solid fa-box"></i> View My Orders
-          </a>
-          <a href="/shop.html" class="btn-act primary">
-            <i class="fa-solid fa-store"></i> Continue Shopping
-          </a>
-        </div>
-
-        <button class="print-btn" onclick="window.print()">
-          <i class="fa-solid fa-print"></i> Download / Print Receipt
-        </button>
-      </div>
+  <div class="card-body">
+    <div class="info-row">
+      <span class="info-label">Order Number</span>
+      <span class="info-value" id="order-num">Loading…</span>
     </div>
-  </main>
+    <div class="info-row">
+      <span class="info-label">Payment Status</span>
+      <span class="status-badge">✓ Paid</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Order Status</span>
+      <span class="status-badge" id="order-status">Confirmed</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Estimated Delivery</span>
+      <span class="info-value" id="est-delivery">3–5 Business Days</span>
+    </div>
 
-  <!-- ═══ FOOTER ═══ -->
-    
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-  
-    
+    <div class="total-row">
+      <span class="label">Amount Paid</span>
+      <span class="amount" id="order-total">₹—</span>
+    </div>
 
+    <div class="btn-group">
+      <a href="orders.html" class="btn btn-outline"><i class="fa-solid fa-bag-shopping"></i> My Orders</a>
+      <a href="shop.html" class="btn btn-primary"><i class="fa-solid fa-store"></i> Continue Shopping</a>
+    </div>
+    <button class="print-btn" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Order Confirmation</button>
+  </div>
+</div>
 
+<script src="app-config.js"></script>
+<script src="app-auth.js"></script>
+  <script src="app-common.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    const params = new URLSearchParams(location.search);
+    const num = params.get('num') || 'HU-XXXXXXXX-XXXX';
+    const id = params.get('id');
 
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
+    document.getElementById('order-num').textContent = num;
 
-    <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer=""></script>
-    <script src="/js/core/api-client.js" defer=""></script>
-    <script src="/js/core/common-ui.js" defer=""></script>
+    if (id) {
+      try {
+        const data = await HeelsUpAuth.api('/api/orders/my');
+        const order = (data.orders || []).find(o => o.id == id);
+        if (order) {
+          document.getElementById('order-total').textContent = '₹' + Number(order.totalAmount).toLocaleString('en-IN');
+          document.getElementById('order-status').textContent = order.orderStatus.charAt(0).toUpperCase() + order.orderStatus.slice(1);
+        }
+      } catch(e) {}
+    }
+  });
+</script>
+
+        </div>
+    </main>
     
-    <!-- State and Operations -->
-    <script src="/js/cart.js" defer=""></script>
-    <script src="/js/wishlist.js" defer=""></script>
-    
-    <!-- Page Controller -->
-    <script src="/js/pages/order-confirmation.js" defer=""></script>
-<footer class="footer"></footer></body></html>
+    <footer class="store-footer">
+        <div class="container footer-grid">
+            <div>
+                <h3 class="nav-logo" style="margin-bottom:1rem">HEELS UP</h3>
+                <p style="color:var(--color-text-muted); font-size:0.9rem; max-width:300px">Crafting the world's most elegant, comfortable, and striking luxury footwear.</p>
+            </div>
+            <div>
+                <div class="footer-heading">Shop</div>
+                <div class="footer-links">
+                    <a href="shop.html">New Arrivals</a>
+                    <a href="shop.html?category=heels">Stilettos</a>
+                    <a href="shop.html?category=wedges">Wedges</a>
+                    <a href="shop.html?category=flats">Flats</a>
+                </div>
+            </div>
+            <div>
+                <div class="footer-heading">Help</div>
+                <div class="footer-links">
+                    <a href="contact.html">Contact Us</a>
+                    <a href="shipping-info.html">Shipping</a>
+                    <a href="returns.html">Returns</a>
+                    <a href="faq.html">FAQ</a>
+                </div>
+            </div>
+            <div>
+                <div class="footer-heading">Legal</div>
+                <div class="footer-links">
+                    <a href="policy.html">Privacy Policy</a>
+                    <a href="policy.html">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+        <div class="container" style="border-top:1px solid var(--color-border); padding-top:2rem; display:flex; justify-content:space-between; color:var(--color-text-muted); font-size:0.875rem">
+            <div>© 2026 Heels Up. All rights reserved.</div>
+            <div style="display:flex; gap:1rem">
+                <i class="fa-brands fa-instagram"></i>
+                <i class="fa-brands fa-tiktok"></i>
+                <i class="fa-brands fa-pinterest"></i>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,89 +1,2651 @@
-<!DOCTYPE html><html lang="en"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HEELS UP | Give Value To Your Feet</title>
-  <meta name="description" content="Premium luxury women's footwear and handbag e-commerce.">
+<!DOCTYPE html>
+<html lang="en">
 
-  <!-- Preconnect & Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Poppins:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  
-    <link rel="stylesheet" href="/css/customer-theme.css">
-    <link rel="stylesheet" href="/css/pages/index.css">
+    <!-- ====== SEO META TAGS ====== -->
+    <title>HeelsUp – Ladies Footwear & Bags | Online Shopping India | Heels, Flats, Sandals</title>
+    <meta name="description"
+        content="HeelsUp – India ki sabse stylish ladies footwear & bags shop. Heels, Flats, Sandals, Wedges, Tote Bags – best prices. Free shipping above ₹499. Shop now!" />
+    <meta name="keywords"
+        content="ladies footwear online, women heels india, ladies sandals online, women shoes india, heels online shopping, ladies bags online, tote bags india, block heels, wedge heels, flat sandals women, ladies chappals, women footwear jodhpur, rajasthan footwear, online shoe shopping india" />
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="HeelsUp" />
+    <link rel="canonical" href="https://heelsup.in/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="HeelsUp – Ladies Footwear & Bags | Online Shopping India" />
+    <meta property="og:description"
+        content="Shop latest ladies footwear & bags at HeelsUp. Best quality. Affordable prices. Fast delivery across India." />
+    <meta property="og:image" content="/assets/og-banner.jpg" />
+    <meta property="og:url" content="https://heelsup.in/" />
+    <meta property="og:site_name" content="HeelsUp" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="HeelsUp – Ladies Footwear & Bags" />
+    <meta name="twitter:description" content="Shop latest ladies footwear & bags. Free shipping above ₹499." />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ClothingStore",
+    "name": "HeelsUp",
+    "description": "Ladies footwear and bags online store – Heels, Flats, Sandals, Bags",
+    "url": "https://heelsup.in",
+    "logo": "https://heelsup.in/logo.png",
+    "priceRange": "₹₹",
+    "currenciesAccepted": "INR",
+    "paymentAccepted": "Cash, Credit Card, Debit Card, UPI",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Jodhpur",
+      "addressRegion": "Rajasthan",
+      "addressCountry": "IN"
+    },
+    "sameAs": [
+      "https://instagram.com/heelsup.in",
+      "https://facebook.com/heelsup.in"
+    ]
+  }
+  </script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
+        rel="stylesheet" />
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- Global CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <style>
+        /* ===== PAGE-SPECIFIC STYLES ===== */
+
+        /* ---- HERO SLIDER ---- */
+        .hero-slider {
+            position: relative;
+            height: 100vh;
+            min-height: 600px;
+            overflow: hidden;
+        }
+
+        .hero-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+            z-index: 1;
+        }
+
+        .hero-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-slide-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg, rgba(13, 13, 13, 0.72) 0%, rgba(13, 13, 13, 0.35) 55%, rgba(13, 13, 13, 0.08) 100%);
+        }
+
+        .hero-content-wrap {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-slide-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--color-primary-light);
+            padding: 7px 18px;
+            border: 1px solid rgba(201, 169, 110, 0.5);
+            border-radius: 100px;
+            background: rgba(201, 169, 110, 0.1);
+            backdrop-filter: blur(8px);
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.7s ease 0.3s;
+        }
+
+        .hero-slide.active .hero-slide-tag {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hero-slide-title {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 7vw, 6.5rem);
+            font-weight: 300;
+            line-height: 1.05;
+            color: #fff;
+            letter-spacing: -0.02em;
+            margin-bottom: 18px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease 0.5s;
+        }
+
+        .hero-slide.active .hero-slide-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hero-slide-title em {
+            font-style: italic;
+            color: var(--color-primary-light);
+        }
+
+        .hero-slide-sub {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.75);
+            max-width: 440px;
+            line-height: 1.7;
+            margin-bottom: 36px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.7s ease 0.7s;
+        }
+
+        .hero-slide.active .hero-slide-sub {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hero-slide-btns {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.7s ease 0.9s;
+        }
+
+        .hero-slide.active .hero-slide-btns {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hero Nav Arrows */
+        .hero-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+        }
+
+        .hero-arrow:hover {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: var(--color-dark);
+        }
+
+        .hero-arrow-prev {
+            left: 28px;
+        }
+
+        .hero-arrow-next {
+            right: 28px;
+        }
+
+        /* Hero Dots */
+        .hero-dots {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+            display: flex;
+            gap: 10px;
+        }
+
+        .hero-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 100px;
+            background: rgba(255, 255, 255, 0.35);
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: none;
+            padding: 0;
+        }
+
+        .hero-dot.active {
+            width: 32px;
+            background: var(--color-primary);
+        }
+
+        /* Hero Scroll Indicator */
+        .hero-scroll {
+            position: absolute;
+            bottom: 32px;
+            right: 36px;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            animation: floatScroll 2.5s ease infinite;
+        }
+
+        .hero-scroll-line {
+            width: 1px;
+            height: 60px;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.4));
+        }
+
+        @keyframes floatScroll {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(8px)
+            }
+        }
+
+        /* ---- TRUST BAR ---- */
+        .trust-bar {
+            background: var(--color-dark);
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .trust-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: nowrap;
+            overflow: hidden;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 28px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
+        }
+
+        .trust-item:last-child {
+            border-right: none;
+        }
+
+        .trust-icon {
+            color: var(--color-primary);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .trust-text {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.65);
+            letter-spacing: 0.04em;
+        }
+
+        .trust-text strong {
+            color: var(--color-primary-light);
+            font-weight: 600;
+        }
+
+        /* ---- CATEGORIES ---- */
+        .categories-section {
+            padding: 90px 0 70px;
+            background: var(--color-light);
+        }
+
+        .cat-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .cat-card {
+            position: relative;
+            border-radius: 18px;
+            overflow: hidden;
+            cursor: pointer;
+            display: block;
+            text-decoration: none;
+        }
+
+        .cat-card-img {
+            aspect-ratio: 3/4;
+            overflow: hidden;
+        }
+
+        .cat-card.cat-large .cat-card-img {
+            aspect-ratio: 2/3;
+        }
+
+        .cat-card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.7s ease;
+        }
+
+        .cat-card:hover .cat-card-img img {
+            transform: scale(1.07);
+        }
+
+        .cat-card-over {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(13, 13, 13, 0.82) 0%, rgba(13, 13, 13, 0.1) 50%, transparent 100%);
+            transition: all 0.4s ease;
+        }
+
+        .cat-card:hover .cat-card-over {
+            background: linear-gradient(to top, rgba(13, 13, 13, 0.9) 0%, rgba(13, 13, 13, 0.25) 55%, rgba(13, 13, 13, 0.05) 100%);
+        }
+
+        .cat-card-body {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 24px 22px;
+            color: #fff;
+        }
+
+        .cat-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--color-primary-light);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .cat-name {
+            font-family: var(--font-heading);
+            font-size: 1.6rem;
+            font-weight: 600;
+            line-height: 1.15;
+            margin-bottom: 5px;
+        }
+
+        .cat-count {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 14px;
+        }
+
+        .cat-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--color-primary-light);
+            transform: translateY(8px);
+            opacity: 0;
+            transition: all 0.35s ease;
+        }
+
+        .cat-card:hover .cat-cta {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .cat-cta-arrow {
+            transition: transform 0.25s ease;
+        }
+
+        .cat-card:hover .cat-cta-arrow {
+            transform: translateX(5px);
+        }
+
+        /* ---- FEATURED PRODUCTS ---- */
+        .featured-section {
+            padding: 90px 0;
+            background: var(--bg-page);
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        /* ---- MARQUEE OFFER STRIP ---- */
+        .offer-marquee-strip {
+            background: var(--color-primary);
+            padding: 13px 0;
+            overflow: hidden;
+            display: flex;
+            gap: 0;
+        }
+
+        .offer-marquee-track {
+            display: flex;
+            gap: 0;
+            animation: marqueeScroll 18s linear infinite;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .offer-marquee-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 32px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--color-dark);
+        }
+
+        .offer-marquee-sep {
+            color: var(--color-dark-3);
+            font-size: 0.6rem;
+        }
+
+        @keyframes marqueeScroll {
+            from {
+                transform: translateX(0)
+            }
+
+            to {
+                transform: translateX(-50%)
+            }
+        }
+
+        /* ---- PROMO BANNER ---- */
+        .promo-banner {
+            padding: 80px 0;
+            background: var(--color-dark-2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .promo-banner-bg {
+            position: absolute;
+            inset: 0;
+            opacity: 0.18;
+        }
+
+        .promo-banner-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(0.3);
+        }
+
+        .promo-banner-inner {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .promo-banner-content {}
+
+        .promo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--color-accent);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 6px 14px;
+            border-radius: 100px;
+            margin-bottom: 18px;
+        }
+
+        .promo-title {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4.2rem);
+            font-weight: 300;
+            color: #fff;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .promo-title em {
+            font-style: italic;
+            color: var(--color-primary-light);
+        }
+
+        .promo-desc {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.75;
+            margin-bottom: 32px;
+        }
+
+        .promo-timer {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .timer-box {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 18px;
+            min-width: 68px;
+        }
+
+        .timer-num {
+            font-family: var(--font-heading);
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-primary-light);
+            line-height: 1;
+            display: block;
+        }
+
+        .timer-label {
+            font-size: 9px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 4px;
+            display: block;
+        }
+
+        .promo-img-side {
+            position: relative;
+        }
+
+        .promo-img-frame {
+            border-radius: 24px;
+            overflow: hidden;
+            aspect-ratio: 4/5;
+            position: relative;
+        }
+
+        .promo-img-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .promo-img-float {
+            position: absolute;
+            bottom: -20px;
+            left: -24px;
+            background: var(--color-white);
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            z-index: 2;
+            min-width: 200px;
+        }
+
+        .promo-float-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--color-primary-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: var(--color-primary);
+            flex-shrink: 0;
+        }
+
+        .promo-float-val {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 3px;
+        }
+
+        .promo-float-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .promo-discount-tag {
+            position: absolute;
+            top: 20px;
+            right: -12px;
+            background: var(--color-accent);
+            color: #fff;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(212, 69, 107, 0.4);
+            z-index: 2;
+        }
+
+        .promo-discount-pct {
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .promo-discount-off {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        /* ---- TRENDING ---- */
+        .trending-section {
+            padding: 90px 0;
+            background: var(--color-light);
+        }
+
+        .trending-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 40px;
+            justify-content: center;
+        }
+
+        .trending-tab {
+            padding: 10px 26px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .trending-tab:hover {
+            color: var(--color-primary);
+        }
+
+        .trending-tab.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .trending-products {
+            display: none;
+        }
+
+        .trending-products.active {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        /* ---- FEATURES/USP ---- */
+        .usp-section {
+            padding: 90px 0;
+            background: var(--color-dark);
+        }
+
+        .usp-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .usp-item {
+            padding: 44px 36px;
+            background: var(--color-dark);
+            text-align: center;
+            transition: background 0.3s ease;
+        }
+
+        .usp-item:hover {
+            background: var(--color-dark-2);
+        }
+
+        .usp-icon-wrap {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            background: var(--color-primary-glow);
+            border: 1px solid rgba(201, 169, 110, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--color-primary);
+            transition: all 0.3s ease;
+        }
+
+        .usp-item:hover .usp-icon-wrap {
+            background: var(--color-primary);
+            color: var(--color-dark);
+            transform: scale(1.1);
+        }
+
+        .usp-title {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .usp-desc {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.45);
+            line-height: 1.7;
+        }
+
+        /* ---- TESTIMONIALS ---- */
+        .testimonials-section {
+            padding: 100px 0;
+            background: var(--bg-page);
+        }
+
+        .testimonial-slider {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .testimonial-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .testimonial-slide {
+            min-width: calc(33.333% - 16px);
+            margin-right: 24px;
+        }
+
+        .t-card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 22px;
+            padding: 36px;
+            height: 100%;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .t-card:hover {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+            transform: translateY(-4px);
+        }
+
+        .t-stars {
+            color: var(--color-primary);
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            margin-bottom: 18px;
+        }
+
+        .t-text {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            line-height: 1.75;
+            margin-bottom: 24px;
+        }
+
+        .t-author {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .t-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: var(--color-primary-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--color-primary);
+            font-size: 1rem;
+            border: 2px solid var(--color-primary-light);
+            flex-shrink: 0;
+        }
+
+        .t-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .t-loc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .t-verified {
+            font-size: 11px;
+            color: var(--color-success);
+            font-weight: 600;
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Testimonial Nav */
+        .t-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 40px;
+        }
+
+        .t-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 100px;
+            background: var(--color-light-3);
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .t-dot.active {
+            width: 28px;
+            background: var(--color-primary);
+        }
+
+        /* ---- INSTAGRAM LOOKBOOK ---- */
+        .lookbook-section {
+            padding: 80px 0 0;
+            background: var(--color-light);
+        }
+
+        .lookbook-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+            margin-top: 40px;
+        }
+
+        .lookbook-item {
+            aspect-ratio: 1;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .lookbook-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .lookbook-item:hover img {
+            transform: scale(1.08);
+        }
+
+        .lookbook-over {
+            position: absolute;
+            inset: 0;
+            background: rgba(13, 13, 13, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lookbook-item:hover .lookbook-over {
+            opacity: 1;
+        }
+
+        .lookbook-ig-icon {
+            color: #fff;
+            font-size: 1.6rem;
+        }
+
+        /* ---- NEWSLETTER ---- */
+        .newsletter-section {
+            padding: 100px 0;
+            background: linear-gradient(135deg, var(--color-dark) 0%, #1a1008 50%, var(--color-dark) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .newsletter-decor {
+            position: absolute;
+            pointer-events: none;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            border: 1px solid rgba(201, 169, 110, 0.06);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .newsletter-decor-2 {
+            position: absolute;
+            pointer-events: none;
+            width: 900px;
+            height: 900px;
+            border-radius: 50%;
+            border: 1px solid rgba(201, 169, 110, 0.03);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .newsletter-inner {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .newsletter-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .newsletter-title {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 300;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 12px;
+            letter-spacing: -0.01em;
+        }
+
+        .newsletter-title em {
+            font-style: italic;
+            color: var(--color-primary-light);
+        }
+
+        .newsletter-sub {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 36px;
+            line-height: 1.7;
+        }
+
+        .newsletter-form {
+            display: flex;
+            gap: 0;
+            max-width: 460px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 100px;
+            overflow: hidden;
+            padding: 6px 6px 6px 22px;
+        }
+
+        .newsletter-input {
+            flex: 1;
+            background: transparent;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .newsletter-input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .newsletter-btn {
+            flex-shrink: 0;
+            padding: 11px 24px;
+            background: var(--color-primary);
+            color: var(--color-dark);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 100px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .newsletter-btn:hover {
+            background: var(--color-primary-dark);
+        }
+
+        .newsletter-note {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ---- STATS SECTION ---- */
+        .stats-section {
+            padding: 70px 0;
+            background: var(--color-white);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 32px 24px;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .stat-item:last-child {
+            border-right: none;
+        }
+
+        .stat-num {
+            font-family: var(--font-display);
+            font-size: 3.2rem;
+            font-weight: 300;
+            color: var(--color-dark);
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .stat-num span {
+            color: var(--color-primary);
+            font-style: italic;
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        /* Product Card tweaks */
+        .product-card {
+            border-radius: 16px;
+        }
+
+        .product-img-wrap {
+            border-radius: 16px 16px 0 0;
+        }
+
+        /* CART DRAWER */
+        .cart-empty {
+            text-align: center;
+            padding: 60px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cart-empty-icon {
+            font-size: 3rem;
+            color: var(--color-light-3);
+        }
+
+        .cart-empty-text {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        /* Sticky WhatsApp Button */
+        .whatsapp-float {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: var(--z-toast);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #25D366;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+            transition: all 0.25s ease;
+            text-decoration: none;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1) rotate(-5deg);
+            box-shadow: 0 12px 32px rgba(37, 211, 102, 0.5);
+        }
+
+        /* Scroll to Top */
+        .scroll-top-btn {
+            position: fixed;
+            bottom: 28px;
+            left: 28px;
+            z-index: var(--z-toast);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--color-white);
+            color: var(--text-primary);
+            border: 1.5px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.3s ease;
+        }
+
+        .scroll-top-btn.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .scroll-top-btn:hover {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: var(--color-dark);
+        }
+
+        /* Responsive */
+        @media(max-width:1024px) {
+            .cat-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .cat-card.cat-large .cat-card-img {
+                aspect-ratio: 3/4;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .trending-products.active {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .usp-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-item:nth-child(2) {
+                border-right: none;
+            }
+
+            .stat-item:nth-child(3) {
+                border-right: 1px solid var(--border-color);
+            }
+
+            .stat-item:nth-child(3),
+            .stat-item:nth-child(4) {
+                border-top: 1px solid var(--border-color);
+            }
+
+            .promo-banner-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .promo-img-side {
+                display: none;
+            }
+
+            .lookbook-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .testimonial-slide {
+                min-width: calc(50% - 12px);
+            }
+        }
+
+        @media(max-width:768px) {
+            .hero-slider {
+                height: 88vh;
+                min-height: 520px;
+            }
+
+            .cat-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+
+            .trending-products.active {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+
+            .usp-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .trust-bar-inner {
+                overflow-x: auto;
+                justify-content: flex-start;
+                padding: 0 16px;
+            }
+
+            .lookbook-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .testimonial-slide {
+                min-width: calc(100% - 0px);
+                margin-right: 0;
+            }
+
+            .promo-timer {
+                gap: 10px;
+            }
+
+            .timer-box {
+                padding: 10px 14px;
+                min-width: 58px;
+            }
+
+            .timer-num {
+                font-size: 1.6rem;
+            }
+        }
+
+        @media(max-width:480px) {
+            .products-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .cat-name {
+                font-size: 1.2rem;
+            }
+
+            .stat-num {
+                font-size: 2.4rem;
+            }
+
+            .hero-arrow {
+                display: none;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div id="navbar"></div>
 
-  <!-- Header Navigation -->
-  
+    <!-- ============================
+     TOPBAR ANNOUNCEMENT
+     ============================ -->
+    <div class="topbar" id="topbar">
+        <div class="topbar-marquee" id="topbar-marquee">
+            <span class="topbar-text">🎉 <strong>NEW ARRIVALS</strong> — Summer Collection is Live!</span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🚚 FREE Shipping on orders above <strong>₹499</strong></span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🏷️ Use code <strong>HEELS10</strong> for 10% off on first order</span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">💳 EMI available on orders above <strong>₹1999</strong></span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">✨ Trusted by <strong>10,000+</strong> happy customers across India</span>
+            <span class="topbar-dot"></span>
+            <!-- Duplicate for seamless loop -->
+            <span class="topbar-text">🎉 <strong>NEW ARRIVALS</strong> — Summer Collection is Live!</span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🚚 FREE Shipping on orders above <strong>₹499</strong></span>
+            <span class="topbar-dot"></span>
+            <span class="topbar-text">🏷️ Use code <strong>HEELS10</strong> for 10% off on first order</span>
+            <span class="topbar-dot"></span>
+        </div>
+        <button class="topbar-close" id="topbar-close" aria-label="Close announcement">✕</button>
+    </div>
 
-  <!-- Main Content injected by Router -->
-  <main id="app">
-    <!-- Content renders here -->
-  </main>
+    <!-- ============================
+     NAVBAR
+     ============================ -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="navbar-inner">
+                <!-- Logo -->
+                <a href="index.html" class="navbar-logo">
+                    <img src="logo.png" alt="HeelsUp Logo" id="navbar-logo-img" onerror="this.style.display='none'" />
+                </a>
 
-  <!-- Footer -->
-  
+                <!-- Nav Menu -->
+                <ul class="navbar-menu" id="nav-menu">
+                    <li class="nav-item">
+                        <a href="index.html" class="nav-link active">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="shop.html" class="nav-link">Shop <i class="fa-solid fa-chevron-down"
+                                style="font-size:9px;opacity:0.6"></i></a>
+                        <div class="nav-dropdown">
+                            <a href="category.html?cat=heels"><span class="nav-dropdown-icon">👠</span> Heels</a>
+                            <a href="category.html?cat=flats"><span class="nav-dropdown-icon">🥿</span> Flats</a>
+                            <a href="category.html?cat=sandals"><span class="nav-dropdown-icon">👡</span> Sandals</a>
+                            <a href="category.html?cat=wedges"><span class="nav-dropdown-icon">👢</span> Wedges</a>
+                            <a href="category.html?cat=bags"><span class="nav-dropdown-icon">👜</span> Bags</a>
+                            <a href="category.html?cat=clutches"><span class="nav-dropdown-icon">👝</span> Clutches</a>
+                        </div>
+                    </li>
 
-  <!-- Cart Drawer -->
-  
-  
-    
-    
-  
+                    <li class="nav-item">
+                        <a href="category.html?cat=new" class="nav-link">New Arrivals</a>
+                    </li>
 
-  <!-- Mobile Menu Drawer -->
-  
-  
-    
-  
+                    <li class="nav-item">
+                        <a href="category.html?cat=sale" class="nav-link" style="color:var(--color-accent)">
+                            <i class="fa-solid fa-fire" style="font-size:0.8rem"></i> Sale
+                        </a>
+                    </li>
 
-  <!-- Toast Notifications -->
-  
+                    <li class="nav-item">
+                        <a href="about.html" class="nav-link">About</a>
+                    </li>
 
-  <!-- Application Logic -->
-    
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-  
-    
+                    <li class="nav-item">
+                        <a href="contact.html" class="nav-link">Contact</a>
+                    </li>
 
+                    <!-- Admin Panel Link -->
+                    <li class="nav-item">
+                        <a href="admin.html" class="nav-link">
+                            <i class="fa-solid fa-user-shield" style="font-size:0.9rem"></i>
+                            Admin
+                        </a>
+                    </li>
+                </ul>
 
+                <!-- Actions -->
+                <div class="navbar-actions">
+                    <button class="nav-icon-btn" id="search-toggle-btn" aria-label="Search" title="Search products">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                    <a href="wishlist.html" class="nav-icon-btn" aria-label="Wishlist" title="My wishlist">
+                        <i class="fa-regular fa-heart"></i>
+                        <span class="nav-badge" id="wishlist-count" style="display:none">0</span>
+                    </a>
+                    <a href="profile.html" class="nav-icon-btn" aria-label="Account" title="My account">
+                        <i class="fa-regular fa-user"></i>
+                    </a>
+                    <button class="nav-icon-btn" id="cart-open-btn" aria-label="Cart" title="Shopping cart">
+                        <i class="fa-solid fa-bag-shopping"></i>
+                        <span class="nav-badge" id="cart-count">0</span>
+                    </button>
+                    <button class="navbar-hamburger" id="hamburger-btn" aria-label="Menu">
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
+    <!-- ============================
+     MOBILE MENU
+     ============================ -->
+    <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu-backdrop" id="mobile-backdrop"></div>
+        <div class="mobile-menu-panel">
+            <div class="mobile-menu-header">
+                <span class="navbar-logo-text">Heels<span style="color:var(--color-primary)">Up</span></span>
+                <button id="mobile-menu-close"
+                    style="font-size:1.3rem;color:var(--text-muted);cursor:pointer;background:none;border:none">✕</button>
+            </div>
+            <div class="mobile-menu-body">
+                <a href="index.html">🏠 Home</a>
+                <a href="shop.html">🛍️ Shop All</a>
+                <a href="category.html?cat=heels">👠 Heels</a>
+                <a href="category.html?cat=flats">🥿 Flats</a>
+                <a href="category.html?cat=sandals">👡 Sandals</a>
+                <a href="category.html?cat=bags">👜 Bags</a>
+                <a href="category.html?cat=new">✨ New Arrivals</a>
+                <a href="category.html?cat=sale" style="color:var(--color-accent)">🔥 Sale</a>
+                <a href="about.html">📄 About Us</a>
+                <a href="contact.html">📞 Contact</a>
+                <hr style="border:none;border-top:1px solid var(--border-color);margin:12px 0" />
+                <a href="login.html">👤 Login</a>
+                <a href="register.html">📝 Register</a>
+                <a href="blog.html">📄 Blog</a>
+            </div>
+        </div>
+    </div>
 
-    <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer=""></script>
-    <script src="/js/core/api-client.js" defer=""></script>
-    <script src="/js/core/common-ui.js" defer=""></script>
-    
-    <!-- State and Operations -->
-    <script src="/js/cart.js" defer=""></script>
-    <script src="/js/wishlist.js" defer=""></script>
-    
-    <!-- Page Controller -->
-    <script src="/js/pages/index.js" defer=""></script>
-<footer class="footer"></footer></body></html>
+    <!-- ============================
+     SEARCH OVERLAY
+     ============================ -->
+    <div class="search-overlay" id="search-overlay">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" class="search-input" id="search-input" placeholder="Search for heels, bags, sandals…"
+                autocomplete="off" />
+            <button class="search-close" id="search-close-btn" aria-label="Close search">✕</button>
+        </div>
+    </div>
+
+    <!-- ============================
+     HERO SLIDER
+     ============================ -->
+    <section class="hero-slider" id="hero-slider" aria-label="Featured collections">
+
+        <!-- Slide 1 -->
+        <div class="hero-slide active" data-slide="0">
+            <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=1600&q=80&auto=format&fit=crop"
+                alt="Ladies heels collection - summer fashion" loading="eager" fetchpriority="high" />
+            <div class="hero-slide-overlay"></div>
+        </div>
+
+        <!-- Slide 2 -->
+        <div class="hero-slide" data-slide="1">
+            <img src="https://images.unsplash.com/photo-1554141220-83411835a60b?w=1600&q=80&auto=format&fit=crop"
+                alt="Designer bags collection" loading="lazy" />
+            <div class="hero-slide-overlay"></div>
+        </div>
+
+        <!-- Slide 3 -->
+        <div class="hero-slide" data-slide="2">
+            <img src="https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=1600&q=80&auto=format&fit=crop"
+                alt="Flat sandals women collection" loading="lazy" />
+            <div class="hero-slide-overlay"></div>
+        </div>
+
+        <!-- Content (overlaid on all slides) -->
+        <div class="hero-content-wrap">
+            <div class="container">
+                <div class="hero-content" id="hero-content">
+                    <span class="hero-slide-tag"><i class="fa-solid fa-star" style="font-size:0.65rem"></i> New Season
+                        Collection</span>
+                    <h1 class="hero-slide-title" id="hero-title">Step Into <em>Summer</em><br />With Confidence</h1>
+                    <p class="hero-slide-sub" id="hero-sub">Discover Jodhpur ki sabse stylish ladies footwear &amp;
+                        bags. Heels, flats, sandals — sab kuch ek jagah par.</p>
+                    <div class="hero-slide-btns">
+                        <a href="shop.html" class="btn btn-primary btn-lg">
+                            <i class="fa-solid fa-bag-shopping"></i> Shop Now
+                        </a>
+                        <a href="category.html?cat=new" class="btn btn-white btn-lg">
+                            New Arrivals
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arrows -->
+        <button class="hero-arrow hero-arrow-prev" id="hero-prev" aria-label="Previous slide">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button class="hero-arrow hero-arrow-next" id="hero-next" aria-label="Next slide">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <!-- Dots -->
+        <div class="hero-dots" id="hero-dots">
+            <button class="hero-dot active" data-dot="0" aria-label="Slide 1"></button>
+            <button class="hero-dot" data-dot="1" aria-label="Slide 2"></button>
+            <button class="hero-dot" data-dot="2" aria-label="Slide 3"></button>
+        </div>
+
+        <!-- Scroll indicator -->
+        <div class="hero-scroll" aria-hidden="true">
+            <div class="hero-scroll-line"></div>
+            <span>Scroll</span>
+        </div>
+    </section>
+
+    <!-- ============================
+     TRUST BAR
+     ============================ -->
+    <div class="trust-bar">
+        <div class="container">
+            <div class="trust-bar-inner">
+                <div class="trust-item">
+                    <i class="fa-solid fa-truck-fast trust-icon"></i>
+                    <span class="trust-text"><strong>Free Shipping</strong> above ₹499</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fa-solid fa-rotate-left trust-icon"></i>
+                    <span class="trust-text"><strong>Easy Returns</strong> within 7 days</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fa-solid fa-shield-halved trust-icon"></i>
+                    <span class="trust-text"><strong>100% Authentic</strong> products</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fa-brands fa-whatsapp trust-icon"></i>
+                    <span class="trust-text"><strong>WhatsApp</strong> support 24/7</span>
+                </div>
+                <div class="trust-item">
+                    <i class="fa-solid fa-indian-rupee-sign trust-icon"></i>
+                    <span class="trust-text"><strong>Cash on Delivery</strong> available</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================
+     CATEGORIES
+     ============================ -->
+    <section class="categories-section reveal" aria-label="Shop by category">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">Collections</span>
+                <h2>Shop By <em style="font-family:var(--font-display);font-style:italic;font-weight:400">Category</em>
+                </h2>
+                <p>Apni style ke according choose karo — heels se bags tak, sab kuch yahan hai</p>
+            </div>
+            <div class="cat-grid">
+                <!-- Large Card: Heels -->
+                <a href="category.html?cat=heels" class="cat-card cat-large reveal reveal-delay-1">
+                    <div class="cat-card-img">
+                        <img src="https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=800&q=80&auto=format&fit=crop"
+                            alt="Women heels collection" loading="lazy" />
+                    </div>
+                    <div class="cat-card-over"></div>
+                    <div class="cat-card-body">
+                        <span class="cat-label">Bestseller</span>
+                        <div class="cat-name">Heels</div>
+                        <div class="cat-count">120+ styles</div>
+                        <span class="cat-cta">Shop Now <i class="fa-solid fa-arrow-right cat-cta-arrow"></i></span>
+                    </div>
+                </a>
+
+                <!-- Flats -->
+                <a href="category.html?cat=flats" class="cat-card reveal reveal-delay-2">
+                    <div class="cat-card-img">
+                        <img src="https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=600&q=80&auto=format&fit=crop"
+                            alt="Women flat shoes" loading="lazy" />
+                    </div>
+                    <div class="cat-card-over"></div>
+                    <div class="cat-card-body">
+                        <span class="cat-label">Comfortable</span>
+                        <div class="cat-name">Flats</div>
+                        <div class="cat-count">80+ styles</div>
+                        <span class="cat-cta">Shop Now <i class="fa-solid fa-arrow-right cat-cta-arrow"></i></span>
+                    </div>
+                </a>
+
+                <!-- Bags -->
+                <a href="category.html?cat=bags" class="cat-card reveal reveal-delay-3">
+                    <div class="cat-card-img">
+                        <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&q=80&auto=format&fit=crop"
+                            alt="Ladies handbags" loading="lazy" />
+                    </div>
+                    <div class="cat-card-over"></div>
+                    <div class="cat-card-body">
+                        <span class="cat-label">Trending</span>
+                        <div class="cat-name">Bags</div>
+                        <div class="cat-count">60+ styles</div>
+                        <span class="cat-cta">Shop Now <i class="fa-solid fa-arrow-right cat-cta-arrow"></i></span>
+                    </div>
+                </a>
+
+                <!-- Sandals -->
+                <a href="category.html?cat=sandals" class="cat-card reveal reveal-delay-4">
+                    <div class="cat-card-img">
+                        <img src="https://images.unsplash.com/photo-1522163182402-834f871fd851?w=600&q=80&auto=format&fit=crop"
+                            alt="Ladies sandals" loading="lazy" />
+                    </div>
+                    <div class="cat-card-over"></div>
+                    <div class="cat-card-body">
+                        <span class="cat-label">Summer Fav</span>
+                        <div class="cat-name">Sandals</div>
+                        <div class="cat-count">90+ styles</div>
+                        <span class="cat-cta">Shop Now <i class="fa-solid fa-arrow-right cat-cta-arrow"></i></span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================
+     MARQUEE OFFER STRIP
+     ============================ -->
+    <div class="offer-marquee-strip" aria-hidden="true">
+        <div class="offer-marquee-track">
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> SUMMER SALE UP TO 50%
+                OFF</span>
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> FREE SHIPPING
+                ₹499+</span>
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> NEW ARRIVALS EVERY
+                WEEK</span>
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> CASH ON DELIVERY
+                AVAILABLE</span>
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> USE CODE HEELS10 FOR 10%
+                OFF</span>
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> SUMMER SALE UP TO 50%
+                OFF</span>
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> FREE SHIPPING
+                ₹499+</span>
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> NEW ARRIVALS EVERY
+                WEEK</span>
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> CASH ON DELIVERY
+                AVAILABLE</span>
+            <span class="offer-marquee-item"><i class="fa-solid fa-star offer-marquee-sep"></i> USE CODE HEELS10 FOR 10%
+                OFF</span>
+        </div>
+    </div>
+
+    <!-- ============================
+     FEATURED PRODUCTS
+     ============================ -->
+    <section class="featured-section" aria-label="Featured products">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="section-label">Curated For You</span>
+                <h2>Featured <em style="font-family:var(--font-display);font-style:italic;font-weight:400">Products</em>
+                </h2>
+                <p>Hamare best-selling styles jo aapko zaroor pasand aayenge</p>
+            </div>
+            <div class="products-grid reveal" id="featured-products-grid">
+                <!-- Populated by JS / Cloudflare -->
+                <div class="skeleton skeleton-img"></div>
+                <div class="skeleton skeleton-img"></div>
+                <div class="skeleton skeleton-img"></div>
+                <div class="skeleton skeleton-img"></div>
+            </div>
+            <div style="text-align:center;margin-top:48px" class="reveal">
+                <a href="shop.html" class="btn btn-secondary btn-lg">
+                    View All Products <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================
+     PROMO BANNER
+     ============================ -->
+    <section class="promo-banner reveal" aria-label="Summer sale offer">
+        <div class="promo-banner-bg">
+            <img src="https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=1200&q=60&auto=format&fit=crop" alt=""
+                loading="lazy" aria-hidden="true" />
+        </div>
+        <div class="container">
+            <div class="promo-banner-inner">
+                <div class="promo-banner-content">
+                    <div class="promo-badge"><i class="fa-solid fa-fire"></i> Limited Time Offer</div>
+                    <h2 class="promo-title">Summer <em>Sale</em> —<br />Up to 50% Off</h2>
+                    <p class="promo-desc">Apni favorite heels aur bags ab bahut kam daam mein. Limited stock — abhi
+                        order karo aur free shipping bhi pao ₹499 ke upar.</p>
+                    <div class="promo-timer">
+                        <div class="timer-box">
+                            <span class="timer-num" id="timer-h">08</span>
+                            <span class="timer-label">Hours</span>
+                        </div>
+                        <div class="timer-box">
+                            <span class="timer-num" id="timer-m">47</span>
+                            <span class="timer-label">Mins</span>
+                        </div>
+                        <div class="timer-box">
+                            <span class="timer-num" id="timer-s">23</span>
+                            <span class="timer-label">Secs</span>
+                        </div>
+                    </div>
+                    <a href="category.html?cat=sale" class="btn btn-primary btn-lg">
+                        <i class="fa-solid fa-tag"></i> Shop the Sale
+                    </a>
+                </div>
+                <div class="promo-img-side">
+                    <div class="promo-img-frame">
+                        <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=600&q=80&auto=format&fit=crop"
+                            alt="Sale products" loading="lazy" />
+                        <div class="promo-discount-tag">
+                            <span class="promo-discount-pct">50%</span>
+                            <span class="promo-discount-off">OFF</span>
+                        </div>
+                    </div>
+                    <div class="promo-img-float">
+                        <div class="promo-float-icon">🛍️</div>
+                        <div>
+                            <div class="promo-float-val">10,000+</div>
+                            <div class="promo-float-sub">Happy Customers</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================
+     TRENDING NOW
+     ============================ -->
+    <section class="trending-section" aria-label="Trending products">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="section-label">What's Hot</span>
+                <h2>Trending <em style="font-family:var(--font-display);font-style:italic;font-weight:400">Right
+                        Now</em></h2>
+            </div>
+            <div class="trending-tabs reveal">
+                <button class="trending-tab active" data-tab="all">All</button>
+                <button class="trending-tab" data-tab="heels">Heels</button>
+                <button class="trending-tab" data-tab="flats">Flats</button>
+                <button class="trending-tab" data-tab="bags">Bags</button>
+                <button class="trending-tab" data-tab="sandals">Sandals</button>
+            </div>
+            <div class="trending-products active" id="trending-all">
+                <!-- JS populated -->
+            </div>
+            <div class="trending-products" id="trending-heels"></div>
+            <div class="trending-products" id="trending-flats"></div>
+            <div class="trending-products" id="trending-bags"></div>
+            <div class="trending-products" id="trending-sandals"></div>
+        </div>
+    </section>
+
+    <!-- ============================
+     STATS
+     ============================ -->
+    <section class="stats-section reveal" aria-label="Brand statistics">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-num" id="stat-customers">10<span>K+</span></span>
+                    <div class="stat-desc">Happy Customers</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num">350<span>+</span></span>
+                    <div class="stat-desc">Products Available</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num">4.<span>8★</span></span>
+                    <div class="stat-desc">Average Rating</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-num">5<span>Yrs</span></span>
+                    <div class="stat-desc">Of Excellence</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================
+     WHY SHOP WITH US (USP)
+     ============================ -->
+    <section class="usp-section reveal" aria-label="Why choose HeelsUp">
+        <div class="container">
+            <div class="section-header" style="margin-bottom:60px">
+                <span class="section-label"
+                    style="color:var(--color-primary-light);border-color:rgba(201,169,110,0.3)">Our Promise</span>
+                <h2 style="color:#fff">Why Choose <em
+                        style="font-family:var(--font-display);font-style:italic;color:var(--color-primary-light)">HeelsUp?</em>
+                </h2>
+            </div>
+            <div class="usp-grid">
+                <div class="usp-item">
+                    <div class="usp-icon-wrap"><i class="fa-solid fa-gem"></i></div>
+                    <div class="usp-title">Premium Quality</div>
+                    <p class="usp-desc">Har product personally check kiya jata hai. Top-grade materials, long-lasting
+                        design.</p>
+                </div>
+                <div class="usp-item">
+                    <div class="usp-icon-wrap"><i class="fa-solid fa-truck-fast"></i></div>
+                    <div class="usp-title">Fast Delivery</div>
+                    <p class="usp-desc">Jodhpur mein same-day delivery. India-wide 3-5 business days mein doorstep par.
+                    </p>
+                </div>
+                <div class="usp-item">
+                    <div class="usp-icon-wrap"><i class="fa-solid fa-headset"></i></div>
+                    <div class="usp-title">24/7 Support</div>
+                    <p class="usp-desc">WhatsApp par koi bhi sawaal — hum hamesha available hain. Koi bhi problem ho,
+                        call karo.</p>
+                </div>
+                <div class="usp-item">
+                    <div class="usp-icon-wrap"><i class="fa-solid fa-rotate-left"></i></div>
+                    <div class="usp-title">Easy Returns</div>
+                    <p class="usp-desc">7 days hassle-free return policy. Size ya design pasand na aaye — no questions
+                        asked.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================
+     TESTIMONIALS
+     ============================ -->
+    <section class="testimonials-section" aria-label="Customer reviews">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="section-label">Reviews</span>
+                <h2>What Our <em style="font-family:var(--font-display);font-style:italic;font-weight:400">Customers
+                        Say</em></h2>
+                <p>10,000+ customers ka pyaar aur trust — HeelsUp ke saath</p>
+            </div>
+            <div class="testimonial-slider reveal">
+                <div class="testimonial-track" id="testimonial-track">
+                    <div class="testimonial-slide">
+                        <div class="t-card">
+                            <div class="t-stars">★★★★★</div>
+                            <p class="t-text">"Kya amazing quality hai! Mene block heels order ki thi — exactly same as
+                                photos, bahut comfortable bhi hain. Delivery bhi 2 din mein aa gayi. Definitely reorder
+                                karungi!"</p>
+                            <div class="t-author">
+                                <div class="t-avatar">P</div>
+                                <div>
+                                    <div class="t-name">Priya Sharma</div>
+                                    <div class="t-loc">📍 Jodhpur, Rajasthan</div>
+                                    <div class="t-verified"><i class="fa-solid fa-circle-check"></i> Verified Purchase
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-slide">
+                        <div class="t-card">
+                            <div class="t-stars">★★★★★</div>
+                            <p class="t-text">"Bags ka collection itna achha hai! Maine tote bag liya — quality ekdum
+                                first class. Office mein sabne compliment diya. HeelsUp se 3rd order ho gaya ab. Best
+                                online shop!"</p>
+                            <div class="t-author">
+                                <div class="t-avatar">S</div>
+                                <div>
+                                    <div class="t-name">Sneha Patel</div>
+                                    <div class="t-loc">📍 Jaipur, Rajasthan</div>
+                                    <div class="t-verified"><i class="fa-solid fa-circle-check"></i> Verified Purchase
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-slide">
+                        <div class="t-card">
+                            <div class="t-stars">★★★★☆</div>
+                            <p class="t-text">"Wedge heels order ki thi shadi ke liye. Bilkul perfect thi — comfortable
+                                aur stylish dono. Packaging bhi bahut cute thi. Thodi delivery late hui but overall
+                                great experience!"</p>
+                            <div class="t-author">
+                                <div class="t-avatar">A</div>
+                                <div>
+                                    <div class="t-name">Anita Mehra</div>
+                                    <div class="t-loc">📍 Udaipur, Rajasthan</div>
+                                    <div class="t-verified"><i class="fa-solid fa-circle-check"></i> Verified Purchase
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-slide">
+                        <div class="t-card">
+                            <div class="t-stars">★★★★★</div>
+                            <p class="t-text">"Flat sandals summer ke liye perfect hain! Comfortable, stylish, durable.
+                                Price bhi bahut reasonable hai compared to other sites. HeelsUp meri favourite shop ban
+                                gayi hai!"</p>
+                            <div class="t-author">
+                                <div class="t-avatar">R</div>
+                                <div>
+                                    <div class="t-name">Ritu Agarwal</div>
+                                    <div class="t-loc">📍 Delhi</div>
+                                    <div class="t-verified"><i class="fa-solid fa-circle-check"></i> Verified Purchase
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-slide">
+                        <div class="t-card">
+                            <div class="t-stars">★★★★★</div>
+                            <p class="t-text">"Return process bahut smooth tha. Size galat ho gayi thi, WhatsApp kiya
+                                aur next day exchange ho gaya bina koi problem ke. Aisi customer service bohot rare hoti
+                                hai!"</p>
+                            <div class="t-author">
+                                <div class="t-avatar">K</div>
+                                <div>
+                                    <div class="t-name">Kavya Singh</div>
+                                    <div class="t-loc">📍 Mumbai, Maharashtra</div>
+                                    <div class="t-verified"><i class="fa-solid fa-circle-check"></i> Verified Purchase
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="t-nav" id="t-nav">
+                    <button class="t-dot active" data-t="0"></button>
+                    <button class="t-dot" data-t="1"></button>
+                    <button class="t-dot" data-t="2"></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================
+     INSTAGRAM LOOKBOOK
+     ============================ -->
+    <section class="lookbook-section" aria-label="Instagram feed">
+        <div class="container">
+            <div class="section-header reveal">
+                <span class="section-label">@heelsup.in</span>
+                <h2>Our <em style="font-family:var(--font-display);font-style:italic;font-weight:400">Lookbook</em></h2>
+                <p>Follow us on Instagram for daily style inspiration</p>
+            </div>
+        </div>
+        <div class="lookbook-grid reveal">
+            <div class="lookbook-item">
+                <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=80&auto=format&fit=crop"
+                    alt="HeelsUp Instagram" loading="lazy" />
+                <div class="lookbook-over"><i class="fa-brands fa-instagram lookbook-ig-icon"></i></div>
+            </div>
+            <div class="lookbook-item">
+                <img src="https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=400&q=80&auto=format&fit=crop"
+                    alt="HeelsUp Instagram" loading="lazy" />
+                <div class="lookbook-over"><i class="fa-brands fa-instagram lookbook-ig-icon"></i></div>
+            </div>
+            <div class="lookbook-item">
+                <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80&auto=format&fit=crop"
+                    alt="HeelsUp Instagram" loading="lazy" />
+                <div class="lookbook-over"><i class="fa-brands fa-instagram lookbook-ig-icon"></i></div>
+            </div>
+            <div class="lookbook-item">
+                <img src="https://images.unsplash.com/photo-1554141220-83411835a60b?w=400&q=80&auto=format&fit=crop"
+                    alt="HeelsUp Instagram" loading="lazy" />
+                <div class="lookbook-over"><i class="fa-brands fa-instagram lookbook-ig-icon"></i></div>
+            </div>
+            <div class="lookbook-item">
+                <img src="https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=400&q=80&auto=format&fit=crop"
+                    alt="HeelsUp Instagram" loading="lazy" />
+                <div class="lookbook-over"><i class="fa-brands fa-instagram lookbook-ig-icon"></i></div>
+            </div>
+            <div class="lookbook-item">
+                <img src="https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=400&q=80&auto=format&fit=crop"
+                    alt="HeelsUp Instagram" loading="lazy" />
+                <div class="lookbook-over"><i class="fa-brands fa-instagram lookbook-ig-icon"></i></div>
+            </div>
+        </div>
+        <div style="text-align:center;padding:28px 0;background:var(--color-light)">
+            <a href="https://instagram.com/heelsup.in" target="_blank" rel="noopener noreferrer" class="btn btn-ghost">
+                <i class="fa-brands fa-instagram"></i> Follow @heelsup.in
+            </a>
+        </div>
+    </section>
+
+    <!-- ============================
+     NEWSLETTER
+     ============================ -->
+    <section class="newsletter-section" aria-label="Newsletter signup">
+        <div class="newsletter-decor"></div>
+        <div class="newsletter-decor-2"></div>
+        <div class="container">
+            <div class="newsletter-inner reveal">
+                <span class="newsletter-icon">💌</span>
+                <h2 class="newsletter-title">Get <em>Exclusive</em> Deals<br />In Your Inbox</h2>
+                <p class="newsletter-sub">Subscribe karo aur pao early access to sales, new arrivals, aur special
+                    discount codes — sirf subscribers ke liye!</p>
+                <div class="newsletter-form">
+                    <input type="email" class="newsletter-input" id="newsletter-email" placeholder="Your email address…"
+                        autocomplete="email" />
+                    <button class="newsletter-btn" id="newsletter-btn">Subscribe</button>
+                </div>
+                <p class="newsletter-note">🔒 No spam. Unsubscribe anytime. Privacy guaranteed.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================
+     FOOTER
+     ============================ -->
+    <footer class="footer" aria-label="Site footer">
+        <div class="container">
+            <div class="footer-top grid grid-4">
+                <!-- Brand Column -->
+                <div>
+                    <div class="footer-logo">
+                        <img src="logo.png" alt="HeelsUp" onerror="this.style.display='none'" />
+                    </div>
+                    <div style="font-family:var(--font-display);font-size:1.6rem;color:#fff;margin-bottom:12px">
+                        Heels<span style="color:var(--color-primary)">Up</span>
+                    </div>
+                    <p class="footer-tagline">Jodhpur se India tak — stylish ladies footwear &amp; bags ka sabse trusted
+                        naam.</p>
+                    <div class="footer-social">
+                        <a href="https://instagram.com/heelsup.in" class="footer-social-link" aria-label="Instagram"
+                            target="_blank" rel="noopener">
+                            <i class="fa-brands fa-instagram"></i>
+                        </a>
+                        <a href="https://facebook.com/heelsup.in" class="footer-social-link" aria-label="Facebook"
+                            target="_blank" rel="noopener">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        <a href="https://wa.me/919xxxxxxxxx" class="footer-social-link" aria-label="WhatsApp"
+                            target="_blank" rel="noopener">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </a>
+                        <a href="https://pinterest.com/heelsup" class="footer-social-link" aria-label="Pinterest"
+                            target="_blank" rel="noopener">
+                            <i class="fa-brands fa-pinterest-p"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <div class="footer-col-title">Quick Links</div>
+                    <ul class="footer-links">
+                        <li><a href="shop.html" class="footer-link"><i class="fa-solid fa-chevron-right"
+                                    style="font-size:8px;opacity:0.5"></i> Shop All</a></li>
+                        <li><a href="category.html?cat=new" class="footer-link"><i class="fa-solid fa-chevron-right"
+                                    style="font-size:8px;opacity:0.5"></i> New Arrivals</a></li>
+                        <li><a href="category.html?cat=sale" class="footer-link"><i class="fa-solid fa-chevron-right"
+                                    style="font-size:8px;opacity:0.5"></i> Sale</a></li>
+                        <li><a href="about.html" class="footer-link"><i class="fa-solid fa-chevron-right"
+                                    style="font-size:8px;opacity:0.5"></i> About Us</a></li>
+                        <li><a href="contact.html" class="footer-link"><i class="fa-solid fa-chevron-right"
+                                    style="font-size:8px;opacity:0.5"></i> Contact Us</a></li>
+                        <li><a href="blog.html" class="footer-link"><i class="fa-solid fa-chevron-right"
+                                    style="font-size:8px;opacity:0.5"></i> Style Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Categories -->
+                <div>
+                    <div class="footer-col-title">Categories</div>
+                    <ul class="footer-links">
+                        <li><a href="category.html?cat=heels" class="footer-link">👠 Heels</a></li>
+                        <li><a href="category.html?cat=flats" class="footer-link">🥿 Flats</a></li>
+                        <li><a href="category.html?cat=sandals" class="footer-link">👡 Sandals</a></li>
+                        <li><a href="category.html?cat=wedges" class="footer-link">👢 Wedges</a></li>
+                        <li><a href="category.html?cat=bags" class="footer-link">👜 Bags</a></li>
+                        <li><a href="category.html?cat=clutches" class="footer-link">👝 Clutches</a></li>
+                    </ul>
+                </div>
+
+                <!-- Help & Policies -->
+                <div>
+                    <div class="footer-col-title">Help & Support</div>
+                    <ul class="footer-links">
+                        <li><a href="orders.html" class="footer-link"><i class="fa-solid fa-box"
+                                    style="font-size:10px;opacity:0.5"></i> Track Order</a></li>
+                        <li><a href="returns.html" class="footer-link"><i class="fa-solid fa-rotate-left"
+                                    style="font-size:10px;opacity:0.5"></i> Return Policy</a></li>
+                        <li><a href="privacy.html" class="footer-link"><i class="fa-solid fa-shield"
+                                    style="font-size:10px;opacity:0.5"></i> Privacy Policy</a></li>
+                        <li><a href="terms.html" class="footer-link"><i class="fa-solid fa-file-lines"
+                                    style="font-size:10px;opacity:0.5"></i> Terms & Conditions</a></li>
+                        <li><a href="faq.html" class="footer-link"><i class="fa-solid fa-circle-question"
+                                    style="font-size:10px;opacity:0.5"></i> FAQs</a></li>
+                    </ul>
+                    <div style="margin-top:20px">
+                        <div class="footer-col-title" style="margin-bottom:10px">Contact Us</div>
+                        <a href="https://wa.me/919xxxxxxxxx" class="footer-link" target="_blank" rel="noopener">
+                            <i class="fa-brands fa-whatsapp" style="color:var(--color-primary)"></i> +91 9XXXXXXXXX
+                        </a>
+                        <a href="mailto:hello@heelsup.in" class="footer-link" style="margin-top:8px">
+                            <i class="fa-solid fa-envelope" style="color:var(--color-primary)"></i> hello@heelsup.in
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <p class="footer-copyright">© 2025 HeelsUp. All rights reserved. Made with ❤️ in Jodhpur, Rajasthan.</p>
+                <div class="footer-bottom-links">
+                    <a href="policy/privacy.html">Privacy</a>
+                    <a href="policy/terms.html">Terms</a>
+                    <a href="policy/returns.html">Returns</a>
+                    <a href="sitemap.xml">Sitemap</a>
+                </div>
+                <div class="footer-payments"
+                    style="display:flex;align-items:center;gap:8px;font-size:11px;color:rgba(255,255,255,0.3)">
+                    <span>We Accept:</span>
+                    <span style="color:var(--color-primary-light);font-weight:600;font-size:12px">UPI · Cards · COD ·
+                        EMI</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================
+     CART DRAWER
+     ============================ -->
+    <div class="cart-drawer-backdrop" id="cart-backdrop"></div>
+    <aside class="cart-drawer" id="cart-drawer" aria-label="Shopping cart">
+        <div class="cart-drawer-header">
+            <div style="display:flex;align-items:center;gap:12px">
+                <h3>My Cart</h3>
+                <span class="cart-count-badge" id="cart-drawer-count">0 items</span>
+            </div>
+            <button class="cart-close-btn" id="cart-close-btn" aria-label="Close cart">✕</button>
+        </div>
+        <div class="cart-drawer-body" id="cart-body">
+            <div class="cart-empty">
+                <div class="cart-empty-icon">🛍️</div>
+                <div class="cart-empty-text">Your cart is empty</div>
+                <p style="font-size:13px;color:var(--text-muted)">Add some amazing products to get started!</p>
+                <a href="shop.html" class="btn btn-primary" style="margin-top:12px">Shop Now</a>
+            </div>
+        </div>
+        <div class="cart-drawer-footer" id="cart-footer" style="display:none">
+            <div class="cart-summary-row"><span>Subtotal</span><span id="cart-subtotal">₹0</span></div>
+            <div class="cart-summary-row"><span>Shipping</span><span style="color:var(--color-success)">Free</span>
+            </div>
+            <div class="cart-summary-row cart-summary-total"><span>Total</span><span id="cart-total">₹0</span></div>
+            <a href="checkout.html" class="btn btn-primary btn-full" style="margin-top:14px">
+                <i class="fa-solid fa-lock"></i> Proceed to Checkout
+            </a>
+            <a href="cart.html" class="btn btn-ghost btn-full" style="margin-top:8px">View Full Cart</a>
+        </div>
+    </aside>
+
+    <!-- ============================
+     TOAST CONTAINER
+     ============================ -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Floating WhatsApp -->
+    <a href="https://wa.me/919xxxxxxxxx?text=Hello HeelsUp! I want to enquire about your products."
+        class="whatsapp-float" target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp"
+        title="Chat on WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <!-- Scroll to Top -->
+    <button class="scroll-top-btn" id="scroll-top" aria-label="Scroll to top">
+        <i class="fa-solid fa-chevron-up"></i>
+    </button>
+
+    <!-- ============================
+     JAVASCRIPT
+     ============================ -->
+    <script src="app-config.js"></script>
+    <script src="app-auth.js"></script>
+    <script>
+        // ===== CONFIG =====
+        const CLOUDFLARE_WORKER_URL = HeelsUpAuth.API_BASE;
+
+        // ===== DEMO DATA (used until Cloudflare backend is ready) =====
+        const DEMO_PRODUCTS = [
+            { id: 1, name: 'Stiletto Block Heel Pumps', category: 'heels', price: 899, original_price: 1499, images: ['https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=500&q=80&auto=format&fit=crop'], is_new: true, is_trending: true, rating: 4.8, review_count: 124 },
+            { id: 2, name: 'Rose Gold Strappy Sandals', category: 'sandals', price: 649, original_price: 999, images: ['https://images.unsplash.com/photo-1522163182402-834f871fd851?w=500&q=80&auto=format&fit=crop'], is_trending: true, rating: 4.7, review_count: 89 },
+            { id: 3, name: 'Classic Tote Bag – Tan', category: 'bags', price: 1299, original_price: 1999, images: ['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80&auto=format&fit=crop'], is_new: true, rating: 4.9, review_count: 203 },
+            { id: 4, name: 'Embroidered Juttis (Flats)', category: 'flats', price: 549, original_price: 849, images: ['https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=500&q=80&auto=format&fit=crop'], rating: 4.6, review_count: 67 },
+            { id: 5, name: 'Wedge Ankle Strap Heels', category: 'heels', price: 799, original_price: 1299, images: ['https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=500&q=80&auto=format&fit=crop'], is_trending: true, rating: 4.5, review_count: 56 },
+            { id: 6, name: 'Mini Sling Crossbody Bag', category: 'bags', price: 899, original_price: 1299, images: ['https://images.unsplash.com/photo-1554141220-83411835a60b?w=500&q=80&auto=format&fit=crop'], is_new: true, is_trending: true, rating: 4.8, review_count: 91 },
+            { id: 7, name: 'Platform Mule Heels', category: 'heels', price: 749, original_price: 1199, images: ['https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&q=80&auto=format&fit=crop'], is_trending: true, rating: 4.7, review_count: 78 },
+            { id: 8, name: 'Kolhapuri Flats – Handcrafted', category: 'flats', price: 499, original_price: 799, images: ['https://images.unsplash.com/photo-1560769629-975ec94e6a86?w=500&q=80&fit=crop&crop=top'], rating: 4.9, review_count: 145 },
+        ];
+
+        // ===== STATE =====
+        let cart = JSON.parse(localStorage.getItem('heelsup_cart') || '[]');
+        let wishlist = JSON.parse(localStorage.getItem('heelsup_wishlist') || '[]');
+        let products = [];
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', () => {
+            initTopbar();
+            initNavbar();
+            initSearch();
+            initHeroSlider();
+            initCart();
+            initScrollAnimations();
+            initScrollTop();
+            initTrendingTabs();
+            initTestimonials();
+            initCountdownTimer();
+            initNewsletter();
+            loadProducts();
+            updateCartUI();
+        });
+
+        // ===== TOPBAR =====
+        function initTopbar() {
+            document.getElementById('topbar-close')?.addEventListener('click', () => {
+                const tb = document.getElementById('topbar');
+                tb.style.height = '0'; tb.style.overflow = 'hidden'; tb.style.padding = '0';
+                tb.style.transition = 'height 0.3s ease';
+            });
+        }
+
+        // ===== NAVBAR =====
+        function initNavbar() {
+            const navbar = document.getElementById('navbar');
+            const hamburger = document.getElementById('hamburger-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const backdrop = document.getElementById('mobile-backdrop');
+            const closeBtn = document.getElementById('mobile-menu-close');
+
+            window.addEventListener('scroll', () => {
+                navbar.classList.toggle('scrolled', window.scrollY > 60);
+                document.getElementById('scroll-top').classList.toggle('visible', window.scrollY > 400);
+            });
+
+            hamburger?.addEventListener('click', () => {
+                hamburger.classList.toggle('open');
+                mobileMenu.classList.toggle('open');
+                document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+            });
+
+            [backdrop, closeBtn].forEach(el => el?.addEventListener('click', closeMobileMenu));
+            function closeMobileMenu() {
+                hamburger.classList.remove('open');
+                mobileMenu.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // ===== SEARCH =====
+        function initSearch() {
+            const overlay = document.getElementById('search-overlay');
+            const input = document.getElementById('search-input');
+            document.getElementById('search-toggle-btn')?.addEventListener('click', () => {
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => input.focus(), 300);
+            });
+            document.getElementById('search-close-btn')?.addEventListener('click', closeSearch);
+            overlay?.addEventListener('click', e => { if (e.target === overlay) closeSearch(); });
+            input?.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && input.value.trim()) {
+                    window.location.href = `search.html?q=${encodeURIComponent(input.value.trim())}`;
+                }
+                if (e.key === 'Escape') closeSearch();
+            });
+            function closeSearch() {
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+                input.value = '';
+            }
+        }
+
+        // ===== HERO SLIDER =====
+        function initHeroSlider() {
+            const slides = document.querySelectorAll('.hero-slide');
+            const dots = document.querySelectorAll('.hero-dot');
+            let current = 0;
+            let timer;
+
+            const heroData = [
+                { tag: 'New Season Collection', title: 'Step Into <em>Summer</em><br/>With Confidence', sub: 'Discover Jodhpur ki sabse stylish ladies footwear & bags. Heels, flats, sandals — sab kuch ek jagah par.' },
+                { tag: 'Trending Now 2025', title: 'Carry Your <em>Story</em><br/>With Style', sub: 'Premium handbags aur tote bags jo aapki personality ko define karte hain. New arrivals every week.' },
+                { tag: 'Comfort Meets Style', title: 'Walk Freely,<br/>Look <em>Gorgeous</em>', sub: 'Comfortable flats aur sandals jo aapko poora din fresh aur stylish rakhein. Best quality guaranteed.' },
+            ];
+
+            function goTo(n) {
+                slides[current].classList.remove('active');
+                dots[current].classList.remove('active');
+                current = (n + slides.length) % slides.length;
+                slides[current].classList.add('active');
+                dots[current].classList.add('active');
+                const d = heroData[current];
+                document.getElementById('hero-title').innerHTML = d.title;
+                document.getElementById('hero-sub').textContent = d.sub;
+                document.querySelector('.hero-slide-tag').textContent = d.tag;
+                resetTimer();
+            }
+
+            function resetTimer() { clearInterval(timer); timer = setInterval(() => goTo(current + 1), 5000); }
+            resetTimer();
+
+            document.getElementById('hero-prev')?.addEventListener('click', () => goTo(current - 1));
+            document.getElementById('hero-next')?.addEventListener('click', () => goTo(current + 1));
+            dots.forEach(d => d.addEventListener('click', () => goTo(parseInt(d.dataset.dot))));
+
+            // Touch/swipe
+            let touchX = 0;
+            const slider = document.getElementById('hero-slider');
+            slider?.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive: true });
+            slider?.addEventListener('touchend', e => {
+                const diff = touchX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 50) goTo(diff > 0 ? current + 1 : current - 1);
+            });
+        }
+
+        // ===== PRODUCTS =====
+        async function loadProducts() {
+            try {
+                // Try Cloudflare first
+                const res = await fetch(`${CLOUDFLARE_WORKER_URL}/api/products?limit=8&featured=true`, { signal: AbortSignal.timeout(3000) });
+                if (res.ok) { products = await res.json(); }
+                else { products = DEMO_PRODUCTS; }
+            } catch {
+                products = DEMO_PRODUCTS; // fallback to demo data
+            }
+            renderFeaturedProducts();
+            renderTrendingProducts();
+        }
+
+        function makeProductCard(product) {
+            const disc = product.original_price ? Math.round((1 - product.price / product.original_price) * 100) : 0;
+            const inWishlist = wishlist.includes(product.id);
+            const stars = '★'.repeat(Math.round(product.rating || 4)) + '☆'.repeat(5 - Math.round(product.rating || 4));
+            return `
+  <div class="product-card" data-id="${product.id}">
+    <div class="product-img-wrap">
+      <img src="${product.images?.[0] || 'assets/placeholder.jpg'}" alt="${product.name}" loading="lazy" />
+      <div class="product-badges">
+        ${product.is_new ? '<span class="badge badge-new">New</span>' : ''}
+        ${product.is_trending ? '<span class="badge badge-hot">🔥 Hot</span>' : ''}
+        ${disc >= 20 ? `<span class="badge badge-sale">-${disc}%</span>` : ''}
+      </div>
+      <div class="product-actions">
+        <button class="product-action-btn wishlist-btn ${inWishlist ? 'wishlist-active' : ''}" data-id="${product.id}" title="Add to wishlist" aria-label="Wishlist">
+          <i class="fa-${inWishlist ? 'solid' : 'regular'} fa-heart"></i>
+        </button>
+        <button class="product-action-btn" onclick="window.location.href='product.html?id=${product.id}'" title="Quick view" aria-label="Quick view">
+          <i class="fa-regular fa-eye"></i>
+        </button>
+      </div>
+      <button class="product-quick-add" data-id="${product.id}" aria-label="Add to cart">
+        <i class="fa-solid fa-bag-shopping"></i> Add to Cart
+      </button>
+    </div>
+    <div class="product-info">
+      <div class="product-category">${product.category || 'Footwear'}</div>
+      <a href="product.html?id=${product.id}" class="product-name">${product.name}</a>
+      <div class="product-price">
+        <span class="price-current">₹${product.price.toLocaleString('en-IN')}</span>
+        ${product.original_price ? `<span class="price-original">₹${product.original_price.toLocaleString('en-IN')}</span>` : ''}
+        ${disc >= 10 ? `<span class="price-discount">Save ${disc}%</span>` : ''}
+      </div>
+      <div class="product-rating">
+        <span class="stars">${stars}</span>
+        <span class="rating-count">(${product.review_count || 0})</span>
+      </div>
+    </div>
+  </div>`;
+        }
+
+        function renderFeaturedProducts() {
+            const grid = document.getElementById('featured-products-grid');
+            if (!grid) return;
+            grid.innerHTML = products.slice(0, 8).map(makeProductCard).join('');
+            attachProductEvents(grid);
+        }
+
+        function renderTrendingProducts() {
+            const categories = ['all', 'heels', 'flats', 'bags', 'sandals'];
+            categories.forEach(cat => {
+                const el = document.getElementById(`trending-${cat}`);
+                if (!el) return;
+                const filtered = cat === 'all' ? products.filter(p => p.is_trending) : products.filter(p => p.category === cat);
+                el.innerHTML = filtered.length ? filtered.slice(0, 4).map(makeProductCard).join('') : `<div class="empty-state"><div class="empty-state-icon">👠</div><p>Coming soon!</p></div>`;
+                attachProductEvents(el);
+            });
+        }
+
+        function attachProductEvents(container) {
+            container.querySelectorAll('.product-quick-add').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const p = products.find(x => x.id == btn.dataset.id);
+                    if (p) addToCart(p);
+                });
+            });
+            container.querySelectorAll('.wishlist-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleWishlist(parseInt(btn.dataset.id), btn);
+                });
+            });
+        }
+
+        // ===== CART =====
+        function initCart() {
+            document.getElementById('cart-open-btn')?.addEventListener('click', openCart);
+            document.getElementById('cart-close-btn')?.addEventListener('click', closeCart);
+            document.getElementById('cart-backdrop')?.addEventListener('click', closeCart);
+        }
+
+        function openCart() {
+            document.getElementById('cart-drawer').classList.add('open');
+            document.getElementById('cart-backdrop').classList.add('open');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCart() {
+            document.getElementById('cart-drawer').classList.remove('open');
+            document.getElementById('cart-backdrop').classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        function addToCart(product) {
+            const existing = cart.find(i => i.id === product.id);
+            if (existing) existing.qty++;
+            else cart.push({ id: product.id, name: product.name, price: product.price, img: product.images?.[0], qty: 1, category: product.category });
+            saveCart();
+            updateCartUI();
+            openCart();
+            showToast('success', '✅ Added to Cart!', `${product.name} added successfully.`);
+        }
+
+        function saveCart() { localStorage.setItem('heelsup_cart', JSON.stringify(cart)); }
+
+        function updateCartUI() {
+            const count = cart.reduce((s, i) => s + i.qty, 0);
+            document.getElementById('cart-count').textContent = count;
+            document.getElementById('cart-drawer-count').textContent = `${count} item${count !== 1 ? 's' : ''}`;
+            renderCartItems();
+        }
+
+        function renderCartItems() {
+            const body = document.getElementById('cart-body');
+            const footer = document.getElementById('cart-footer');
+            if (!cart.length) {
+                body.innerHTML = `<div class="cart-empty"><div class="cart-empty-icon">🛍️</div><div class="cart-empty-text">Your cart is empty</div><p style="font-size:13px;color:var(--text-muted)">Add some amazing products!</p><a href="shop.html" class="btn btn-primary" style="margin-top:12px">Shop Now</a></div>`;
+                footer.style.display = 'none';
+                return;
+            }
+            const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+            body.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-img"><img src="${item.img || 'assets/placeholder.jpg'}" alt="${item.name}" /></div>
+      <div class="cart-item-body">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-variant">${item.category}</div>
+        <div class="cart-item-price">₹${(item.price * item.qty).toLocaleString('en-IN')}</div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="updateQty(${item.id}, -1)">−</button>
+          <span class="qty-value">${item.qty}</span>
+          <button class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+        </div>
+        <div class="cart-item-remove" onclick="removeCartItem(${item.id})"><i class="fa-solid fa-trash-can"></i> Remove</div>
+      </div>
+    </div>`).join('');
+            document.getElementById('cart-subtotal').textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+            document.getElementById('cart-total').textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+            footer.style.display = 'block';
+        }
+
+        window.updateQty = function (id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            item.qty = Math.max(1, item.qty + delta);
+            saveCart(); updateCartUI();
+        };
+
+        window.removeCartItem = function (id) {
+            cart = cart.filter(i => i.id !== id);
+            saveCart(); updateCartUI();
+        };
+
+        // ===== WISHLIST =====
+        function toggleWishlist(id, btn) {
+            const idx = wishlist.indexOf(id);
+            if (idx === -1) {
+                wishlist.push(id);
+                btn.classList.add('wishlist-active');
+                btn.innerHTML = '<i class="fa-solid fa-heart"></i>';
+                showToast('success', '❤️ Wishlist Updated!', 'Product added to your wishlist.');
+            } else {
+                wishlist.splice(idx, 1);
+                btn.classList.remove('wishlist-active');
+                btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+                showToast('info', 'Removed from Wishlist', 'Product removed from your wishlist.');
+            }
+            localStorage.setItem('heelsup_wishlist', JSON.stringify(wishlist));
+            const wc = document.getElementById('wishlist-count');
+            wc.textContent = wishlist.length;
+            wc.style.display = wishlist.length ? 'flex' : 'none';
+        }
+
+        // ===== TOAST =====
+        function showToast(type, title, message) {
+            const container = document.getElementById('toast-container');
+            const id = 'toast-' + Date.now();
+            const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+            container.insertAdjacentHTML('beforeend', `
+    <div class="toast toast-${type}" id="${id}">
+      <i class="fa-solid ${icons[type] || icons.info} toast-icon"></i>
+      <div class="toast-body"><div class="toast-title">${title}</div><div class="toast-message">${message}</div></div>
+      <button class="toast-close" onclick="document.getElementById('${id}').remove()">✕</button>
+    </div>`);
+            setTimeout(() => document.getElementById(id)?.remove(), 4000);
+        }
+
+        // ===== SCROLL REVEAL =====
+        function initScrollAnimations() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); observer.unobserve(e.target); } });
+            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        // ===== SCROLL TOP =====
+        function initScrollTop() {
+            document.getElementById('scroll-top')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        }
+
+        // ===== TRENDING TABS =====
+        function initTrendingTabs() {
+            document.querySelectorAll('.trending-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.trending-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.trending-products').forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    const el = document.getElementById(`trending-${tab.dataset.tab}`);
+                    if (el) el.classList.add('active');
+                });
+            });
+        }
+
+        // ===== TESTIMONIALS SLIDER =====
+        function initTestimonials() {
+            const track = document.getElementById('testimonial-track');
+            const dots = document.querySelectorAll('.t-dot');
+            let current = 0;
+            const perView = window.innerWidth < 768 ? 1 : window.innerWidth < 1024 ? 2 : 3;
+
+            function goTo(n) {
+                const max = Math.ceil(dots.length - 1);
+                current = Math.max(0, Math.min(n, max));
+                track.style.transform = `translateX(calc(-${current * (100 / perView)}% - ${current * 24 / perView}px))`;
+                dots.forEach((d, i) => d.classList.toggle('active', i === current));
+            }
+
+            dots.forEach(d => d.addEventListener('click', () => goTo(parseInt(d.dataset.t))));
+            setInterval(() => goTo((current + 1) % dots.length), 4500);
+        }
+
+        // ===== COUNTDOWN TIMER =====
+        function initCountdownTimer() {
+            let end = new Date();
+            end.setHours(end.getHours() + 8, end.getMinutes() + 47, end.getSeconds() + 23);
+            function update() {
+                const now = new Date();
+                let diff = Math.max(0, end - now);
+                const h = Math.floor(diff / 3600000); diff %= 3600000;
+                const m = Math.floor(diff / 60000); diff %= 60000;
+                const s = Math.floor(diff / 1000);
+                const fmt = n => String(n).padStart(2, '0');
+                document.getElementById('timer-h').textContent = fmt(h);
+                document.getElementById('timer-m').textContent = fmt(m);
+                document.getElementById('timer-s').textContent = fmt(s);
+                if (diff === 0) { end = new Date(); end.setDate(end.getDate() + 1); }
+            }
+            update(); setInterval(update, 1000);
+        }
+
+        // ===== NEWSLETTER =====
+        function initNewsletter() {
+            document.getElementById('newsletter-btn')?.addEventListener('click', async () => {
+                const email = document.getElementById('newsletter-email').value.trim();
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    showToast('error', 'Invalid Email', 'Please enter a valid email address.');
+                    return;
+                }
+                try {
+                    await fetch(`${CLOUDFLARE_WORKER_URL}/api/newsletter`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+                } catch { }
+                document.getElementById('newsletter-email').value = '';
+                showToast('success', '🎉 Subscribed!', 'Welcome to HeelsUp! Check your email for a special discount code.');
+            });
+        }
+    </script>
+
+</body>
+
+</html>

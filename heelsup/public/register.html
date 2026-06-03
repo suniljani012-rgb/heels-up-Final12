@@ -1,367 +1,334 @@
-<html lang="en"><head></head><body>﻿
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Account — HeelsUp | Ladies Footwear &amp; Bags</title>
-  <meta name="description" content="Join HeelsUp — shop premium ladies footwear &amp; bags with free shipping above ₹799.">
-  <meta name="robots" content="noindex, nofollow">
+<!DOCTYPE html>
+<html lang="en">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&amp;family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&amp;family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;display=swap" rel="stylesheet">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register – HeelsUp | Free Account Banao</title>
+    <meta name="description"
+        content="HeelsUp pe free account banao aur pao exclusive deals, order tracking aur wishlist." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .auth-page {
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
 
-  
-    <link rel="stylesheet" href="/css/customer-theme.css">
-    <link rel="stylesheet" href="/css/pages/register.css">
+        .auth-left {
+            position: relative;
+            overflow: hidden;
+            background: var(--color-dark);
+        }
 
+        .auth-left img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.45;
+        }
 
+        .auth-left-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(160deg, rgba(13, 13, 13, 0.35) 0%, rgba(13, 13, 13, 0.88) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 60px;
+        }
 
-    <div id="navbar"></div>
+        .auth-perks {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin-bottom: 36px;
+        }
 
-  
+        .auth-perk {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
 
-  <div class="page-wrap">
+        .auth-perk-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(201, 169, 110, 0.15);
+            border: 1px solid rgba(201, 169, 110, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-primary);
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
 
-    <!-- ══════════════════════════
-       LEFT PANEL
-  ══════════════════════════ -->
-    <aside class="left-panel">
-      <div class="left-bg">
-        <img src="https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=1200&amp;q=90&amp;auto=format&amp;fit=crop" alt="HeelsUp Collection">
-      </div>
-      <div class="left-grad"></div>
-      <div class="left-ring lr1"></div>
-      <div class="left-ring lr2"></div>
-      <div class="left-ring lr3"></div>
+        .auth-perk-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.5;
+        }
 
-      <div class="left-content">
-        <a href="index.html" class="l-logo">
-          <img src="logo.png" alt="HeelsUp" id="logoImg" onerror="this.classList.add('err');this.style.display='none'">
-          <span class="l-logo-fallback">Heels<span>Up</span></span>
-        </a>
+        .auth-perk-text strong {
+            color: #fff;
+            display: block;
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
 
-        <div class="l-mid">
-          <div class="l-badge">
-            <span class="l-badge-dot"></span>
-            Join 10,000+ Women
-          </div>
-          <h2 class="l-title">
-            Step Into
-            <em>Elegance</em>
-          </h2>
-          <p class="l-sub">Create your free account and unlock exclusive offers, order tracking, and priority access to
-            new arrivals.</p>
+        .auth-left-quote {
+            font-family: var(--font-display);
+            font-size: 2.4rem;
+            font-weight: 300;
+            color: #fff;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
+        }
 
-          <div class="l-perks">
-            <div class="l-perk">
-              <div class="l-perk-ico"><svg viewBox="0 0 24 24">
-                  <path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3M16 21l5-5-5-5M21 16H9a2 2 0 00-2 2v2"></path>
-                </svg></div>
-              <div class="l-perk-txt"><strong>Free Shipping on ₹799+</strong><span>Pan-India delivery, every
-                  order</span></div>
+        .auth-left-quote em {
+            font-style: italic;
+            color: var(--color-primary-light);
+        }
+
+        .auth-right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 50px 40px;
+            background: var(--color-white);
+            overflow-y: auto;
+        }
+
+        .auth-box {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .auth-logo {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 28px;
+            display: block;
+            text-decoration: none;
+        }
+
+        .auth-logo span {
+            color: var(--color-primary);
+        }
+
+        .auth-title {
+            font-family: var(--font-heading);
+            font-size: 1.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .auth-sub {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        .auth-sub a {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .auth-terms {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 16px 0 24px;
+        }
+
+        .auth-terms a {
+            color: var(--color-primary);
+        }
+
+        @media(max-width:768px) {
+            .auth-page {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-left {
+                display: none;
+            }
+
+            .auth-right {
+                padding: 40px 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="navbar-inner">
+                <a href="index.html" class="navbar-logo">
+                    <span class="navbar-logo-text">Heels<span>Up</span></span>
+                </a>
+                <div class="navbar-actions">
+                    <a href="login.html" class="btn btn-secondary btn-sm">Login</a>
+                </div>
             </div>
-            <div class="l-perk">
-              <div class="l-perk-ico"><svg viewBox="0 0 24 24">
-                  <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"></path>
-                </svg></div>
-              <div class="l-perk-txt"><strong>Wishlist &amp; Order Tracking</strong><span>Save favorites, track
-                  deliveries</span></div>
+        </div>
+    </nav>
+
+    <main class="auth-page">
+        <div class="auth-left">
+            <img src="https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=900&q=80&auto=format&fit=crop"
+                alt="" />
+            <div class="auth-left-overlay">
+                <div class="auth-left-quote">Join <em>HeelsUp</em><br />Family Today</div>
+                <p style="font-size:13px;color:rgba(255,255,255,0.45);margin:8px 0 36px">10,000+ customers already love
+                    us</p>
+                <div class="auth-perks">
+                    <div class="auth-perk">
+                        <div class="auth-perk-icon"><i class="fa-solid fa-tag"></i></div>
+                        <div class="auth-perk-text"><strong>Exclusive Discounts</strong>Members-only deals aur early
+                            sale access</div>
+                    </div>
+                    <div class="auth-perk">
+                        <div class="auth-perk-icon"><i class="fa-solid fa-box"></i></div>
+                        <div class="auth-perk-text"><strong>Order Tracking</strong>Apne orders ko real-time track karo
+                        </div>
+                    </div>
+                    <div class="auth-perk">
+                        <div class="auth-perk-icon"><i class="fa-regular fa-heart"></i></div>
+                        <div class="auth-perk-text"><strong>Wishlist</strong>Apni favorite items save karo</div>
+                    </div>
+                </div>
             </div>
-            <div class="l-perk">
-              <div class="l-perk-ico"><svg viewBox="0 0 24 24">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg></div>
-              <div class="l-perk-txt"><strong>Exclusive Member Offers</strong><span>Early access to sales &amp;
-                  discounts</span></div>
-            </div>
-          </div>
         </div>
 
-        <div class="l-stats">
-          <div>
-            <div class="l-stat-num">10K+</div>
-            <div class="l-stat-lbl">Customers</div>
-          </div>
-          <div>
-            <div class="l-stat-num">500+</div>
-            <div class="l-stat-lbl">Products</div>
-          </div>
-          <div>
-            <div class="l-stat-num">4.9★</div>
-            <div class="l-stat-lbl">Rating</div>
-          </div>
+        <div class="auth-right">
+            <div class="auth-box">
+                <a href="index.html" class="auth-logo">Heels<span>Up</span></a>
+                <h1 class="auth-title">Create Account</h1>
+                <p class="auth-sub">Already account hai? <a href="login.html">Login karo</a></p>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">First Name <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="reg-fname" placeholder="Priya" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="reg-lname" placeholder="Sharma" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address <span class="required">*</span></label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-regular fa-envelope input-icon"></i>
+                        <input type="email" class="form-input" id="reg-email" placeholder="aapka@email.com" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone Number <span class="required">*</span></label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-phone input-icon"></i>
+                        <input type="tel" class="form-input" id="reg-phone" placeholder="+91 98765 43210" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password <span class="required">*</span></label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" class="form-input" id="reg-pass" placeholder="Minimum 8 characters" />
+                        <i class="fa-regular fa-eye input-icon input-icon-right" id="toggle-pass"></i>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirm Password <span class="required">*</span></label>
+                    <div class="input-icon-wrap">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" class="form-input" id="reg-pass2" placeholder="Password dobara daalo" />
+                    </div>
+                </div>
+                <label class="form-check">
+                    <input type="checkbox" class="form-check-input" id="agree-terms" />
+                    <span class="form-check-label">
+                        Main <a href="policy/terms.html" style="color:var(--color-primary)">Terms & Conditions</a> aur
+                        <a href="policy/privacy.html" style="color:var(--color-primary)">Privacy Policy</a> se agree
+                        karta/karti hoon
+                    </span>
+                </label>
+                <div style="margin-top:24px">
+                    <button class="btn btn-primary btn-full btn-lg" id="reg-btn">
+                        <i class="fa-solid fa-user-plus"></i> Account Banao
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
-    </aside>
-
-    <!-- ══════════════════════════
-       RIGHT PANEL
-  ══════════════════════════ -->
-    <main class="right-panel">
-      <div class="form-wrap">
-
-        <div class="mob-logo">
-          <div class="mob-logo-txt">Heels<span>Up</span></div>
-        </div>
-
-        <!-- Step progress indicator -->
-        <div class="step-progress" style="padding-bottom:24px;margin-bottom:8px">
-          <div class="sp-dot active" id="dot1" style="position:relative">
-            <span>1</span>
-            <span class="sp-label">Your Details</span>
-          </div>
-          <div class="sp-line" id="line1"></div>
-          <div class="sp-dot inactive" id="dot2" style="position:relative">
-            <span>2</span>
-            <span class="sp-label">Verify Email</span>
-          </div>
-        </div>
-
-        <!-- Alert -->
-        <div class="alert alert-error" id="alertBox">
-          <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          <span id="alertMsg"></span>
-        </div>
-
-        <!-- ── STEP 1 : Details ── -->
-        <div class="step-panel active" id="step1">
-          <div class="form-eyebrow">Step 1 of 2</div>
-          <h2 class="form-title">Create Your <em>Account</em></h2>
-          <p class="form-sub">Join HeelsUp — free shipping, exclusive offers &amp; order tracking</p>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="fFname">First Name <span style="color:var(--rose)">*</span></label>
-              <div class="input-wrap">
-                <span class="inp-icon"><svg viewBox="0 0 24 24">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg></span>
-                <input type="text" id="fFname" placeholder="Priya" autocomplete="given-name" oninput="clearErr()">
-              </div>
-              <div class="field-err" id="errFname">Please enter your first name</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="fLname">Last Name</label>
-              <div class="input-wrap">
-                <span class="inp-icon"><svg viewBox="0 0 24 24">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg></span>
-                <input type="text" id="fLname" placeholder="Sharma" autocomplete="family-name">
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="fEmail">Email Address <span style="color:var(--rose)">*</span></label>
-            <div class="input-wrap">
-              <span class="inp-icon"><svg viewBox="0 0 24 24">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                  <polyline points="22,6 12,13 2,6"></polyline>
-                </svg></span>
-              <input type="email" id="fEmail" placeholder="you@example.com" autocomplete="email" autocapitalize="none" oninput="clearErr()">
-            </div>
-            <div class="field-err" id="errEmail">Please enter a valid email address</div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="fPhone">Mobile Number <span style="color:var(--rose)">*</span></label>
-            <div class="phone-wrap">
-              <div class="phone-prefix">🇮🇳 +91</div>
-              <input type="tel" id="fPhone" placeholder="10-digit number" maxlength="10" autocomplete="tel" oninput="this.value=this.value.replace(/\D/g,'');clearErr()" style="border-radius:0 var(--r) var(--r) 0;padding:13px 14px;border:1.5px solid var(--border);width:100%;font-size:14px;color:var(--text-1);background:var(--cream);transition:all var(--t)">
-            </div>
-            <div class="field-err" id="errPhone">Please enter a valid 10-digit mobile number</div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="fPw">Password <span style="color:var(--rose)">*</span></label>
-            <div class="input-wrap">
-              <span class="inp-icon"><svg viewBox="0 0 24 24">
-                  <rect x="3" y="11" width="18" height="11" rx="2"></rect>
-                  <path d="M7 11V7a5 5 0 0110 0v4"></path>
-                </svg></span>
-              <input type="password" id="fPw" placeholder="Min. 8 characters" autocomplete="new-password" oninput="checkStrength(this.value);clearErr()">
-              <button class="pw-toggle" onclick="togglePw('fPw','eyePw')" type="button" aria-label="Toggle">
-                <svg viewBox="0 0 24 24" id="eyePw">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-            </div>
-            <div class="pw-strength">
-              <div class="pw-strength-bar">
-                <div class="pw-seg" id="seg0"></div>
-                <div class="pw-seg" id="seg1"></div>
-                <div class="pw-seg" id="seg2"></div>
-                <div class="pw-seg" id="seg3"></div>
-              </div>
-              <span class="pw-strength-lbl" id="strengthLbl">Enter a password</span>
-            </div>
-            <div class="field-err" id="errPw">Password must be at least 8 characters</div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="fConfirm">Confirm Password <span style="color:var(--rose)">*</span></label>
-            <div class="input-wrap">
-              <span class="inp-icon"><svg viewBox="0 0 24 24">
-                  <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg></span>
-              <input type="password" id="fConfirm" placeholder="Re-enter your password" autocomplete="new-password" oninput="clearErr()" onkeydown="if(event.key==='Enter')sendOtp()">
-              <button class="pw-toggle" onclick="togglePw('fConfirm','eyeConfirm')" type="button" aria-label="Toggle">
-                <svg viewBox="0 0 24 24" id="eyeConfirm">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-            </div>
-            <div class="field-err" id="errConfirm">Passwords do not match</div>
-          </div>
-
-          <div class="check-group" id="termsGroup" onclick="toggleTerms()">
-            <div class="custom-check" id="termsCheck">
-              <svg viewBox="0 0 24 24">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-            </div>
-            <span class="check-label">
-              I agree to the <a href="policy/terms.html" onclick="event.stopPropagation()">Terms of Service</a>
-              and <a href="policy/privacy.html" onclick="event.stopPropagation()">Privacy Policy</a>
-            </span>
-          </div>
-
-          <button class="btn-submit" id="btnSendOtp" onclick="sendOtp()">
-            <div class="btn-inner" id="btnSendOtpInner">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-              Send OTP &amp; Continue
-            </div>
-          </button>
-
-          <!-- Divider -->
-          <div style="display:flex; align-items:center; gap:14px; color:var(--text-4); font-size:12px; margin-bottom:20px;">
-            <div style="flex:1; height:1px; background:var(--border);"></div>
-            or continue with
-            <div style="flex:1; height:1px; background:var(--border);"></div>
-          </div>
-
-          <!-- Google SSO -->
-          <div id="googleBtnWrapper" style="display:flex; justify-content:center; margin-bottom: 20px;"></div>
-
-          <div class="form-footer">
-            Already have an account? <a href="login.html">Sign In</a>
-          </div>
-
-          <div class="sec-row">
-            <div class="sec-item"><svg viewBox="0 0 24 24">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>SSL Secured</div>
-            <div class="sec-item" style="color:var(--border)">·</div>
-            <div class="sec-item"><svg viewBox="0 0 24 24">
-                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
-                <path d="M7 11V7a5 5 0 0110 0v4"></path>
-              </svg>Encrypted</div>
-            <div class="sec-item" style="color:var(--border)">·</div>
-            <div class="sec-item"><svg viewBox="0 0 24 24">
-                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>Verified</div>
-          </div>
-        </div>
-
-        <!-- ── STEP 2 : OTP ── -->
-        <div class="step-panel" id="step2">
-          <button class="back-btn" onclick="goStep(1)">
-            <svg viewBox="0 0 24 24">
-              <path d="M19 12H5M12 19l-7-7 7-7"></path>
-            </svg>
-            Change Details
-          </button>
-          <div class="form-eyebrow">Step 2 of 2</div>
-          <h2 class="form-title">Verify Your <em>Email</em></h2>
-          <p class="form-sub" id="otpSubText">Enter the 6-digit OTP sent to your email.</p>
-
-          <div class="otp-row" id="otpRow">
-            <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="o0">
-            <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="o1">
-            <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="o2">
-            <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="o3">
-            <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="o4">
-            <input class="otp-box" type="text" inputmode="numeric" maxlength="1" id="o5">
-          </div>
-
-          <button class="btn-submit" id="btnVerify" onclick="verifyAndRegister()">
-            <div class="btn-inner" id="btnVerifyInner">
-              <svg viewBox="0 0 24 24">
-                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-              Verify &amp; Create Account
-            </div>
-          </button>
-
-          <div class="resend-row">
-            Didn't receive it?&nbsp;&nbsp;
-            <button class="resend-btn" id="resendBtn" onclick="resendOtp()" disabled="">Resend OTP</button>
-            &nbsp;&nbsp;<span class="timer-badge" id="timerBadge">
-              <svg viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              <span id="timerVal">60</span>s
-            </span>
-          </div>
-        </div>
-
-      </div>
     </main>
+    <div class="toast-container" id="toast-container"></div>
+    <script>
+        window.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60));
+        document.getElementById('toggle-pass')?.addEventListener('click', function () {
+            const inp = document.getElementById('reg-pass');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+            this.classList.toggle('fa-eye'); this.classList.toggle('fa-eye-slash');
+        });
+        document.getElementById('reg-btn')?.addEventListener('click', async () => {
+            const fname = document.getElementById('reg-fname').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const pass = document.getElementById('reg-pass').value;
+            const pass2 = document.getElementById('reg-pass2').value;
+            const agreed = document.getElementById('agree-terms').checked;
+            if (!fname) { showToast('error', 'Error', 'First name daalo.'); return; }
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('error', 'Error', 'Valid email daalo.'); return; }
+            if (!phone) { showToast('error', 'Error', 'Phone number daalo.'); return; }
+            if (!pass || pass.length < 8) { showToast('error', 'Error', 'Password kam se kam 8 characters ka ho.'); return; }
+            if (pass !== pass2) { showToast('error', 'Error', 'Dono passwords match nahi kar rahe.'); return; }
+            if (!agreed) { showToast('error', 'Error', 'Terms & Conditions se agree karo.'); return; }
+            const btn = document.getElementById('reg-btn');
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Account ban raha hai...';
+            try {
+                const res = await API.post('/auth/register', { name: fname, email, phone, password: pass });
+                if (res.ok && res.data.data) {
+                    Auth.setToken(res.data.data.token);
+                    Auth.setUser(res.data.data.user);
+                    showToast('success', 'Account Bana Gaya! 🎉', 'HeelsUp family mein aapka swagat hai!');
+                    setTimeout(() => window.location.href = 'profile.html', 1500);
+                } else {
+                    showToast('error', 'Error', res.data?.error || 'Registration fail ho gayi.');
+                    btn.disabled = false; btn.innerHTML = 'Account Banao';
+                }
+            } catch (e) {
+                showToast('error', 'Error', 'Registration mein problem aayi. Dobara koshish karo.');
+                btn.disabled = false; btn.innerHTML = 'Account Banao';
+            }
+        });
+        function showToast(type, title, msg) {
+            const c = document.getElementById('toast-container'); const id = 't' + Date.now();
+            const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark' };
+            c.insertAdjacentHTML('beforeend', `<div class="toast toast-${type}" id="${id}"><i class="fa-solid ${icons[type] || 'fa-circle-info'} toast-icon"></i><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-message">${msg}</div></div><button class="toast-close" onclick="document.getElementById('${id}').remove()">✕</button></div>`);
+            setTimeout(() => document.getElementById(id)?.remove(), 4000);
+        }
+    </script>
+    <script src="/app-config.js"></script>
+    <script src="/app-api.js"></script>
+    <script src="/app-auth.js"></script>
+</body>
 
-  </div>
-
-  
-  
-  <script src="https://accounts.google.com/gsi/client" async="" defer=""></script>
-    
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-  
-    
-
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-
-    <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer=""></script>
-    <script src="/js/core/api-client.js" defer=""></script>
-    <script src="/js/core/common-ui.js" defer=""></script>
-    
-    <!-- State and Operations -->
-    <script src="/js/cart.js" defer=""></script>
-    <script src="/js/wishlist.js" defer=""></script>
-    
-    <!-- Page Controller -->
-    <script src="/js/pages/register.js" defer=""></script>
-<footer class="footer"></footer></body></html>
+</html>

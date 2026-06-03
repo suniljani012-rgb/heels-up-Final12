@@ -1,525 +1,589 @@
-<html lang="en"><head></head><body>﻿
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Profile – HeelsUp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        .profile-page {
+            background: var(--color-light);
+            min-height: 100vh;
+            padding: 40px 0 80px;
+        }
 
+        .profile-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 28px;
+            align-items: start;
+        }
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <meta name="theme-color" content="#E8CCC5">
+        /* Sidebar */
+        .profile-sidebar {
+            background: var(--color-white);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            position: sticky;
+            top: 90px;
+        }
 
-    <!-- ═══ PRIMARY SEO ═══ -->
-    <title>My Account – HeelsUp | Premium Ladies Heels, Sandals &amp; Bags</title>
-    <meta name="description" content="Manage your HeelsUp account — profile, orders, addresses, wishlist and security.">
-    <meta name="robots" content="noindex,nofollow">
+        .profile-sidebar-head {
+            background: linear-gradient(135deg, var(--color-dark) 0%, #2a1a08 100%);
+            padding: 32px 24px;
+            text-align: center;
+        }
 
-    <!-- ═══ PRECONNECT & FONTS ═══ -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        .profile-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            color: var(--color-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 auto 12px;
+            border: 3px solid rgba(201, 169, 110, 0.4);
+        }
 
-    
-    <link rel="stylesheet" href="/css/customer-theme.css">
-    <link rel="stylesheet" href="/css/pages/profile.css">
+        .profile-name {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            color: #fff;
+            font-weight: 600;
+        }
 
+        .profile-email {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 4px;
+        }
 
+        .profile-nav {
+            padding: 12px 0;
+        }
 
-    <div id="navbar"></div>
+        .profile-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 24px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+        }
 
-    <div class="page-progress" id="pageProgress"></div>
-    <!-- ═══ TOAST CONTAINER ═══ -->
-    
+        .profile-nav-item:hover {
+            color: var(--color-primary);
+            background: var(--color-primary-glow);
+        }
 
-    
-        
-    
+        .profile-nav-item.active {
+            color: var(--color-primary);
+            background: var(--color-primary-glow);
+            border-left-color: var(--color-primary);
+        }
 
-    <!-- ═══ MOBILE MENU ═══ -->
-    
+        .profile-nav-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 1rem;
+        }
 
-    <!-- ═══ SEARCH OVERLAY ═══ -->
-    <div class="search-overlay" id="search-overlay" role="search" aria-label="Product search">
+        /* Main content tabs */
+        .profile-panel {
+            display: none;
+        }
+
+        .profile-panel.active {
+            display: block;
+        }
+
+        .panel-card {
+            background: var(--color-white);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 36px;
+            margin-bottom: 20px;
+        }
+
+        .panel-card-title {
+            font-family: var(--font-heading);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Order mini cards */
+        .order-mini {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .order-mini:last-child {
+            border-bottom: none;
+        }
+
+        .order-mini-img {
+            width: 60px;
+            height: 72px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--color-light-3);
+            flex-shrink: 0;
+        }
+
+        .order-mini-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .order-mini-info {
+            flex: 1;
+        }
+
+        .order-mini-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .order-mini-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .order-mini-status {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 100px;
+        }
+
+        .status-delivered {
+            background: var(--color-success-light);
+            color: var(--color-success);
+        }
+
+        .status-processing {
+            background: var(--color-warning-light);
+            color: var(--color-warning);
+        }
+
+        .status-shipped {
+            background: var(--color-info-light);
+            color: var(--color-info);
+        }
+
+        /* Stats row */
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .profile-stat {
+            background: var(--color-white);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .profile-stat-num {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: var(--color-primary);
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .profile-stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        /* Address card */
+        .address-card {
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px 22px;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .address-card.default {
+            border-color: var(--color-primary);
+        }
+
+        .address-default-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: var(--color-primary-glow);
+            color: var(--color-primary-dark);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 100px;
+            border: 1px solid var(--color-primary-light);
+        }
+
+        @media(max-width:900px) {
+            .profile-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-sidebar {
+                position: static;
+            }
+        }
+
+        @media(max-width:480px) {
+            .profile-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="topbar-marquee"><span class="topbar-text">🎉 <strong>NEW ARRIVALS</strong> — Summer Collection is
+                Live!</span><span class="topbar-dot"></span><span class="topbar-text">🚚 FREE Shipping on orders above
+                <strong>₹499</strong></span></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
         <div class="container">
-            <div class="search-wrap">
-                <span class="search-kicker">What are you looking for?</span>
-                <div class="search-field">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <input type="search" class="search-input-el" id="search-inp" placeholder="heels, bags, sandals…" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Search">
-                    <button class="search-cls" id="search-close-btn" aria-label="Close search">
-                        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                    </button>
+            <div class="navbar-inner">
+                <a href="index.html" class="navbar-logo"><span class="navbar-logo-text">Heels<span>Up</span></span></a>
+                <ul class="navbar-menu">
+                    <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="shop.html" class="nav-link">Shop</a></li>
+                    <li class="nav-item"><a href="category.html?cat=new" class="nav-link">New Arrivals</a></li>
+                </ul>
+                <div class="navbar-actions">
+                    <a href="wishlist.html" class="nav-icon-btn"><i class="fa-regular fa-heart"></i></a>
+                    <a href="profile.html" class="nav-icon-btn" style="color:var(--color-primary)"><i
+                            class="fa-solid fa-user"></i></a>
+                    <button class="nav-icon-btn" id="cart-open-btn"><i class="fa-solid fa-bag-shopping"></i><span
+                            class="nav-badge" id="cart-count">0</span></button>
+                    <button class="navbar-hamburger" id="hamburger-btn"><span class="hamburger-line"></span><span
+                            class="hamburger-line"></span><span class="hamburger-line"></span></button>
                 </div>
-                <div class="search-res" id="search-res" role="listbox" aria-label="Search results"></div>
-                <p class="search-hint-txt">Press <kbd style="background:rgba(255,255,255,.1);padding:2px 7px;border-radius:4px;font-size:11px">Enter</kbd>
-                    to search &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,.1);padding:2px 7px;border-radius:4px;font-size:11px">Esc</kbd>
-                    to close</p>
+            </div>
+        </div>
+    </nav>
+
+    <div class="profile-page">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb" style="margin-bottom:28px">
+                <span class="breadcrumb-item"><a href="index.html">Home</a></span>
+                <span class="breadcrumb-sep"><i class="fa-solid fa-chevron-right" style="font-size:8px"></i></span>
+                <span class="breadcrumb-item active">My Profile</span>
+            </nav>
+
+            <div class="profile-layout">
+                <!-- Sidebar -->
+                <aside class="profile-sidebar">
+                    <div class="profile-sidebar-head">
+                        <div class="profile-avatar">P</div>
+                        <div class="profile-name">Priya Sharma</div>
+                        <div class="profile-email">priya@email.com</div>
+                    </div>
+                    <nav class="profile-nav">
+                        <a class="profile-nav-item active" data-tab="dashboard"><i class="fa-solid fa-grid-2"></i>
+                            Dashboard</a>
+                        <a class="profile-nav-item" data-tab="orders"><i class="fa-solid fa-box"></i> My Orders</a>
+                        <a class="profile-nav-item" data-tab="wishlist"><i class="fa-regular fa-heart"></i> Wishlist</a>
+                        <a class="profile-nav-item" data-tab="addresses"><i class="fa-solid fa-location-dot"></i>
+                            Addresses</a>
+                        <a class="profile-nav-item" data-tab="edit"><i class="fa-solid fa-pen"></i> Edit Profile</a>
+                        <a class="profile-nav-item" data-tab="security"><i class="fa-solid fa-shield"></i> Security</a>
+                        <hr style="border:none;border-top:1px solid var(--border-color);margin:8px 0" />
+                        <a class="profile-nav-item" id="logout-link" href="index.html" style="color:var(--color-accent)"><i
+                                class="fa-solid fa-right-from-bracket"></i> Logout</a>
+                    </nav>
+                </aside>
+
+                <!-- Main -->
+                <main>
+                    <!-- Dashboard -->
+                    <div class="profile-panel active" id="tab-dashboard">
+                        <div class="profile-stats">
+                            <div class="profile-stat">
+                                <div class="profile-stat-num">8</div>
+                                <div class="profile-stat-label">Total Orders</div>
+                            </div>
+                            <div class="profile-stat">
+                                <div class="profile-stat-num">3</div>
+                                <div class="profile-stat-label">Wishlist Items</div>
+                            </div>
+                            <div class="profile-stat">
+                                <div class="profile-stat-num">₹4.2K</div>
+                                <div class="profile-stat-label">Total Spent</div>
+                            </div>
+                        </div>
+                        <div class="panel-card">
+                            <div class="panel-card-title">Recent Orders <a href="#" data-tab="orders"
+                                    class="profile-nav-link btn btn-sm btn-secondary"
+                                    style="font-size:12px;padding:6px 16px">View All</a></div>
+                            <div class="order-mini">
+                                <div class="order-mini-img"><img
+                                        src="https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=200&q=80&auto=format&fit=crop"
+                                        alt="" /></div>
+                                <div class="order-mini-info">
+                                    <div class="order-mini-name">Stiletto Block Heel Pumps</div>
+                                    <div class="order-mini-meta">Order #HU-2024-0812 · 28 Apr 2025</div>
+                                </div>
+                                <span class="order-mini-status status-delivered">Delivered</span>
+                            </div>
+                            <div class="order-mini">
+                                <div class="order-mini-img"><img
+                                        src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=200&q=80&auto=format&fit=crop"
+                                        alt="" /></div>
+                                <div class="order-mini-info">
+                                    <div class="order-mini-name">Classic Tote Bag – Tan</div>
+                                    <div class="order-mini-meta">Order #HU-2024-0901 · 2 May 2025</div>
+                                </div>
+                                <span class="order-mini-status status-shipped">Shipped</span>
+                            </div>
+                            <div class="order-mini">
+                                <div class="order-mini-img"><img
+                                        src="https://images.unsplash.com/photo-1522163182402-834f871fd851?w=200&q=80&auto=format&fit=crop"
+                                        alt="" /></div>
+                                <div class="order-mini-info">
+                                    <div class="order-mini-name">Rose Gold Strappy Sandals</div>
+                                    <div class="order-mini-meta">Order #HU-2024-0930 · 4 May 2025</div>
+                                </div>
+                                <span class="order-mini-status status-processing">Processing</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders -->
+                    <div class="profile-panel" id="tab-orders">
+                        <div class="panel-card">
+                            <div class="panel-card-title">My Orders</div>
+                            <a href="orders.html" class="btn btn-primary">View Full Order History <i
+                                    class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Wishlist -->
+                    <div class="profile-panel" id="tab-wishlist">
+                        <div class="panel-card">
+                            <div class="panel-card-title">My Wishlist</div>
+                            <a href="wishlist.html" class="btn btn-primary">Wishlist Dekho <i
+                                    class="fa-regular fa-heart"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Addresses -->
+                    <div class="profile-panel" id="tab-addresses">
+                        <div class="panel-card">
+                            <div class="panel-card-title">Saved Addresses <button class="btn btn-secondary btn-sm"><i
+                                        class="fa-solid fa-plus"></i> Add New</button></div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                                <div class="address-card default">
+                                    <span class="address-default-badge">Default</span>
+                                    <div style="font-weight:600;margin-bottom:8px">Priya Sharma</div>
+                                    <div style="font-size:14px;color:var(--text-secondary);line-height:1.7">
+                                        123, Shastri Nagar<br />Jodhpur, Rajasthan 342001<br />+91 98765 43210
+                                    </div>
+                                    <div style="margin-top:14px;display:flex;gap:10px">
+                                        <button class="btn btn-ghost btn-sm">Edit</button>
+                                        <button class="btn btn-ghost btn-sm"
+                                            style="color:var(--color-accent)">Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Profile -->
+                    <div class="profile-panel" id="tab-edit">
+                        <div class="panel-card">
+                            <div class="panel-card-title">Edit Profile</div>
+                            <div class="form-row"
+                                style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+                                <div class="form-group"><label class="form-label">First Name</label><input type="text"
+                                        class="form-input" id="edit-first-name" value="Priya" /></div>
+                                <div class="form-group"><label class="form-label">Last Name</label><input type="text"
+                                        class="form-input" id="edit-last-name" value="Sharma" /></div>
+                            </div>
+                            <div class="form-group"><label class="form-label">Email</label><input type="email"
+                                    class="form-input" id="edit-email" value="priya@email.com" disabled /></div>
+                            <div class="form-group"><label class="form-label">Phone</label><input type="tel"
+                                    class="form-input" id="edit-phone" value="+91 98765 43210" /></div>
+                            <button class="btn btn-primary" id="save-profile-btn"><i class="fa-solid fa-check"></i> Save Changes</button>
+                        </div>
+                    </div>
+
+                    <!-- Security -->
+                    <div class="profile-panel" id="tab-security">
+                        <div class="panel-card">
+                            <div class="panel-card-title">Change Password</div>
+                            <div class="form-group"><label class="form-label">Current Password</label><input
+                                    type="password" class="form-input" id="current-password" placeholder="••••••••" /></div>
+                            <div class="form-group"><label class="form-label">New Password</label><input type="password"
+                                    class="form-input" id="new-password" placeholder="Minimum 8 characters" /></div>
+                            <div class="form-group"><label class="form-label">Confirm New Password</label><input
+                                    type="password" class="form-input" id="confirm-password" placeholder="Password dobara daalo" /></div>
+                            <button class="btn btn-primary" id="update-password-btn"><i class="fa-solid fa-lock"></i> Update Password</button>
+                        </div>
+                    </div>
+                </main>
             </div>
         </div>
     </div>
 
-    <!-- ═══ CART BACKDROP & DRAWER ═══ -->
-    <div class="cart-bd" id="cart-bd" aria-hidden="true"></div>
-    
-
-    <!-- ══════════════════════════════
-     SHOP HERO HEADER
-  ══════════════════════════════ -->
-    <section class="shop-hero">
-        <div class="container">
-            <div class="breadcrumb">
-                <a href="/">Home</a>
-                <span class="bc-sep">›</span>
-                <span class="bc-item active">My Account</span>
-            </div>
-            <h1>My <em>Account</em></h1>
-            <p>Manage your profile, orders, addresses, and wishlist.</p>
+    <!-- Cart Drawer -->
+    <div class="cart-drawer-backdrop" id="cart-backdrop"></div>
+    <aside class="cart-drawer" id="cart-drawer">
+        <div class="cart-drawer-header">
+            <h3>My Cart</h3><button class="cart-close-btn" id="cart-close-btn">✕</button>
         </div>
-    </section>
+        <div class="cart-drawer-body" id="cart-body">
+            <div class="cart-empty">
+                <div class="cart-empty-icon">🛍️</div>
+                <div class="cart-empty-text">Cart is empty</div><a href="shop.html" class="btn btn-primary"
+                    style="margin-top:12px">Shop Now</a>
+            </div>
+        </div>
+    </aside>
+    <div class="toast-container" id="toast-container"></div>
 
-    <!-- ══ PAGE ══ -->
-    <div class="container">
-        <div class="profile-layout">
+    <script src="app-config.js"></script>
+    <script src="app-auth.js"></script>
+    <script>
+        window.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60));
+        // Tab switching
+        document.querySelectorAll('.profile-nav-item[data-tab]').forEach(item => {
+            item.addEventListener('click', e => {
+                e.preventDefault();
+                const tab = item.dataset.tab;
+                document.querySelectorAll('.profile-nav-item').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+                item.classList.add('active');
+                document.getElementById('tab-' + tab)?.classList.add('active');
+            });
+        });
+        // Cart
+        const cart = JSON.parse(localStorage.getItem('heelsup_cart') || '[]');
+        document.getElementById('cart-count').textContent = cart.reduce((s, i) => s + i.qty, 0);
+        document.getElementById('cart-open-btn')?.addEventListener('click', () => { document.getElementById('cart-drawer').classList.add('open'); document.getElementById('cart-backdrop').classList.add('open'); });
+        document.getElementById('cart-close-btn')?.addEventListener('click', () => { document.getElementById('cart-drawer').classList.remove('open'); document.getElementById('cart-backdrop').classList.remove('open'); });
+        document.getElementById('cart-backdrop')?.addEventListener('click', () => { document.getElementById('cart-drawer').classList.remove('open'); document.getElementById('cart-backdrop').classList.remove('open'); });
 
-            <!-- ══ SIDEBAR ══ -->
-            <aside class="sidebar">
-                <div class="sidebar-hero">
-                    <div class="sidebar-hero-ring shr1"></div>
-                    <div class="sidebar-hero-ring shr2"></div>
-                    <div class="sidebar-avatar-wrap">
-                        <div class="sidebar-avatar" id="sidebarAvatar">?</div>
-                        <div class="sidebar-avatar-ring"></div>
-                        <div class="sidebar-online"></div>
-                    </div>
-                    <div class="sidebar-name" id="sidebarName">Loading…</div>
-                    <div class="sidebar-email" id="sidebarEmail"></div>
-                    <div class="sidebar-member-badge">
-                        <i class="fa-solid fa-star"></i> HeelsUp Member
-                    </div>
-                </div>
+        function toast(type, title, message) {
+            const container = document.getElementById('toast-container');
+            const id = 'toast-' + Date.now();
+            const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+            container.insertAdjacentHTML('beforeend', `<div class="toast toast-${type}" id="${id}"><i class="fa-solid ${icons[type] || icons.info} toast-icon"></i><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-message">${message}</div></div><button class="toast-close" onclick="document.getElementById('${id}').remove()">×</button></div>`);
+            setTimeout(() => document.getElementById(id)?.remove(), 4000);
+        }
 
-                <div class="sidebar-mini-stats">
-                    <div class="sms-item">
-                        <div class="sms-num" id="miniOrders">–</div>
-                        <div class="sms-lbl">Orders</div>
-                    </div>
-                    <div class="sms-item">
-                        <div class="sms-num" id="miniWishlist">–</div>
-                        <div class="sms-lbl">Wishlist</div>
-                    </div>
-                    <div class="sms-item">
-                        <div class="sms-num" id="miniSpent" style="font-size:1.15rem;display:flex;align-items:center;justify-content:center;height:100%;">
-                            –</div>
-                        <div class="sms-lbl">Spent</div>
-                    </div>
-                </div>
+        async function loadProfile() {
+            if (!HeelsUpAuth.getToken()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const data = await HeelsUpAuth.api('/api/me');
+                const user = data.user || {};
+                document.querySelector('.profile-name').textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Customer';
+                document.querySelector('.profile-email').textContent = user.email || '-';
+                document.querySelector('.profile-avatar').textContent = (user.firstName || 'C').slice(0, 1).toUpperCase();
+                document.getElementById('edit-first-name').value = user.firstName || '';
+                document.getElementById('edit-last-name').value = user.lastName || '';
+                document.getElementById('edit-email').value = user.email || '';
+                document.getElementById('edit-phone').value = user.phone || '';
+            } catch (err) {
+                HeelsUpAuth.clearSession();
+                window.location.href = 'login.html';
+            }
+        }
 
-                <nav class="sidebar-nav">
-                    <button class="sidebar-nav-item active" data-tab="overview">
-                        <i class="fa-solid fa-border-all"></i> Overview
-                    </button>
-                    <button class="sidebar-nav-item" data-tab="orders">
-                        <i class="fa-solid fa-box-open"></i> My Orders
-                    </button>
-                    <button class="sidebar-nav-item" data-tab="wishlist">
-                        <i class="fa-solid fa-heart"></i> Wishlist
-                    </button>
-                    <button class="sidebar-nav-item" data-tab="profile">
-                        <i class="fa-solid fa-user-pen"></i> Edit Profile
-                    </button>
-                    <button class="sidebar-nav-item" data-tab="addresses">
-                        <i class="fa-solid fa-location-dot"></i> Addresses
-                    </button>
-                    <button class="sidebar-nav-item" data-tab="security">
-                        <i class="fa-solid fa-shield-halved"></i> Security
-                    </button>
-                    <div class="sidebar-nav-sep"></div>
-                    <button class="sidebar-nav-item logout-btn" id="logoutBtn">
-                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
-                    </button>
-                </nav>
-            </aside>
+        document.getElementById('save-profile-btn')?.addEventListener('click', async () => {
+            try {
+                await HeelsUpAuth.api('/api/me', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        firstName: document.getElementById('edit-first-name').value.trim(),
+                        lastName: document.getElementById('edit-last-name').value.trim(),
+                        phone: document.getElementById('edit-phone').value.trim()
+                    })
+                });
+                toast('success', 'Saved', 'Profile updated successfully.');
+                loadProfile();
+            } catch (err) {
+                toast('error', 'Update Failed', err.message || 'Try again.');
+            }
+        });
 
-            <!-- ══ MAIN PANELS ══ -->
-            <div>
+        document.getElementById('update-password-btn')?.addEventListener('click', async () => {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            if (!currentPassword || !newPassword) return toast('error', 'Missing', 'All password fields are required.');
+            if (newPassword.length < 8) return toast('error', 'Invalid', 'New password at least 8 characters.');
+            if (newPassword !== confirmPassword) return toast('error', 'Mismatch', 'New passwords match nahi kar rahe.');
+            try {
+                await HeelsUpAuth.api('/api/me/password', {
+                    method: 'PUT',
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                document.getElementById('current-password').value = '';
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+                toast('success', 'Updated', 'Password changed successfully.');
+            } catch (err) {
+                toast('error', 'Update Failed', err.message || 'Try again.');
+            }
+        });
 
-                <!-- ─ OVERVIEW PANEL ─ -->
-                <div class="panel active" id="panel-overview">
-                    <div class="stats-row">
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="fa-solid fa-box-open"></i></div>
-                            <div class="stat-num" id="statOrders">–</div>
-                            <div class="stat-lbl">Total Orders</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="fa-solid fa-heart"></i></div>
-                            <div class="stat-num" id="statWishlist">–</div>
-                            <div class="stat-lbl">Wishlist Items</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
-                            <div class="stat-num" id="statSpent" style="font-size:1.6rem;display:flex;align-items:flex-end;">–</div>
-                            <div class="stat-lbl">Total Spent</div>
-                        </div>
-                    </div>
+        document.getElementById('logout-link')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            HeelsUpAuth.clearSession();
+            window.location.href = 'index.html';
+        });
 
-                    <!-- Recent Orders -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-eyebrow"><i class="fa-solid fa-clock-rotate-left"></i> Recent Activity
-                                </div>
-                                <div class="card-title">Latest Orders</div>
-                                <div class="card-sub">Track your latest purchases</div>
-                            </div>
-                            <button class="btn btn-primary" onclick="switchTab('orders')">
-                                <div class="btn-inner">View All <i class="fa-solid fa-arrow-right"></i></div>
-                            </button>
-                        </div>
-                        <div class="card-body" id="recentOrdersBody">
-                            <div class="skel-line skel" style="width:100%;margin-bottom:14px"></div>
-                            <div class="skel-line skel skel-sm"></div>
-                        </div>
-                    </div>
+        loadProfile();
+    </script>
+</body>
 
-                    <!-- Quick links -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-title">Quick Actions</div>
-                                <div class="card-sub">Shortcuts to common tasks</div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px">
-                                <a href="/shop.html" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);transition:all var(--t);text-align:center;text-decoration:none" onmouseover="this.style.borderColor='var(--primary)';this.style.background='rgba(192,57,43,.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='transparent'">
-                                    <i class="fa-solid fa-bag-shopping" style="font-size:1.6rem;color:var(--primary)"></i>
-                                    <span style="font-size:13px;font-weight:600;color:var(--text-b)">Shop Now</span>
-                                </a>
-                                <a href="/orders" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);transition:all var(--t);text-align:center;text-decoration:none" onmouseover="this.style.borderColor='var(--primary)';this.style.background='rgba(192,57,43,.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='transparent'">
-                                    <i class="fa-solid fa-truck-fast" style="font-size:1.6rem;color:var(--primary)"></i>
-                                    <span style="font-size:13px;font-weight:600;color:var(--text-b)">Track Order</span>
-                                </a>
-                                <button onclick="switchTab('addresses')" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);transition:all var(--t);text-align:center;cursor:pointer;background:none;" onmouseover="this.style.borderColor='var(--primary)';this.style.background='rgba(192,57,43,.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='transparent'">
-                                    <i class="fa-solid fa-location-dot" style="font-size:1.6rem;color:var(--primary)"></i>
-                                    <span style="font-size:13px;font-weight:600;color:var(--text-b)">Addresses</span>
-                                </button>
-                                <a href="/contact.html" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:20px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);transition:all var(--t);text-align:center;text-decoration:none" onmouseover="this.style.borderColor='var(--primary)';this.style.background='rgba(192,57,43,.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='transparent'">
-                                    <i class="fa-solid fa-headset" style="font-size:1.6rem;color:var(--primary)"></i>
-                                    <span style="font-size:13px;font-weight:600;color:var(--text-b)">Support</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ─ ORDERS PANEL ─ -->
-                <div class="panel" id="panel-orders">
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-eyebrow">Order History</div>
-                                <div class="card-title">My Orders</div>
-                                <div class="card-sub">Track and manage all your purchases</div>
-                            </div>
-                        </div>
-                        <div class="card-body" id="allOrdersBody">
-                            <div class="skel-line skel" style="width:100%;margin-bottom:14px"></div>
-                            <div class="skel-line skel skel-sm"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ─ WISHLIST PANEL ─ -->
-                <div class="panel" id="panel-wishlist">
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-eyebrow">Saved Items</div>
-                                <div class="card-title">My Wishlist</div>
-                            </div>
-                            <span id="wishlistCount" class="badge badge-placed">0 items</span>
-                        </div>
-                        <div class="card-body" id="wishlistBody">
-                            <div class="skel-line skel" style="width:60%;margin-bottom:10px"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ─ PROFILE PANEL ─ -->
-                <div class="panel" id="panel-profile">
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-eyebrow">Personal Info</div>
-                                <div class="card-title">Edit Profile</div>
-                                <div class="card-sub">Keep your information up to date</div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-error" id="profileAlert">
-                                <i class="fa-solid fa-circle-exclamation"></i>
-                                <span id="profileAlertMsg"></span>
-                            </div>
-
-                            <div class="form-row-2">
-                                <div class="form-group">
-                                    <label class="form-label">First Name <span class="req">*</span></label>
-                                    <div class="input-wrap">
-                                        <span class="inp-icon"><i class="fa-regular fa-user"></i></span>
-                                        <input type="text" id="editFname" placeholder="Priya" autocomplete="given-name">
-                                    </div>
-                                    <div class="field-err" id="errFname">First name is required</div>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Last Name</label>
-                                    <div class="input-wrap">
-                                        <span class="inp-icon"><i class="fa-regular fa-user"></i></span>
-                                        <input type="text" id="editLname" placeholder="Sharma" autocomplete="family-name">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Email Address</label>
-                                <div class="input-wrap">
-                                    <span class="inp-icon"><i class="fa-regular fa-envelope"></i></span>
-                                    <input type="email" id="editEmail" disabled="">
-                                </div>
-                                <div class="form-hint">
-                                    <i class="fa-solid fa-lock"></i> Email cannot be changed after registration
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Mobile Number</label>
-                                <div class="phone-wrap">
-                                    <div class="phone-prefix">🇮🇳 +91</div>
-                                    <input type="tel" id="editPhone" class="phone-field" placeholder="10-digit number" maxlength="10" autocomplete="tel" oninput="this.value=this.value.replace(/\D/g,'')">
-                                </div>
-                                <div class="form-hint">Used for order &amp; delivery notifications</div>
-                            </div>
-
-                            <button class="btn btn-primary" id="saveProfileBtn" onclick="saveProfile()">
-                                <div class="btn-inner">
-                                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ─ ADDRESSES PANEL ─ -->
-                <div class="panel" id="panel-addresses">
-                    <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-eyebrow">Delivery</div>
-                                <div class="card-title">Saved Addresses</div>
-                                <div class="card-sub">Manage your delivery locations</div>
-                            </div>
-                            <button class="btn btn-primary" onclick="toast('Address management coming soon!','info')">
-                                <div class="btn-inner">
-                                    <i class="fa-solid fa-plus"></i> Add New
-                                </div>
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <div class="address-grid" id="addrGrid">
-                                <div class="addr-card default">
-                                    <span class="addr-default-tag">Default</span>
-                                    <div class="addr-name" id="addrName">—</div>
-                                    <div class="addr-detail" id="addrDetail">Loading…</div>
-                                    <div class="addr-actions">
-                                        <button class="btn btn-outline btn-sm" onclick="toast('Edit address coming soon!','info')">Edit</button>
-                                        <button class="btn btn-danger-ghost btn-sm" onclick="toast('Delete coming soon!','info')">Delete</button>
-                                    </div>
-                                </div>
-                                <button class="btn-add-addr" onclick="toast('Address management coming soon!','info')">
-                                    <i class="fa-solid fa-plus"></i>
-                                    Add New Address
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ─ SECURITY PANEL ─ -->
-                <div class="panel" id="panel-security">
-                    <!-- Change Password -->
-                    <div class="card" style="margin-bottom:20px">
-                        <div class="card-header">
-                            <div>
-                                <div class="card-eyebrow">Account Security</div>
-                                <div class="card-title">Change Password</div>
-                                <div class="card-sub">Use a strong, unique password</div>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="alert alert-error" id="pwAlert">
-                                <i class="fa-solid fa-circle-exclamation"></i>
-                                <span id="pwAlertMsg"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Current Password <span class="req">*</span></label>
-                                <div class="input-wrap">
-                                    <span class="inp-icon"><i class="fa-solid fa-lock"></i></span>
-                                    <input type="password" id="currPw" placeholder="Your current password">
-                                    <span class="inp-suffix" onclick="togglePwField('currPw','eyeCurr')">
-                                        <i class="fa-solid fa-eye" id="eyeCurr"></i>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">New Password <span class="req">*</span></label>
-                                <div class="input-wrap">
-                                    <span class="inp-icon"><i class="fa-solid fa-shield-halved"></i></span>
-                                    <input type="password" id="newPw" placeholder="Min. 8 characters" oninput="checkPwStrength(this.value)">
-                                    <span class="inp-suffix" onclick="togglePwField('newPw','eyeNew')">
-                                        <i class="fa-solid fa-eye" id="eyeNew"></i>
-                                    </span>
-                                </div>
-                                <div class="pw-strength">
-                                    <div class="pw-bar">
-                                        <div class="pw-seg" id="ps0"></div>
-                                        <div class="pw-seg" id="ps1"></div>
-                                        <div class="pw-seg" id="ps2"></div>
-                                        <div class="pw-seg" id="ps3"></div>
-                                    </div>
-                                    <span class="pw-strength-lbl" id="pwLbl">Enter a new password</span>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Confirm New Password <span class="req">*</span></label>
-                                <div class="input-wrap">
-                                    <span class="inp-icon"><i class="fa-solid fa-shield-check"></i></span>
-                                    <input type="password" id="confPw" placeholder="Repeat new password">
-                                    <span class="inp-suffix" onclick="togglePwField('confPw','eyeConf')">
-                                        <i class="fa-solid fa-eye" id="eyeConf"></i>
-                                    </span>
-                                </div>
-                            </div>
-
-                            <button class="btn btn-primary" id="updatePwBtn" onclick="updatePassword()">
-                                <div class="btn-inner">
-                                    <i class="fa-solid fa-key"></i> Update Password
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Security Info -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-title">Notification &amp; Security Settings</div>
-                        </div>
-                        <div class="card-body">
-                            <div class="security-item">
-                                <div class="security-item-left">
-                                    <div class="security-icon"><i class="fa-solid fa-comment-sms"></i></div>
-                                    <div>
-                                        <div class="security-title">SMS Notifications</div>
-                                        <div class="security-desc">Receive order updates via SMS on your registered
-                                            mobile</div>
-                                        <div class="security-status on"><span class="security-status-dot"></span>
-                                            Enabled</div>
-                                    </div>
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked="" onchange="toast('Notification preferences saved!','success')">
-                                    <span class="toggle-track"></span>
-                                </label>
-                            </div>
-
-                            <div class="security-item">
-                                <div class="security-item-left">
-                                    <div class="security-icon"><i class="fa-regular fa-envelope"></i></div>
-                                    <div>
-                                        <div class="security-title">Email Notifications</div>
-                                        <div class="security-desc">Get order confirmations, shipping updates and offers
-                                            by email</div>
-                                        <div class="security-status on"><span class="security-status-dot"></span>
-                                            Enabled</div>
-                                    </div>
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked="" onchange="toast('Notification preferences saved!','success')">
-                                    <span class="toggle-track"></span>
-                                </label>
-                            </div>
-
-                            <div class="security-item">
-                                <div class="security-item-left">
-                                    <div class="security-icon"><i class="fa-solid fa-shield-heart"></i></div>
-                                    <div>
-                                        <div class="security-title">Two-Factor Authentication</div>
-                                        <div class="security-desc">Add an extra layer of security with OTP on every
-                                            login</div>
-                                        <div class="security-status off"><span class="security-status-dot"></span>
-                                            Coming Soon</div>
-                                    </div>
-                                </div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" disabled="">
-                                    <span class="toggle-track" style="opacity:.5"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div><!-- /main -->
-        </div><!-- /profile-layout -->
-    </div><!-- /page -->
-
-    <!-- ═══ FOOTER ═══ -->
-    
-
-    <!-- ═══ FLOATING ═══ -->
-    
-    
-
-    <!-- ═══ SCRIPTS ═══ -->
-    
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-  
-    
-
-
-
-    <!-- Core Config and API Client -->
-    
-    
-    
-    
-    <!-- State and Operations -->
-    
-    
-    
-    <!-- Page Controller -->
-    
-
-    <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer=""></script>
-    <script src="/js/core/api-client.js" defer=""></script>
-    <script src="/js/core/common-ui.js" defer=""></script>
-    
-    <!-- State and Operations -->
-    <script src="/js/cart.js" defer=""></script>
-    <script src="/js/wishlist.js" defer=""></script>
-    
-    <!-- Page Controller -->
-    <script src="/js/pages/profile.js" defer=""></script>
-<footer class="footer"></footer></body></html>
+</html>
