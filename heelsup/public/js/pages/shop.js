@@ -93,7 +93,7 @@
                 srchRes.innerHTML = prods.map(p => {
                     const img = esc((p.images && p.images[0]) || p.image_url || '');
                     const slug = encPath(p.slug || p.id);
-                    return `<a href="/product.html?id=" class="search-res-item" role="option">
+                    return `<a href="/product.html?id=${p.id}" class="search-res-item" role="option">
             ${img ? `<img class="search-res-img" src="${img}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'">` : '<div class="search-res-img"></div>'}
             <div style="flex:1;min-width:0">
               <div class="search-res-name">${esc(p.name)}</div>
@@ -185,26 +185,6 @@
             } catch (e) { toast('Could not add to bag. Please try again.', 'error'); }
         };
 
-        window.toggleWish = function (id, btn) {
-            btn.classList.toggle('wishlisted');
-            const isWish = btn.classList.contains('wishlisted');
-            if (isWish) {
-                btn.innerHTML = '<i class="fa-solid fa-heart" aria-hidden="true"></i>';
-                btn.setAttribute('aria-pressed', 'true');
-            } else {
-                btn.innerHTML = '<i class="fa-regular fa-heart" aria-hidden="true"></i>';
-                btn.setAttribute('aria-pressed', 'false');
-            }
-            if (typeof HeelsUpWishlistSystem !== 'undefined') {
-                if (isWish) HeelsUpWishlistSystem.add(id);
-                else HeelsUpWishlistSystem.remove(id);
-                // System shows toast on its own? Actually no, add() doesn't show toast, toggle does.
-                // We'll show toast manually here.
-                toast(isWish ? 'Added to Wishlist' : 'Removed from Wishlist', isWish ? 'success' : 'info');
-            } else {
-                toast(isWish ? 'Added to Wishlist' : 'Removed from Wishlist', isWish ? 'success' : 'info');
-            }
-        };
 
         /* ── SHOP MOBILE FILTER ── */
         $('filter-mob-btn')?.addEventListener('click', () => {
@@ -258,13 +238,13 @@
             if (viewMode === 'list') {
                 return `<div class="prod-list-card" aria-label="${name}">
           <div class="list-img">
-            <a href="/product.html?id=">
+            <a href="/product.html?id=${id}">
               <img src="${img}" alt="${name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=70'"/>
             </a>
           </div>
           <div class="list-body">
             <div class="prod-cat" style="font-size:11px;margin-bottom:6px">${cat}</div>
-            <h3 class="prod-name" style="font-size:18px;margin-bottom:12px"><a href="/product.html?id=">${name}</a></h3>
+            <h3 class="prod-name" style="font-size:18px;margin-bottom:12px"><a href="/product.html?id=${id}">${name}</a></h3>
             <div class="prod-rating" style="margin-bottom:16px">
               <span class="prod-stars">${stars}</span>
               <span class="prod-rc">(${rc} Reviews)</span>
@@ -289,7 +269,7 @@
 
             return `<article class="prod-card" aria-label="${name}">
         <div class="prod-img-wrap">
-          <a href="/product.html?id=" aria-label="View ${name}">
+          <a href="/product.html?id=${id}" aria-label="View ${name}">
             <img src="${img}" alt="${name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&q=70'"/>
           </a>
           <div class="prod-card-badges">
@@ -304,14 +284,14 @@
             <button class="prod-action-btn pab-primary" onclick="addToCartQuick(${id})">
               <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Add to Bag
             </button>
-            <a href="/product.html?id=" class="prod-action-btn pab-outline">
+            <a href="/product.html?id=${id}" class="prod-action-btn pab-outline">
               <i class="fa-regular fa-eye" aria-hidden="true"></i> View
             </a>
           </div>
         </div>
         <div class="prod-body">
           <div class="prod-cat">${cat}</div>
-          <h3 class="prod-name"><a href="/product.html?id=">${name}</a></h3>
+          <h3 class="prod-name"><a href="/product.html?id=${id}">${name}</a></h3>
           <div class="prod-rating">
             <span class="prod-stars" aria-label="${rating} out of 5 stars">${stars}</span>
             <span class="prod-rc">(${rc})</span>
@@ -328,14 +308,8 @@
         async function loadData() {
             updateHeader(activeCat);
             try {
-                // Fallback for visual demonstration
-                const data = await HeelsUpAuth.api('/api/products?limit=200').catch(() => ({
-                    products: Array.from({ length: 42 }).map((_, i) => ({
-                        id: i + 1, name: `Premium Product ${i + 1}`, price: 1200 + (Math.random() * 2000), original_price: Math.random() > 0.5 ? 3500 : null,
-                        category: ['heels', 'sandals', 'bags', 'flats'][i % 4], is_new: Math.random() > 0.8, featured: Math.random() > 0.8
-                    }))
-                }));
-                allProducts = data.products || data.data || [];
+                const data = await HeelsUpAuth.api('/api/products?limit=200');
+                allProducts = data.products || data.data || data.results || data || [];
                 updateCounts();
                 applyFilters();
             } catch (e) {

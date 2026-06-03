@@ -20,7 +20,4 @@
             sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
             tocLinks.forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + current); });
         });
-
-        // Cart count from localStorage
-        const cart = JSON.parse(localStorage.getItem('heelsup_cart') || '[]');
-        document.getElementById('cart-count').textContent = cart.reduce((s, i) => s + i.qty, 0);
+

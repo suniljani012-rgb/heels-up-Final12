@@ -187,50 +187,18 @@
 
     /* ── PRODUCT LOGIC ── */
     async function loadProduct() {
-      // Simulate ID fetching for vanilla JS environment
       const params = new URLSearchParams(location.search);
       const id = params.get('id');
 
-      // Allow loading even without ID for preview/demo purposes if needed. 
-      // In production, uncomment the immediate return block.
-      /*
       if (!id) {
         $('product-loading').style.display = 'none';
         $('product-error').style.display = 'block';
         return;
       }
-      */
 
       try {
-        // Fallback for visual demonstration when run locally
-        let product;
-        if (id && typeof HeelsUpAuth !== 'undefined' && HeelsUpAuth.api) {
-          const data = await HeelsUpAuth.api(`/api/products/${id}`);
-          product = data.product || data.data || data;
-        } else {
-          // Mock Data
-          product = {
-            id: id || '123',
-            name: 'Classic Black Stiletto',
-            category: 'Heels',
-            price: 1899,
-            original_price: 2499,
-            rating: 4.8,
-            review_count: 124,
-            stock: 15,
-            is_new: true,
-            description: 'Elevate your evening look with our Classic Black Stilettos. Featuring a sleek pointed toe, comfortable padded insole, and a sturdy 3.5-inch heel. Perfect for parties, dinners, or making a powerful statement at work.',
-            material: 'Premium Vegan Leather',
-            images: [
-              'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=800&q=80',
-              'https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=800&q=80',
-              'https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=800&q=80',
-              'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80'
-            ]
-          };
-          // artificial delay for skeleton
-          await new Promise(r => setTimeout(r, 600));
-        }
+        const data = await HeelsUpAuth.api(`/api/products/${id}`);
+        const product = data.product || data.data || data;
 
         if (!product) throw new Error('Product not found');
         currentProduct = product;
@@ -572,16 +540,9 @@
       grid.innerHTML = `<div class="skel" style="aspect-ratio:3/4;border-radius:14px"></div>`.repeat(4);
 
       try {
-        let products = [];
-        if (typeof HeelsUpAuth !== 'undefined' && HeelsUpAuth.api) {
-          const data = await HeelsUpAuth.api(`/api/products?category=${encodeURIComponent(category)}&limit=8`);
-          products = (data.products || data || []).filter(p => p.id != excludeId).slice(0, 4);
-        } else {
-          // Mock data
-          products = Array.from({ length: 4 }).map((_, i) => ({
-            id: i + 100, name: `Related Product ${i + 1}`, category: category, price: 1599 + (i * 100), rating: 4.5, review_count: 24, images: [FALLBACK_IMAGES[i % 4]]
-          }));
-        }
+        const data = await HeelsUpAuth.api(`/api/products?category=${encodeURIComponent(category)}&limit=8`);
+        const list = data.products || data.data || data.results || data || [];
+        const products = list.filter(p => p.id != excludeId).slice(0, 4);
 
         if (products.length === 0) {
           grid.innerHTML = '<p style="color:var(--text-m);grid-column:1/-1;text-align:center">No related products found.</p>';
@@ -603,7 +564,7 @@
       return `
         <article class="prod-card" aria-label="${esc(p.name)}">
           <div class="prod-img-wrap">
-            <a href="/product.html?id=">
+            <a href="/product.html?id=${p.id}">
               <img src="${img}" alt="${esc(p.name)}" loading="lazy">
             </a>
             <div class="prod-card-badges">
@@ -615,12 +576,12 @@
             </button>
             <div class="prod-hover-actions">
               <button onclick="quickAdd(${p.id})" class="prod-action-btn pab-primary"><i class="fa-solid fa-bag-shopping"></i> Add</button>
-              <a href="/product.html?id=" class="prod-action-btn pab-outline"><i class="fa-solid fa-eye"></i> View</a>
+              <a href="/product.html?id=${p.id}" class="prod-action-btn pab-outline"><i class="fa-solid fa-eye"></i> View</a>
             </div>
           </div>
           <div class="prod-body">
             <div class="prod-cat">${esc(p.category || '')}</div>
-            <h3 class="prod-name"><a href="/product.html?id=">${esc(p.name)}</a></h3>
+            <h3 class="prod-name"><a href="/product.html?id=${p.id}">${esc(p.name)}</a></h3>
             <div class="prod-rating"><span class="prod-stars">${buildStarsHTML(p.rating || 4.5)}</span> <span class="prod-rc">(${p.review_count || 0})</span></div>
             <div class="prod-price">
               <span class="price-now">${fmt(p.price)}</span>
@@ -632,48 +593,26 @@
 
     window.quickAdd = function (id) {
       toast('👠 Open product to select size', 'info');
-      setTimeout(() => location.href = `/product/${id}`, 1200);
+      setTimeout(() => location.href = `/product.html?id=${id}`, 1200);
     };
 
-    window.toggleWish = function (id, btn) {
-            btn.classList.toggle('wishlisted');
-            const isWish = btn.classList.contains('wishlisted');
-            if (isWish) {
-                btn.innerHTML = '<i class="fa-solid fa-heart" aria-hidden="true"></i>';
-                btn.setAttribute('aria-pressed', 'true');
-            } else {
-                btn.innerHTML = '<i class="fa-regular fa-heart" aria-hidden="true"></i>';
-                btn.setAttribute('aria-pressed', 'false');
-            }
-            if (typeof HeelsUpWishlistSystem !== 'undefined') {
-                if (isWish) HeelsUpWishlistSystem.add(id);
-                else HeelsUpWishlistSystem.remove(id);
-                // System shows toast on its own? Actually no, add() doesn't show toast, toggle does.
-                // We'll show toast manually here.
-                toast(isWish ? 'Added to Wishlist' : 'Removed from Wishlist', isWish ? 'success' : 'info');
-            } else {
-                toast(isWish ? 'Added to Wishlist' : 'Removed from Wishlist', isWish ? 'success' : 'info');
-            }
-        };
 
     /* ── REVIEWS ── */
     let realReviews = [];
     async function loadReviews(productId) {
       try {
-        if (typeof HeelsUpAuth !== 'undefined' && HeelsUpAuth.api) {
-          const data = await HeelsUpAuth.api('/api/products/' + productId + '/reviews');
-          realReviews = data.reviews || [];
-        } else {
-          // Mock reviews
-          realReviews = [
-            { first_name: "Anita", last_name: "R.", rating: 5, body: "Absolutely love these! Very comfortable and exactly as shown.", created_at: new Date().toISOString(), title: "Perfect fit" }
-          ];
-        }
+        const data = await HeelsUpAuth.api('/api/products/' + productId + '/reviews');
+        realReviews = data.reviews || data.data || data.results || data || [];
 
         const ratingValEl = $('info-rating-val');
         const rating = ratingValEl ? parseFloat(ratingValEl.innerText) : 4.5;
-        renderReviews(rating, realReviews.length || 1);
-      } catch (e) { console.error('Failed to load reviews', e); }
+        renderReviews(rating, realReviews.length || 0);
+      } catch (e) {
+        console.error('Failed to load reviews', e);
+        const ratingValEl = $('info-rating-val');
+        const rating = ratingValEl ? parseFloat(ratingValEl.innerText) : 4.5;
+        renderReviews(rating, 0);
+      }
     }
 
     function renderReviews(rating, count) {

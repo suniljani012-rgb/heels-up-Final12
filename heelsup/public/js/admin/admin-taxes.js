@@ -216,10 +216,13 @@
             category_label: catLabels[f.category.value] || f.category.value,
             hsn_code: f.hsn_code.value.trim(),
             tax_rate: Number(f.tax_rate.value),
+            rate: Number(f.tax_rate.value),
+            name: `GST ${f.tax_rate.value}% (${catLabels[f.category.value] || f.category.value})`,
+            active: f.is_active.checked ? 1 : 0,
+            is_active: f.is_active.checked ? 1 : 0,
             condition_type: f.condition_type.value,
             condition_amount: f.condition_amount.value ? Number(f.condition_amount.value) : null,
-            notes: f.notes.value.trim(),
-            is_active: f.is_active.checked ? 1 : 0,
+            notes: f.notes.value.trim()
          };
 
          try {
@@ -245,7 +248,7 @@
 
       async function toggleRule(id, val) {
          try {
-            await HeelsUpAuth.api(`/api/admin/taxes/rules/${id}`, { method: 'PATCH', body: JSON.stringify({ is_active: val ? 1 : 0 }) });
+            await HeelsUpAuth.api(`/api/admin/taxes/rules/${id}`, { method: 'PUT', body: JSON.stringify({ active: val ? 1 : 0 }) });
             const r = taxRules.find(x => x.id === id);
             if (r) r.is_active = val ? 1 : 0;
             showToast(val ? 'Rule enabled.' : 'Rule disabled.');

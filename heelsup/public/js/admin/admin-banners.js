@@ -70,8 +70,7 @@
 
         // ── FILTER ────────────────────────────────────────────────────────────────
         function filterBanners() {
-            const placement = $('placementFilter').value;
-            let list = placement ? allBanners.filter(b => b.placement === placement) : [...allBanners];
+            let list = [...allBanners];
             list.sort((a, b) => { if (a.active === b.active) return (a.sort_order || 99) - (b.sort_order || 99); return a.active ? -1 : 1; });
             renderTable(list);
         }
@@ -80,10 +79,12 @@
         function renderTable(list) {
             const tbody = $('bannersBody');
             if (!list.length) {
-                tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="fa-regular fa-image"></i><h3>No Banners Found</h3><p>No banners for this placement yet.</p></div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-regular fa-image"></i><h3>No Banners Found</h3></div></td></tr>`;
                 return;
             }
-            tbody.innerHTML = list.map(b => `
+            tbody.innerHTML = list.map(b => {
+                const bannerLink = b.link || b.link_url || '';
+                return `
     <tr style="${b.active ? '' : 'opacity:.65;background:#FAFBFF'}">
       <td>
         ${b.image_url
@@ -94,10 +95,9 @@
         <div class="td-name">${esc(b.title || '—')}</div>
         <div class="td-sub">${esc(b.subtitle || 'No subtitle')}</div>
       </td>
-      <td><span class="badge badge-placement">${esc(b.placement || '—')}</span></td>
       <td>
-        ${b.link_url
-                    ? `<a href="${esc(b.link_url)}" target="_blank" style="color:var(--blue);font-size:.8rem;text-decoration:underline">${esc(b.link_url)}</a>`
+        ${bannerLink
+                    ? `<a href="${esc(bannerLink)}" target="_blank" style="color:var(--blue);font-size:.8rem;text-decoration:underline">${esc(bannerLink)}</a>`
                     : '<span style="color:var(--muted);font-size:.8rem">—</span>'}
       </td>
       <td style="text-align:center;font-weight:600">${b.sort_order || '—'}</td>
@@ -112,7 +112,8 @@
           </button>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+            }).join('');
         }
 
         // ── MODAL ─────────────────────────────────────────────────────────────────
@@ -120,7 +121,7 @@
             editingId = null;
             $('modalTitle').textContent = 'Upload New Banner';
             $('fTitle').value = ''; $('fSubtitle').value = ''; $('fImageUrl').value = '';
-            $('fPlacement').value = 'Homepage Hero'; $('fSort').value = allBanners.length + 1;
+            $('fSort').value = allBanners.length + 1;
             $('fLink').value = ''; $('fActive').checked = true;
             $('bannerModal').classList.add('show');
         }
@@ -131,9 +132,8 @@
             $('fTitle').value = b.title || '';
             $('fSubtitle').value = b.subtitle || '';
             $('fImageUrl').value = b.image_url || '';
-            $('fPlacement').value = b.placement || 'Homepage Hero';
             $('fSort').value = b.sort_order || 1;
-            $('fLink').value = b.link_url || '';
+            $('fLink').value = b.link || b.link_url || '';
             $('fActive').checked = !!b.active;
             $('bannerModal').classList.add('show');
         }
@@ -155,9 +155,9 @@
 
             const payload = {
                 title, subtitle: $('fSubtitle').value.trim(),
-                image_url: imageUrl, placement: $('fPlacement').value,
+                image_url: imageUrl,
                 sort_order: parseInt($('fSort').value) || 1,
-                link_url: link, active: $('fActive').checked
+                link: link, active: $('fActive').checked
             };
 
             try {

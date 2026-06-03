@@ -70,22 +70,20 @@
         function filterPages() {
             const q = document.getElementById('pageSearch').value.toLowerCase();
             const statF = document.getElementById('statusFilter').value;
-            const tempF = document.getElementById('templateFilter').value;
 
             filteredPages = allPages.filter(p => {
                 const titleStr = (p.title || '').toLowerCase();
                 const slugStr = (p.slug || '').toLowerCase();
-                const status = (p.status || 'published').toLowerCase();
-                const template = p.template || 'Default Page';
+                const active = p.active === undefined ? 1 : Number(p.active);
+                const status = active === 1 ? 'published' : 'draft';
 
                 // Search Match
                 const matchesSearch = !q || titleStr.includes(q) || slugStr.includes(q);
 
                 // Dropdown Match
                 const matchesStat = !statF || status === statF;
-                const matchesTemp = !tempF || template === tempF;
 
-                return matchesSearch && matchesStat && matchesTemp;
+                return matchesSearch && matchesStat;
             });
 
             document.getElementById('totalCountDisplay').textContent = `All Pages (${filteredPages.length})`;
@@ -101,36 +99,35 @@
             const info = document.getElementById('paginationInfo');
 
             if (!page.length) {
-                tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><i class="fa-regular fa-file-lines"></i><h3>No Pages Found</h3><p>Try adjusting your search or filters.</p></div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><i class="fa-regular fa-file-lines"></i><h3>No Pages Found</h3><p>Try adjusting your search or filters.</p></div></td></tr>';
                 info.textContent = `Showing 0 pages`;
                 document.getElementById('pagesPagination').innerHTML = '';
                 return;
             }
 
-            info.innerHTML = `Showing <strong>${start + 1}â€“${Math.min(start + PAGE, filteredPages.length)}</strong> of <strong>${filteredPages.length}</strong> pages`;
+            info.innerHTML = `Showing <strong>${start + 1}–${Math.min(start + PAGE, filteredPages.length)}</strong> of <strong>${filteredPages.length}</strong> pages`;
 
             tbody.innerHTML = page.map(p => {
-                const isPublished = (p.status || 'published').toLowerCase() === 'published';
-                const statusCls = isPublished ? 'status-published' : 'status-draft';
-                const statusTxt = isPublished ? 'Published' : 'Draft';
-                const trStyle = isPublished ? '' : 'style="background:var(--color-light);"';
-                const titleCls = isPublished ? '' : 'text-muted';
+                const isActive = p.active === undefined ? true : Number(p.active) === 1;
+                const statusCls = isActive ? 'status-published' : 'status-draft';
+                const statusTxt = isActive ? 'Published' : 'Draft';
+                const trStyle = isActive ? '' : 'style="background:var(--color-light);"';
+                const titleCls = isActive ? '' : 'text-muted';
 
                 return `<tr ${trStyle}>
                     <td>
                         <div class="admin-table-name ${titleCls}">${esc(p.title || 'Untitled')}</div>
                         <div class="url-slug">/pages/${esc(p.slug || '')}</div>
                     </td>
-                    <td><span class="badge-gold">${esc(p.template || 'Default Page')}</span></td>
                     <td>
                         <div class="admin-table-name ${titleCls}">${fmtDate(p.updated_at || p.created_at)}</div>
-                        <div class="admin-table-sub">${esc(p.author || 'System')}</div>
+                        <div class="admin-table-sub">System</div>
                     </td>
                     <td><span class="status-badge ${statusCls}">${statusTxt}</span></td>
                     <td>
                         <div class="admin-table-actions" style="justify-content:flex-end;">
                             <button class="table-action-btn" title="Edit Page" onclick='openPageModal(${JSON.stringify(p).replace(/'/g, "&#39;")})'><i class="fa-regular fa-pen-to-square"></i></button>
-                            <button class="table-action-btn" title="View Live"><i class="fa-regular fa-eye"></i></button>
+                            <button class="table-action-btn" title="View Live" onclick="window.open('/pages/${esc(p.slug)}', '_blank')"><i class="fa-regular fa-eye"></i></button>
                             <button class="table-action-btn danger" title="Delete Page" onclick="deletePage(${p.id})"><i class="fa-regular fa-trash-can"></i></button>
                         </div>
                     </td>
@@ -157,14 +154,16 @@
                 document.getElementById('updatePageId').value = p.id;
                 document.getElementById('pageTitle').value = p.title || '';
                 document.getElementById('pageSlug').value = p.slug || '';
-                document.getElementById('pageStatus').value = p.status || 'published';
-                document.getElementById('pageTemplate').value = p.template || 'Default Page';
+                document.getElementById('pageStatus').value = (p.active === undefined ? 1 : Number(p.active)) === 1 ? 'published' : 'draft';
                 document.getElementById('pageContent').value = p.content || '';
+                document.getElementById('pageMetaTitle').value = p.meta_title || '';
+                document.getElementById('pageMetaDescription').value = p.meta_description || '';
             } else {
                 document.getElementById('pageModalTitle').textContent = `Create New Page`;
                 document.getElementById('updatePageId').value = '';
                 document.getElementById('pageStatus').value = 'published';
-                document.getElementById('pageTemplate').value = 'Default Page';
+                document.getElementById('pageMetaTitle').value = '';
+                document.getElementById('pageMetaDescription').value = '';
             }
 
             document.getElementById('pageModal').classList.add('show');
@@ -184,10 +183,10 @@
             const payload = {
                 title: document.getElementById('pageTitle').value.trim(),
                 slug: document.getElementById('pageSlug').value.trim(),
-                status: document.getElementById('pageStatus').value,
-                template: document.getElementById('pageTemplate').value,
+                active: document.getElementById('pageStatus').value === 'published' ? 1 : 0,
                 content: document.getElementById('pageContent').value,
-                author: currentUser
+                meta_title: document.getElementById('pageMetaTitle').value.trim(),
+                meta_description: document.getElementById('pageMetaDescription').value.trim()
             };
 
             try {

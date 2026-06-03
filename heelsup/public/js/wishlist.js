@@ -130,12 +130,29 @@
     // Backwards compat for shop cards
     window.toggleWish = async function (id, btn) {
         if (!isLoggedIn()) {
-            if (typeof toast !== 'undefined') toast('Please log in to save items', 'info');
+            if (typeof toast !== 'undefined') {
+                toast('Please log in to save items', 'info');
+            } else if (typeof showToast !== 'undefined') {
+                showToast('Please log in to save items', 'info');
+            }
             return;
         }
         const result = await toggle(id);
-        if (btn) btn.classList.toggle('active', result);
-        if (typeof toast !== 'undefined') toast(result ? '❤️ Added to wishlist!' : 'Removed from wishlist', result ? 'success' : 'info');
+        if (btn) {
+            btn.classList.toggle('active', result);
+            btn.classList.toggle('wishlisted', result);
+            btn.setAttribute('aria-pressed', result ? 'true' : 'false');
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = result ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+            } else {
+                btn.innerHTML = result ? '<i class="fa-solid fa-heart" aria-hidden="true"></i>' : '<i class="fa-regular fa-heart" aria-hidden="true"></i>';
+            }
+        }
+        const msg = result ? 'Added to Wishlist ✓' : 'Removed from Wishlist';
+        const type = result ? 'success' : 'info';
+        if (typeof toast !== 'undefined') toast(msg, type);
+        else if (typeof showToast !== 'undefined') showToast(msg, type);
     };
 
     // Auto-sync after auth is ready

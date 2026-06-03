@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -121,18 +121,10 @@
                             <option value="published">Published</option>
                             <option value="draft">Draft</option>
                         </select>
-                        <select class="filter-select" id="templateFilter" onchange="filterPages()">
-                            <option value="">All Templates</option>
-                            <option value="Default Page">Default Page</option>
-                            <option value="Contact Form Template">Contact Form</option>
-                            <option value="FAQ Template">FAQ</option>
-                            <option value="Legal Template">Legal</option>
-                            <option value="Custom Promo Template">Promo/Landing</option>
-                        </select>
                     </div>
                     <div>
                         <span style="font-size:var(--text-sm); font-weight:600; color:var(--text);"
-                            id="totalCountDisplay">All Pages (0)</span>
+                             id="totalCountDisplay">All Pages (0)</span>
                     </div>
                 </div>
 
@@ -143,7 +135,6 @@
                             <thead>
                                 <tr>
                                     <th class="sortable sorted">Page Title</th>
-                                    <th>Template</th>
                                     <th>Last Updated</th>
                                     <th>Status</th>
                                     <th style="text-align:right;">Actions</th>
@@ -194,15 +185,13 @@
                             <option value="draft">Draft</option>
                         </select>
                     </div>
+                    <div class="form-field">
+                        <label class="form-label">Meta Title (SEO)</label>
+                        <input type="text" class="form-input" id="pageMetaTitle" placeholder="SEO Title">
+                    </div>
                     <div class="form-field full">
-                        <label class="form-label">Template</label>
-                        <select class="form-select" id="pageTemplate" required>
-                            <option value="Default Page">Default Page</option>
-                            <option value="Contact Form Template">Contact Form Template</option>
-                            <option value="FAQ Template">FAQ Template</option>
-                            <option value="Legal Template">Legal Template</option>
-                            <option value="Custom Promo Template">Custom Promo Template</option>
-                        </select>
+                        <label class="form-label">Meta Description (SEO)</label>
+                        <textarea class="form-textarea" id="pageMetaDescription" style="height:60px;" placeholder="SEO Meta Description..."></textarea>
                     </div>
                     <div class="form-field full">
                         <label class="form-label">Content (HTML)</label>
