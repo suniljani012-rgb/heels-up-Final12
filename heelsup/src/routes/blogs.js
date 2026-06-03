@@ -46,7 +46,13 @@ export async function blogsAdminRouter(request, env) {
                     : 'SELECT COUNT(*) as n FROM blog_posts'
             ).bind(...(status ? [status] : [])).first();
 
-            return list(rows.results, { page, limit, total: countR?.n || 0 });
+            const results = rows.results.map(post => ({
+                ...post,
+                cover_image_url: post.cover_image_url !== undefined ? post.cover_image_url : post.image_url,
+                meta_desc: post.meta_desc !== undefined ? post.meta_desc : post.meta_description
+            }));
+
+            return list(results, { page, limit, total: countR?.n || 0 });
         } catch (e) { return serverError('Failed to fetch blog posts'); }
     }
 
@@ -55,6 +61,10 @@ export async function blogsAdminRouter(request, env) {
         const id = path.slice(1);
         const post = await env.DB.prepare('SELECT * FROM blog_posts WHERE id = ?').bind(id).first();
         if (!post) return notFound('Blog post not found');
+        
+        post.cover_image_url = post.cover_image_url !== undefined ? post.cover_image_url : post.image_url;
+        post.meta_desc = post.meta_desc !== undefined ? post.meta_desc : post.meta_description;
+        
         return ok(post);
     }
 
@@ -62,30 +72,37 @@ export async function blogsAdminRouter(request, env) {
     if (path === '/' && method === 'POST') {
         try {
             const {
-                title, content, excerpt, cover_image_url,
+                title, content, excerpt, cover_image_url, image_url,
                 category, tags = [], status = 'draft',
-                meta_title, meta_desc, published_at
+                meta_title, meta_desc, meta_description, published_at
             } = await request.json();
 
             if (!title || !content) return error('Title and content are required');
 
             const slug = slugify(title) + '-' + Date.now().toString(36);
+            const imgUrl = image_url || cover_image_url || null;
+            const metaDescVal = meta_description || meta_desc || excerpt || null;
 
             await env.DB.prepare(`
                 INSERT INTO blog_posts
-                    (author_id, title, slug, content, excerpt, cover_image_url,
-                     category, tags, status, meta_title, meta_desc, published_at, created_at, updated_at)
+                    (author_id, title, slug, content, excerpt, image_url,
+                     category, tags, status, meta_title, meta_description, published_at, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
             `).bind(
-                user.id, title, slug, content, excerpt || null, cover_image_url || null,
+                user.id, title, slug, content, excerpt || null, imgUrl,
                 category || null, JSON.stringify(tags), status,
-                meta_title || title, meta_desc || excerpt || null,
+                meta_title || title, metaDescVal,
                 status === 'published' ? (published_at || new Date().toISOString()) : null
             ).run();
 
             const newPost = await env.DB.prepare(
                 'SELECT * FROM blog_posts WHERE slug = ?'
             ).bind(slug).first();
+
+            if (newPost) {
+                newPost.cover_image_url = newPost.image_url;
+                newPost.meta_desc = newPost.meta_description;
+            }
 
             return created(newPost, 'Blog post created');
         } catch (e) {
@@ -102,8 +119,8 @@ export async function blogsAdminRouter(request, env) {
             if (!existing) return notFound('Blog post not found');
 
             const {
-                title, content, excerpt, cover_image_url,
-                category, tags, status, meta_title, meta_desc, published_at
+                title, content, excerpt, cover_image_url, image_url,
+                category, tags, status, meta_title, meta_desc, meta_description, published_at
             } = await request.json();
 
             const newStatus = status || existing.status;
@@ -111,30 +128,37 @@ export async function blogsAdminRouter(request, env) {
                 ? new Date().toISOString()
                 : (published_at || null);
 
+            const imgUrl = image_url !== undefined ? image_url : (cover_image_url !== undefined ? cover_image_url : null);
+            const metaDescVal = meta_description !== undefined ? meta_description : (meta_desc !== undefined ? meta_desc : null);
+
             await env.DB.prepare(`
                 UPDATE blog_posts SET
                     title           = COALESCE(?, title),
                     content         = COALESCE(?, content),
                     excerpt         = COALESCE(?, excerpt),
-                    cover_image_url = COALESCE(?, cover_image_url),
+                    image_url       = COALESCE(?, image_url),
                     category        = COALESCE(?, category),
                     tags            = COALESCE(?, tags),
                     status          = ?,
                     meta_title      = COALESCE(?, meta_title),
-                    meta_desc       = COALESCE(?, meta_desc),
+                    meta_description = COALESCE(?, meta_description),
                     published_at    = COALESCE(?, published_at),
                     updated_at      = datetime('now')
                 WHERE id = ?
             `).bind(
                 title || null, content || null, excerpt || null,
-                cover_image_url || null, category || null,
+                imgUrl, category || null,
                 tags ? JSON.stringify(tags) : null,
                 newStatus,
-                meta_title || null, meta_desc || null, pubAt,
+                meta_title || null, metaDescVal, pubAt,
                 id
             ).run();
 
             const updated = await env.DB.prepare('SELECT * FROM blog_posts WHERE id = ?').bind(id).first();
+            if (updated) {
+                updated.cover_image_url = updated.image_url;
+                updated.meta_desc = updated.meta_description;
+            }
             return ok(updated, 'Blog post updated');
         } catch (e) { return serverError('Failed to update blog post'); }
     }
@@ -178,7 +202,7 @@ export async function blogsPublicRouter(request, env) {
         const offset = (page - 1) * limit;
         const category = url.searchParams.get('category');
 
-        let sql = `SELECT id, title, slug, excerpt, cover_image_url, category, tags, published_at
+        let sql = `SELECT id, title, slug, excerpt, image_url, category, tags, published_at
                    FROM blog_posts WHERE status = 'published'`;
         const params = [];
         if (category) { sql += ' AND category = ?'; params.push(category); }
@@ -192,7 +216,12 @@ export async function blogsPublicRouter(request, env) {
                 : "SELECT COUNT(*) as n FROM blog_posts WHERE status='published'"
         ).bind(...(category ? [category] : [])).first();
 
-        return list(rows.results, { page, limit, total: countR?.n || 0 });
+        const results = rows.results.map(post => ({
+            ...post,
+            cover_image_url: post.image_url
+        }));
+
+        return list(results, { page, limit, total: countR?.n || 0 });
     }
 
     // GET /api/blogs/:slug
@@ -202,6 +231,10 @@ export async function blogsPublicRouter(request, env) {
             "SELECT * FROM blog_posts WHERE slug = ? AND status = 'published'"
         ).bind(slug).first();
         if (!post) return notFound('Blog post not found');
+        
+        post.cover_image_url = post.image_url;
+        post.meta_desc = post.meta_description;
+        
         return ok(post);
     }
 

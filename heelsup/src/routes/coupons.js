@@ -15,8 +15,7 @@ export async function couponsRouter(request, env) {
 
             const coupon = await env.DB.prepare(
                 `SELECT * FROM coupons WHERE code = ? AND active = 1
-         AND (valid_from IS NULL OR valid_from <= datetime('now'))
-         AND (valid_until IS NULL OR valid_until >= datetime('now'))`
+          AND (expires_at IS NULL OR expires_at >= datetime('now'))`
             ).bind(code.toUpperCase()).first();
 
             if (!coupon) return error('Invalid or expired coupon code');
@@ -53,11 +52,11 @@ export async function couponsRouter(request, env) {
         const { user, error: authError } = await requireAdmin(request, env);
         if (authError) return authError;
         try {
-            const { code, type, value, min_order, max_uses, per_user, valid_from, valid_until } = await request.json();
+            const { code, type, value, min_order, max_uses, expires_at, description } = await request.json();
             if (!code || !type || !value) return error('Code, type, and value required');
             const result = await env.DB.prepare(
-                'INSERT INTO coupons (code, type, value, min_order, max_uses, per_user, valid_from, valid_until) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *'
-            ).bind(code.toUpperCase(), type, value, min_order || 0, max_uses || null, per_user || 1, valid_from || null, valid_until || null).first();
+                "INSERT INTO coupons (code, type, value, min_order, max_uses, expires_at, description, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now')) RETURNING *"
+            ).bind(code.toUpperCase(), type, value, min_order || 0, max_uses || null, expires_at || null, description || '').first();
             return created(result, 'Coupon created');
         } catch (e) {
             if (e.message?.includes('UNIQUE')) return error('Coupon code already exists', 409);

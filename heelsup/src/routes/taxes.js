@@ -64,11 +64,11 @@ export async function taxesAdminRouter(request, env) {
     // ── GET /api/admin/taxes/rules ─────────────────────────────
     if (path === '/rules' && method === 'GET') {
         try {
-            const tax_class = url.searchParams.get('tax_class');
+            const tax_class = url.searchParams.get('tax_class') || url.searchParams.get('category');
             let sql = 'SELECT * FROM tax_rules';
             const params = [];
-            if (tax_class) { sql += ' WHERE tax_class = ?'; params.push(tax_class); }
-            sql += ' ORDER BY priority ASC, created_at DESC';
+            if (tax_class) { sql += ' WHERE category = ?'; params.push(tax_class); }
+            sql += ' ORDER BY created_at DESC';
 
             const rows = await env.DB.prepare(sql).bind(...params).all();
             return list(rows.results);
@@ -79,30 +79,36 @@ export async function taxesAdminRouter(request, env) {
     if (path === '/rules' && method === 'POST') {
         try {
             const {
-                tax_class = 'standard',
+                tax_class,
+                category,
                 country = 'IN',
                 state = '*',
-                postcode = '*',
-                city = '*',
                 rate,           // e.g. 18.00 (percentage)
                 name,           // e.g. "GST 18%"
-                priority = 1,
-                compound = 0,
-                shipping = 0,
+                type = 'percentage',
+                active = 1,
+                hsn_code,
+                condition_type,
+                condition_amount,
+                notes
             } = await request.json();
 
             if (!rate || !name) return error('Rate and name are required');
             if (rate < 0 || rate > 100) return error('Rate must be 0–100');
 
+            const ruleCategory = category || tax_class || 'standard';
+
             const result = await env.DB.prepare(`
                 INSERT INTO tax_rules
-                    (tax_class, country, state, postcode, city, rate, name, priority, compound, shipping, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                    (name, type, rate, country, state, category, active, hsn_code, condition_type, condition_amount, notes, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
                 RETURNING *
             `).bind(
-                tax_class, country, state, postcode, city,
-                parseFloat(rate), name, priority,
-                compound ? 1 : 0, shipping ? 1 : 0
+                name, type, parseFloat(rate), country, state, ruleCategory,
+                active !== undefined ? (active ? 1 : 0) : 1,
+                hsn_code || null, condition_type || null,
+                condition_amount !== undefined ? parseFloat(condition_amount) : null,
+                notes || null
             ).first();
 
             return created(result, 'Tax rule created');
@@ -120,30 +126,43 @@ export async function taxesAdminRouter(request, env) {
             if (!existing) return notFound('Tax rule not found');
 
             const {
-                tax_class, country, state, postcode,
-                city, rate, name, priority, compound, shipping
+                tax_class, category, country, state, rate, name, type, active,
+                hsn_code, condition_type, condition_amount, notes
             } = await request.json();
+
+            const ruleCategory = category || tax_class || null;
+            let activeVal = null;
+            if (active !== undefined) {
+                activeVal = active ? 1 : 0;
+            }
 
             await env.DB.prepare(`
                 UPDATE tax_rules SET
-                    tax_class = COALESCE(?, tax_class),
-                    country   = COALESCE(?, country),
-                    state     = COALESCE(?, state),
-                    postcode  = COALESCE(?, postcode),
-                    city      = COALESCE(?, city),
-                    rate      = COALESCE(?, rate),
-                    name      = COALESCE(?, name),
-                    priority  = COALESCE(?, priority),
-                    compound  = COALESCE(?, compound),
-                    shipping  = COALESCE(?, shipping)
+                    name             = COALESCE(?, name),
+                    type             = COALESCE(?, type),
+                    rate             = COALESCE(?, rate),
+                    country          = COALESCE(?, country),
+                    state            = COALESCE(?, state),
+                    category         = COALESCE(?, category),
+                    active           = COALESCE(?, active),
+                    hsn_code         = COALESCE(?, hsn_code),
+                    condition_type   = COALESCE(?, condition_type),
+                    condition_amount = COALESCE(?, condition_amount),
+                    notes            = COALESCE(?, notes),
+                    updated_at       = datetime('now')
                 WHERE id = ?
             `).bind(
-                tax_class || null, country || null, state || null,
-                postcode || null, city || null,
+                name || null,
+                type || null,
                 rate !== undefined ? parseFloat(rate) : null,
-                name || null, priority || null,
-                compound !== undefined ? (compound ? 1 : 0) : null,
-                shipping !== undefined ? (shipping ? 1 : 0) : null,
+                country || null,
+                state || null,
+                ruleCategory,
+                activeVal,
+                hsn_code || null,
+                condition_type || null,
+                condition_amount !== undefined ? parseFloat(condition_amount) : null,
+                notes || null,
                 id
             ).run();
 

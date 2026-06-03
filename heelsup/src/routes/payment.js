@@ -65,7 +65,7 @@ export async function paymentRouter(request, env) {
 
     // Update order with razorpay details
     await env.DB.prepare(
-      "UPDATE online_orders SET payment_status='paid', order_status='confirmed', razorpay_order_id=?, razorpay_payment_id=?, razorpay_signature=?, paid_at=?, updated_at=? WHERE id=?"
+      "UPDATE orders SET payment_status='paid', order_status='confirmed', razorpay_order_id=?, razorpay_payment_id=?, razorpay_signature=?, paid_at=?, updated_at=? WHERE id=?"
     ).bind(razorpay_order_id, razorpay_payment_id, razorpay_signature, paidAt, paidAt, orderId).run();
 
     // Insert payment record
@@ -76,22 +76,6 @@ export async function paymentRouter(request, env) {
     // Increment coupon usage
     if (pending.couponCode) {
       await env.DB.prepare("UPDATE coupons SET used_count = used_count + 1 WHERE code = ?").bind(pending.couponCode).run();
-    }
-
-    // Decrement stock for products
-    for (const item of pending.items) {
-      if (item.productId) {
-        const prod = await env.DB.prepare("SELECT id, name, stock FROM products WHERE id=?").bind(item.productId).first();
-        if (prod) {
-          const newStock = Math.max(0, (prod.stock || 0) - (item.qty || 1));
-          await env.DB.prepare("UPDATE products SET stock=?, sold_count=sold_count+?, updated_at=? WHERE id=?").bind(newStock, item.qty || 1, paidAt, prod.id).run();
-          
-          const diff = - (item.qty || 1);
-          await env.DB.prepare(
-            "INSERT INTO inventory_log (product_id, product_name, change_type, quantity_before, quantity_change, quantity_after, reason, created_at) VALUES (?,?,'sale',?,?,?,?,datetime('now'))"
-          ).bind(prod.id, prod.name, prod.stock || 0, diff, newStock, `Razorpay sale: Order ${pending.orderNumber}`).run();
-        }
-      }
     }
 
     // Delete pending KV draft order
@@ -118,11 +102,11 @@ export async function paymentRouter(request, env) {
 
     const localOrderId = parseInt(body.orderId || 0);
     if (localOrderId) {
-      const order = await env.DB.prepare("SELECT * FROM online_orders WHERE id=?").bind(localOrderId).first();
+      const order = await env.DB.prepare("SELECT * FROM orders WHERE id=?").bind(localOrderId).first();
       if (order) {
         if (order.payment_status === 'paid') return err("Already paid", 400);
         await env.DB.prepare("DELETE FROM order_items WHERE order_id=?").bind(localOrderId).run();
-        await env.DB.prepare("DELETE FROM online_orders WHERE id=?").bind(localOrderId).run();
+        await env.DB.prepare("DELETE FROM orders WHERE id=?").bind(localOrderId).run();
       }
     }
 
@@ -143,7 +127,7 @@ export async function paymentRouter(request, env) {
       const rzpOrderId = event.payload?.payment?.entity?.order_id;
       if (rzpOrderId) {
         await env.DB.prepare(
-          "UPDATE online_orders SET payment_status='failed', order_status='cancelled', updated_at=datetime('now') WHERE razorpay_order_id = ?"
+          "UPDATE orders SET payment_status='failed', order_status='cancelled', updated_at=datetime('now') WHERE razorpay_order_id = ?"
         ).bind(rzpOrderId).run();
       }
     }

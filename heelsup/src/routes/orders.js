@@ -16,13 +16,9 @@ async function getSetting(env, key, fallback = '') {
 
 async function generateOrderNumber(env) {
     const today = new Date();
-    const prefix = `HU-${today.getUTCFullYear()}`;
-    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM online_orders WHERE order_number LIKE ?").bind(`${prefix}%`).first();
-    const seq = String((row?.c || 0) + 1).padStart(4, "0");
-    return `${prefix}${seq}`;
-}${String(today.getUTCMonth() + 1).padStart(2, "0")}${String(today.getUTCDate()).padStart(2, "0")}`;
-    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM online_orders WHERE order_number LIKE ?").bind(`${prefix}-%`).first();
-    const seq = String((row?.c || 0) + 1).padStart(4, "0");
+    const prefix = `HU-${today.getUTCFullYear()}${String(today.getUTCMonth() + 1).padStart(2, '0')}${String(today.getUTCDate()).padStart(2, '0')}`;
+    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM orders WHERE order_number LIKE ?").bind(`${prefix}-%`).first();
+    const seq = String((row?.c || 0) + 1).padStart(4, '0');
     const rand = Math.floor(1000 + Math.random() * 9000);
     return `${prefix}-${seq}-${rand}`;
 }
@@ -98,6 +94,10 @@ function formatItem(it) {
 // ── STOCK HELPERS ──────────────────────────────────────────────────────────────
 
 async function deductSizeStock(env, productId, sizeLabel, qty) {
+    const prod = await env.DB.prepare("SELECT name, stock FROM products WHERE id=?").bind(productId).first();
+    const beforeStock = prod ? prod.stock : 0;
+    const afterStock = Math.max(0, beforeStock - qty);
+
     // Deduct from size-specific stock if available
     if (sizeLabel) {
         const row = await env.DB.prepare(
@@ -114,16 +114,28 @@ async function deductSizeStock(env, productId, sizeLabel, qty) {
     await env.DB.prepare(
         "UPDATE products SET stock=MAX(0, stock-?), sold_count=COALESCE(sold_count,0)+?, updated_at=datetime('now') WHERE id=?"
     ).bind(qty, qty, productId).run();
+
+    // Log to inventory_log
+    try {
+        await env.DB.prepare(
+            "INSERT INTO inventory_log (product_id, product_name, change_type, quantity_before, quantity_change, quantity_after, reason, created_at) VALUES (?, ?, 'sale', ?, ?, ?, ?, datetime('now'))"
+        ).bind(productId, prod ? prod.name : 'Unknown Product', beforeStock, -qty, afterStock, `Sale of quantity ${qty}`).run();
+    } catch (_) { /* log non-critical */ }
 }
 
 async function restoreSizeStock(env, orderId) {
     // Restore stock for all items in an order (used on cancellation)
     try {
         const items = await env.DB.prepare(
-            "SELECT product_id, quantity, size_label FROM online_order_items WHERE order_id=?"
+            "SELECT product_id, quantity, size_label FROM order_items WHERE order_id=?"
         ).bind(orderId).all();
         for (const item of (items.results || [])) {
             if (!item.product_id) continue;
+            
+            const prod = await env.DB.prepare("SELECT name, stock FROM products WHERE id=?").bind(item.product_id).first();
+            const beforeStock = prod ? prod.stock : 0;
+            const afterStock = beforeStock + item.quantity;
+
             if (item.size_label) {
                 await env.DB.prepare(
                     "UPDATE product_size_stock SET stock=stock+?, updated_at=datetime('now') WHERE product_id=? AND size_label=?"
@@ -132,6 +144,13 @@ async function restoreSizeStock(env, orderId) {
             await env.DB.prepare(
                 "UPDATE products SET stock=stock+?, sold_count=MAX(0,COALESCE(sold_count,0)-?), updated_at=datetime('now') WHERE id=?"
             ).bind(item.quantity, item.quantity, item.product_id).run();
+
+            // Log to inventory_log
+            try {
+                await env.DB.prepare(
+                    "INSERT INTO inventory_log (product_id, product_name, change_type, quantity_before, quantity_change, quantity_after, reason, created_at) VALUES (?, ?, 'restocked', ?, ?, ?, ?, datetime('now'))"
+                ).bind(item.product_id, prod ? prod.name : 'Unknown Product', beforeStock, item.quantity, afterStock, `Order ${orderId} cancelled`).run();
+            } catch (_) { /* log non-critical */ }
         }
     } catch (e) {
         console.error('restoreSizeStock error:', e);
@@ -191,25 +210,38 @@ export async function createOrderRecord(env, input) {
     const source = String(input.source || "online");
 
     const result = await env.DB.prepare(
-        `INSERT INTO online_orders (order_number, online_customer_id, delivery_address, subtotal, delivery_charge, discount, total, payment_method, payment_status, status, notes, created_at, updated_at)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        `INSERT INTO orders (
+            order_number, user_id, customer_name, customer_email, customer_phone,
+            address_line1, address_line2, city, state, pincode, country,
+            delivery_method, source, order_status, payment_status, payment_method,
+            subtotal_amount, discount_amount, shipping_amount, total_amount, coupon_code,
+            notes, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
-        orderNumber, input.userId, JSON.stringify({line1: finalAddressLine1, line2: addressLine2, city: finalCity, state: finalState, pincode: finalPincode, country: country}),
-        subtotalAmount * 100, shippingAmount * 100, discountAmount * 100, totalAmount * 100, input.paymentMethod, input.paymentStatus, input.orderStatus, String(input.notes || "").trim(), createdAt, createdAt
+        orderNumber, input.userId || null, customerName, customerEmail, customerPhone,
+        finalAddressLine1, addressLine2 || null, finalCity, finalState, finalPincode, country,
+        input.deliveryMethod || 'Standard', source, input.orderStatus || 'placed', input.paymentStatus || 'pending', input.paymentMethod || null,
+        Math.round(subtotalAmount * 100), Math.round(discountAmount * 100), Math.round(shippingAmount * 100), Math.round(totalAmount * 100), input.couponCode || null,
+        String(input.notes || "").trim(), createdAt, createdAt
     ).run();
 
     const orderId = result.meta?.last_row_id;
     for (const item of items) {
         await env.DB.prepare(
-            "INSERT INTO online_order_items (order_id, product_id, product_code, product_name, color, size, quantity, unit_price, total_price) VALUES (?,?,?,?,?,?,?,?,?)"
-        ).bind(orderId, item.productId, item.sku, item.name, '', item.size || 'Default', item.qty, Math.round(item.unitPrice * 100), Math.round(item.lineTotal * 100)).run();
+            `INSERT INTO order_items (
+                order_id, product_id, product_name, product_sku, quantity, unit_price, line_total, size_label, image_url, created_at
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+            orderId, item.productId, item.name, item.sku, item.qty,
+            item.unitPrice * 100, item.lineTotal * 100, item.size || 'Default', item.image, createdAt
+        ).run();
         // Deduct stock per size
         if (item.productId) {
             await deductSizeStock(env, item.productId, item.size, item.qty);
         }
     }
 
-    return { ok: true, order: { id: orderId, order_number: orderNumber, total_amount: totalAmount, subtotal_amount: subtotalAmount, shipping_amount: shippingAmount: taxAmount, discount_amount: discountAmount } };
+    return { ok: true, order: { id: orderId, order_number: orderNumber, total_amount: totalAmount, subtotal_amount: subtotalAmount, shipping_amount: shippingAmount, discount_amount: discountAmount } };
 }
 
 // ── MAIN ROUTER ──────────────────────────────────────────────────────────────
@@ -387,15 +419,15 @@ export async function ordersRouter(request, env) {
             const limit = Math.min(50, parseInt(params.get('limit') || '10'));
             const offset = (page - 1) * limit;
 
-            const countRow = await env.DB.prepare('SELECT COUNT(*) as cnt FROM online_orders WHERE online_customer_id = ?').bind(user.id).first();
+            const countRow = await env.DB.prepare('SELECT COUNT(*) as cnt FROM orders WHERE user_id = ?').bind(user.id).first();
             const ordersRes = await env.DB.prepare(
-                `SELECT * FROM online_orders WHERE online_customer_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`
+                `SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`
             ).bind(user.id, limit, offset).all();
 
             const orders = [];
             for (const o of (ordersRes.results || [])) {
                 const itemsRes = await env.DB.prepare(
-                    `SELECT product_name, image_url, size_label, quantity, unit_price FROM online_order_items WHERE order_id = ? LIMIT 4`
+                    `SELECT product_name, image_url, size_label, quantity, unit_price FROM order_items WHERE order_id = ? LIMIT 4`
                 ).bind(o.id).all();
                 const items = (itemsRes.results || []).map(it => ({
                     name: it.product_name,
@@ -422,7 +454,7 @@ export async function ordersRouter(request, env) {
         try {
             const order = await env.DB.prepare(
                 `SELECT order_number, order_status, payment_status, tracking_number, tracking_url, shipped_at, delivered_at, created_at
-                 FROM online_orders WHERE order_number = ?`
+                 FROM orders WHERE order_number = ?`
             ).bind(orderNumber.toUpperCase()).first();
             if (!order) return notFound('Order not found');
             return ok(order);
@@ -437,9 +469,9 @@ export async function ordersRouter(request, env) {
         if (authErr) return authErr;
         const id = parseInt(path.match(/(\d+)/)?.[1]);
         try {
-            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ? AND online_customer_id = ?').bind(id, user.id).first();
+            const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').bind(id, user.id).first();
             if (!order) return notFound('Order not found');
-            const itemsRes = await env.DB.prepare('SELECT * FROM online_order_items WHERE order_id = ?').bind(id).all();
+            const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(id).all();
             const items = (itemsRes.results || []).map(formatItem);
             return ok(formatOrder(order, items));
         } catch (e) {
@@ -453,7 +485,7 @@ export async function ordersRouter(request, env) {
         if (authErr) return authErr;
         const id = parseInt(path.match(/(\d+)/)?.[1]);
         try {
-            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ? AND online_customer_id = ?').bind(id, user.id).first();
+            const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').bind(id, user.id).first();
             if (!order) return notFound('Order not found');
 
             if (order.order_status !== 'delivered')
@@ -471,7 +503,7 @@ export async function ordersRouter(request, env) {
             if (!reason?.trim()) return error('Exchange reason is required', 400);
 
             await env.DB.prepare(
-                `UPDATE online_orders SET order_status = 'exchange_requested', exchange_reason = ?, exchange_product = ?, updated_at = datetime('now') WHERE id = ?`
+                `UPDATE orders SET order_status = 'exchange_requested', exchange_reason = ?, exchange_product = ?, updated_at = datetime('now') WHERE id = ?`
             ).bind(reason.trim(), exchange_product || null, id).run();
 
             return ok(null, 'Exchange request submitted successfully');
@@ -508,9 +540,9 @@ export async function ordersRouter(request, env) {
 
             const whereSQL = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
-            const countRow = await env.DB.prepare(`SELECT COUNT(*) as cnt FROM online_orders ${whereSQL}`).bind(...binds).first();
+            const countRow = await env.DB.prepare(`SELECT COUNT(*) as cnt FROM orders ${whereSQL}`).bind(...binds).first();
             const ordersRes = await env.DB.prepare(
-                `SELECT * FROM online_orders ${whereSQL} ORDER BY id DESC LIMIT ? OFFSET ?`
+                `SELECT * FROM orders ${whereSQL} ORDER BY id DESC LIMIT ? OFFSET ?`
             ).bind(...binds, limit, offset).all();
 
             const total = countRow?.cnt || 0;
@@ -540,7 +572,7 @@ export async function ordersRouter(request, env) {
              SUM(CASE WHEN payment_status = 'paid' THEN total_amount ELSE 0 END) as revenue,
              SUM(discount_amount) as total_discount,
              COUNT(DISTINCT user_id) as unique_customers
-           FROM online_orders`
+           FROM orders`
             ).first();
 
             return ok(stats);
@@ -555,9 +587,9 @@ export async function ordersRouter(request, env) {
         if (authErr) return authErr;
         const id = parseInt(path.match(/(\d+)/)?.[1]);
         try {
-            const order = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ?').bind(id).first();
+            const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
             if (!order) return notFound('Order not found');
-            const itemsRes = await env.DB.prepare('SELECT * FROM online_order_items WHERE order_id = ?').bind(id).all();
+            const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(id).all();
             const items = (itemsRes.results || []).map(formatItem);
             return ok(formatOrder(order, items));
         } catch (e) {
@@ -576,7 +608,7 @@ export async function ordersRouter(request, env) {
             if (!status) return error('Status is required', 400);
 
             // Get current status before updating
-            const currentOrder = await env.DB.prepare('SELECT order_status FROM online_orders WHERE id = ?').bind(id).first();
+            const currentOrder = await env.DB.prepare('SELECT order_status FROM orders WHERE id = ?').bind(id).first();
 
             const sets = ['order_status = ?', "updated_at = datetime('now')"];
             const binds = [status];
@@ -597,14 +629,14 @@ export async function ordersRouter(request, env) {
 
             binds.push(id);
 
-            await env.DB.prepare(`UPDATE online_orders SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
+            await env.DB.prepare(`UPDATE orders SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
 
             // Restore stock if order is being cancelled (and wasn't already cancelled)
             if (status === 'cancelled' && currentOrder?.order_status !== 'cancelled') {
                 await restoreSizeStock(env, id);
             }
 
-            const updated = await env.DB.prepare('SELECT * FROM online_orders WHERE id = ?').bind(id).first();
+            const updated = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
             return ok(formatOrder(updated), 'Order status updated');
         } catch (e) {
             console.error('Update status error:', e);
@@ -624,7 +656,7 @@ export async function ordersRouter(request, env) {
 
             const status = action === 'approve' ? 'exchange_approved' : 'exchange_rejected';
             await env.DB.prepare(
-                `UPDATE online_orders SET order_status = ?, updated_at = datetime('now') WHERE id = ?`
+                `UPDATE orders SET order_status = ?, updated_at = datetime('now') WHERE id = ?`
             ).bind(status, id).run();
 
             return ok(null, `Exchange request ${action}d`);

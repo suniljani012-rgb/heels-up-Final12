@@ -23,7 +23,7 @@ export async function pagesAdminRouter(request, env) {
     if (path === '/' && method === 'GET') {
         try {
             const pages = await env.DB.prepare(
-                'SELECT id, title, slug, status, template, updated_at FROM pages ORDER BY title ASC'
+                'SELECT id, title, slug, active, updated_at FROM pages ORDER BY title ASC'
             ).all();
             return list(pages.results);
         } catch (e) { return serverError('Failed to fetch pages'); }
@@ -41,11 +41,9 @@ export async function pagesAdminRouter(request, env) {
     if (path === '/' && method === 'POST') {
         try {
             const {
-                title, content, excerpt,
-                template = 'default',
-                status = 'published',
-                meta_title, meta_desc,
-                show_in_footer = 0, show_in_nav = 0
+                title, content,
+                active = 1, status,
+                meta_title, meta_desc, meta_description
             } = await request.json();
 
             if (!title || !content) return error('Title and content are required');
@@ -55,17 +53,19 @@ export async function pagesAdminRouter(request, env) {
             const exists = await env.DB.prepare('SELECT id FROM pages WHERE slug = ?').bind(slug).first();
             if (exists) return error('A page with this title already exists');
 
+            const activeVal = active !== undefined ? (active ? 1 : 0) : (status === 'draft' ? 0 : 1);
+            const metaDescriptionVal = meta_description !== undefined ? meta_description : (meta_desc || null);
+
             const result = await env.DB.prepare(`
                 INSERT INTO pages
-                    (title, slug, content, excerpt, template, status,
-                     meta_title, meta_desc, show_in_footer, show_in_nav,
+                    (title, slug, content,
+                     meta_title, meta_description, active,
                      created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+                VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
                 RETURNING *
             `).bind(
-                title, slug, content, excerpt || null, template, status,
-                meta_title || title, meta_desc || null,
-                show_in_footer ? 1 : 0, show_in_nav ? 1 : 0
+                title, slug, content,
+                meta_title || title, metaDescriptionVal, activeVal
             ).first();
 
             return created(result, 'Page created');
@@ -83,29 +83,31 @@ export async function pagesAdminRouter(request, env) {
             if (!existing) return notFound('Page not found');
 
             const {
-                title, content, excerpt, template, status,
-                meta_title, meta_desc, show_in_footer, show_in_nav
+                title, content, active, status,
+                meta_title, meta_desc, meta_description
             } = await request.json();
+
+            let activeVal = null;
+            if (active !== undefined) {
+                activeVal = active ? 1 : 0;
+            } else if (status !== undefined) {
+                activeVal = status === 'published' ? 1 : 0;
+            }
+
+            const metaDescriptionVal = meta_description !== undefined ? meta_description : (meta_desc !== undefined ? meta_desc : null);
 
             await env.DB.prepare(`
                 UPDATE pages SET
-                    title          = COALESCE(?, title),
-                    content        = COALESCE(?, content),
-                    excerpt        = COALESCE(?, excerpt),
-                    template       = COALESCE(?, template),
-                    status         = COALESCE(?, status),
-                    meta_title     = COALESCE(?, meta_title),
-                    meta_desc      = COALESCE(?, meta_desc),
-                    show_in_footer = COALESCE(?, show_in_footer),
-                    show_in_nav    = COALESCE(?, show_in_nav),
-                    updated_at     = datetime('now')
+                    title            = COALESCE(?, title),
+                    content          = COALESCE(?, content),
+                    meta_title       = COALESCE(?, meta_title),
+                    meta_description = COALESCE(?, meta_description),
+                    active           = COALESCE(?, active),
+                    updated_at       = datetime('now')
                 WHERE id = ?
             `).bind(
-                title || null, content || null, excerpt || null,
-                template || null, status || null,
-                meta_title || null, meta_desc || null,
-                show_in_footer !== undefined ? (show_in_footer ? 1 : 0) : null,
-                show_in_nav !== undefined ? (show_in_nav ? 1 : 0) : null,
+                title || null, content || null,
+                meta_title || null, metaDescriptionVal, activeVal,
                 id
             ).run();
 
@@ -117,12 +119,17 @@ export async function pagesAdminRouter(request, env) {
     // ── PATCH /api/admin/pages/:id/status ─────────────────────
     if (path.match(/^\/\d+\/status$/) && method === 'PATCH') {
         const id = path.match(/(\d+)/)[1];
-        const { status } = await request.json();
-        if (!['draft', 'published'].includes(status)) return error('Invalid status');
+        const { status, active } = await request.json();
+        let activeVal = 1;
+        if (active !== undefined) {
+            activeVal = active ? 1 : 0;
+        } else if (status !== undefined) {
+            activeVal = status === 'published' ? 1 : 0;
+        }
         await env.DB.prepare(
-            "UPDATE pages SET status = ?, updated_at = datetime('now') WHERE id = ?"
-        ).bind(status, id).run();
-        return ok(null, `Page ${status}`);
+            "UPDATE pages SET active = ?, updated_at = datetime('now') WHERE id = ?"
+        ).bind(activeVal, id).run();
+        return ok(null, 'Page status updated');
     }
 
     // ── DELETE /api/admin/pages/:id ────────────────────────────
@@ -145,7 +152,7 @@ export async function pagesPublicRouter(request, env) {
 
     if (path === '/' && method === 'GET') {
         const pages = await env.DB.prepare(
-            "SELECT id, title, slug, excerpt, show_in_footer, show_in_nav FROM pages WHERE status='published'"
+            "SELECT id, title, slug FROM pages WHERE active = 1"
         ).all();
         return list(pages.results);
     }
@@ -153,7 +160,7 @@ export async function pagesPublicRouter(request, env) {
     if (path.match(/^\/[a-z0-9-]+$/) && method === 'GET') {
         const slug = path.slice(1);
         const page = await env.DB.prepare(
-            "SELECT * FROM pages WHERE slug = ? AND status = 'published'"
+            "SELECT * FROM pages WHERE slug = ? AND active = 1"
         ).bind(slug).first();
         if (!page) return error('Page not found', 404);
         return ok(page);
