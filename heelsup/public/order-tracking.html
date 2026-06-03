@@ -1,24 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
   <!-- SEO -->
   <title>Track Your Order – HeelsUp</title>
-  <meta name="description"
-    content="Track your HeelsUp order in real-time. Enter your Order ID or phone number to see live delivery status, courier details and estimated delivery date." />
-  <meta name="robots" content="noindex,follow" />
-  <link rel="canonical" href="https://heelsup.in/track" />
+  <meta name="description" content="Track your HeelsUp order in real-time. Enter your Order ID or phone number to see live delivery status, courier details and estimated delivery date.">
+  <meta name="robots" content="noindex,follow">
+  <link rel="canonical" href="https://heelsup.in/track">
 
   <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   
     <link rel="stylesheet" href="/css/customer-theme.css">
@@ -29,53 +23,28 @@
     <div id="navbar"></div>
 
   <!-- ═══ TOAST ═══ -->
-  <div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+  
 
   
-  </div>
+  
 
   
 
   <!-- ═══ MOBILE MENU ═══ -->
-  <div class="mob-menu" id="mob-menu">
-    <div class="mob-bd" id="mob-bd"></div>
-    <nav class="mob-panel">
-      <div class="mob-head">
-        <span class="mob-head-logo">Heels<span>Up</span></span>
-        <button class="mob-close-btn" id="mob-close"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="mob-body">
-        <a href="/" class="mob-link"><span class="mi">🏠</span> Home</a>
-        <a href="/shop" class="mob-link"><span class="mi">🛍️</span> Shop All</a>
-        <div class="mob-sep"></div>
-        <div class="mob-cat">Categories</div>
-        <a href="/shop/heels" class="mob-link"><span class="mi">👠</span> Heels</a>
-        <a href="/shop/sandals" class="mob-link"><span class="mi">👡</span> Sandals</a>
-        <a href="/shop/flats" class="mob-link"><span class="mi">🥿</span> Flats</a>
-        <a href="/shop/bags" class="mob-link"><span class="mi">👜</span> Bags</a>
-        <div class="mob-sep"></div>
-        <a href="/track" class="mob-link active"><span class="mi">📦</span> Track Order</a>
-        <a href="/orders" class="mob-link"><span class="mi">📋</span> My Orders</a>
-        <a href="/account" class="mob-link" id="mob-acc"><span class="mi">👤</span> My Account</a>
-      </div>
-      <div class="mob-foot">
-        <a href="/login" class="mob-cta" id="mob-login">Login / Sign Up</a>
-      </div>
-    </nav>
-  </div>
+  
 
   <!-- ═══ BREADCRUMB ═══ -->
   <div class="breadcrumb">
     <div class="container">
-      <ol class="breadcrumb-list" itemscope itemtype="https://schema.org/BreadcrumbList">
-        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <ol class="breadcrumb-list" itemscope="" itemtype="https://schema.org/BreadcrumbList">
+        <li itemprop="itemListElement" itemscope="" itemtype="https://schema.org/ListItem">
           <a href="/" itemprop="item"><span itemprop="name">Home</span></a>
-          <meta itemprop="position" content="1" />
+          <meta itemprop="position" content="1">
         </li>
         <li><i class="fa-solid fa-chevron-right breadcrumb-sep"></i></li>
-        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <li itemprop="itemListElement" itemscope="" itemtype="https://schema.org/ListItem">
           <span class="active" itemprop="name">Track Order</span>
-          <meta itemprop="position" content="2" />
+          <meta itemprop="position" content="2">
         </li>
       </ol>
     </div>
@@ -114,14 +83,12 @@
             <div class="sc-body">
               <div class="sc-form">
                 <div class="sc-input-wrap">
-                  <input type="text" class="sc-input" id="order-id-inp" placeholder="Order ID — e.g. ORD-1234-AB5C"
-                    autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Order ID" />
+                  <input type="text" class="sc-input" id="order-id-inp" placeholder="Order ID — e.g. ORD-1234-AB5C" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Order ID">
                   <i class="fa-solid fa-hashtag sc-input-icon" id="inp-icon-1"></i>
                 </div>
                 <div class="sc-or">or</div>
                 <div class="sc-input-wrap">
-                  <input type="tel" class="sc-input" id="phone-inp" placeholder="Registered Phone Number — 10 digits"
-                    autocomplete="tel" maxlength="10" aria-label="Phone number" />
+                  <input type="tel" class="sc-input" id="phone-inp" placeholder="Registered Phone Number — 10 digits" autocomplete="tel" maxlength="10" aria-label="Phone number">
                   <i class="fa-solid fa-phone sc-input-icon" id="inp-icon-2"></i>
                 </div>
                 <button class="btn btn-primary btn-pill sc-btn" id="track-btn" onclick="handleTrack()">
@@ -205,18 +172,42 @@
 ═══════════════════════════════════════════ -->
     
     <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer></script>
-    <script src="/js/core/api-client.js" defer></script>
-    <script src="/js/core/common-ui.js" defer></script>
+    
+    
+    
     
     <!-- State and Operations -->
-    <script src="/js/cart.js" defer></script>
-    <script src="/js/wishlist.js" defer></script>
+    
+    
     
     <!-- Page Controller -->
-    <script src="/js/pages/order-tracking.js" defer></script>
+    
   
-    <footer class="footer"></footer>
-</body>
+    
 
-</html>
+
+
+    <!-- Core Config and API Client -->
+    
+    
+    
+    
+    <!-- State and Operations -->
+    
+    
+    
+    <!-- Page Controller -->
+    
+
+    <!-- Core Config and API Client -->
+    <script src="/js/core/config.js" defer=""></script>
+    <script src="/js/core/api-client.js" defer=""></script>
+    <script src="/js/core/common-ui.js" defer=""></script>
+    
+    <!-- State and Operations -->
+    <script src="/js/cart.js" defer=""></script>
+    <script src="/js/wishlist.js" defer=""></script>
+    
+    <!-- Page Controller -->
+    <script src="/js/pages/order-tracking.js" defer=""></script>
+<footer class="footer"></footer></body></html>

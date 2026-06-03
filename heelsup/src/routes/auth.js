@@ -57,10 +57,6 @@ async function sendOtpEmail(env, email, otp, purpose) {
         resendApiKey = env.RESEND_API_KEY;
     }
 
-    if (!resendApiKey) {
-        return { ok: false, error: 'Resend API key not configured. Add resend_api_key to settings.' };
-    }
-
     const siteName = await getSetting(env, 'site_name', 'HeelsUp');
     const fromAddress = await getSetting(env, 'email_from_address', 'support@heelsup.in');
 
@@ -70,30 +66,58 @@ async function sendOtpEmail(env, email, otp, purpose) {
         login: `Your ${siteName} login OTP`
     };
 
-    try {
-        const res = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${resendApiKey}`
-            },
-            body: JSON.stringify({
-                from: `${siteName} <${fromAddress}>`,
-                to: [email],
-                subject: subjects[purpose] || `Your ${siteName} OTP`,
-                html: buildOtpHtml(siteName, otp, purpose)
-            })
-        });
+    if (resendApiKey) {
+        try {
+            const res = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${resendApiKey}`
+                },
+                body: JSON.stringify({
+                    from: `${siteName} <${fromAddress}>`,
+                    to: [email],
+                    subject: subjects[purpose] || `Your ${siteName} OTP`,
+                    html: buildOtpHtml(siteName, otp, purpose)
+                })
+            });
 
-        if (!res.ok) {
-            const errorData = await res.json().catch(() => ({}));
-            console.error('Resend API Error:', errorData);
-            return { ok: false, error: errorData.message || 'Failed to send email via Resend' };
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                console.error('Resend API Error:', errorData);
+                return { ok: false, error: errorData.message || 'Failed to send email via Resend' };
+            }
+
+            return { ok: true };
+        } catch (e) {
+            return { ok: false, error: e.message };
         }
-
-        return { ok: true };
-    } catch (e) {
-        return { ok: false, error: e.message };
+    } else {
+        // Fallback to Google Apps Script
+        const scriptUrl = await getSetting(env, 'otp_script_url', 'https://script.google.com/macros/s/AKfycbzXkeCVB258ETOqj2i0FQPc-tYOLdsfHUqpE8fAqM8Q268f03bv4mt4GxMHyNQ_mDsV7A/exec');
+        if (!scriptUrl) {
+            return { ok: false, error: 'Neither Resend API Key nor Google Apps Script URL is configured.' };
+        }
+        try {
+            const res = await fetch(scriptUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    to: email,
+                    subject: subjects[purpose] || `Your ${siteName} OTP`,
+                    message: `Your OTP is: ${otp}`,
+                    html: buildOtpHtml(siteName, otp, purpose)
+                })
+            });
+            if (!res.ok) {
+                return { ok: false, error: `Apps Script returned status ${res.status}` };
+            }
+            return { ok: true };
+        } catch (e) {
+            return { ok: false, error: e.message };
+        }
     }
 }
 
@@ -102,13 +126,13 @@ function buildOtpHtml(siteName, otp, purpose, userName = 'Customer') {
     if (purpose === 'forgot') {
         bodyText = `We received a request to reset your password.<br><br>
 Use the following OTP to reset your password:<br><br>
-🔢 <strong>${otp}</strong><br><br>
+ <strong>${otp}</strong><br><br>
 ⏱️ Valid for <strong>10 minutes</strong> only.<br><br>
 Do not share this OTP with anyone.<br>
 If you didn't request this, please secure your account immediately.`;
     } else {
         bodyText = `Your One-Time Password (OTP) is:<br><br>
-🔢 <strong>${otp}</strong><br><br>
+ <strong>${otp}</strong><br><br>
 ⏱️ This OTP is valid for <strong>10 minutes</strong>.<br><br>
 ⚠️ Do not share this code with anyone for security reasons.<br>
 If you did not request this, please ignore this email.`;
@@ -267,7 +291,7 @@ export async function authRouter(request, env) {
             const attempts = parseInt(await env.KV.get(rateLimitKey) || '0');
             if (attempts >= 5) return error('Too many login attempts. Try after 1 minute.', 429);
 
-                        const user = await env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
+            const user = await env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
             const tableName = 'users';
 
             if (!user || !(await verifyPassword(password, user.password_hash))) {
@@ -286,7 +310,7 @@ export async function authRouter(request, env) {
             // ── Admin 2FA: OTP step ───────────────────────────────────────────
             // Only triggered for admin/staff/manager when REQUIRE_EMAIL_OTP = "true"
             const requireOtp = (env.REQUIRE_EMAIL_OTP === 'true') ||
-                               (await getSetting(env, 'require_email_otp', 'false') === 'true');
+                (await getSetting(env, 'require_email_otp', 'false') === 'true');
 
             if (isAdminUser && requireOtp) {
                 // Issue short-lived session token (5 min) — cannot access admin routes
@@ -447,7 +471,7 @@ export async function authRouter(request, env) {
         const { user, error: authError } = await requireAuth(request, env);
         if (authError) return authError;
 
-                const dbUser = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(user.id).first();
+        const dbUser = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(user.id).first();
 
         if (!dbUser) return unauthorized('User not found');
         return ok({ user: mapUser(dbUser) });

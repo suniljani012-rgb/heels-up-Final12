@@ -1,30 +1,28 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="en"><head></head><body>﻿
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
-  <meta name="theme-color" content="#E8CCC5" />
+
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <meta name="theme-color" content="#E8CCC5">
 
   <!-- ═══ PRIMARY SEO ═══ -->
   <title>Secure Checkout – HeelsUp | Premium Ladies Footwear</title>
-  <meta name="robots" content="noindex,nofollow" />
+  <meta name="robots" content="noindex,nofollow">
 
   <!-- ═══ PRECONNECT & FONTS ═══ -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   
     <link rel="stylesheet" href="/css/customer-theme.css">
     <link rel="stylesheet" href="/css/pages/checkout.css">
-</head>
 
-<body>
+
+
     <div id="navbar"></div>
 
   <!-- ═══ TOAST CONTAINER ═══ -->
@@ -34,8 +32,7 @@
   <nav class="checkout-nav" role="navigation" aria-label="Checkout navigation">
     <div class="container checkout-nav-inner">
       <a href="/" class="checkout-logo" aria-label="Return to HeelsUp Home">
-        <img src="/logo.png" alt="HeelsUp"
-          onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<span style=\'font-family:var(--font-head);font-size:1.6rem;font-weight:700;color:var(--ink)\'>Heels<span style=\'color:var(--primary)\'>Up</span></span>');" />
+        <img src="/logo.png" alt="HeelsUp" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<span style=\'font-family:var(--font-head);font-size:1.6rem;font-weight:700;color:var(--ink)\'>Heels<span style=\'color:var(--primary)\'>Up</span></span>');">
       </a>
       <div class="secure-badge">
         <i class="fa-solid fa-lock" aria-hidden="true"></i> <span>Secure Checkout</span>
@@ -54,7 +51,7 @@
       </div>
       <div class="step-line done"></div>
       <div class="step-item active">
-        <div class="step-num">2</div> <span>Delivery & Payment</span>
+        <div class="step-num">2</div> <span>Delivery &amp; Payment</span>
       </div>
       <div class="step-line"></div>
       <div class="step-item">
@@ -91,8 +88,7 @@
             </div>
             <div class="form-group">
               <label for="c-phone">Mobile Number <span class="req">*</span></label>
-              <input type="tel" id="c-phone" placeholder="10-digit mobile number" maxlength="10" autocomplete="tel"
-                oninput="this.value=this.value.replace(/\D/g,'')">
+              <input type="tel" id="c-phone" placeholder="10-digit mobile number" maxlength="10" autocomplete="tel" oninput="this.value=this.value.replace(/\D/g,'')">
             </div>
           </div>
           <div class="form-group">
@@ -109,8 +105,7 @@
         </div>
         <div class="section-body">
           <!-- Saved Addresses Dropdown (Visible if user has saved addresses) -->
-          <div class="form-group" id="saved-address-group"
-            style="display:none; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px dashed var(--border);">
+          <div class="form-group" id="saved-address-group" style="display:none; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px dashed var(--border);">
             <label for="saved-addresses">Use Saved Address</label>
             <select id="saved-addresses" onchange="fillSavedAddress(this.value)">
               <option value="">— Choose a saved address —</option>
@@ -119,8 +114,7 @@
 
           <div class="form-group">
             <label for="c-line1">Address Line 1 <span class="req">*</span></label>
-            <input type="text" id="c-line1" placeholder="House/Flat No., Building Name, Street"
-              autocomplete="address-line1">
+            <input type="text" id="c-line1" placeholder="House/Flat No., Building Name, Street" autocomplete="address-line1">
           </div>
           <div class="form-group">
             <label for="c-line2">Address Line 2 (Optional)</label>
@@ -134,8 +128,7 @@
             </div>
             <div class="form-group">
               <label for="c-pincode">Pincode <span class="req">*</span></label>
-              <input type="text" id="c-pincode" placeholder="6-digit pincode" maxlength="6" autocomplete="postal-code"
-                oninput="this.value=this.value.replace(/\D/g,'')">
+              <input type="text" id="c-pincode" placeholder="6-digit pincode" maxlength="6" autocomplete="postal-code" oninput="this.value=this.value.replace(/\D/g,'')">
             </div>
           </div>
 
@@ -184,7 +177,7 @@
           </div>
 
           <label class="save-address-lbl">
-            <input type="checkbox" id="save-address" checked>
+            <input type="checkbox" id="save-address" checked="">
             Save this information for next time
           </label>
         </div>
@@ -266,10 +259,8 @@
 
           <!-- Trust Badges -->
           <div class="trust-row">
-            <div class="trust-badge" title="256-bit SSL Encryption"><i class="fa-solid fa-shield-halved"
-                aria-hidden="true"></i> SSL Secure</div>
-            <div class="trust-badge" title="Powered by Razorpay"><i class="fa-solid fa-building-columns"
-                aria-hidden="true"></i> Safe Payments</div>
+            <div class="trust-badge" title="256-bit SSL Encryption"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> SSL Secure</div>
+            <div class="trust-badge" title="Powered by Razorpay"><i class="fa-solid fa-building-columns" aria-hidden="true"></i> Safe Payments</div>
             <div class="trust-badge" title="Guaranteed Quality"><i class="fa-solid fa-medal" aria-hidden="true"></i>
               100% Authentic</div>
           </div>
@@ -283,18 +274,42 @@
   <!-- ═══ SCRIPTS ═══ -->
     
     <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer></script>
-    <script src="/js/core/api-client.js" defer></script>
-    <script src="/js/core/common-ui.js" defer></script>
+    
+    
+    
     
     <!-- State and Operations -->
-    <script src="/js/cart.js" defer></script>
-    <script src="/js/wishlist.js" defer></script>
+    
+    
     
     <!-- Page Controller -->
-    <script src="/js/pages/checkout.js" defer></script>
+    
   
-    <footer class="footer"></footer>
-</body>
+    
 
-</html>
+
+
+    <!-- Core Config and API Client -->
+    
+    
+    
+    
+    <!-- State and Operations -->
+    
+    
+    
+    <!-- Page Controller -->
+    
+
+    <!-- Core Config and API Client -->
+    <script src="/js/core/config.js" defer=""></script>
+    <script src="/js/core/api-client.js" defer=""></script>
+    <script src="/js/core/common-ui.js" defer=""></script>
+    
+    <!-- State and Operations -->
+    <script src="/js/cart.js" defer=""></script>
+    <script src="/js/wishlist.js" defer=""></script>
+    
+    <!-- Page Controller -->
+    <script src="/js/pages/checkout.js" defer=""></script>
+<footer class="footer"></footer></body></html>

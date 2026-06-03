@@ -1,23 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
-    <meta name="theme-color" content="#E8CCC5" />
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <meta name="theme-color" content="#E8CCC5">
 
     <title>FAQs – HeelsUp | Frequently Asked Questions</title>
-    <meta name="description"
-        content="Find answers to all your questions about HeelsUp orders, shipping, returns, and more." />
+    <meta name="description" content="Find answers to all your questions about HeelsUp orders, shipping, returns, and more.">
 
     <!-- PRECONNECT -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     
     <link rel="stylesheet" href="/css/customer-theme.css">
@@ -31,65 +25,24 @@
 
     
         <button class="ann-close" id="ann-close" aria-label="Close announcement">✕</button>
-    </div>
+    
 
     <!-- Main Desktop/Mobile Navbar -->
     
 
     <!-- Mobile Menu Overlay -->
-    <div class="mob-menu" id="mob-menu" role="dialog" aria-label="Mobile navigation" aria-modal="true">
-        <div class="mob-backdrop" id="mob-backdrop"></div>
-        <nav class="mob-panel">
-            <div class="mob-head">
-                <img src="/logo.png" alt="HeelsUp" height="32" onerror="this.style.display='none'" />
-                <button class="mob-close" id="mob-close" aria-label="Close menu">
-                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-                </button>
-            </div>
-            <div class="mob-body">
-                <div class="mob-cat-title">Main</div>
-                <a href="/" class="mob-link"><span class="m-icon" aria-hidden="true"><i
-                            class="fa-solid fa-house"></i></span> Home</a>
-                <a href="/shop.html" class="mob-link"><span class="m-icon" aria-hidden="true"><i
-                            class="fa-solid fa-bag-shopping"></i></span> Shop All</a>
-                <div class="mob-sep"></div>
-                <div class="mob-cat-title">Categories</div>
-                <a href="/shop.html?cat=heels" class="mob-link"><span class="m-icon" aria-hidden="true"><i
-                            class="fa-solid fa-shoe-prints"></i></span> Heels</a>
-                <a href="/shop.html?cat=flats" class="mob-link"><span class="m-icon" aria-hidden="true"><i
-                            class="fa-solid fa-shoe-prints" style="transform:rotate(180deg)"></i></span> Flats</a>
-                <a href="/shop.html?cat=sandals" class="mob-link"><span class="m-icon" aria-hidden="true"><i
-                            class="fa-solid fa-shoe-prints"></i></span> Sandals</a>
-                <a href="/shop.html?cat=bags" class="mob-link"><span class="m-icon" aria-hidden="true"><i
-                            class="fa-solid fa-briefcase"></i></span> Bags</a>
-                <div class="mob-sep"></div>
-                <a href="/about.html" class="mob-link"><span class="m-icon" aria-hidden="true"><i
-                            class="fa-solid fa-book-open"></i></span> About Us</a>
-                <a href="/contact.html" class="mob-link"><span class="m-icon" aria-hidden="true"><i
-                            class="fa-solid fa-phone"></i></span> Contact</a>
-                <a href="/faq.html" class="mob-link active"><span class="m-icon" aria-hidden="true"><i
-                            class="fa-solid fa-circle-question"></i></span> FAQ</a>
-            </div>
-            <div class="mob-foot">
-                <a href="/login.html" class="mob-foot-btn" id="mob-login-btn">Login / Sign Up</a>
-            </div>
-        </nav>
-    </div>
+    
 
     <!-- Search Overlay -->
     <div class="search-overlay" id="search-overlay" role="search">
         <div class="container" style="width:100%">
             <div style="max-width:680px; width:100%; margin:0 auto;">
-                <span
-                    style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--blush);margin-bottom:14px;display:block;font-family:var(--font-head);">What
+                <span style="font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--blush);margin-bottom:14px;display:block;font-family:var(--font-head);">What
                     are you looking for?</span>
-                <div
-                    style="display:flex;align-items:center;gap:14px;border-bottom:2px solid var(--blush);padding-bottom:14px;">
+                <div style="display:flex;align-items:center;gap:14px;border-bottom:2px solid var(--blush);padding-bottom:14px;">
                     <i class="fa-solid fa-magnifying-glass" style="font-size:1.2rem;color:var(--blush)"></i>
-                    <input type="search" id="search-inp" placeholder="heels, bags, sandals…"
-                        style="flex:1;background:transparent;color:#fff;border:none;font-family:var(--font-head);font-size:clamp(1.4rem, 4vw, 2.4rem);font-weight:300;outline:none;" />
-                    <button id="search-close-btn"
-                        style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.5);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <input type="search" id="search-inp" placeholder="heels, bags, sandals…" style="flex:1;background:transparent;color:#fff;border:none;font-family:var(--font-head);font-size:clamp(1.4rem, 4vw, 2.4rem);font-weight:300;outline:none;">
+                    <button id="search-close-btn" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.5);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -101,20 +54,7 @@
     <div class="cart-bd" id="cart-bd" aria-hidden="true"></div>
     
 
-    <header class="faq-hero">
-        <div class="container">
-            <h1 class="faq-hero-title">Frequently Asked <em>Questions</em></h1>
-            <p class="faq-hero-sub">Find everything you need to know about your order, our products, and how we ensure
-                the best experience for you.</p>
-
-            <div class="faq-search-box">
-                <i class="fa-solid fa-magnifying-glass"
-                    style="color:rgba(255,255,255,0.4); margin-right:8px; font-size:16px;"></i>
-                <input type="text" id="faq-search-input" placeholder="Search for answers..." autocomplete="off">
-                <button type="button" id="faq-search-btn">Search</button>
-            </div>
-        </div>
-    </header>
+    
 
     <main class="faq-page">
         <div class="container">
@@ -132,28 +72,24 @@
                     <div class="faq-sidebar">
                         <span class="faq-sidebar-title">Categories</span>
                         <button class="faq-cat-link active" data-target="all">
-                            <div style="display:flex;align-items:center;gap:10px;"><i
-                                    class="fa-solid fa-layer-group"></i> <span>All Questions</span></div>
+                            <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-layer-group"></i> <span>All Questions</span></div>
                             <span class="faq-cat-count">14</span>
                         </button>
                         <button class="faq-cat-link" data-target="cat-orders">
                             <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-box-open"></i>
-                                <span>Orders & Delivery</span></div>
+                                <span>Orders &amp; Delivery</span></div>
                             <span class="faq-cat-count">4</span>
                         </button>
                         <button class="faq-cat-link" data-target="cat-products">
-                            <div style="display:flex;align-items:center;gap:10px;"><i
-                                    class="fa-solid fa-shoe-prints"></i> <span>Products</span></div>
+                            <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-shoe-prints"></i> <span>Products</span></div>
                             <span class="faq-cat-count">3</span>
                         </button>
                         <button class="faq-cat-link" data-target="cat-returns">
-                            <div style="display:flex;align-items:center;gap:10px;"><i
-                                    class="fa-solid fa-rotate-left"></i> <span>Returns & Support</span></div>
+                            <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-rotate-left"></i> <span>Returns &amp; Support</span></div>
                             <span class="faq-cat-count">4</span>
                         </button>
                         <button class="faq-cat-link" data-target="cat-payments">
-                            <div style="display:flex;align-items:center;gap:10px;"><i
-                                    class="fa-solid fa-credit-card"></i> <span>Payments</span></div>
+                            <div style="display:flex;align-items:center;gap:10px;"><i class="fa-solid fa-credit-card"></i> <span>Payments</span></div>
                             <span class="faq-cat-count">3</span>
                         </button>
                     </div>
@@ -164,7 +100,7 @@
 
                     <!-- Orders & Delivery -->
                     <section class="faq-group" id="cat-orders">
-                        <h2 class="faq-group-title"><i class="fa-solid fa-box-open"></i> Orders & Delivery</h2>
+                        <h2 class="faq-group-title"><i class="fa-solid fa-box-open"></i> Orders &amp; Delivery</h2>
 
                         <div class="faq-item">
                             <div class="faq-question">
@@ -214,7 +150,7 @@
 
                     <!-- Products & Quality -->
                     <section class="faq-group" id="cat-products">
-                        <h2 class="faq-group-title"><i class="fa-solid fa-shoe-prints"></i> Products & Sizing</h2>
+                        <h2 class="faq-group-title"><i class="fa-solid fa-shoe-prints"></i> Products &amp; Sizing</h2>
 
                         <div class="faq-item">
                             <div class="faq-question">
@@ -253,7 +189,7 @@
 
                     <!-- Returns, Exchange & Support -->
                     <section class="faq-group" id="cat-returns">
-                        <h2 class="faq-group-title"><i class="fa-solid fa-rotate-left"></i> Returns & Exchange</h2>
+                        <h2 class="faq-group-title"><i class="fa-solid fa-rotate-left"></i> Returns &amp; Exchange</h2>
 
                         <div class="faq-item">
                             <div class="faq-question">
@@ -343,12 +279,9 @@
                     </section>
 
                     <!-- Search No Results State -->
-                    <div id="faq-no-results"
-                        style="display:none; text-align:center; padding: 40px; background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border);">
-                        <i class="fa-regular fa-face-frown"
-                            style="font-size:3rem; color:var(--text-pale); margin-bottom:16px; display:block;"></i>
-                        <h3
-                            style="font-family:var(--font-head); font-size:1.4rem; color:var(--text-h); margin-bottom:8px;">
+                    <div id="faq-no-results" style="display:none; text-align:center; padding: 40px; background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--border);">
+                        <i class="fa-regular fa-face-frown" style="font-size:3rem; color:var(--text-pale); margin-bottom:16px; display:block;"></i>
+                        <h3 style="font-family:var(--font-head); font-size:1.4rem; color:var(--text-h); margin-bottom:8px;">
                             No matching questions found</h3>
                         <p style="color:var(--text-m);">We couldn't find an answer for your search. Feel free to contact
                             our support team.</p>
@@ -371,92 +304,45 @@
         </div>
     </main>
 
-    <footer class="footer" role="contentinfo">
-        <div class="container">
-            <div class="footer-top">
-                <div class="footer-grid">
-                    <!-- Brand -->
-                    <div>
-                        <div class="footer-logo-wrap">
-                            <img src="/logo.png" alt="HeelsUp" onerror="this.style.display='none'" />
-                        </div>
-                        <p class="footer-tagline">
-                            Premium ladies footwear &amp; bags for the modern Indian woman.
-                            Quality, style, and comfort — all in one place. Give Value to Your Feet.
-                        </p>
-                        <div class="footer-socials">
-                            <a href="https://www.instagram.com/heel_s_up" target="_blank" rel="noopener noreferrer"
-                                class="footer-soc" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                            
-                            <a href="mailto:support@heelsup.in" class="footer-soc" aria-label="Email"><i
-                                    class="fa-regular fa-envelope"></i></a>
-                        </div>
-                    </div>
-
-                    <!-- Shop -->
-                    <div>
-                        <div class="footer-col-title">Shop</div>
-                        <nav class="footer-links">
-                            <a href="/shop.html">All Products</a>
-                            <a href="/shop.html?cat=heels">Heels</a>
-                            <a href="/shop.html?cat=flats">Flats</a>
-                            <a href="/shop.html?cat=sandals">Sandals</a>
-                            <a href="/shop.html?cat=bags">Bags</a>
-                        </nav>
-                    </div>
-
-                    <!-- Company -->
-                    <div>
-                        <div class="footer-col-title">Company</div>
-                        <nav class="footer-links">
-                            <a href="/about.html">About Us</a>
-                            <a href="/contact.html">Contact</a>
-                            <a href="/order-tracking.html">Track Order</a>
-                            <a href="/faq.html">FAQ</a>
-                        </nav>
-                    </div>
-
-                    <!-- Help -->
-                    <div>
-                        <div class="footer-col-title">Help &amp; Policies</div>
-                        <nav class="footer-links">
-                            <a href="/shipping-info.html">Shipping Policy</a>
-                            <a href="/returns.html">Return Policy</a>
-                            <a href="/privacy.html">Privacy Policy</a>
-                            <a href="/terms.html">Terms &amp; Conditions</a>
-                        </nav>
-                    </div>
-                </div>
-            </div>
-
-            <div class="footer-bottom">
-                <p class="footer-copy">© 2025 HeelsUp. All rights reserved.</p>
-                <div class="footer-pay">
-                    <span class="pay-chip">UPI</span>
-                    <span class="pay-chip">Visa</span>
-                    <span class="pay-chip">Mastercard</span>
-                </div>
-                <div class="footer-legal">
-                    <a href="/privacy.html">Privacy</a>
-                    <a href="/terms.html">Terms</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+    
     
     <!-- Core Config and API Client -->
-    <script src="/js/core/config.js" defer></script>
-    <script src="/js/core/api-client.js" defer></script>
-    <script src="/js/core/common-ui.js" defer></script>
+    
+    
+    
     
     <!-- State and Operations -->
-    <script src="/js/cart.js" defer></script>
-    <script src="/js/wishlist.js" defer></script>
+    
+    
     
     <!-- Page Controller -->
-    <script src="/js/pages/faq.js" defer></script>
+    
   
-    <footer class="footer"></footer>
-</body>
+    
 
-</html>
+
+
+    <!-- Core Config and API Client -->
+    
+    
+    
+    
+    <!-- State and Operations -->
+    
+    
+    
+    <!-- Page Controller -->
+    
+
+    <!-- Core Config and API Client -->
+    <script src="/js/core/config.js" defer=""></script>
+    <script src="/js/core/api-client.js" defer=""></script>
+    <script src="/js/core/common-ui.js" defer=""></script>
+    
+    <!-- State and Operations -->
+    <script src="/js/cart.js" defer=""></script>
+    <script src="/js/wishlist.js" defer=""></script>
+    
+    <!-- Page Controller -->
+    <script src="/js/pages/faq.js" defer=""></script>
+<footer class="footer"></footer></body></html>

@@ -76,5 +76,65 @@ export async function settingsRouter(request, env) {
         } catch (e) { return serverError('Failed to update settings'); }
     }
 
+    // POST /api/settings/test/otp
+    if (path === '/test/otp' && method === 'POST') {
+        const { error: authError } = await requireAdmin(request, env);
+        if (authError) return authError;
+        try {
+            const body = await request.json();
+            const url = body?.otp_script_url;
+            if (!url) return error('Script URL is required', 400);
+
+            const siteName = 'HeelsUp Test';
+            const testEmail = 'support@heelsup.in';
+            const otp = '123456';
+
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: testEmail,
+                    subject: `Test OTP from ${siteName}`,
+                    message: `This is a test OTP: ${otp}`,
+                    html: `<h3>Test Mail</h3><p>Your test OTP code is <b>${otp}</b></p>`
+                })
+            });
+
+            if (!res.ok) {
+                return error(`Apps Script returned status ${res.status}`, 400);
+            }
+            return ok(null, 'Test OTP sent successfully');
+        } catch (e) {
+            return error(e.message || 'Mailer test failed', 500);
+        }
+    }
+
+    // POST /api/settings/test/razorpay
+    if (path === '/test/razorpay' && method === 'POST') {
+        const { error: authError } = await requireAdmin(request, env);
+        if (authError) return authError;
+        try {
+            const body = await request.json();
+            const keyId = body?.razorpay_key_id;
+            const secret = body?.razorpay_key_secret;
+            if (!keyId || !secret) return error('Key ID and Secret are required', 400);
+
+            const authString = btoa(`${keyId}:${secret}`);
+            const res = await fetch('https://api.razorpay.com/v1/orders?count=1', {
+                headers: {
+                    'Authorization': `Basic ${authString}`
+                }
+            });
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                return error(errorData?.error?.description || `Razorpay returned status ${res.status}`, 400);
+            }
+            return ok(null, 'Razorpay credentials verified');
+        } catch (e) {
+            return error(e.message || 'Razorpay connection test failed', 500);
+        }
+    }
+
     return error('Route not found', 404);
 }
