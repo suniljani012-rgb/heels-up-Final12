@@ -139,10 +139,11 @@
     try {
       if (window.HeelsUpAuth && typeof window.HeelsUpAuth.api === "function") {
         const catRes = await HeelsUpAuth.api("/api/categories");
-        storeCategories = (catRes && (catRes.categories || catRes.data)) || [];
+        const catData = (catRes && (catRes.categories || catRes.data)) || [];
+        storeCategories = Array.isArray(catData) ? catData : [];
         
         const settingsRes = await HeelsUpAuth.api("/api/settings/public");
-        storeSettings = settingsRes || {};
+        storeSettings = (settingsRes && settingsRes.data) || settingsRes || {};
       }
     } catch (e) {
       console.error("Layout Engine API fetch failed:", e);
