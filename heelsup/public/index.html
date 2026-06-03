@@ -2369,7 +2369,11 @@
             try {
                 // Try Cloudflare first
                 const res = await fetch(`${CLOUDFLARE_WORKER_URL}/api/products?limit=8&featured=true`, { signal: AbortSignal.timeout(3000) });
-                if (res.ok) { products = await res.json(); }
+                if (res.ok) {
+                    const json = await res.json();
+                    products = Array.isArray(json) ? json : (json.data || []);
+                    if (!products || !products.length) products = DEMO_PRODUCTS;
+                }
                 else { products = DEMO_PRODUCTS; }
             } catch {
                 products = DEMO_PRODUCTS; // fallback to demo data
@@ -2379,7 +2383,8 @@
         }
 
         function makeProductCard(product) {
-            const disc = product.original_price ? Math.round((1 - product.price / product.original_price) * 100) : 0;
+            const showMrp = product.show_mrp !== false && product.show_mrp !== 0;
+            const disc = (showMrp && product.original_price) ? Math.round((1 - product.price / product.original_price) * 100) : 0;
             const inWishlist = wishlist.includes(product.id);
             const stars = '★'.repeat(Math.round(product.rating || 4)) + '☆'.repeat(5 - Math.round(product.rating || 4));
             return `
@@ -2389,7 +2394,7 @@
       <div class="product-badges">
         ${product.is_new ? '<span class="badge badge-new">New</span>' : ''}
         ${product.is_trending ? '<span class="badge badge-hot">🔥 Hot</span>' : ''}
-        ${disc >= 20 ? `<span class="badge badge-sale">-${disc}%</span>` : ''}
+        ${(showMrp && disc >= 20) ? `<span class="badge badge-sale">-${disc}%</span>` : ''}
       </div>
       <div class="product-actions">
         <button class="product-action-btn wishlist-btn ${inWishlist ? 'wishlist-active' : ''}" data-id="${product.id}" title="Add to wishlist" aria-label="Wishlist">
@@ -2408,8 +2413,8 @@
       <a href="product.html?id=${product.id}" class="product-name">${product.name}</a>
       <div class="product-price">
         <span class="price-current">₹${product.price.toLocaleString('en-IN')}</span>
-        ${product.original_price ? `<span class="price-original">₹${product.original_price.toLocaleString('en-IN')}</span>` : ''}
-        ${disc >= 10 ? `<span class="price-discount">Save ${disc}%</span>` : ''}
+        ${(showMrp && product.original_price) ? `<span class="price-original">₹${product.original_price.toLocaleString('en-IN')}</span>` : ''}
+        ${(showMrp && disc >= 10) ? `<span class="price-discount">Save ${disc}%</span>` : ''}
       </div>
       <div class="product-rating">
         <span class="stars">${stars}</span>

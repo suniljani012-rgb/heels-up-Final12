@@ -1134,6 +1134,8 @@
         </div>
     </footer>
 
+    <script src="app-config.js"></script>
+    <script src="app-auth.js"></script>
     <script>
         const DEMO_PRODUCTS = [
             { id: 1, name: 'Stiletto Block Heel Pumps', category: 'heels', price: 899, original_price: 1499, images: ['https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=500&q=80&auto=format&fit=crop'], is_new: true, is_trending: true, rating: 4.8, review_count: 124 },
@@ -1192,33 +1194,138 @@
             input?.addEventListener('keydown', e => { if (e.key === 'Enter' && input.value.trim()) window.location.href = `search.html?q=${encodeURIComponent(input.value.trim())}`; });
         }
 
-        function loadProductFromURL() {
+        async function loadProductFromURL() {
             const params = new URLSearchParams(window.location.search);
             const id = parseInt(params.get('id') || '1');
-            const p = DEMO_PRODUCTS.find(x => x.id === id) || DEMO_PRODUCTS[0];
+            const CLOUDFLARE_WORKER_URL = HeelsUpAuth.API_BASE;
+            
+            let p = null;
+            let images = [];
+            let sizeStock = [];
+            
+            try {
+                const res = await fetch(`${CLOUDFLARE_WORKER_URL}/api/products/${id}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    const data = json.data || json;
+                    p = data.product;
+                    images = data.images || [];
+                    sizeStock = data.sizeStock || [];
+                }
+            } catch (err) {
+                console.warn("API product load failed, falling back to demo", err);
+            }
+            
+            if (!p) {
+                p = DEMO_PRODUCTS.find(x => x.id === id) || DEMO_PRODUCTS[0];
+                images = p.images.map((img, index) => ({ url: img, is_primary: index === 0 }));
+            }
+            
+            // Map product details
             document.getElementById('pd-name').textContent = p.name;
             document.getElementById('pd-cat').textContent = p.category;
+            
+            // Handle MRP visibility toggle
+            const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
             document.getElementById('pd-price').textContent = '₹' + p.price.toLocaleString('en-IN');
-            if (p.original_price) {
-                document.getElementById('pd-original').textContent = '₹' + p.original_price.toLocaleString('en-IN');
-                const disc = Math.round((1 - p.price / p.original_price) * 100);
-                document.getElementById('pd-discount').textContent = disc + '% OFF';
+            const origEl = document.getElementById('pd-original');
+            const discEl = document.getElementById('pd-discount');
+            
+            if (showMrp && p.original_price) {
+                if (origEl) {
+                    origEl.textContent = '₹' + p.original_price.toLocaleString('en-IN');
+                    origEl.style.display = '';
+                }
+                if (discEl) {
+                    const disc = Math.round((1 - p.price / p.original_price) * 100);
+                    discEl.textContent = disc + '% OFF';
+                    discEl.style.display = '';
+                }
+            } else {
+                if (origEl) origEl.style.display = 'none';
+                if (discEl) discEl.style.display = 'none';
             }
-            document.getElementById('gallery-main-img').src = p.images[0];
+            
+            // Render images in gallery
+            const mainImg = document.getElementById('gallery-main-img');
+            if (mainImg && images.length) {
+                mainImg.src = images.find(img => img.is_primary)?.url || images[0].url;
+            }
+            
+            // Setup thumbs
+            const thumbsWrap = document.getElementById('gallery-thumbs-wrapper') || document.querySelector('.product-gallery-thumbs');
+            if (thumbsWrap && images.length > 1) {
+                thumbsWrap.innerHTML = images.map((img, i) => `
+                    <div class="gallery-thumb ${i === 0 ? 'active' : ''}" data-img="${img.url}">
+                        <img src="${img.url}" alt="${p.name}" />
+                    </div>
+                `).join('');
+                initGallery();
+            }
+            
+            // Setup dynamic sizes from sizeStock
+            const sizesWrap = document.getElementById('sizes-wrapper') || document.querySelector('.size-options');
+            if (sizesWrap && sizeStock && sizeStock.length) {
+                sizesWrap.innerHTML = sizeStock.map(ss => `
+                    <button class="size-option ${ss.stock <= 0 ? 'unavailable' : ''}" data-size="${ss.size_label}">
+                        ${ss.size_label}
+                    </button>
+                `).join('');
+                initSizes();
+            }
+            
             document.getElementById('bc-name').textContent = p.name;
             document.getElementById('bc-cat').textContent = p.category;
             document.getElementById('bc-cat').href = 'category.html?cat=' + p.category;
             document.title = p.name + ' – HeelsUp';
+            
             // Wishlist state
-            if (wishlist.includes(p.id)) { document.getElementById('wishlist-btn').classList.add('active'); document.getElementById('wishlist-btn').innerHTML = '<i class="fa-solid fa-heart"></i>'; }
-            document.getElementById('add-to-cart-btn').addEventListener('click', () => { addToCart({ ...p, qty }); openCart(); });
-            document.getElementById('wishlist-btn').addEventListener('click', () => {
-                const btn = document.getElementById('wishlist-btn');
-                if (wishlist.includes(p.id)) { wishlist = wishlist.filter(x => x !== p.id); btn.classList.remove('active'); btn.innerHTML = '<i class="fa-regular fa-heart"></i>'; showToast('info', 'Removed', 'Removed from wishlist.'); }
-                else { wishlist.push(p.id); btn.classList.add('active'); btn.innerHTML = '<i class="fa-solid fa-heart"></i>'; showToast('success', '❤️ Saved!', 'Added to wishlist.'); }
-                localStorage.setItem('heelsup_wishlist', JSON.stringify(wishlist));
-                const wc = document.getElementById('wishlist-count'); wc.textContent = wishlist.length; wc.style.display = wishlist.length ? 'flex' : 'none';
+            if (wishlist.includes(p.id)) {
+                document.getElementById('wishlist-btn').classList.add('active');
+                document.getElementById('wishlist-btn').innerHTML = '<i class="fa-solid fa-heart"></i>';
+            }
+            
+            // Cart and Wishlist triggers
+            const addBtn = document.getElementById('add-to-cart-btn');
+            const newAddBtn = addBtn.cloneNode(true);
+            addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+            
+            newAddBtn.addEventListener('click', () => {
+                addToCart({
+                    id: p.id,
+                    name: p.name,
+                    price: p.price,
+                    images: [mainImg.src],
+                    category: p.category,
+                    qty
+                });
+                openCart();
             });
+            
+            const wishBtn = document.getElementById('wishlist-btn');
+            const newWishBtn = wishBtn.cloneNode(true);
+            wishBtn.parentNode.replaceChild(newWishBtn, wishBtn);
+            
+            newWishBtn.addEventListener('click', () => {
+                if (wishlist.includes(p.id)) {
+                    wishlist = wishlist.filter(x => x !== p.id);
+                    newWishBtn.classList.remove('active');
+                    newWishBtn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+                    showToast('info', 'Removed', 'Removed from wishlist.');
+                } else {
+                    wishlist.push(p.id);
+                    newWishBtn.classList.add('active');
+                    newWishBtn.innerHTML = '<i class="fa-solid fa-heart"></i>';
+                    showToast('success', '❤️ Saved!', 'Added to wishlist.');
+                }
+                localStorage.setItem('heelsup_wishlist', JSON.stringify(wishlist));
+                const wc = document.getElementById('wishlist-count');
+                wc.textContent = wishlist.length;
+                wc.style.display = wishlist.length ? 'flex' : 'none';
+            });
+            
+            // Load related products
+            renderRelated(p.category, p.id);
         }
 
         function initGallery() {
@@ -1274,21 +1381,47 @@
 
         function submitReview() { if (!rating) { showToast('error', 'Rating Required', 'Please select a star rating.'); return; } showToast('success', '✅ Review Submitted!', 'Thank you for your review!'); }
 
-        function renderRelated() {
+        async function renderRelated(category, currentId) {
             const grid = document.getElementById('related-grid');
             if (!grid) return;
-            grid.innerHTML = DEMO_PRODUCTS.map(p => {
-                const disc = p.original_price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+            
+            let relatedList = [];
+            const CLOUDFLARE_WORKER_URL = HeelsUpAuth.API_BASE;
+            
+            try {
+                const res = await fetch(`${CLOUDFLARE_WORKER_URL}/api/products?limit=5&category=${encodeURIComponent(category || '')}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    const list = Array.isArray(json) ? json : (json.data || []);
+                    relatedList = list.filter(p => p.id !== currentId).slice(0, 4);
+                }
+            } catch (err) {
+                console.warn("Failed to load related products", err);
+            }
+            
+            if (!relatedList.length) {
+                relatedList = DEMO_PRODUCTS.filter(p => p.id !== currentId).slice(0, 4);
+            }
+            
+            grid.innerHTML = relatedList.map(p => {
+                const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
+                const disc = (showMrp && p.original_price) ? Math.round((1 - p.price / p.original_price) * 100) : 0;
                 return `<div class="product-card" onclick="location.href='product.html?id=${p.id}'" style="cursor:pointer">
             <div class="product-img-wrap" style="border-radius:16px 16px 0 0">
-                <img src="${p.images[0]}" alt="${p.name}" loading="lazy"/>
-                <div class="product-badges">${p.is_new ? '<span class="badge badge-new">New</span>' : ''}${disc >= 20 ? `<span class="badge badge-sale">-${disc}%</span>` : ''}</div>
-                <button class="product-quick-add" onclick="event.stopPropagation();addToCart(DEMO_PRODUCTS.find(x=>x.id==${p.id}));openCart()"><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
+                <img src="${p.images?.[0] || 'assets/placeholder.jpg'}" alt="${p.name}" loading="lazy"/>
+                <div class="product-badges">
+                    ${p.is_new ? '<span class="badge badge-new">New</span>' : ''}
+                    ${(showMrp && disc >= 20) ? `<span class="badge badge-sale">-${disc}%</span>` : ''}
+                </div>
+                <button class="product-quick-add" onclick="event.stopPropagation();addToCart({ id: ${p.id}, name: '${p.name.replace(/'/g, "\\'")}', price: ${p.price}, images: ['${p.images?.[0] || ''}'], category: '${p.category}' });openCart()"><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
             </div>
             <div class="product-info">
                 <div class="product-category">${p.category}</div>
                 <a href="product.html?id=${p.id}" class="product-name">${p.name}</a>
-                <div class="product-price"><span class="price-current">₹${p.price.toLocaleString('en-IN')}</span>${p.original_price ? `<span class="price-original">₹${p.original_price.toLocaleString('en-IN')}</span>` : ''}</div>
+                <div class="product-price">
+                    <span class="price-current">₹${p.price.toLocaleString('en-IN')}</span>
+                    ${(showMrp && p.original_price) ? `<span class="price-original">₹${p.original_price.toLocaleString('en-IN')}</span>` : ''}
+                </div>
             </div>
         </div>`;
             }).join('');

@@ -16,7 +16,9 @@ const PUBLIC_SETTING_KEYS = new Set([
     'gst_registered', 'gst_number',
     'invoice_prefix',
     'google_client_id',   // public OAuth client ID is fine to expose
+    'support_phone', 'site_email', 'shipping_free_above', 'shipping_standard_charge'
 ]);
+
 
 export async function settingsRouter(request, env) {
     const url = new URL(request.url);

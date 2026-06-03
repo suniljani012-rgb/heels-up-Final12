@@ -50,6 +50,74 @@
     return data;
   }
 
+  // Dynamic settings loading and storefront injection
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/settings/public`);
+      if (response.ok) {
+        const json = await response.json();
+        const settings = json.data || json;
+        if (settings) {
+          // 1. Update Whatsapp floats and links
+          const phone = settings.support_phone || settings.store_phone;
+          if (phone) {
+            const cleanPhone = phone.replace(/[^0-9]/g, '');
+            document.querySelectorAll('a[href*="wa.me"]').forEach(link => {
+              link.href = `https://wa.me/${cleanPhone}?text=Hello HeelsUp! I want to enquire about your products.`;
+            });
+            document.querySelectorAll('.whatsapp-number').forEach(el => {
+              el.textContent = phone;
+            });
+          }
+
+          // 2. Update store email
+          const email = settings.store_email || settings.site_email;
+          if (email) {
+            document.querySelectorAll('a[href^="mailto:"]').forEach(link => {
+              link.href = `mailto:${email}`;
+            });
+            document.querySelectorAll('.store-email-label').forEach(el => {
+              el.textContent = email;
+            });
+          }
+
+          // 3. Update Social links
+          if (settings.social_instagram) {
+            document.querySelectorAll('a[href*="instagram.com"]').forEach(link => {
+              link.href = settings.social_instagram;
+            });
+          }
+          if (settings.social_facebook) {
+            document.querySelectorAll('a[href*="facebook.com"]').forEach(link => {
+              link.href = settings.social_facebook;
+            });
+          }
+          if (settings.social_pinterest) {
+            document.querySelectorAll('a[href*="pinterest.com"]').forEach(link => {
+              link.href = settings.social_pinterest;
+            });
+          }
+
+          // 4. Update Footer Tagline
+          if (settings.footer_tagline) {
+            const taglineEl = document.querySelector('.footer-tagline');
+            if (taglineEl) taglineEl.textContent = settings.footer_tagline;
+          }
+
+          // 5. Update shipping notice thresholds
+          const threshold = settings.shipping_free_above || settings.free_delivery_threshold;
+          if (threshold) {
+            document.querySelectorAll('.free-shipping-threshold').forEach(el => {
+              el.textContent = `₹${threshold}`;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load public settings dynamically:", e);
+    }
+  });
+
   window.HeelsUpAuth = {
     API_BASE,
     getToken,
@@ -59,3 +127,4 @@
     api
   };
 })();
+

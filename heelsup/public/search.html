@@ -226,6 +226,8 @@
     </aside>
     <div class="toast-container" id="toast-container"></div>
 
+    <script src="app-config.js"></script>
+    <script src="app-auth.js"></script>
     <script>
         const PRODUCTS = [
             { id: 1, name: 'Stiletto Block Heel Pumps', category: 'heels', price: 899, original_price: 1499, images: ['https://images.unsplash.com/photo-1596703263926-eb0762ee17e4?w=500&q=80&auto=format&fit=crop'], is_trending: true, rating: 4.8, review_count: 124 },
@@ -240,16 +242,61 @@
         let cart = JSON.parse(localStorage.getItem('heelsup_cart') || '[]');
 
         function makeCard(p) {
-            const disc = p.original_price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
-            return `<div class="product-card"><div class="product-img-wrap"><img src="${p.images[0]}" alt="${p.name}" loading="lazy" /><div class="product-badges">${p.is_new ? '<span class="badge badge-new">New</span>' : ''}${disc >= 20 ? `<span class="badge badge-sale">-${disc}%</span>` : ''}</div><button class="product-quick-add" onclick='addCart(${JSON.stringify(p)})'><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button></div><div class="product-info"><div class="product-category">${p.category}</div><a href="product.html?id=${p.id}" class="product-name">${p.name}</a><div class="product-price"><span class="price-current">₹${p.price.toLocaleString('en-IN')}</span>${p.original_price ? `<span class="price-original">₹${p.original_price.toLocaleString('en-IN')}</span>` : ''}</div><div class="product-rating"><span class="stars">${'★'.repeat(Math.round(p.rating))}${'☆'.repeat(5 - Math.round(p.rating))}</span><span class="rating-count">(${p.review_count || 0})</span></div></div></div>`;
+            const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
+            const disc = (showMrp && p.original_price) ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+            return `<div class="product-card">
+                <div class="product-img-wrap">
+                    <img src="${p.images?.[0] || 'assets/placeholder.jpg'}" alt="${p.name}" loading="lazy" />
+                    <div class="product-badges">
+                        ${p.is_new ? '<span class="badge badge-new">New</span>' : ''}
+                        ${(showMrp && disc >= 20) ? `<span class="badge badge-sale">-${disc}%</span>` : ''}
+                    </div>
+                    <button class="product-quick-add" onclick='addCart(${JSON.stringify(p).replace(/'/g, "\\'")})'><i class="fa-solid fa-bag-shopping"></i> Add to Cart</button>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">${p.category || 'Footwear'}</div>
+                    <a href="product.html?id=${p.id}" class="product-name">${p.name}</a>
+                    <div class="product-price">
+                        <span class="price-current">₹${p.price.toLocaleString('en-IN')}</span>
+                        ${(showMrp && p.original_price) ? `<span class="price-original">₹${p.original_price.toLocaleString('en-IN')}</span>` : ''}
+                    </div>
+                    <div class="product-rating">
+                        <span class="stars">${'★'.repeat(Math.round(p.rating || 4))}${'☆'.repeat(5 - Math.round(p.rating || 4))}</span>
+                        <span class="rating-count">(${p.review_count || 0})</span>
+                    </div>
+                </div>
+            </div>`;
         }
 
-        function addCart(p) { const ex = cart.find(i => i.id === p.id); if (ex) ex.qty++; else cart.push({ id: p.id, name: p.name, price: p.price, img: p.images[0], qty: 1, category: p.category }); localStorage.setItem('heelsup_cart', JSON.stringify(cart)); document.getElementById('cart-count').textContent = cart.reduce((s, i) => s + i.qty, 0); document.getElementById('cart-drawer').classList.add('open'); document.getElementById('cart-backdrop').classList.add('open'); showToast('success', 'Added!', p.name + ' added to cart.'); }
+        function addCart(p) {
+            const ex = cart.find(i => i.id === p.id);
+            if (ex) ex.qty++;
+            else cart.push({ id: p.id, name: p.name, price: p.price, img: p.images?.[0] || 'assets/placeholder.jpg', qty: 1, category: p.category });
+            localStorage.setItem('heelsup_cart', JSON.stringify(cart));
+            document.getElementById('cart-count').textContent = cart.reduce((s, i) => s + i.qty, 0);
+            document.getElementById('cart-drawer').classList.add('open');
+            document.getElementById('cart-backdrop').classList.add('open');
+            showToast('success', 'Added!', p.name + ' added to cart.');
+        }
 
-        function doSearch() {
-            const q = document.getElementById('main-search').value.trim().toLowerCase();
+        async function doSearch() {
+            const q = document.getElementById('main-search').value.trim();
             if (!q) return;
-            const results = PRODUCTS.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+            
+            const CLOUDFLARE_WORKER_URL = HeelsUpAuth.API_BASE;
+            let results = [];
+            
+            try {
+                const res = await fetch(`${CLOUDFLARE_WORKER_URL}/api/products?q=${encodeURIComponent(q)}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    results = Array.isArray(json) ? json : (json.data || []);
+                }
+            } catch (err) {
+                console.warn('Search fetch failed, filtering local list', err);
+                results = PRODUCTS.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.category.toLowerCase().includes(q.toLowerCase()));
+            }
+            
             document.getElementById('default-state').style.display = 'none';
             document.getElementById('no-results').style.display = 'none';
             document.getElementById('search-results-section').style.display = 'none';
@@ -258,6 +305,21 @@
             document.getElementById('results-grid').innerHTML = results.map(makeCard).join('');
             document.getElementById('search-results-section').style.display = 'block';
         }
+
+        async function loadDefaultTrending() {
+            const CLOUDFLARE_WORKER_URL = HeelsUpAuth.API_BASE;
+            let list = [];
+            try {
+                const res = await fetch(`${CLOUDFLARE_WORKER_URL}/api/products?featured=true&limit=8`);
+                if (res.ok) {
+                    const json = await res.json();
+                    list = Array.isArray(json) ? json : (json.data || []);
+                }
+            } catch {}
+            if (!list.length) list = PRODUCTS.filter(p => p.is_trending);
+            document.getElementById('trending-default').innerHTML = list.map(makeCard).join('');
+        }
+
         function setSearch(q) { document.getElementById('main-search').value = q; doSearch(); }
 
         document.getElementById('main-search')?.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
@@ -267,7 +329,7 @@
         const q = params.get('q');
         if (q) { document.getElementById('main-search').value = q; doSearch(); }
         else {
-            document.getElementById('trending-default').innerHTML = PRODUCTS.filter(p => p.is_trending).map(makeCard).join('');
+            loadDefaultTrending();
         }
 
         window.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60));

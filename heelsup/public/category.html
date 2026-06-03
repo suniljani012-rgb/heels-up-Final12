@@ -855,7 +855,13 @@
         async function loadProducts() {
             try {
                 const res = await fetch(`${CLOUDFLARE_WORKER_URL}/api/products?limit=50`, { signal: AbortSignal.timeout(3000) });
-                if (res.ok) products = await res.json(); else products = DEMO_PRODUCTS;
+                if (res.ok) {
+                    const json = await res.json();
+                    products = Array.isArray(json) ? json : (json.data || []);
+                    if (!products || !products.length) products = DEMO_PRODUCTS;
+                } else {
+                    products = DEMO_PRODUCTS;
+                }
             } catch { products = DEMO_PRODUCTS; }
             applyFilters();
         }
@@ -900,7 +906,8 @@
         }
 
         function makeGridCard(p) {
-            const disc = p.original_price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+            const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
+            const disc = (showMrp && p.original_price) ? Math.round((1 - p.price / p.original_price) * 100) : 0;
             const inW = wishlist.includes(p.id);
             const stars = '★'.repeat(Math.round(p.rating || 4)) + '☆'.repeat(5 - Math.round(p.rating || 4));
             return `<div class="product-card" data-id="${p.id}">
@@ -909,7 +916,7 @@
       <div class="product-badges">
         ${p.is_new ? '<span class="badge badge-new">New</span>' : ''}
         ${p.is_trending ? '<span class="badge badge-hot">🔥</span>' : ''}
-        ${disc >= 20 ? `<span class="badge badge-sale">-${disc}%</span>` : ''}
+        ${(showMrp && disc >= 20) ? `<span class="badge badge-sale">-${disc}%</span>` : ''}
       </div>
       <div class="product-actions">
         <button class="product-action-btn wishlist-btn ${inW ? 'wishlist-active' : ''}" data-id="${p.id}"><i class="fa-${inW ? 'solid' : 'regular'} fa-heart"></i></button>
@@ -922,8 +929,8 @@
       <a href="product.html?id=${p.id}" class="product-name">${p.name}</a>
       <div class="product-price">
         <span class="price-current">₹${p.price.toLocaleString('en-IN')}</span>
-        ${p.original_price ? `<span class="price-original">₹${p.original_price.toLocaleString('en-IN')}</span>` : ''}
-        ${disc >= 10 ? `<span class="price-discount">Save ${disc}%</span>` : ''}
+        ${(showMrp && p.original_price) ? `<span class="price-original">₹${p.original_price.toLocaleString('en-IN')}</span>` : ''}
+        ${(showMrp && disc >= 10) ? `<span class="price-discount">Save ${disc}%</span>` : ''}
       </div>
       <div class="product-rating"><span class="stars">${stars}</span><span class="rating-count">(${p.review_count || 0})</span></div>
     </div>
@@ -931,7 +938,8 @@
         }
 
         function makeListCard(p) {
-            const disc = p.original_price ? Math.round((1 - p.price / p.original_price) * 100) : 0;
+            const showMrp = p.show_mrp !== false && p.show_mrp !== 0;
+            const disc = (showMrp && p.original_price) ? Math.round((1 - p.price / p.original_price) * 100) : 0;
             const inW = wishlist.includes(p.id);
             const stars = '★'.repeat(Math.round(p.rating || 4)) + '☆'.repeat(5 - Math.round(p.rating || 4));
             return `<div class="product-card-list">
@@ -943,8 +951,8 @@
       <div class="list-footer">
         <div style="display:flex;align-items:center;gap:10px">
           <span class="price-current">₹${p.price.toLocaleString('en-IN')}</span>
-          ${p.original_price ? `<span class="price-original">₹${p.original_price.toLocaleString('en-IN')}</span>` : ''}
-          ${disc >= 10 ? `<span class="price-discount">-${disc}%</span>` : ''}
+          ${(showMrp && p.original_price) ? `<span class="price-original">₹${p.original_price.toLocaleString('en-IN')}</span>` : ''}
+          ${(showMrp && disc >= 10) ? `<span class="price-discount">-${disc}%</span>` : ''}
         </div>
         <div style="display:flex;gap:8px">
           <button class="wishlist-btn product-action-btn ${inW ? 'wishlist-active' : ''}" data-id="${p.id}"><i class="fa-${inW ? 'solid' : 'regular'} fa-heart"></i></button>

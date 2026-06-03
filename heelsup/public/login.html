@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="style.css" />
     <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         .auth-page {
             min-height: 100vh;
@@ -226,7 +228,9 @@
                 <p class="auth-sub">New yahan? <a href="register.html">Account banao free mein</a></p>
 
                 <div class="social-btns">
-                    <a href="#" class="social-btn"><i class="fa-brands fa-google" style="color:#EA4335"></i> Google</a>
+                    <div id="googleBtnWrapper" style="flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center;">
+                        <a href="#" id="customGoogleBtn" class="social-btn" style="width: 100%; justify-content: center; margin: 0;"><i class="fa-brands fa-google" style="color:#EA4335"></i> Google</a>
+                    </div>
                     <a href="#" class="social-btn"><i class="fa-brands fa-facebook" style="color:#1877F2"></i>
                         Facebook</a>
                 </div>
@@ -304,6 +308,58 @@
                 showToast('error', 'Login Failed', res?.data?.error || 'Email ya password galat hai.');
             }
         });
+
+        // Google Sign-In Integration
+        async function handleGoogleCallback(response) {
+            try {
+                const res = await API.post('/auth/google', { credential: response.credential });
+                if (res && res.ok && res.data.success) {
+                    Auth.setToken(res.data.data.token);
+                    Auth.setUser(res.data.data.user);
+                    showToast('success', 'Login Successful!', 'Google login successful.');
+                    const params = new URLSearchParams(window.location.search);
+                    setTimeout(() => window.location.href = params.get('redirect') || 'profile.html', 1200);
+                } else {
+                    showToast('error', 'Google Auth Failed', res?.data?.error || 'Invalid Google credential.');
+                }
+            } catch (e) {
+                showToast('error', 'Google Auth Error', 'Something went wrong during Google login.');
+            }
+        }
+
+        async function initGoogle() {
+            try {
+                const res = await API.get('/config');
+                if (res.ok && res.data && res.data.googleClientId) {
+                    const clientId = res.data.googleClientId;
+                    const tryRender = () => {
+                        if (window.google) {
+                            const customBtn = document.getElementById('customGoogleBtn');
+                            const wrapper = document.getElementById('googleBtnWrapper');
+                            if (customBtn && wrapper) {
+                                google.accounts.id.initialize({
+                                    client_id: clientId,
+                                    callback: handleGoogleCallback
+                                });
+                                google.accounts.id.renderButton(
+                                    wrapper,
+                                    { theme: "outline", size: "large", type: "standard", width: customBtn.offsetWidth || 200 }
+                                );
+                                // Hide the custom design stub to let standard Google button display
+                                customBtn.style.display = 'none';
+                            }
+                        } else {
+                            setTimeout(tryRender, 100);
+                        }
+                    };
+                    tryRender();
+                }
+            } catch (e) {
+                console.warn('Google client init failed:', e);
+            }
+        }
+        window.addEventListener('load', initGoogle);
+
         function showToast(type, title, msg) {
             const c = document.getElementById('toast-container');
             const id = 't' + Date.now();
