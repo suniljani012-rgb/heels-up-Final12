@@ -21,6 +21,7 @@
 </head>
 
 <body>
+    <div id="navbar"></div>
 
   <!-- Header Navigation -->
   <header class="header" id="header">
@@ -59,68 +60,11 @@
   </main>
 
   <!-- Footer -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-grid">
-        <div>
-          <div class="footer-logo">HEELS<span>UP</span></div>
-          <p class="footer-text">Premium luxury women's footwear and handbags. Give Value To Your Feet with our
-            exquisite craftsmanship and elegant designs.</p>
-          <div class="social-links">
-            <a href="https://www.instagram.com/heel_s_up/" target="_blank"><i class="fa-brands fa-instagram"></i></a>
-            <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
-            <a href="#"><i class="fa-brands fa-pinterest-p"></i></a>
-          </div>
-        </div>
-        <div>
-          <h4 class="footer-heading">Shop</h4>
-          <ul class="footer-links">
-            <li><a href="#/shop">All Products</a></li>
-            <li><a href="#/shop?cat=heels">Luxury Heels</a></li>
-            <li><a href="#/shop?cat=flats">Elegant Flats</a></li>
-            <li><a href="#/shop?cat=bags">Premium Bags</a></li>
-            <li><a href="#/shop?cat=wedding">Wedding Collection</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="footer-heading">Brand</h4>
-          <ul class="footer-links">
-            <li><a href="#/about">Our Story</a></li>
-            <li><a href="#">Sustainability</a></li>
-            <li><a href="#">Press</a></li>
-            <li><a href="#">Careers</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="footer-heading">Visit Us</h4>
-          <ul class="footer-links" style="color: #999; font-size: 0.9rem; line-height: 1.8;">
-            <li><i class="fa-solid fa-location-dot" style="margin-right:8px; color:var(--clr-primary);"></i> 1st 'B'
-              Road, Near Mahaveer Mega Mart</li>
-            <li style="margin-bottom: 1rem; margin-left: 20px;">Sardarpura, Jodhpur, Rajasthan</li>
-            <li><i class="fa-solid fa-phone" style="margin-right:8px; color:var(--clr-primary);"></i> +91 7891470935
-            </li>
-            <li><i class="fa-solid fa-envelope" style="margin-right:8px; color:var(--clr-primary);"></i>
-              support@heelsup.in</li>
-          </ul>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p>&copy; 2026 HEELS UP Luxury. All rights reserved.</p>
-        <div style="display:flex; gap:1.5rem;">
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-        </div>
-      </div>
-    </div>
-  </footer>
+  
 
   <!-- Cart Drawer -->
-  <div class="drawer-overlay" id="cart-overlay"></div>
-  <div class="drawer" id="cart-drawer">
-    <div class="drawer-header">
-      <h3 class="drawer-title">Your Bag</h3>
-      <div class="drawer-close" id="close-cart"><i class="fa-solid fa-xmark"></i></div>
-    </div>
+  
+  
     <div class="drawer-body" id="cart-items">
       <!-- Cart Items injected here -->
     </div>
@@ -135,12 +79,8 @@
   </div>
 
   <!-- Mobile Menu Drawer -->
-  <div class="drawer-overlay" id="menu-overlay"></div>
-  <div class="drawer" id="menu-drawer" style="right: auto; left: -100%;">
-    <div class="drawer-header">
-      <div class="logo">HEELS<span>UP</span></div>
-      <div class="drawer-close" id="close-menu"><i class="fa-solid fa-xmark"></i></div>
-    </div>
+  
+  
     <div class="drawer-body">
       <ul
         style="display:flex; flex-direction:column; gap:1.5rem; font-size: 1.2rem; font-family: var(--font-heading); text-transform: uppercase;">
@@ -155,13 +95,21 @@
   </div>
 
   <!-- Toast Notifications -->
-  <div class="toast-container" id="toast-container"></div>
+  
 
   <!-- Application Logic -->
-  <script src="/js/core/api-client.js"></script>
-  <script src="/js/cart.js"></script>
-  <script src="/js/wishlist.js"></script>
+  
+  
+  
   <script defer src="/js/pages/index.js"></script>
+
+    <script src="/js/core/config.js" defer></script>
+    <script src="/js/core/api-client.js" defer></script>
+    <script src="/js/core/common-ui.js" defer></script>
+    <script src="/js/cart.js" defer></script>
+    <script src="/js/wishlist.js" defer></script>
+  
+    <footer class="footer"></footer>
 </body>
 
 </html>

@@ -26,104 +26,12 @@
 </head>
 
 <body>
+    <div id="navbar"></div>
 
   <!-- ═══ TOAST CONTAINER ═══ -->
-  <div class="toast-container" id="toast-wrap" aria-live="polite"></div>
+  
 
-  <!-- ═══ ANNOUNCEMENT BAR ═══ -->
-  <div class="ann-bar" id="ann-bar">
-    <div class="ann-scroll">
-      <span class="ann-item">🚚 <strong>Free Shipping</strong> on orders above ₹799!</span>
-      <span class="ann-dot"></span>
-      <span class="ann-item">✨ 21,700+ Happy Customers &nbsp;·&nbsp; Pan-India Delivery</span>
-      <span class="ann-dot"></span>
-      <span class="ann-item">💫 Exchange Policy Available &nbsp;·&nbsp; Authentic Quality Guaranteed</span>
-      <span class="ann-dot"></span>
-      <span class="ann-item">🚚 <strong>Free Shipping</strong> on orders above ₹799!</span>
-      <span class="ann-dot"></span>
-      <span class="ann-item">✨ 21,700+ Happy Customers &nbsp;·&nbsp; Pan-India Delivery</span>
-      <span class="ann-dot"></span>
-      <span class="ann-item">💫 Exchange Policy Available &nbsp;·&nbsp; Authentic Quality Guaranteed</span>
-      <span class="ann-dot"></span>
-    </div>
-    <button class="ann-close" id="ann-close" aria-label="Close announcement">✕</button>
-  </div>
-
-  <!-- ═══ NAVBAR ═══ -->
-  <nav class="navbar" id="navbar" role="navigation" aria-label="Main navigation">
-    <div class="container">
-      <div class="nav-inner">
-        <!-- Logo -->
-        <a href="/" class="nav-logo" aria-label="HeelsUp Home">
-          <img src="/logo.png" alt="HeelsUp" id="logo-img" width="140" height="42" loading="eager" />
-        </a>
-
-        <!-- Desktop Menu -->
-        <ul class="nav-menu" role="list">
-          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
-          <li class="nav-item">
-            <a href="/shop.html" class="nav-link active" aria-haspopup="true">
-              Shop <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-            </a>
-            <div class="nav-drop" role="menu">
-              <a href="/shop.html?cat=heels" class="nav-drop-link" role="menuitem">
-                <span class="nav-drop-icon" aria-hidden="true"><i class="fa-solid fa-shoe-prints"></i></span>
-                <div class="nav-drop-text"><strong>Heels</strong><span>Block, Stiletto, Cone</span></div>
-              </a>
-              <a href="/shop.html?cat=flats" class="nav-drop-link" role="menuitem">
-                <span class="nav-drop-icon" aria-hidden="true"><i class="fa-solid fa-socks"></i></span>
-                <div class="nav-drop-text"><strong>Flats</strong><span>Mules, Loafers, Slip-ons</span></div>
-              </a>
-              <a href="/shop.html?cat=sandals" class="nav-drop-link" role="menuitem">
-                <span class="nav-drop-icon" aria-hidden="true"><i class="fa-solid fa-shoe-prints"></i></span>
-                <div class="nav-drop-text"><strong>Sandals</strong><span>Strappy, Flat, Wedge</span></div>
-              </a>
-              <a href="/shop.html?cat=bags" class="nav-drop-link" role="menuitem">
-                <span class="nav-drop-icon" aria-hidden="true"><i class="fa-solid fa-suitcase"></i></span>
-                <div class="nav-drop-text"><strong>Bags</strong><span>Tote, Clutch, Sling</span></div>
-              </a>
-              <div class="nav-drop-sep" role="separator"></div>
-              <a href="/shop.html?cat=new" class="nav-drop-link" role="menuitem">
-                <span class="nav-drop-icon" aria-hidden="true" style="color: var(--primary);"><i
-                    class="fa-solid fa-sparkles"></i></span>
-                <div class="nav-drop-text"><strong>New Arrivals</strong><span>Fresh seasonal picks</span></div>
-              </a>
-              <a href="/shop.html?cat=sale" class="nav-drop-link" role="menuitem">
-                <span class="nav-drop-icon" aria-hidden="true" style="color: var(--red);"><i
-                    class="fa-solid fa-fire"></i></span>
-                <div class="nav-drop-text"><strong>Sale</strong><span>Unbeatable discounts</span></div>
-              </a>
-            </div>
-          </li>
-          <li class="nav-item"><a href="/shop.html?cat=heels" class="nav-link">Heels</a></li>
-          <li class="nav-item"><a href="/shop.html?cat=sandals" class="nav-link">Sandals</a></li>
-          <li class="nav-item"><a href="/shop.html?cat=bags" class="nav-link">Bags</a></li>
-          <li class="nav-item"><a href="/about.html" class="nav-link">About</a></li>
-          <li class="nav-item"><a href="/contact.html" class="nav-link">Contact</a></li>
-        </ul>
-
-        <!-- Actions -->
-        <div class="nav-actions">
-          <a href="/search.html" class="nav-btn">
-            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          </a>
-          <a href="/wishlist.html" class="nav-btn" aria-label="My Wishlist">
-            <i class="fa-regular fa-heart" aria-hidden="true"></i>
-          </a>
-          <a href="/profile.html" class="nav-btn" id="nav-account-btn" aria-label="My Account">
-            <i class="fa-regular fa-user" aria-hidden="true"></i>
-          </a>
-          <button class="nav-btn" id="cart-open-btn" aria-label="Shopping Cart" aria-expanded="false">
-            <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
-            <span class="nav-badge" id="cart-count" style="display:none" aria-label="items in cart">0</span>
-          </button>
-          <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu" aria-expanded="false">
-            <span class="ham-line"></span>
-            <span class="ham-line"></span>
-            <span class="ham-line"></span>
-          </button>
-        </div>
-      </div>
+  
     </div>
   </nav>
 
@@ -196,33 +104,7 @@
 
   <!-- ═══ CART BACKDROP & DRAWER ═══ -->
   <div class="cart-bd" id="cart-bd" aria-hidden="true"></div>
-  <aside class="cart-drawer" id="cart-drawer" role="complementary" aria-label="Shopping cart">
-    <div class="cart-head">
-      <div>
-        <span class="cart-head-title">Your Bag</span>
-        <span class="cart-head-cnt" id="cart-head-cnt"></span>
-      </div>
-      <button class="cart-cls" id="cart-cls-btn" aria-label="Close cart">
-        <i class="fa-solid fa-xmark" aria-hidden="true"></i>
-      </button>
-    </div>
-    <div class="cart-body-el" id="cart-body-el">
-      <div class="cart-empty-state">
-        <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i>
-        <p>Your bag is empty</p>
-        <button class="btn btn-primary btn-sm btn-pill" onclick="closeCart()">Start Shopping</button>
-      </div>
-    </div>
-    <div class="cart-foot-el" id="cart-foot-el" style="display:none">
-      <div class="cart-total-row">
-        <span class="cart-total-lbl">Subtotal</span>
-        <span class="cart-total-val" id="cart-subtotal-val">₹0</span>
-      </div>
-      <div class="cart-free-note" id="cart-ship-note"></div>
-      <a href="/cart.html" class="cart-checkout-btn">View Bag & Checkout</a>
-      <button class="cart-cont-btn" id="cart-cont-btn">Continue Shopping</button>
-    </div>
-  </aside>
+  
 
   <!-- ============================
    BREADCRUMB
@@ -515,8 +397,7 @@
             <div class="footer-socials">
               <a href="https://www.instagram.com/heel_s_up" target="_blank" rel="noopener noreferrer" class="footer-soc"
                 aria-label="HeelsUp on Instagram"><i class="fa-brands fa-instagram" aria-hidden="true"></i></a>
-              <a href="https://wa.me/917891470935" target="_blank" rel="noopener noreferrer" class="footer-soc"
-                aria-label="HeelsUp on WhatsApp"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a>
+              
               <a href="mailto:support@heelsup.in" class="footer-soc" aria-label="Email HeelsUp"><i
                   class="fa-regular fa-envelope" aria-hidden="true"></i></a>
             </div>
@@ -583,13 +464,8 @@
   </footer>
 
   <!-- ═══ FLOATING ═══ -->
-  <a href="https://wa.me/917891470935?text=Hi%20HeelsUp%2C%20I%20need%20help%20with%20an%20order" target="_blank"
-    rel="noopener noreferrer" class="whatsapp-fab" aria-label="Chat on WhatsApp">
-    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
-  </a>
-  <button class="scroll-top" id="scroll-top-btn" aria-label="Scroll to top">
-    <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
-  </button>
+  
+  
 
   <!-- ============================
    REVIEW MODAL
@@ -628,12 +504,20 @@
    SCRIPTS
    ============================ -->
   <script src="js/core/config.js"></script>
-  <script src="js/core/api-client.js"></script>
+  
   <script src="js/cart.js"></script>
   <script src="js/wishlist.js"></script>
 
   
     <script defer src="/js/pages/product.js"></script>
+
+    <script src="/js/core/config.js" defer></script>
+    <script src="/js/core/api-client.js" defer></script>
+    <script src="/js/core/common-ui.js" defer></script>
+    <script src="/js/cart.js" defer></script>
+    <script src="/js/wishlist.js" defer></script>
+  
+    <footer class="footer"></footer>
 </body>
 
 </html>

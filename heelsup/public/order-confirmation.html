@@ -22,50 +22,9 @@
 </head>
 
 <body>
+    <div id="navbar"></div>
 
-  <!-- ═══ NAVBAR ═══ -->
-  <nav class="navbar" id="navbar">
-    <div class="container">
-      <div class="nav-inner">
-        <!-- Logo -->
-        <a href="/" class="nav-logo" aria-label="HeelsUp Home">
-          <img src="logo.png" alt="HeelsUp" id="logo-img" width="140" height="42" loading="eager" />
-        </a>
-
-        <!-- Desktop Menu -->
-        <ul class="nav-menu">
-          <li class="nav-item"><a href="/" class="nav-link">Home</a></li>
-          <li class="nav-item"><a href="/shop.html" class="nav-link">Shop</a></li>
-          <li class="nav-item"><a href="/shop.html?cat=heels" class="nav-link">Heels</a></li>
-          <li class="nav-item"><a href="/shop.html?cat=flats" class="nav-link">Flats</a></li>
-          <li class="nav-item"><a href="/about.html" class="nav-link">About</a></li>
-          <li class="nav-item"><a href="/contact.html" class="nav-link">Contact</a></li>
-        </ul>
-
-        <!-- Actions -->
-        <div class="nav-actions">
-          <button class="nav-btn" id="search-btn" aria-label="Search products">
-            <i class="fa-solid fa-magnifying-glass"></i>
-          </button>
-          <a href="/wishlist.html" class="nav-btn" aria-label="My Wishlist">
-            <i class="fa-regular fa-heart"></i>
-          </a>
-          <a href="/profile.html" class="nav-btn" id="nav-account-btn" aria-label="My Account">
-            <i class="fa-regular fa-user"></i>
-          </a>
-          <a href="/cart.html" class="nav-btn" aria-label="Shopping Cart">
-            <i class="fa-solid fa-bag-shopping"></i>
-            <span class="nav-badge" id="cart-count" style="display:none">0</span>
-          </a>
-          <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
-            <span class="ham-line"></span>
-            <span class="ham-line"></span>
-            <span class="ham-line"></span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </nav>
+  
 
   <!-- ═══ MOBILE MENU ═══ -->
   <div class="mob-menu" id="mob-menu">
@@ -182,77 +141,21 @@
   </main>
 
   <!-- ═══ FOOTER ═══ -->
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-top">
-        <div class="footer-grid">
-          <div>
-            <div class="footer-logo-wrap">
-              <img src="logo.png" alt="HeelsUp" onerror="this.style.display='none'" />
-            </div>
-            <p class="footer-tagline">
-              Premium ladies footwear &amp; bags for the modern Indian woman.
-              Quality, style, and comfort — all in one place. Give Value to Your Feet.
-            </p>
-            <div class="footer-socials">
-              <a href="https://instagram.com/heelsup.in" target="_blank" class="footer-soc"><i
-                  class="fa-brands fa-instagram"></i></a>
-              <a href="https://facebook.com/heelsup.in" target="_blank" class="footer-soc"><i
-                  class="fa-brands fa-facebook-f"></i></a>
-              <a href="https://wa.me/917891470935" target="_blank" class="footer-soc"><i
-                  class="fa-brands fa-whatsapp"></i></a>
-            </div>
-          </div>
-          <div>
-            <div class="footer-col-title">Shop</div>
-            <nav class="footer-links">
-              <a href="/shop.html">All Products</a>
-              <a href="/shop.html?cat=heels">Heels</a>
-              <a href="/shop.html?cat=flats">Flats</a>
-              <a href="/shop.html?cat=sandals">Sandals</a>
-              <a href="/shop.html?cat=bags">Bags</a>
-            </nav>
-          </div>
-          <div>
-            <div class="footer-col-title">Company</div>
-            <nav class="footer-links">
-              <a href="/about.html">About Us</a>
-              <a href="/contact.html">Contact</a>
-              <a href="/blog.html">Blog</a>
-              <a href="/faq.html">FAQ</a>
-            </nav>
-          </div>
-          <div>
-            <div class="footer-col-title">Help &amp; Policies</div>
-            <nav class="footer-links">
-              <a href="/policy/shipping.html">Shipping Policy</a>
-              <a href="/policy/exchange.html">Exchange Policy</a>
-              <a href="/size-guide.html">Size Guide</a>
-              <a href="/contact.html">Customer Support</a>
-            </nav>
-          </div>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <p class="footer-copy">© 2026 HeelsUp. All rights reserved.</p>
-        <div class="footer-pay">
-          <span class="pay-chip">UPI</span>
-          <span class="pay-chip">Visa</span>
-          <span class="pay-chip">Mastercard</span>
-        </div>
-        <div class="footer-legal">
-          <a href="/policy/privacy.html">Privacy</a>
-          <a href="/policy/terms.html">Terms</a>
-        </div>
-      </div>
-    </div>
-  </footer>
+  
 
   <script src="js/core/config.js"></script>
-  <script src="js/core/api-client.js"></script>
+  
   <script src="js/cart.js"></script>
   <script src="js/wishlist.js"></script>
   <script defer src="/js/pages/order-confirmation.js"></script>
+
+    <script src="/js/core/config.js" defer></script>
+    <script src="/js/core/api-client.js" defer></script>
+    <script src="/js/core/common-ui.js" defer></script>
+    <script src="/js/cart.js" defer></script>
+    <script src="/js/wishlist.js" defer></script>
+  
+    <footer class="footer"></footer>
 </body>
 
 </html>

@@ -139,7 +139,14 @@
         // Store
         document.getElementById('site_name').value = liveSettings.site_name || '';
         document.getElementById('support_phone').value = liveSettings.support_phone || '';
+        document.getElementById('store_phone').value = liveSettings.store_phone || '';
+        document.getElementById('store_email').value = liveSettings.store_email || '';
         document.getElementById('site_email').value = liveSettings.site_email || '';
+        document.getElementById('store_address').value = liveSettings.store_address || '';
+        document.getElementById('footer_tagline').value = liveSettings.footer_tagline || '';
+        document.getElementById('social_instagram').value = liveSettings.social_instagram || '';
+        document.getElementById('social_facebook').value = liveSettings.social_facebook || '';
+        document.getElementById('social_pinterest').value = liveSettings.social_pinterest || '';
 
         // Security
         document.getElementById('max_login_attempts').value = liveSettings.max_login_attempts || '5';
@@ -206,10 +213,19 @@
         } else if (section === 'store') {
           const email = document.getElementById('site_email').value.trim();
           if (email && !validateEmail(email)) throw new Error('Invalid email format.');
+          const storeEmail = document.getElementById('store_email').value.trim();
+          if (storeEmail && !validateEmail(storeEmail)) throw new Error('Invalid public store email format.');
           payload = {
             site_name: document.getElementById('site_name').value.trim(),
             support_phone: document.getElementById('support_phone').value.trim(),
-            site_email: email
+            store_phone: document.getElementById('store_phone').value.trim(),
+            store_email: storeEmail,
+            site_email: email,
+            store_address: document.getElementById('store_address').value.trim(),
+            footer_tagline: document.getElementById('footer_tagline').value.trim(),
+            social_instagram: document.getElementById('social_instagram').value.trim(),
+            social_facebook: document.getElementById('social_facebook').value.trim(),
+            social_pinterest: document.getElementById('social_pinterest').value.trim()
           };
         } else if (section === 'security') {
           const maxAtt = parseInt(document.getElementById('max_login_attempts').value);

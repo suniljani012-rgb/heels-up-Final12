@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -319,16 +319,47 @@
                       <input type="text" class="form-input" id="support_phone" placeholder="+91 99999 00000" />
                     </div>
                   </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Public Store Phone</label>
+                      <input type="text" class="form-input" id="store_phone" placeholder="+91 7891470935" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Public Store Email</label>
+                      <input type="email" class="form-input" id="store_email" placeholder="support@heelsup.in" />
+                    </div>
+                  </div>
                   <div class="form-group">
-                    <label class="form-label">Primary Support Email</label>
+                    <label class="form-label">Primary Support Email (Alerts)</label>
                     <input type="email" class="form-input" id="site_email" placeholder="support@brand.com" />
-                    <div class="form-hint">Also functions as the receiving address for system alerts and critical
-                      updates.</div>
+                    <div class="form-hint">Functions as the receiving address for system alerts and critical updates.</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Store Address</label>
+                    <textarea class="form-input" id="store_address" placeholder="Store physical address..." rows="2"></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Footer Tagline</label>
+                    <input type="text" class="form-input" id="footer_tagline" placeholder="Premium ladies footwear & bags..." />
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label">Instagram Link</label>
+                      <input type="url" class="form-input" id="social_instagram" placeholder="https://instagram.com/..." />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Facebook Link</label>
+                      <input type="url" class="form-input" id="social_facebook" placeholder="https://facebook.com/..." />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Pinterest Link</label>
+                      <input type="url" class="form-input" id="social_pinterest" placeholder="https://pinterest.com/..." />
+                    </div>
                   </div>
                   <div id="store-error" class="alert alert-danger" style="display:none;margin-top:10px">
                     <i class="fa-solid fa-circle-exclamation"></i><span id="store-error-msg"></span>
                   </div>
-                  <div style="margin-top:8px">
+                  <div style="margin-top:16px">
                     <button class="btn btn-primary" onclick="saveSection('store')" id="btn-save-store">
                       <i class="fa-solid fa-floppy-disk"></i> Save Business Info
                     </button>
