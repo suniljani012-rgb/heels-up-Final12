@@ -179,7 +179,7 @@
             <i class="fa-solid fa-bars"></i>
           </div>
 
-          <a href="/index.html" class="logo">HEELS<span>UP</span></a>
+          <a href="/index.html" class="logo"><img src="/logo.png" alt="HeelsUp Logo" style="height:36px;width:auto;object-fit:contain;"></a>
 
           <nav class="nav-links">
             <a href="/index.html" class="nav-link">Home</a>
@@ -233,7 +233,7 @@
         <div class="container">
           <div class="footer-grid">
             <div>
-              <div class="footer-logo">HEELS<span>UP</span></div>
+              <div class="footer-logo"><img src="/logo.png" alt="HeelsUp Logo" style="height:32px;width:auto;object-fit:contain;"></div>
               <p class="footer-desc">${storeSettings.footer_tagline || "Premium luxury women's footwear and handbags. Give Value To Your Feet with our exquisite craftsmanship and elegant designs."}</p>
               <div class="social-links">
                 <a href="${insta}" target="_blank" class="social-icon"><i class="fa-brands fa-instagram"></i></a>
@@ -309,7 +309,7 @@
         <div class="drawer-overlay" id="menu-overlay"></div>
         <div class="drawer" id="menu-drawer" style="right:auto; left:-100%; transition: left 0.6s cubic-bezier(0.22, 1, 0.36, 1)">
           <div class="drawer-header">
-            <div class="logo">HEELS<span>UP</span></div>
+            <div class="logo"><img src="/logo.png" alt="HeelsUp Logo" style="height:32px;width:auto;object-fit:contain;"></div>
             <div class="drawer-close" id="close-menu"><i class="fa-solid fa-xmark"></i></div>
           </div>
           <div class="drawer-body">

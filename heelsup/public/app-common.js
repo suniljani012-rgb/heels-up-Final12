@@ -372,7 +372,7 @@
     const brandContainers = document.querySelectorAll('.sidebar-brand, .admin-sidebar-logo, .navbar-brand, .footer-logo');
     brandContainers.forEach(container => {
       if (/Heels\s*Up/i.test(container.textContent) && !container.querySelector('img[src*="logo.png"]')) {
-        container.innerHTML = `<img src="logo.png" alt="HeelsUp Logo" style="height:32px;object-fit:contain;display:inline-block;vertical-align:middle;" onerror="this.outerHTML='<span style=\'font-weight:700\'>HeelsUp</span>'">`;
+        container.innerHTML = `<img src="/logo.png" alt="HeelsUp Logo" style="height:32px;object-fit:contain;display:inline-block;vertical-align:middle;" onerror="this.outerHTML='<span style=\'font-weight:700\'>HeelsUp</span>'">`;
       }
     });
   }
