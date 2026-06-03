@@ -1,16 +1,34 @@
 // public/js/print.js
+// Depends on: js/core/api-client.js (HeelsUpAuth) being loaded first
+
+/**
+ * Authenticated fetch helper — wraps HeelsUpAuth.api when available,
+ * falls back to a direct Bearer-token fetch.
+ */
+async function _printFetch(endpoint) {
+    if (typeof HeelsUpAuth !== 'undefined' && HeelsUpAuth.api) {
+        return HeelsUpAuth.api(endpoint);
+    }
+    // Fallback: manual fetch with token
+    const token = localStorage.getItem('heelsup_token') || '';
+    const res = await fetch(endpoint, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
 
 async function fetchOrder(id, isOffline = false) {
     const endpoint = isOffline ? `/api/pos/sales/${id}` : `/api/orders/admin/${id}`;
-    // Actually offline sales endpoint doesn't exist by ID natively in pos.js yet but I'll use online orders for online.
     try {
-        const res = await apiFetch(endpoint);
+        const res = await _printFetch(endpoint);
         return res;
     } catch (e) {
         alert("Error fetching order details: " + e.message);
         return null;
     }
 }
+
 
 function renderItems(items) {
     return items.map(item => `

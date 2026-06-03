@@ -1,0 +1,43 @@
+/*
+  # Security Headers — applied to all responses via Cloudflare Pages
+  # These complement the headers already set in the Worker (src/index.js)
+
+  # Prevent clickjacking
+  X-Frame-Options: DENY
+
+  # Block MIME-type sniffing
+  X-Content-Type-Options: nosniff
+
+  # Referrer policy
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Permissions policy — restrict dangerous APIs
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(self "https://checkout.razorpay.com")
+
+  # HSTS — force HTTPS for 1 year (including subdomains)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+  # Content Security Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://media.heelsup.in https://*.unsplash.com https://*.razorpay.com; connect-src 'self' https://heelsupnew.heelsup.workers.dev https://api.razorpay.com; frame-src https://*.razorpay.com; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self';
+
+# Static assets — long-lived cache
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Fonts cached for 1 year
+*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML pages — short cache (always revalidate)
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Service worker — never cache
+/sw.js
+  Cache-Control: no-store, max-age=0

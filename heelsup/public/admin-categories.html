@@ -907,9 +907,9 @@
         </div>
     </div>
 
-    <script src="app-config.js"></script>
-    <script src="app-auth.js"></script>
-  <script src="admin-enterprise.js"></script>
+    <script src="js/core/config.js"></script>
+    <script src="js/core/api-client.js"></script>
+  <script src="js/admin/enterprise.js"></script>
     <script>
         let user = null;
         try { user = HeelsUpAuth.getUser(); if (!user || user.role !== 'admin') window.location = 'login.html?redirect=admin-categories.html'; } catch (e) { user = { firstName: 'Admin', role: 'admin' }; }

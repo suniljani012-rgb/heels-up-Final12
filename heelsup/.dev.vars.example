@@ -1,16 +1,32 @@
-# Cloudflare runtime vars (non-secret)
-APP_NAME=HeelsUp
-CORS_ORIGIN=*
-API_BASE_URL=https://heelsup-api.YOUR-SUBDOMAIN.workers.dev
-GOOGLE_APPSCRIPT_ENDPOINT=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
-GOOGLE_APPSCRIPT_TOKEN=your-gas-shared-token
-JWT_EXPIRES_DAYS=30
-OTP_EXPIRY_MINUTES=10
-REQUIRE_EMAIL_OTP=false
+# HeelsUp — Environment Variables Template
+# Copy this file to .dev.vars for local development
+# NEVER commit .dev.vars — it is in .gitignore
 
-# Cloudflare secrets (set via wrangler secret put ...)
-# JWT_SECRET=
-# RAZORPAY_KEY_ID=
-# RAZORPAY_KEY_SECRET=
-# ADMIN_BOOTSTRAP_EMAIL=
-# ADMIN_BOOTSTRAP_PASSWORD=
+# ── Cloudflare Credentials ─────────────────────────────────────
+# Used by Wrangler for deploying to your Cloudflare account
+# Get from: https://dash.cloudflare.com/profile/api-tokens
+CLOUDFLARE_API_TOKEN=your_cloudflare_api_token
+CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
+
+# ── JWT Authentication ─────────────────────────────────────────
+# Generate with: openssl rand -base64 64
+JWT_SECRET=your_jwt_secret_at_least_32_chars
+
+# ── Razorpay Payment Gateway ───────────────────────────────────
+# Get from: https://dashboard.razorpay.com/app/keys
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=your_razorpay_secret
+
+# ── Admin Bootstrap ────────────────────────────────────────────
+# Used to create the first admin account
+ADMIN_BOOTSTRAP_EMAIL=admin@heelsup.in
+ADMIN_BOOTSTRAP_PASSWORD=change_this_immediately
+
+# ── CORS ────────────────────────────────────────────────────────
+# In production: https://heelsup.in
+# In development: http://localhost:8788
+CORS_ORIGIN=https://heelsup.in
+
+# ── Email / Notifications (Optional) ──────────────────────────
+# EMAIL_API_KEY=your_email_service_key
+# EMAIL_FROM=noreply@heelsup.in

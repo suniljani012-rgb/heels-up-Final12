@@ -6,17 +6,25 @@ Disallow: /admin.html
 Disallow: /admin-*.html
 Disallow: /api/
 
-# Block cart and checkout
+# Block cart, checkout, and authenticated pages
 Disallow: /cart.html
 Disallow: /checkout.html
 Disallow: /orders.html
+Disallow: /order-confirmation.html
 Disallow: /profile.html
 Disallow: /login.html
 Disallow: /register.html
 Disallow: /forgot-password.html
 Disallow: /reset-password.html
+Disallow: /print.html
+Disallow: /order-tracking.html
 
-# Allow important pages
+# Block internal assets
+Disallow: /js/admin/
+Disallow: /js/core/
+Disallow: /img/
+
+# Allow important SEO pages
 Allow: /index.html
 Allow: /shop.html
 Allow: /category.html
@@ -27,6 +35,10 @@ Allow: /blog-post.html
 Allow: /about.html
 Allow: /contact.html
 Allow: /faq.html
+Allow: /size-guide.html
+Allow: /shipping-info.html
+Allow: /returns.html
 Allow: /policy/
 
+# Sitemap
 Sitemap: https://heelsup.in/sitemap.xml

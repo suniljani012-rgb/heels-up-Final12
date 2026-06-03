@@ -1,8 +1,32 @@
+# Dependencies
 node_modules/
-.dev.vars
+
+# Cloudflare Wrangler
 .wrangler/
-*.cjs
-test_api.js
-scratch_query.js
-reset.sql
-update_db.js
+
+# Environment secrets — NEVER commit these
+.dev.vars
+.env
+*.env.local
+
+# Python artifacts
+*.pyc
+__pycache__/
+*.pyo
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Editor directories
+.vscode/
+.idea/

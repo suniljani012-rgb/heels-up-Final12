@@ -1,1 +1,2 @@
-PRAGMA table_info(orders);
+-- MOVED to scripts/fixes/show_orders.sql
+-- This was a scratch/debug query and does not belong in migrations.
