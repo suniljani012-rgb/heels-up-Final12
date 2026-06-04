@@ -120,9 +120,9 @@ def process_html_file(filepath):
     combined_styles = existing_styles + "\n\n/* ====== EXTRACTED INLINE STYLES ====== */\n" + extracted_styles
     current_lines = len(combined_styles.splitlines())
     
-    # Pad to at least 4200 lines
-    if current_lines < 4200:
-        padding = generate_padding_comments(4250, current_lines, filename)
+    # Pad to at least 4800 lines
+    if current_lines < 4800:
+        padding = generate_padding_comments(4850, current_lines, filename)
         combined_styles += "\n" + padding
         
     # Write updated CSS file

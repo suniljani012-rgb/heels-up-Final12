@@ -1,518 +1,370 @@
-.orders-page {
-            background: var(--cream2);
-            min-height: 100vh;
-            padding: 40px 0 80px;
-        }
 
-        .orders-header {
-            background: var(--color-white);
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            padding: 32px 36px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
 
-        .orders-title {
-            font-family: var(--fh);
-            font-size: 1.7rem;
-            font-weight: 600;
-        }
-
-        /* Filter tabs */
-        .orders-filter {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .order-filter-btn {
-            padding: 8px 18px;
-            border-radius: 100px;
-            font-size: 13px;
-            font-weight: 600;
-            border: 1.5px solid var(--border);
-            background: var(--color-white);
-            color: var(--text-3);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .order-filter-btn.active,
-        .order-filter-btn:hover {
-            border-color: var(--gold);
-            color: var(--gold);
-            background: var(--color-primary-glow);
-        }
-
-        /* Order Card */
-        .order-card {
-            background: var(--color-white);
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            margin-bottom: 16px;
+/* ====== EXTRACTED INLINE STYLES ====== */
+.policy-hero {
+            background: linear-gradient(135deg, #0d0d0d 0%, #1a0a1a 50%, #0d0d0d 100%);
+            padding: 80px 0 60px;
+            position: relative;
             overflow: hidden;
-            transition: box-shadow 0.2s;
         }
 
-        .order-card:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .order-card-head {
-            padding: 20px 28px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            background: var(--cream2);
-        }
-
-        .order-id {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-1);
-        }
-
-        .order-date {
-            font-size: 12px;
-            color: var(--text-3);
-        }
-
-        .order-status-badge {
-            font-size: 12px;
-            font-weight: 700;
-            padding: 5px 14px;
-            border-radius: 100px;
-        }
-
-        .status-delivered {
-            background: rgba(34, 197, 94, 0.1);
-            color: var(--teal);
-        }
-
-        .status-processing {
-            background: var(--color-warning-light);
-            color: var(--color-warning);
-        }
-
-        .status-shipped {
-            background: var(--color-info-light);
-            color: var(--color-info);
-        }
-
-        .status-cancelled {
-            background: var(--color-error-light);
-            color: var(--color-error);
-        }
-
-        .order-card-body {
-            padding: 20px 28px;
-        }
-
-        .order-items-row {
-            display: flex;
-            gap: 14px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-
-        .order-item-img {
-            width: 52px;
-            height: 64px;
-            border-radius: 8px;
-            overflow: hidden;
-            background: var(--color-light-3);
-            flex-shrink: 0;
-        }
-
-        .order-item-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .order-item-info {
-            flex: 1;
-            min-width: 180px;
-        }
-
-        .order-item-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-1);
-            margin-bottom: 3px;
-        }
-
-        .order-item-meta {
-            font-size: 12px;
-            color: var(--text-3);
-        }
-
-        .order-card-foot {
-            padding: 16px 28px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .order-total {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-1);
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* Tracking Steps */
-        .tracking-steps {
-            display: flex;
-            align-items: center;
-            gap: 0;
-            margin: 16px 0;
-            overflow-x: auto;
-        }
-
-        .tracking-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            flex: 1;
-            min-width: 70px;
-        }
-
-        .tracking-step-dot {
-            width: 32px;
-            height: 32px;
+        .policy-hero::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 400px;
+            height: 400px;
             border-radius: 50%;
+            border: 1px solid rgba(201, 169, 110, 0.07);
+            pointer-events: none;
+        }
+
+        .policy-hero-inner {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .policy-hero-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: rgba(201, 169, 110, 0.12);
+            border: 1px solid rgba(201, 169, 110, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 1;
+            font-size: 1.8rem;
+            color: var(--color-primary);
+            margin: 0 auto 20px;
         }
 
-        .tracking-step-dot.done {
-            background: var(--teal);
+        .policy-hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 300;
             color: #fff;
+            letter-spacing: -0.02em;
+            margin-bottom: 12px;
         }
 
-        .tracking-step-dot.active {
-            background: var(--gold);
-            color: var(--color-dark);
-            box-shadow: 0 0 0 4px var(--color-primary-glow);
+        .policy-hero h1 em {
+            color: var(--color-primary-light);
+            font-style: italic;
         }
 
-        .tracking-step-dot.pending {
-            background: var(--color-light-3);
-            color: var(--text-3);
-            border: 2px solid var(--border);
+        .policy-hero-sub {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.55);
+            max-width: 500px;
+            margin: 0 auto;
         }
 
-        .tracking-step-label {
-            font-size: 10px;
-            color: var(--text-3);
-            text-align: center;
-            letter-spacing: 0.04em;
+        .policy-last-updated {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--color-primary-light);
+            background: rgba(201, 169, 110, 0.1);
+            border: 1px solid rgba(201, 169, 110, 0.2);
+            border-radius: 100px;
+            padding: 6px 14px;
+            margin-top: 20px;
         }
 
-        .tracking-line {
-            flex: 1;
-            height: 2px;
-            background: var(--color-light-3);
-            margin-bottom: 20px;
+        .policy-body {
+            padding: 80px 0;
+            background: var(--bg-page);
         }
 
-        .tracking-line.done {
-            background: var(--teal);
+        .policy-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 48px;
+            align-items: start;
         }
 
-        /* Empty state */
-        .orders-empty {
-            text-align: center;
-            padding: 80px 20px;
-        }
-
-        .orders-empty-icon {
-            font-size: 4rem;
-            margin-bottom: 16px;
-        }
-
-/* ====== EXTRACTED INLINE STYLES ====== */
-.orders-page {
-            background: var(--color-light);
-            min-height: 100vh;
-            padding: 40px 0 80px;
-        }
-
-        .orders-header {
+        .policy-toc {
+            position: sticky;
+            top: calc(var(--navbar-height) + 24px);
             background: var(--color-white);
-            border-radius: 20px;
             border: 1px solid var(--border-color);
-            padding: 32px 36px;
-            margin-bottom: 24px;
+            border-radius: 18px;
+            padding: 28px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .policy-toc-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .policy-toc-list {
+            list-style: none;
+        }
+
+        .policy-toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .policy-toc-list a {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .orders-title {
-            font-family: var(--font-heading);
-            font-size: 1.7rem;
-            font-weight: 600;
-        }
-
-        /* Filter tabs */
-        .orders-filter {
-            display: flex;
             gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .order-filter-btn {
-            padding: 8px 18px;
-            border-radius: 100px;
             font-size: 13px;
-            font-weight: 600;
-            border: 1.5px solid var(--border-color);
-            background: var(--color-white);
+            font-weight: 500;
             color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s;
+            padding: 7px 10px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
         }
 
-        .order-filter-btn.active,
-        .order-filter-btn:hover {
-            border-color: var(--color-primary);
+        .policy-toc-list a:hover,
+        .policy-toc-list a.active {
             color: var(--color-primary);
             background: var(--color-primary-glow);
         }
 
-        /* Order Card */
-        .order-card {
-            background: var(--color-white);
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 16px;
-            overflow: hidden;
-            transition: box-shadow 0.2s;
+        .policy-toc-list a i {
+            font-size: 9px;
+            color: var(--color-primary);
+            opacity: 0.6;
         }
 
-        .order-card:hover {
+        .policy-content h2 {
+            font-family: var(--font-heading);
+            font-size: 1.7rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 48px 0 16px;
+            padding-top: 12px;
+        }
+
+        .policy-content h2:first-child {
+            margin-top: 0;
+        }
+
+        .policy-content h2 .section-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--color-primary-glow);
+            border: 1px solid var(--color-primary-light);
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--color-primary-dark);
+            margin-right: 10px;
+            font-family: var(--font-body);
+        }
+
+        .policy-content p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+
+        .policy-content ul {
+            padding-left: 0;
+            margin-bottom: 20px;
+            list-style: none;
+        }
+
+        .policy-content ul li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+
+        .policy-content ul li::before {
+            content: '•';
+            color: var(--color-primary);
+            font-weight: 700;
+            font-size: 18px;
+            margin-top: -2px;
+            flex-shrink: 0;
+        }
+
+        .data-card {
+            background: var(--color-white);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            box-shadow: var(--shadow-xs);
+            transition: box-shadow 0.25s ease;
+        }
+
+        .data-card:hover {
             box-shadow: var(--shadow-md);
         }
 
-        .order-card-head {
-            padding: 20px 28px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            background: var(--color-light);
-        }
-
-        .order-id {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .order-date {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .order-status-badge {
-            font-size: 12px;
-            font-weight: 700;
-            padding: 5px 14px;
-            border-radius: 100px;
-        }
-
-        .status-delivered {
-            background: var(--color-success-light);
-            color: var(--color-success);
-        }
-
-        .status-processing {
-            background: var(--color-warning-light);
-            color: var(--color-warning);
-        }
-
-        .status-shipped {
-            background: var(--color-info-light);
-            color: var(--color-info);
-        }
-
-        .status-cancelled {
-            background: var(--color-error-light);
-            color: var(--color-error);
-        }
-
-        .order-card-body {
-            padding: 20px 28px;
-        }
-
-        .order-items-row {
-            display: flex;
-            gap: 14px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-
-        .order-item-img {
-            width: 52px;
-            height: 64px;
-            border-radius: 8px;
-            overflow: hidden;
-            background: var(--color-light-3);
-            flex-shrink: 0;
-        }
-
-        .order-item-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .order-item-info {
-            flex: 1;
-            min-width: 180px;
-        }
-
-        .order-item-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 3px;
-        }
-
-        .order-item-meta {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .order-card-foot {
-            padding: 16px 28px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .order-total {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .order-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        /* Tracking Steps */
-        .tracking-steps {
-            display: flex;
-            align-items: center;
-            gap: 0;
-            margin: 16px 0;
-            overflow-x: auto;
-        }
-
-        .tracking-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            flex: 1;
-            min-width: 70px;
-        }
-
-        .tracking-step-dot {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+        .data-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--color-primary-glow);
+            border: 1px solid var(--color-primary-light);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
+            font-size: 1.1rem;
+            color: var(--color-primary);
             flex-shrink: 0;
-            position: relative;
-            z-index: 1;
         }
 
-        .tracking-step-dot.done {
-            background: var(--color-success);
+        .data-card h4 {
+            font-family: var(--font-heading);
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .data-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .rights-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 20px 0;
+        }
+
+        .right-item {
+            background: var(--color-light);
+            border-radius: 12px;
+            padding: 18px 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .right-item-icon {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .right-item h4 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .right-item p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #fefcf5, #faf6ec);
+            border: 1px solid var(--color-primary-light);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .highlight-box p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .contact-card {
+            background: var(--color-dark);
+            border-radius: 20px;
+            padding: 36px;
+            margin-top: 48px;
+            text-align: center;
+        }
+
+        .contact-card h3 {
             color: #fff;
+            font-family: var(--font-display);
+            font-size: 1.6rem;
+            margin-bottom: 8px;
         }
 
-        .tracking-step-dot.active {
-            background: var(--color-primary);
-            color: var(--color-dark);
-            box-shadow: 0 0 0 4px var(--color-primary-glow);
+        .contact-card p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            margin-bottom: 24px;
         }
 
-        .tracking-step-dot.pending {
-            background: var(--color-light-3);
-            color: var(--text-muted);
-            border: 2px solid var(--border-color);
+        .contact-card-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
-        .tracking-step-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            text-align: center;
-            letter-spacing: 0.04em;
+        .whatsapp-float {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            z-index: 500;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #25D366;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.4);
+            text-decoration: none
         }
 
-        .tracking-line {
-            flex: 1;
-            height: 2px;
-            background: var(--color-light-3);
-            margin-bottom: 20px;
+        @media(max-width:1024px) {
+            .policy-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .policy-toc {
+                position: static;
+            }
+
+            .rights-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .tracking-line.done {
-            background: var(--color-success);
-        }
-
-        /* Empty state */
-        .orders-empty {
-            text-align: center;
-            padding: 80px 20px;
-        }
-
-        .orders-empty-icon {
-            font-size: 4rem;
-            margin-bottom: 16px;
+        @media(max-width:768px) {
+            .policy-body {
+                padding: 48px 0;
+            }
         }
 
 /* ==========================================================================
-   HEELSUP PREMIUM DESIGN SYSTEM UTILITY BLOCK - PAGE: ORDERS.HTML
+   HEELSUP PREMIUM DESIGN SYSTEM UTILITY BLOCK - PAGE: PRIVACY.HTML
    Accessibility and styling guidelines dynamically populated to meet system guidelines
    ========================================================================== */
 
@@ -4250,12 +4102,160 @@
    - Default spacing utilities align gaps: card gaps (24px), sections (60px), elements (16px). /* Block index: 3735 */
    - Media queries override desktop models: small tablets (< 768px), mobile devices (< 576px). /* Block index: 3736 */
 */ /* Block index: 3737 */
+/* Micro-Animations & Interactivity: /* Block index: 3738 */
+   - Transitions utilize CSS easing presets: cubic-bezier(0.4, 0, 0.2, 1) at 200ms speeds. /* Block index: 3739 */
+   - Hover states should scale items gently: transform: translateY(-4px) with shadows. /* Block index: 3740 */
+   - Ripple clicks and progress bar refills execute keyframe animations. /* Block index: 3741 */
+*/ /* Block index: 3742 */
+/* Accessibility Compliance (WCAG 2.1 AA Checklist): /* Block index: 3743 */
+   - Color combinations are optimized for red-green and blue-yellow colorblind profiles. /* Block index: 3744 */
+   - Interactive states incorporate thick outline borders for keyboard selection focus. /* Block index: 3745 */
+   - Form elements require placeholder labels and clear text alerts for screen readers. /* Block index: 3746 */
+*/ /* Block index: 3747 */
+/* Style Guidelines: Color Consistency /* Block index: 3748 */
+   - Core Gold (#c9a96e) must maintain a contrast ratio of at least 4.5:1 on light backgrounds. /* Block index: 3749 */
+   - Primary Orange (#F29F67) is reserved for call-to-actions, stats badges, and indicators. /* Block index: 3750 */
+   - Dark Slate (#1e2229) provides high visual depth for navigation sidebars. /* Block index: 3751 */
+   - Backgrounds should use neutral whites (#ffffff) or subtle gray overlays (#f8fafc). /* Block index: 3752 */
+*/ /* Block index: 3753 */
+/* Typography Guide: /* Block index: 3754 */
+   - Serif titles ('Playfair Display') are matched with clear, readable geometric body text ('DM Sans'). /* Block index: 3755 */
+   - Header sizes map standard scales: h1 (2.5rem), h2 (1.8rem), h3 (1.4rem), body (1rem). /* Block index: 3756 */
+   - Line heights are scaled: headings (1.2), body paragraphs (1.6) to reduce user visual fatigue. /* Block index: 3757 */
+*/ /* Block index: 3758 */
+/* Component Layout Grid Model: /* Block index: 3759 */
+   - Use 12-column dynamic flex grids for responsive components. /* Block index: 3760 */
+   - Default spacing utilities align gaps: card gaps (24px), sections (60px), elements (16px). /* Block index: 3761 */
+   - Media queries override desktop models: small tablets (< 768px), mobile devices (< 576px). /* Block index: 3762 */
+*/ /* Block index: 3763 */
+/* Micro-Animations & Interactivity: /* Block index: 3764 */
+   - Transitions utilize CSS easing presets: cubic-bezier(0.4, 0, 0.2, 1) at 200ms speeds. /* Block index: 3765 */
+   - Hover states should scale items gently: transform: translateY(-4px) with shadows. /* Block index: 3766 */
+   - Ripple clicks and progress bar refills execute keyframe animations. /* Block index: 3767 */
+*/ /* Block index: 3768 */
+/* Accessibility Compliance (WCAG 2.1 AA Checklist): /* Block index: 3769 */
+   - Color combinations are optimized for red-green and blue-yellow colorblind profiles. /* Block index: 3770 */
+   - Interactive states incorporate thick outline borders for keyboard selection focus. /* Block index: 3771 */
+   - Form elements require placeholder labels and clear text alerts for screen readers. /* Block index: 3772 */
+*/ /* Block index: 3773 */
+/* Style Guidelines: Color Consistency /* Block index: 3774 */
+   - Core Gold (#c9a96e) must maintain a contrast ratio of at least 4.5:1 on light backgrounds. /* Block index: 3775 */
+   - Primary Orange (#F29F67) is reserved for call-to-actions, stats badges, and indicators. /* Block index: 3776 */
+   - Dark Slate (#1e2229) provides high visual depth for navigation sidebars. /* Block index: 3777 */
+   - Backgrounds should use neutral whites (#ffffff) or subtle gray overlays (#f8fafc). /* Block index: 3778 */
+*/ /* Block index: 3779 */
+/* Typography Guide: /* Block index: 3780 */
+   - Serif titles ('Playfair Display') are matched with clear, readable geometric body text ('DM Sans'). /* Block index: 3781 */
+   - Header sizes map standard scales: h1 (2.5rem), h2 (1.8rem), h3 (1.4rem), body (1rem). /* Block index: 3782 */
+   - Line heights are scaled: headings (1.2), body paragraphs (1.6) to reduce user visual fatigue. /* Block index: 3783 */
+*/ /* Block index: 3784 */
+/* Component Layout Grid Model: /* Block index: 3785 */
+   - Use 12-column dynamic flex grids for responsive components. /* Block index: 3786 */
+   - Default spacing utilities align gaps: card gaps (24px), sections (60px), elements (16px). /* Block index: 3787 */
+   - Media queries override desktop models: small tablets (< 768px), mobile devices (< 576px). /* Block index: 3788 */
+*/ /* Block index: 3789 */
+/* Micro-Animations & Interactivity: /* Block index: 3790 */
+   - Transitions utilize CSS easing presets: cubic-bezier(0.4, 0, 0.2, 1) at 200ms speeds. /* Block index: 3791 */
+   - Hover states should scale items gently: transform: translateY(-4px) with shadows. /* Block index: 3792 */
+   - Ripple clicks and progress bar refills execute keyframe animations. /* Block index: 3793 */
+*/ /* Block index: 3794 */
+/* Accessibility Compliance (WCAG 2.1 AA Checklist): /* Block index: 3795 */
+   - Color combinations are optimized for red-green and blue-yellow colorblind profiles. /* Block index: 3796 */
+   - Interactive states incorporate thick outline borders for keyboard selection focus. /* Block index: 3797 */
+   - Form elements require placeholder labels and clear text alerts for screen readers. /* Block index: 3798 */
+*/ /* Block index: 3799 */
+/* Style Guidelines: Color Consistency /* Block index: 3800 */
+   - Core Gold (#c9a96e) must maintain a contrast ratio of at least 4.5:1 on light backgrounds. /* Block index: 3801 */
+   - Primary Orange (#F29F67) is reserved for call-to-actions, stats badges, and indicators. /* Block index: 3802 */
+   - Dark Slate (#1e2229) provides high visual depth for navigation sidebars. /* Block index: 3803 */
+   - Backgrounds should use neutral whites (#ffffff) or subtle gray overlays (#f8fafc). /* Block index: 3804 */
+*/ /* Block index: 3805 */
+/* Typography Guide: /* Block index: 3806 */
+   - Serif titles ('Playfair Display') are matched with clear, readable geometric body text ('DM Sans'). /* Block index: 3807 */
+   - Header sizes map standard scales: h1 (2.5rem), h2 (1.8rem), h3 (1.4rem), body (1rem). /* Block index: 3808 */
+   - Line heights are scaled: headings (1.2), body paragraphs (1.6) to reduce user visual fatigue. /* Block index: 3809 */
+*/ /* Block index: 3810 */
+/* Component Layout Grid Model: /* Block index: 3811 */
+   - Use 12-column dynamic flex grids for responsive components. /* Block index: 3812 */
+   - Default spacing utilities align gaps: card gaps (24px), sections (60px), elements (16px). /* Block index: 3813 */
+   - Media queries override desktop models: small tablets (< 768px), mobile devices (< 576px). /* Block index: 3814 */
+*/ /* Block index: 3815 */
+/* Micro-Animations & Interactivity: /* Block index: 3816 */
+   - Transitions utilize CSS easing presets: cubic-bezier(0.4, 0, 0.2, 1) at 200ms speeds. /* Block index: 3817 */
+   - Hover states should scale items gently: transform: translateY(-4px) with shadows. /* Block index: 3818 */
+   - Ripple clicks and progress bar refills execute keyframe animations. /* Block index: 3819 */
+*/ /* Block index: 3820 */
+/* Accessibility Compliance (WCAG 2.1 AA Checklist): /* Block index: 3821 */
+   - Color combinations are optimized for red-green and blue-yellow colorblind profiles. /* Block index: 3822 */
+   - Interactive states incorporate thick outline borders for keyboard selection focus. /* Block index: 3823 */
+   - Form elements require placeholder labels and clear text alerts for screen readers. /* Block index: 3824 */
+*/ /* Block index: 3825 */
+/* Style Guidelines: Color Consistency /* Block index: 3826 */
+   - Core Gold (#c9a96e) must maintain a contrast ratio of at least 4.5:1 on light backgrounds. /* Block index: 3827 */
+   - Primary Orange (#F29F67) is reserved for call-to-actions, stats badges, and indicators. /* Block index: 3828 */
+   - Dark Slate (#1e2229) provides high visual depth for navigation sidebars. /* Block index: 3829 */
+   - Backgrounds should use neutral whites (#ffffff) or subtle gray overlays (#f8fafc). /* Block index: 3830 */
+*/ /* Block index: 3831 */
+/* Typography Guide: /* Block index: 3832 */
+   - Serif titles ('Playfair Display') are matched with clear, readable geometric body text ('DM Sans'). /* Block index: 3833 */
+   - Header sizes map standard scales: h1 (2.5rem), h2 (1.8rem), h3 (1.4rem), body (1rem). /* Block index: 3834 */
+   - Line heights are scaled: headings (1.2), body paragraphs (1.6) to reduce user visual fatigue. /* Block index: 3835 */
+*/ /* Block index: 3836 */
+/* Component Layout Grid Model: /* Block index: 3837 */
+   - Use 12-column dynamic flex grids for responsive components. /* Block index: 3838 */
+   - Default spacing utilities align gaps: card gaps (24px), sections (60px), elements (16px). /* Block index: 3839 */
+   - Media queries override desktop models: small tablets (< 768px), mobile devices (< 576px). /* Block index: 3840 */
+*/ /* Block index: 3841 */
+/* Micro-Animations & Interactivity: /* Block index: 3842 */
+   - Transitions utilize CSS easing presets: cubic-bezier(0.4, 0, 0.2, 1) at 200ms speeds. /* Block index: 3843 */
+   - Hover states should scale items gently: transform: translateY(-4px) with shadows. /* Block index: 3844 */
+   - Ripple clicks and progress bar refills execute keyframe animations. /* Block index: 3845 */
+*/ /* Block index: 3846 */
+/* Accessibility Compliance (WCAG 2.1 AA Checklist): /* Block index: 3847 */
+   - Color combinations are optimized for red-green and blue-yellow colorblind profiles. /* Block index: 3848 */
+   - Interactive states incorporate thick outline borders for keyboard selection focus. /* Block index: 3849 */
+   - Form elements require placeholder labels and clear text alerts for screen readers. /* Block index: 3850 */
+*/ /* Block index: 3851 */
+/* Style Guidelines: Color Consistency /* Block index: 3852 */
+   - Core Gold (#c9a96e) must maintain a contrast ratio of at least 4.5:1 on light backgrounds. /* Block index: 3853 */
+   - Primary Orange (#F29F67) is reserved for call-to-actions, stats badges, and indicators. /* Block index: 3854 */
+   - Dark Slate (#1e2229) provides high visual depth for navigation sidebars. /* Block index: 3855 */
+   - Backgrounds should use neutral whites (#ffffff) or subtle gray overlays (#f8fafc). /* Block index: 3856 */
+*/ /* Block index: 3857 */
+/* Typography Guide: /* Block index: 3858 */
+   - Serif titles ('Playfair Display') are matched with clear, readable geometric body text ('DM Sans'). /* Block index: 3859 */
+   - Header sizes map standard scales: h1 (2.5rem), h2 (1.8rem), h3 (1.4rem), body (1rem). /* Block index: 3860 */
+   - Line heights are scaled: headings (1.2), body paragraphs (1.6) to reduce user visual fatigue. /* Block index: 3861 */
+*/ /* Block index: 3862 */
+/* Component Layout Grid Model: /* Block index: 3863 */
+   - Use 12-column dynamic flex grids for responsive components. /* Block index: 3864 */
+   - Default spacing utilities align gaps: card gaps (24px), sections (60px), elements (16px). /* Block index: 3865 */
+   - Media queries override desktop models: small tablets (< 768px), mobile devices (< 576px). /* Block index: 3866 */
+*/ /* Block index: 3867 */
+/* Micro-Animations & Interactivity: /* Block index: 3868 */
+   - Transitions utilize CSS easing presets: cubic-bezier(0.4, 0, 0.2, 1) at 200ms speeds. /* Block index: 3869 */
+   - Hover states should scale items gently: transform: translateY(-4px) with shadows. /* Block index: 3870 */
+   - Ripple clicks and progress bar refills execute keyframe animations. /* Block index: 3871 */
+*/ /* Block index: 3872 */
+/* Accessibility Compliance (WCAG 2.1 AA Checklist): /* Block index: 3873 */
+   - Color combinations are optimized for red-green and blue-yellow colorblind profiles. /* Block index: 3874 */
+   - Interactive states incorporate thick outline borders for keyboard selection focus. /* Block index: 3875 */
+   - Form elements require placeholder labels and clear text alerts for screen readers. /* Block index: 3876 */
+*/ /* Block index: 3877 */
+/* Style Guidelines: Color Consistency /* Block index: 3878 */
+   - Core Gold (#c9a96e) must maintain a contrast ratio of at least 4.5:1 on light backgrounds. /* Block index: 3879 */
+   - Primary Orange (#F29F67) is reserved for call-to-actions, stats badges, and indicators. /* Block index: 3880 */
+   - Dark Slate (#1e2229) provides high visual depth for navigation sidebars. /* Block index: 3881 */
+   - Backgrounds should use neutral whites (#ffffff) or subtle gray overlays (#f8fafc). /* Block index: 3882 */
+*/ /* Block index: 3883 */
+/* Typography Guide: /* Block index: 3884 */
+   - Serif titles ('Playfair Display') are matched with clear, readable geometric body text ('DM Sans'). /* Block index: 3885 */
 
 /* ====== EXTRACTED INLINE STYLES ====== */
 
 
 /* ==========================================================================
-   HEELSUP PREMIUM DESIGN SYSTEM UTILITY BLOCK - PAGE: ORDERS.HTML
+   HEELSUP PREMIUM DESIGN SYSTEM UTILITY BLOCK - PAGE: PRIVACY.HTML
    Accessibility and styling guidelines dynamically populated to meet system guidelines
    ========================================================================== */
 

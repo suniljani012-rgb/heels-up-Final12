@@ -15,221 +15,11 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <!-- Global CSS -->
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/css/admin/admin-banners.css" />
+    <link rel="stylesheet" href="/css/admin/admin-banners.css" />
 
-    <style>
-        body {
-            background: var(--admin-bg);
-        }
-
-        .sidebar-brand {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            color: var(--color-white);
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
-
-        .sidebar-brand span {
-            color: var(--color-primary);
-        }
-
-        .sidebar-version {
-            font-size: 9px;
-            color: rgba(255, 255, 255, 0.25);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-top: 2px;
-        }
-
-        /* Banners Specific Styles */
-        .banner-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: var(--space-5);
-            margin-bottom: var(--space-6);
-        }
-
-        .adv-filter-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--color-white);
-            padding: var(--space-4) var(--space-6);
-            border: 1px solid var(--border-color);
-            border-radius: var(--admin-card-radius) var(--admin-card-radius) 0 0;
-            flex-wrap: wrap;
-            gap: var(--space-4);
-            border-bottom: none;
-        }
-
-        .banner-preview-img {
-            width: 120px;
-            height: 60px;
-            border-radius: var(--radius-sm);
-            object-fit: cover;
-            border: 1px solid var(--border-color);
-            background: var(--color-light-3);
-        }
-
-        .placement-badge {
-            background: var(--color-light-3);
-            color: var(--text-secondary);
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: var(--radius-pill);
-            font-weight: 600;
-            display: inline-block;
-        }
-
-        .url-link {
-            font-size: 11px;
-            color: var(--color-info);
-            text-decoration: underline;
-            margin-top: 4px;
-            display: block;
-        }
-
-        /* Modals */
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            padding: var(--space-4);
-        }
-
-        .modal-overlay.open {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal-box {
-            background: var(--color-white);
-            border-radius: var(--radius-lg);
-            width: 100%;
-            max-width: 700px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-2xl);
-            transform: translateY(20px);
-            transition: all 0.3s ease;
-        }
-
-        .modal-overlay.open .modal-box {
-            transform: translateY(0);
-        }
-
-        .modal-header {
-            padding: var(--space-5) var(--space-6);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            background: var(--color-white);
-            z-index: 10;
-        }
-
-        .modal-title {
-            font-family: var(--font-heading);
-            font-size: var(--text-xl);
-            font-weight: 600;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .modal-close:hover {
-            color: var(--color-error);
-        }
-
-        .modal-body {
-            padding: var(--space-6);
-        }
-
-        .modal-footer {
-            padding: var(--space-4) var(--space-6);
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: flex-end;
-            gap: var(--space-3);
-            background: var(--color-light);
-            position: sticky;
-            bottom: 0;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: var(--space-4);
-            margin-bottom: var(--space-4);
-        }
-
-        .form-group-full {
-            grid-column: span 2;
-        }
-
-        .form-label {
-            display: block;
-            font-size: var(--text-sm);
-            font-weight: 600;
-            margin-bottom: var(--space-2);
-            color: var(--text-primary);
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-base);
-            font-size: var(--text-sm);
-            font-family: inherit;
-            transition: all 0.2s;
-            background: var(--color-white);
-        }
-
-        .form-control:focus {
-            border-color: var(--color-primary);
-            box-shadow: 0 0 0 3px var(--color-primary-glow);
-            outline: none;
-        }
-
-        .upload-area {
-            border: 2px dashed var(--border-color);
-            border-radius: var(--radius-md);
-            padding: var(--space-6);
-            text-align: center;
-            background: var(--color-light);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .upload-area:hover {
-            border-color: var(--color-primary);
-            background: var(--color-primary-glow);
-        }
-
-        .upload-icon {
-            font-size: 2rem;
-            color: var(--color-primary);
-            margin-bottom: 10px;
-        }
-    </style>
+    
 </head>
 
 <body>
@@ -643,6 +433,18 @@
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
     </script>
+
+    <!-- Core API & Live Controller Scripts -->
+    <script src="/app-config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin/admin-banners.js"></script>
+
+    <!-- Core API & Live Controller Scripts -->
+    <script src="/app-config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin/admin-banners.js"></script>
 </body>
 
 </html>

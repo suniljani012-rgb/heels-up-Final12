@@ -11,136 +11,10 @@
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap"
         rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="style.css" />
-    <style>
-        body {
-            background: var(--admin-bg);
-        }
-
-        .sidebar-brand {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            color: var(--color-white);
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
-
-        .sidebar-brand span {
-            color: var(--color-primary);
-        }
-
-        .sidebar-version {
-            font-size: 9px;
-            color: rgba(255, 255, 255, 0.25);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-top: 2px;
-        }
-
-        .funnel-step {
-            background: var(--color-white);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: var(--space-4) var(--space-5);
-            display: flex;
-            align-items: center;
-            gap: var(--space-4);
-            margin-bottom: var(--space-3);
-            position: relative;
-        }
-
-        .funnel-step::after {
-            content: '↓';
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: var(--text-muted);
-            font-size: 1rem;
-        }
-
-        .funnel-step:last-child::after {
-            display: none;
-        }
-
-        .funnel-bar {
-            height: 10px;
-            border-radius: var(--radius-pill);
-            background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light));
-        }
-
-        .channel-row {
-            display: flex;
-            align-items: center;
-            gap: var(--space-3);
-            padding: var(--space-3) 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .channel-row:last-child {
-            border-bottom: none;
-        }
-
-        .channel-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: var(--radius-base);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-
-        .geo-row {
-            display: flex;
-            align-items: center;
-            gap: var(--space-3);
-            padding: var(--space-2) 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .geo-row:last-child {
-            border-bottom: none;
-        }
-
-        .geo-flag {
-            font-size: 1.3rem;
-        }
-
-        .device-ring {
-            width: 120px;
-            height: 120px;
-            position: relative;
-        }
-
-        .device-ring svg {
-            transform: rotate(-90deg);
-        }
-
-        .device-ring-center {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .kpi-big {
-            font-family: var(--font-display);
-            font-size: 2.5rem;
-            font-weight: 300;
-            color: var(--text-primary);
-            letter-spacing: -0.02em;
-            line-height: 1;
-        }
-
-        .kpi-big span {
-            color: var(--color-primary);
-            font-style: italic;
-        }
-    </style>
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/css/admin/admin-analytics.css" />
+    <link rel="stylesheet" href="/css/admin/admin-analytics.css" />
+    
 </head>
 
 <body>
@@ -810,6 +684,18 @@
             });
         });
     </script>
+
+    <!-- Core API & Live Controller Scripts -->
+    <script src="/app-config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin/admin-analytics.js"></script>
+
+    <!-- Core API & Live Controller Scripts -->
+    <script src="/app-config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin/admin-analytics.js"></script>
 </body>
 
 </html>

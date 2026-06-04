@@ -15,202 +15,11 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <!-- Global CSS -->
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/css/admin/admin-notifications.css" />
+    <link rel="stylesheet" href="/css/admin/admin-notifications.css" />
 
-    <style>
-        body {
-            background: var(--admin-bg);
-        }
-
-        .sidebar-brand {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            color: var(--color-white);
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
-
-        .sidebar-brand span {
-            color: var(--color-primary);
-        }
-
-        .sidebar-version {
-            font-size: 9px;
-            color: rgba(255, 255, 255, 0.25);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-top: 2px;
-        }
-
-        .notif-page-layout {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .notif-filter-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: var(--space-6);
-        }
-
-        .notif-tabs {
-            display: flex;
-            gap: 10px;
-        }
-
-        .notif-tab {
-            padding: 6px 14px;
-            border-radius: var(--radius-pill);
-            font-size: var(--text-sm);
-            font-weight: 600;
-            color: var(--text-secondary);
-            background: var(--color-white);
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .notif-tab:hover {
-            border-color: var(--color-primary);
-        }
-
-        .notif-tab.active {
-            background: var(--color-dark);
-            color: var(--color-white);
-            border-color: var(--color-dark);
-        }
-
-        .notif-timeline {
-            background: var(--color-white);
-            border: 1px solid var(--border-color);
-            border-radius: var(--admin-card-radius);
-            box-shadow: var(--shadow-xs);
-            overflow: hidden;
-        }
-
-        .date-divider {
-            background: var(--color-light);
-            padding: 8px 20px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
-            border-top: 1px solid var(--border-color);
-        }
-
-        .date-divider:first-child {
-            border-top: none;
-        }
-
-        .notif-list-item {
-            display: flex;
-            align-items: flex-start;
-            gap: var(--space-4);
-            padding: var(--space-5) var(--space-6);
-            border-bottom: 1px solid var(--border-color);
-            transition: background 0.2s;
-            position: relative;
-        }
-
-        .notif-list-item:last-child {
-            border-bottom: none;
-        }
-
-        .notif-list-item:hover {
-            background: var(--color-light);
-        }
-
-        .notif-list-item.unread {
-            background: rgba(201, 169, 110, 0.05);
-        }
-
-        .notif-list-item.unread::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: var(--color-primary);
-        }
-
-        .notif-icon-lg {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-
-        /* Icon Colors */
-        .icon-order {
-            background: var(--color-info-light);
-            color: var(--color-info);
-        }
-
-        .icon-alert {
-            background: var(--color-error-light);
-            color: var(--color-error);
-        }
-
-        .icon-success {
-            background: var(--color-success-light);
-            color: var(--color-success);
-        }
-
-        .icon-system {
-            background: var(--color-light-3);
-            color: var(--text-secondary);
-        }
-
-        .notif-content {
-            flex: 1;
-        }
-
-        .notif-title {
-            font-size: var(--text-base);
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-
-        .notif-desc {
-            font-size: var(--text-sm);
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 8px;
-        }
-
-        .notif-meta {
-            font-size: var(--text-xs);
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .notif-action {
-            padding: 6px 12px;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
-            background: var(--color-white);
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .notif-action:hover {
-            border-color: var(--color-primary);
-            color: var(--color-primary-dark);
-        }
-    </style>
+    
 </head>
 
 <body>
@@ -419,6 +228,18 @@
             alert('All notifications marked as read.');
         }
     </script>
+
+    <!-- Core API & Live Controller Scripts -->
+    <script src="/app-config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin/admin-notifications.js"></script>
+
+    <!-- Core API & Live Controller Scripts -->
+    <script src="/app-config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin/admin-notifications.js"></script>
 </body>
 
 </html>

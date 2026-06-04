@@ -15,51 +15,11 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <!-- Global CSS -->
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/css/admin/admin-categories.css" />
+    <link rel="stylesheet" href="/css/admin/admin-categories.css" />
 
-    <style>
-        body {
-            background: var(--admin-bg);
-        }
-
-        .sidebar-brand {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            color: var(--color-white);
-            font-weight: 600;
-            letter-spacing: 0.05em;
-        }
-
-        .sidebar-brand span {
-            color: var(--color-primary);
-        }
-
-        .sidebar-version {
-            font-size: 9px;
-            color: rgba(255, 255, 255, 0.25);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            margin-top: 2px;
-        }
-
-        .cat-image {
-            width: 60px;
-            height: 60px;
-            border-radius: var(--radius-circle);
-            object-fit: cover;
-            border: 2px solid var(--border-color);
-        }
-
-        .cat-desc {
-            font-size: var(--text-xs);
-            color: var(--text-muted);
-            max-width: 250px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 2px;
-        }
-    </style>
+    
 </head>
 
 <body>
@@ -423,6 +383,18 @@
             checkboxes.forEach(cb => cb.checked = e.target.checked);
         });
     </script>
+
+    <!-- Core API & Live Controller Scripts -->
+    <script src="/app-config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin/admin-categories.js"></script>
+
+    <!-- Core API & Live Controller Scripts -->
+    <script src="/app-config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/admin/admin-categories.js"></script>
 </body>
 
 </html>
