@@ -2476,9 +2476,8 @@
     .footer-logo-wrap img {
       height: 42px;
       width: auto;
-      /* Fix for logo white background on dark footer */
-      filter: grayscale(1) invert(1) brightness(1.5);
-      mix-blend-mode: screen;
+      /* Clean white logo on dark footer */
+      filter: brightness(0) invert(1);
       margin-bottom: 14px;
       opacity: 0.95;
     }
@@ -3759,13 +3758,13 @@
             <div class="footer-col-title">Shop</div>
             <nav class="footer-links" aria-label="Shop navigation">
               <a href="/shop.html">All Products</a>
-              <a href="/shop.html?cat=">Heels</a>
-              <a href="/shop.html?cat=">Flats</a>
-              <a href="/shop.html?cat=">Sandals</a>
-              <a href="/shop.html?cat=">Bags</a>
-              <a href="/shop.html?cat=">Summer Collection</a>
-              <a href="/shop.html?cat=">Wedding Collection</a>
-              <a href="/shop.html?cat=">Trending Collection</a>
+              <a href="/shop.html?cat=heels">Heels</a>
+              <a href="/shop.html?cat=flats">Flats</a>
+              <a href="/shop.html?cat=sandals">Sandals</a>
+              <a href="/shop.html?cat=bags">Bags</a>
+              <a href="/shop.html?cat=new">Summer Collection</a>
+              <a href="/shop.html?cat=new">Wedding Collection</a>
+              <a href="/shop.html?cat=sale">Trending Collection</a>
             </nav>
           </div>
 
@@ -3825,9 +3824,9 @@
   </button>
 
   <!-- ═══ SCRIPTS ═══ -->
-  <script src="app-config.js" defer></script>
+  <script src="app-config.js"></script>
   <script src="app-auth.js"></script>
-  <script src="js/cart.js" defer></script>
+  <script src="js/cart.js"></script>
 
   <script>
     /*!
