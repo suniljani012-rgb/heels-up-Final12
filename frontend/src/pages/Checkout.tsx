@@ -19,8 +19,20 @@ export default function Checkout() {
   const navigate = useNavigate()
 
   // Coupon variables from cart routing context
-  const stateCouponCode = location.state?.couponCode || ''
-  const stateDiscount = location.state?.discount || 0 // Paise
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(location.state?.couponCode || '')
+  const [discountVal, setDiscountVal] = useState(location.state?.discount || 0) // Paise
+  const [checkingCoupon, setCheckingCoupon] = useState(false)
+
+  useEffect(() => {
+    if (location.state?.couponCode) {
+      setAppliedCoupon(location.state.couponCode)
+      setCouponCode(location.state.couponCode)
+    }
+    if (location.state?.discount) {
+      setDiscountVal(location.state.discount)
+    }
+  }, [location.state])
 
   // Form states
   const [name, setName] = useState('')
@@ -39,8 +51,45 @@ export default function Checkout() {
   const subtotalRupees = subtotalPaise / 100
   const freeShippingThreshold = 799
   const shippingCharge = subtotalRupees >= freeShippingThreshold ? 0 : 60 // ₹60 standard shipping
-  const discountRupees = stateDiscount / 100
+  const discountRupees = discountVal / 100
   const totalRupees = Math.max(0, subtotalRupees + shippingCharge - discountRupees)
+
+  const handleApplyCoupon = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const code = couponCode.trim().toUpperCase()
+    if (!code) return
+
+    setCheckingCoupon(true)
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          cart_total: subtotalPaise
+        })
+      })
+      const data = await res.json()
+      if (data.success && data.data) {
+        setAppliedCoupon(code)
+        setDiscountVal(data.data.discount || 0) // Paise
+        showToast('success', 'Coupon Applied! 🏷️', data.data.message || `You saved ₹${((data.data.discount || 0) / 100).toFixed(0)}`)
+      } else {
+        showToast('error', 'Invalid Coupon', data.error || 'This coupon code could not be applied.')
+      }
+    } catch {
+      showToast('error', 'Network Error', 'Could not validate coupon code.')
+    } finally {
+      setCheckingCoupon(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon('')
+    setDiscountVal(0)
+    setCouponCode('')
+    showToast('info', 'Coupon Removed', 'Coupon discount has been removed.')
+  }
 
   // Pre-fill user details if logged in
   useEffect(() => {
@@ -87,7 +136,7 @@ export default function Checkout() {
         },
         deliveryMethod: 'Standard',
         notes,
-        couponCode: stateCouponCode,
+        couponCode: appliedCoupon,
         discountAmount: discountRupees
       }
 
@@ -336,14 +385,48 @@ export default function Checkout() {
               ))}
             </div>
 
+            {/* Coupon form validation inside Checkout */}
+            <div className="border-t border-gray-200 pt-4 pb-2">
+              <h3 className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2 flex items-center gap-1">
+                🏷️ Have a Coupon?
+              </h3>
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-lg p-2.5 text-xs text-emerald-800 font-medium">
+                  <span className="flex items-center gap-1 font-bold">🏷️ Code {appliedCoupon} Active</span>
+                  <button type="button" onClick={handleRemoveCoupon} className="text-gray-400 hover:text-rose-600 font-bold text-[9px] uppercase tracking-wider">
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter Coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    disabled={checkingCoupon}
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs uppercase focus:outline-none focus:border-primary bg-white text-gray-800"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    disabled={checkingCoupon}
+                    className="px-4 py-2 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-lg transition-colors uppercase tracking-wider shrink-0"
+                  >
+                    Apply
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Price lines */}
             <div className="border-t border-gray-200 pt-4 space-y-2 text-xs text-gray-600">
               <div className="flex justify-between">
                 <span>Subtotal</span>
                 <span>₹{subtotalRupees.toLocaleString('en-IN')}</span>
               </div>
-              {stateDiscount > 0 && (
-                <div className="flex justify-between text-emerald-700">
+              {discountVal > 0 && (
+                <div className="flex justify-between text-emerald-700 font-semibold">
                   <span>Coupon Discount</span>
                   <span>-₹{discountRupees.toLocaleString('en-IN')}</span>
                 </div>

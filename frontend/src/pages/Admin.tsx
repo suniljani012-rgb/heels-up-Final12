@@ -46,8 +46,9 @@ export default function Admin() {
   const [password, setPassword] = useState('')
   const [loggingIn, setLoggingIn] = useState(false)
 
-  // Current tab view: 'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings' | 'categories' | 'coupons' | 'banners' | 'reviews' | 'pages' | 'staff'
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings' | 'categories' | 'coupons' | 'banners' | 'reviews' | 'pages' | 'staff'>('dashboard')
+  // Current tab view: 'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings' | 'categories' | 'coupons' | 'banners' | 'reviews' | 'pages' | 'staff' | 'reports'
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings' | 'categories' | 'coupons' | 'banners' | 'reviews' | 'pages' | 'staff' | 'reports'>('dashboard')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // Shared data states
   const [products, setProducts] = useState<Product[]>([])
@@ -109,12 +110,22 @@ export default function Admin() {
   const [staffRole, setStaffRole] = useState<'admin' | 'manager' | 'staff'>('staff')
 
   // POS billing ticket states
-  const [posCart, setPosCart] = useState<any[]>([])
+  const [posRows, setPosRows] = useState<any[]>([
+    { id: Math.random().toString(), searchQuery: '', selectedProduct: null, selectedSize: '38', qty: 1, price: 0 }
+  ])
   const [posCustomerName, setPosCustomerName] = useState('')
   const [posCustomerPhone, setPosCustomerPhone] = useState('')
   const [posDiscount, setPosDiscount] = useState(0) // in rupees
-  const [posPaymentMethod] = useState<'Cash' | 'Card' | 'UPI'>('Cash')
-  const [posSearchQuery, setPosSearchQuery] = useState('')
+  const [posPaymentMethod, setPosPaymentMethod] = useState<'Cash' | 'Card' | 'UPI'>('Cash')
+  const [posPaymentRef, setPosPaymentRef] = useState('')
+  const [posNotes, setPosNotes] = useState('In-Store POS Bill')
+
+  // Reports states
+  const [reportsData, setReportsData] = useState<any>(null)
+  const [reportType, setReportType] = useState<'sales' | 'inventory' | 'customers' | 'orders'>('sales')
+  const [reportFrom, setReportFrom] = useState(new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10))
+  const [reportTo, setReportTo] = useState(new Date().toISOString().slice(0, 10))
+  const [loadingReport, setLoadingReport] = useState(false)
 
   // Product Manager states
   const [editingProduct, setEditingProduct] = useState<any | null>(null)
@@ -237,12 +248,13 @@ export default function Admin() {
       { id: 'reviews', label: 'User Reviews', icon: <Star className="w-4 h-4" /> },
       { id: 'pages', label: 'Store Policies', icon: <FileText className="w-4 h-4" /> },
       { id: 'staff', label: 'Staff Accounts', icon: <Users className="w-4 h-4" /> },
-      { id: 'settings', label: 'Store Settings', icon: <Settings className="w-4 h-4" /> }
+      { id: 'settings', label: 'Store Settings', icon: <Settings className="w-4 h-4" /> },
+      { id: 'reports', label: 'Reports & Export', icon: <FileText className="w-4 h-4" /> }
     ]
 
     let allowed = allTabs
     if (role === 'manager') {
-      allowed = allTabs.filter(t => ['dashboard', 'pos', 'products', 'categories', 'orders', 'inventory', 'coupons', 'reviews'].includes(t.id))
+      allowed = allTabs.filter(t => ['dashboard', 'pos', 'products', 'categories', 'orders', 'inventory', 'coupons', 'reviews', 'reports'].includes(t.id))
     } else if (role !== 'admin') {
       allowed = allTabs.filter(t => ['pos', 'orders', 'inventory', 'reviews'].includes(t.id))
     }
@@ -1219,47 +1231,31 @@ export default function Admin() {
     }
   }
 
-  // Add Product to POS ticket
-  const handleAddPosItem = (prod: Product) => {
-    const existingIdx = posCart.findIndex(i => i.id === prod.id)
-    if (existingIdx > -1) {
-      const updated = [...posCart]
-      updated[existingIdx].qty += 1
-      setPosCart(updated)
-    } else {
-      setPosCart([...posCart, {
-        id: prod.id,
-        name: prod.name,
-        sku: prod.sku,
-        price: prod.price / 100, // API price is paise, POS operates in rupees
-        qty: 1
-      }])
-    }
-  }
-
-  // POS Checkout trigger
+  // POS Checkout trigger for spreadsheet grid
   const handlePosCheckout = async () => {
-    if (posCart.length === 0) return
+    const validRows = posRows.filter(r => r.selectedProduct !== null)
+    if (validRows.length === 0) {
+      showToast('error', 'Cart Empty', 'Please select at least one product with search autocomplete.')
+      return
+    }
 
     try {
       const checkoutBody = {
-        items: posCart.map(i => ({
-          productId: i.id,
-          name: i.name,
-          sku: i.sku,
+        items: validRows.map(i => ({
+          product_id: i.selectedProduct!.id,
+          unit_price: i.price * 100, // Rupees to paise
           qty: i.qty,
-          price: i.price,
-          size: '38',
-          image: '/assets/placeholder.jpg'
+          size: i.selectedSize,
+          color: 'Default'
         })),
-        customerName: posCustomerName || 'Retail Customer',
-        customerPhone: posCustomerPhone || '',
-        discount: posDiscount,
-        paymentMethod: posPaymentMethod,
-        notes: 'In-Store POS Bill'
+        customer_name: posCustomerName || 'Walk-in',
+        customer_phone: posCustomerPhone || '',
+        discount: posDiscount * 100, // flat discount in paise
+        payment_method: posPaymentMethod.toLowerCase(), // cash, card, upi
+        notes: `Ref: ${posPaymentRef || 'None'}. Notes: ${posNotes}`
       }
 
-      const res = await fetch('/api/pos/bills', {
+      const res = await fetch('/api/pos/sale', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1270,11 +1266,13 @@ export default function Admin() {
 
       const data = await res.json()
       if (data.success) {
-        showToast('success', 'Sale Logged successfully! 🧾', `Invoice Generated: ${data.data?.bill_number}`)
-        setPosCart([])
+        showToast('success', 'POS Transaction Recorded! 🧾', `Invoice: ${data.data?.bill_number || 'HU-OFL-*'}`)
+        setPosRows([{ id: Math.random().toString(), searchQuery: '', selectedProduct: null, selectedSize: '38', qty: 1, price: 0 }])
         setPosCustomerName('')
         setPosCustomerPhone('')
         setPosDiscount(0)
+        setPosPaymentRef('')
+        setPosNotes('In-Store POS Bill')
         loadTabDetails()
       } else {
         showToast('error', 'POS Checkout Failed', data.error || 'Sale could not be saved.')
@@ -1282,6 +1280,69 @@ export default function Admin() {
     } catch {
       showToast('error', 'POS Network Error', 'Failed to process checkout transaction.')
     }
+  }
+
+  // Reports fetching and CSV exporter logic
+  const loadReport = async () => {
+    setLoadingReport(true)
+    try {
+      const res = await fetch(`/api/reports/${reportType}?from=${reportFrom}&to=${reportTo}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        setReportsData(data.data)
+        showToast('success', 'Report Generated 📊', `Loaded ${reportType} logs from database.`)
+      } else {
+        showToast('error', 'Report Error', data.error || 'Failed to generate report dataset.')
+      }
+    } catch {
+      showToast('error', 'Network Error', 'Could not fetch report logs.')
+    } finally {
+      setLoadingReport(false)
+    }
+  }
+
+  const handlePrintReport = () => {
+    window.print()
+  }
+
+  const handleExportCSV = () => {
+    if (!reportsData) return
+    let headers: string[] = []
+    let rows: any[] = []
+    let filename = `report_${reportType}_${reportFrom}_to_${reportTo}.csv`
+
+    if (reportType === 'sales') {
+      headers = ['Date', 'Orders Count', 'Revenue (₹)']
+      rows = (reportsData.daily || []).map((d: any) => [d.date, d.orders, (d.revenue / 105).toFixed(2)])
+    } else if (reportType === 'inventory') {
+      headers = ['Product Name', 'SKU', 'Current Stock']
+      const low = (reportsData.low_stock || []).map((p: any) => [p.name, p.sku, p.stock])
+      const out = (reportsData.out_of_stock || []).map((p: any) => [p.name, p.sku, 0])
+      rows = [...low, ...out]
+    } else if (reportType === 'customers') {
+      headers = ['Customer Name', 'Email', 'Phone', 'Orders Count', 'Total Spent (₹)']
+      rows = (reportsData.top_customers || []).map((c: any) => [c.first_name, c.email, c.phone, c.total_orders, (c.total_spent / 100).toFixed(2)])
+    } else if (reportType === 'orders') {
+      headers = ['Category/Status', 'Orders Count', 'Revenue (₹)']
+      rows = (reportsData.by_status || []).map((s: any) => [s.status, s.count, (s.total / 100).toFixed(2)])
+    }
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(r => r.map((val: any) => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', filename)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
 
@@ -1381,7 +1442,7 @@ export default function Admin() {
   }
 
   // POS pricing aggregates
-  const posSubtotal = posCart.reduce((s, i) => s + i.price * i.qty, 0)
+  const posSubtotal = posRows.reduce((s, i) => s + (i.price * i.qty), 0)
   const posTotal = Math.max(0, posSubtotal - posDiscount)
 
   // Render Login overlay if not staff
@@ -1471,43 +1532,64 @@ export default function Admin() {
         </div>
       </header>
 
-      {/* Main Panel Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Collapsible Left Sidebar */}
-          <div className="lg:col-span-3 bg-gray-900 text-gray-300 rounded-2xl p-5 shadow-xl border border-gray-800 space-y-6">
-            <div className="border-b border-gray-800 pb-3">
-              <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Main Modules</h2>
-            </div>
+      {/* Full-Page Edge-to-Edge Layout */}
+      <div className="w-full flex items-stretch mt-0 min-h-[calc(100vh-73px)]">
+        {/* Left Sidebar */}
+        <div className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-gray-950 text-gray-300 p-5 shadow-xl border-r border-gray-900 space-y-6 flex flex-col transition-all duration-300 shrink-0`}>
+          <div className="border-b border-gray-900 pb-3 flex items-center justify-between">
+            {!sidebarCollapsed ? (
+              <div className="flex items-center gap-2">
+                <img 
+                  src="/logo.png" 
+                  alt="HeelsUp" 
+                  className="h-8 object-contain brightness-0 invert filter" 
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                />
+                <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Main Menu</h2>
+              </div>
+            ) : (
+              <span className="mx-auto text-[10px] font-bold text-gray-500">Menu</span>
+            )}
+            <button 
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="text-gray-400 hover:text-white p-1 rounded bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer text-xs"
+              title={sidebarCollapsed ? "Expand Menu" : "Collapse Menu"}
+            >
+              {sidebarCollapsed ? "➡️" : "⬅️"}
+            </button>
+          </div>
 
             {/* Sidebar Search (AdminLTE v4 inspired) */}
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search modules..."
-                value={sidebarQuery}
-                onChange={(e) => setSidebarQuery(e.target.value)}
-                className="w-full bg-gray-800 text-gray-100 border border-gray-700/60 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#C9A96E] placeholder-gray-500 transition-colors"
-              />
-              <span className="absolute right-3.5 top-2.5 text-xs text-gray-500 pointer-events-none">🔍</span>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="relative animate-fadeIn">
+                <input
+                  type="text"
+                  placeholder="Search modules..."
+                  value={sidebarQuery}
+                  onChange={(e) => setSidebarQuery(e.target.value)}
+                  className="w-full bg-gray-800 text-gray-100 border border-gray-700/60 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#C9A96E] placeholder-gray-500 transition-colors"
+                />
+                <span className="absolute right-3.5 top-2.5 text-xs text-gray-500 pointer-events-none">🔍</span>
+              </div>
+            )}
 
             <div className="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto pr-1 select-none scrollbar-thin">
               {getAllowedTabs().map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2.5 text-xs font-semibold p-3 rounded-xl text-left transition-all duration-200 cursor-pointer ${
+                  className={`flex items-center ${sidebarCollapsed ? 'justify-center p-3' : 'gap-2.5 p-3'} text-xs font-semibold rounded-xl text-left transition-all duration-200 cursor-pointer ${
                     activeTab === tab.id
                       ? 'bg-[#C9A96E] text-gray-900 shadow-md font-bold'
                       : 'hover:bg-gray-800/80 hover:text-white'
                   }`}
+                  title={sidebarCollapsed ? tab.label : undefined}
                 >
                   {tab.icon}
-                  <span>{tab.label}</span>
+                  {!sidebarCollapsed && <span className="truncate">{tab.label}</span>}
                 </button>
               ))}
-              {getAllowedTabs().length === 0 && (
+              {getAllowedTabs().length === 0 && !sidebarCollapsed && (
                 <div className="text-center text-[10px] text-gray-500 italic py-4">No matching tabs</div>
               )}
             </div>
@@ -1519,15 +1601,16 @@ export default function Admin() {
                   showToast('info', 'Logged Out', 'Staff session closed.')
                   navigate('/')
                 }}
-                className="w-full py-2.5 border border-gray-800 hover:border-rose-900/50 text-gray-400 hover:text-rose-400 hover:bg-rose-950/20 text-xs font-semibold rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-200"
+                className={`w-full py-2.5 border border-gray-800 hover:border-rose-900/50 text-gray-400 hover:text-rose-400 hover:bg-rose-950/20 text-xs font-semibold rounded-xl uppercase tracking-widest flex items-center justify-center ${sidebarCollapsed ? 'px-1' : 'gap-2'} transition-all duration-200`}
+                title={sidebarCollapsed ? "Sign Out" : undefined}
               >
-                <LogOut className="w-4 h-4" /> Sign Out
+                <LogOut className="w-4 h-4 shrink-0" /> {!sidebarCollapsed && <span>Sign Out</span>}
               </button>
             </div>
           </div>
 
           {/* Dynamic Tab view */}
-          <div className="lg:col-span-9 bg-white border border-gray-150 rounded-2xl p-6 md:p-8 shadow-sm min-h-[75vh]">
+          <div className="flex-1 bg-white border border-gray-150 rounded-2xl p-6 md:p-8 shadow-sm min-h-[75vh]">
             
             {/* TABS 1: Summary Analytics Dashboard */}
             {activeTab === 'dashboard' && (
@@ -1865,22 +1948,46 @@ export default function Admin() {
                 {/* Sales Channels Contribution */}
                 <div className="border border-gray-150 rounded-xl p-5 md:p-6 bg-white shadow-sm space-y-4">
                   <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Multi-Channel Contribution</h4>
-                  <p className="text-[10px] text-gray-400">Total payments split by source of purchase</p>
+                  <p className="text-[10px] text-gray-400">Total payments split by source of purchase represented as 3D Glossy Cylinders</p>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                     {[
-                      { name: 'Web Storefront', pct: 64, color: 'bg-[#C9A96E]', amount: stats ? Math.round(stats.revenue * 0.64 / 100) : 0 },
-                      { name: 'POS Terminal', pct: 18, color: 'bg-gray-950', amount: stats ? Math.round(stats.revenue * 0.18 / 100) : 0 },
-                      { name: 'WhatsApp Shop', pct: 12, color: 'bg-emerald-600', amount: stats ? Math.round(stats.revenue * 0.12 / 100) : 0 },
-                      { name: 'Instagram Direct', pct: 6, color: 'bg-pink-600', amount: stats ? Math.round(stats.revenue * 0.06 / 100) : 0 }
+                      { id: 'web', name: 'Web Storefront', pct: 64, gradFrom: '#dfb680', gradMid: '#C9A96E', gradTo: '#b17e3f', amount: stats ? Math.round(stats.revenue * 0.64 / 100) : 0 },
+                      { id: 'pos', name: 'POS Terminal', pct: 18, gradFrom: '#6b7280', gradMid: '#374151', gradTo: '#111827', amount: stats ? Math.round(stats.revenue * 0.18 / 100) : 0 },
+                      { id: 'whatsapp', name: 'WhatsApp Shop', pct: 12, gradFrom: '#6ee7b7', gradMid: '#10b981', gradTo: '#047857', amount: stats ? Math.round(stats.revenue * 0.12 / 100) : 0 },
+                      { id: 'instagram', name: 'Instagram Direct', pct: 6, gradFrom: '#f472b6', gradMid: '#db2777', gradTo: '#9d174d', amount: stats ? Math.round(stats.revenue * 0.06 / 100) : 0 }
                     ].map((ch, idx) => (
-                      <div key={idx} className="space-y-1.5 text-[10px]">
+                      <div key={idx} className="space-y-2 text-[10px]">
                         <div className="flex justify-between font-bold text-gray-700">
                           <span>{ch.name} ({ch.pct}%)</span>
                           <span>₹{ch.amount.toLocaleString('en-IN')}</span>
                         </div>
-                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div className={`h-full ${ch.color} rounded-full`} style={{ width: `${ch.pct}%` }} />
+                        
+                        {/* 3D Cylinder representation using SVG */}
+                        <div className="h-4 relative">
+                          <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 12">
+                            <defs>
+                              <linearGradient id={`cylGrad-${ch.id}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={ch.gradFrom} />
+                                <stop offset="40%" stopColor={ch.gradMid} />
+                                <stop offset="100%" stopColor={ch.gradTo} />
+                              </linearGradient>
+                            </defs>
+                            
+                            {/* Cylinder Background Track */}
+                            <rect x="0" y="1" width="100" height="10" rx="5" fill="#f3f4f6" stroke="#e5e7eb" strokeWidth="0.5" />
+                            
+                            {/* Cylinder Active Progress Fill */}
+                            {ch.pct > 0 && (
+                              <>
+                                <rect x="0" y="1" width={ch.pct} height="10" rx="5" fill={`url(#cylGrad-${ch.id})`} />
+                                {/* Glass Gloss Highlight layer */}
+                                <rect x="1" y="2.5" width={Math.max(0, ch.pct - 2)} height="2" rx="1" fill="#ffffff" fillOpacity="0.35" />
+                                {/* Bottom Shadow border for 3D depth */}
+                                <line x1="2" y1="10" x2={ch.pct - 2} y2="10" stroke="#000000" strokeWidth="0.75" strokeOpacity="0.2" />
+                              </>
+                            )}
+                          </svg>
                         </div>
                       </div>
                     ))}
@@ -1926,137 +2033,317 @@ export default function Admin() {
                     ))}
                   </div>
                 </div>
-
               </div>
             )}
 
             {/* TABS 2: Point-of-Sale Billing Terminal */}
             {activeTab === 'pos' && (
               <div className="space-y-6 animate-fadeIn">
-                <div className="border-b border-gray-100 pb-4">
+                <div className="border-b border-gray-150 pb-4">
                   <h3 className="text-lg font-semibold text-gray-900 font-display italic">POS Billing Terminal</h3>
                   <p className="text-[10px] text-gray-400 mt-0.5">Generate physical retail invoices and deduct inventory automatically</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                  {/* Left: Products grid & search */}
-                  <div className="lg:col-span-7 space-y-4">
-                    <input
-                      type="text"
-                      placeholder="Search items by product name, SKU code..."
-                      value={posSearchQuery}
-                      onChange={(e) => setPosSearchQuery(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary transition-colors placeholder-gray-400"
-                    />
+                  
+                  {/* Left Column: Spreadsheet Table Grid */}
+                  <div className="lg:col-span-8 space-y-4">
+                    <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm">
+                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <span>📝 In-Store Sales Spreadsheet Grid</span>
+                      </h4>
+                      
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse min-w-[700px] align-middle">
+                          <thead>
+                            <tr className="border-b border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                              <th className="py-3 px-2 w-[40%]">Product Name / SKU Search</th>
+                              <th className="py-3 px-2 w-[15%]">Size</th>
+                              <th className="py-3 px-2 w-[15%]">Unit Price (₹)</th>
+                              <th className="py-3 px-2 w-[12%]">Qty</th>
+                              <th className="py-3 px-2 w-[13%]">Total (₹)</th>
+                              <th className="py-3 px-2 w-[5%] text-center"></th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {posRows.map((row, index) => {
+                              const showDropdown = row.searchQuery.trim().length > 0 && (!row.selectedProduct || row.selectedProduct.name !== row.searchQuery);
+                              const matches = showDropdown
+                                ? products.filter(
+                                    p =>
+                                      p.name.toLowerCase().includes(row.searchQuery.toLowerCase()) ||
+                                      p.sku.toLowerCase().includes(row.searchQuery.toLowerCase())
+                                  ).slice(0, 5)
+                                : [];
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1 select-none">
-                      {products
-                        .filter(p => p.name.toLowerCase().includes(posSearchQuery.toLowerCase()) || p.sku.toLowerCase().includes(posSearchQuery.toLowerCase()))
-                        .map((p) => {
-                          const isLow = p.stock <= 3
-                          const isOut = p.stock === 0
-                          return (
-                            <div 
-                              key={p.id} 
-                              onClick={() => { if (!isOut) handleAddPosItem(p); }}
-                              className={`border p-3.5 rounded-xl text-left transition-all duration-200 ${
-                                isOut 
-                                  ? 'opacity-40 cursor-not-allowed border-gray-100 bg-gray-50' 
-                                  : 'cursor-pointer hover:shadow-md hover:border-primary border-gray-150 bg-white'
-                              }`}
-                            >
-                              <div className="flex justify-between items-start">
-                                <h4 className="text-xs font-bold text-gray-950 line-clamp-1">{p.name}</h4>
-                                <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase ${
-                                  isOut ? 'bg-rose-50 text-rose-700' : isLow ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'
-                                }`}>
-                                  {isOut ? 'Out' : isLow ? `Only ${p.stock}` : 'In Stock'}
-                                </span>
-                              </div>
-                              <span className="text-[9px] text-gray-400 font-mono tracking-wider block mt-1">SKU: {p.sku}</span>
-                              <div className="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
-                                <span className="font-bold text-gray-950 text-xs">₹{(p.price / 100).toLocaleString()}</span>
-                                <span className="text-[9px] font-bold text-primary hover:text-black">Add &rarr;</span>
-                              </div>
-                            </div>
-                          )
-                        })}
+                              return (
+                                <tr key={row.id} className="align-middle group/row">
+                                  {/* Product Search & Dropdown */}
+                                  <td className="py-3 px-2 relative">
+                                    <input
+                                      type="text"
+                                      placeholder="Type name or SKU..."
+                                      value={row.searchQuery}
+                                      onChange={(e) => {
+                                        const newRows = [...posRows];
+                                        newRows[index].searchQuery = e.target.value;
+                                        if (row.selectedProduct && row.selectedProduct.name !== e.target.value) {
+                                          newRows[index].selectedProduct = null;
+                                        }
+                                        setPosRows(newRows);
+                                      }}
+                                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none focus:border-primary font-medium"
+                                    />
+                                    
+                                    {/* Autocomplete Dropdown */}
+                                    {showDropdown && matches.length > 0 && (
+                                      <div className="absolute left-2 right-2 top-12 bg-white border border-gray-250 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-gray-50">
+                                        {matches.map(prod => (
+                                          <button
+                                            type="button"
+                                            key={prod.id}
+                                            onClick={() => {
+                                              const newRows = [...posRows];
+                                              newRows[index].selectedProduct = prod;
+                                              newRows[index].searchQuery = prod.name;
+                                              newRows[index].price = prod.price / 100;
+                                              newRows[index].selectedSize = prod.sizes && prod.sizes.length > 0 ? prod.sizes[0] : '38';
+                                              setPosRows(newRows);
+                                            }}
+                                            className="w-full text-left p-3 hover:bg-gray-50 flex items-center justify-between text-xs transition-colors"
+                                          >
+                                            <div>
+                                              <div className="font-bold text-gray-900">{prod.name}</div>
+                                              <div className="text-[9px] text-gray-400 font-mono mt-0.5">SKU: {prod.sku} &middot; Stock: {prod.stock}</div>
+                                            </div>
+                                            <span className="font-bold text-[#C9A96E]">₹{(prod.price / 100).toLocaleString()}</span>
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </td>
+
+                                  {/* Size Selection */}
+                                  <td className="py-3 px-2">
+                                    <select
+                                      value={row.selectedSize}
+                                      onChange={(e) => {
+                                        const newRows = [...posRows];
+                                        newRows[index].selectedSize = e.target.value;
+                                        setPosRows(newRows);
+                                      }}
+                                      disabled={!row.selectedProduct}
+                                      className="w-full border border-gray-200 rounded-xl px-2 py-2 text-xs bg-white focus:outline-none focus:border-primary disabled:opacity-50 font-bold"
+                                    >
+                                      {(row.selectedProduct?.sizes || ['36', '37', '38', '39', '40', '41', '42']).map((sz: any) => (
+                                        <option key={sz} value={sz}>Size {sz}</option>
+                                      ))}
+                                    </select>
+                                  </td>
+
+                                  {/* Unit Price Adjustment */}
+                                  <td className="py-3 px-2">
+                                    <input
+                                      type="number"
+                                      value={row.price || ''}
+                                      onChange={(e) => {
+                                        const newRows = [...posRows];
+                                        newRows[index].price = Number(e.target.value);
+                                        setPosRows(newRows);
+                                      }}
+                                      disabled={!row.selectedProduct}
+                                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white text-right font-bold focus:outline-none focus:border-primary disabled:opacity-50"
+                                      placeholder="0.00"
+                                    />
+                                  </td>
+
+                                  {/* Quantity */}
+                                  <td className="py-3 px-2">
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={row.qty}
+                                      onChange={(e) => {
+                                        const newRows = [...posRows];
+                                        newRows[index].qty = Math.max(1, Number(e.target.value));
+                                        setPosRows(newRows);
+                                      }}
+                                      disabled={!row.selectedProduct}
+                                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white text-center focus:outline-none focus:border-primary disabled:opacity-50 font-semibold"
+                                    />
+                                  </td>
+
+                                  {/* Line Total */}
+                                  <td className="py-3 px-2 text-right font-bold text-gray-900 text-xs font-mono">
+                                    ₹{(row.price * row.qty).toLocaleString()}
+                                  </td>
+
+                                  {/* Remove Action */}
+                                  <td className="py-3 px-2 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (posRows.length > 1) {
+                                          setPosRows(posRows.filter(r => r.id !== row.id));
+                                        } else {
+                                          setPosRows([{ id: Math.random().toString(), searchQuery: '', selectedProduct: null, selectedSize: '38', qty: 1, price: 0 }]);
+                                        }
+                                      }}
+                                      className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
+                                      title="Remove Row"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPosRows([
+                            ...posRows,
+                            { id: Math.random().toString(), searchQuery: '', selectedProduct: null, selectedSize: '38', qty: 1, price: 0 }
+                          ]);
+                        }}
+                        className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[#C9A96E] hover:text-[#b17e3f] bg-[#faf6ee] hover:bg-[#f5ebd6] px-4 py-2 rounded-xl transition-all cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" /> Add another item row
+                      </button>
                     </div>
                   </div>
 
-                  {/* Right: Receipt details ticket */}
-                  <div className="lg:col-span-5 border border-[#ead2ae] bg-[#faf8f4] rounded-2xl p-5 shadow-sm space-y-4">
-                    <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-                      <h4 className="text-xs font-bold uppercase tracking-widest text-gray-900">Receipt Ticket</h4>
-                      <button onClick={() => setPosCart([])} className="text-[9px] font-bold text-rose-600 hover:underline">Clear Items</button>
-                    </div>
-
-                    {/* Cart list */}
-                    <div className="space-y-3.5 max-h-[200px] overflow-y-auto pr-1">
-                      {posCart.length === 0 ? (
-                        <div className="text-center py-10 text-[10px] text-gray-400 italic font-medium">
-                          Click catalog cards to build receipt
+                  {/* Right Column: Customer Details, Payment, Summary */}
+                  <div className="lg:col-span-4 space-y-6">
+                    
+                    {/* Customer Registry */}
+                    <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm space-y-4">
+                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest border-b border-gray-100 pb-2">
+                        👤 Customer Details
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">Customer Phone</label>
+                          <input
+                            type="tel"
+                            placeholder="10-digit phone number"
+                            value={posCustomerPhone}
+                            onChange={(e) => setPosCustomerPhone(e.target.value)}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none focus:border-primary font-medium"
+                          />
                         </div>
-                      ) : (
-                        posCart.map(item => (
-                          <div key={item.id} className="flex justify-between items-center text-xs">
-                            <div>
-                              <span className="font-semibold text-gray-900 line-clamp-1">{item.name}</span>
-                              <span className="text-[9px] text-gray-400 font-medium">SKU: {item.sku} &middot; Qty: {item.qty}</span>
-                            </div>
-                            <span className="font-bold text-gray-950">₹{(item.price * item.qty).toLocaleString()}</span>
-                          </div>
-                        ))
-                      )}
-                    </div>
-
-                    {/* Customer Register */}
-                    <div className="space-y-2 border-t border-gray-200 pt-4">
-                      <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider">Customer Registry</label>
-                      <input
-                        type="text"
-                        placeholder="Customer Name"
-                        value={posCustomerName}
-                        onChange={(e) => setPosCustomerName(e.target.value)}
-                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
-                      />
-                      <input
-                        type="tel"
-                        placeholder="Mobile Number"
-                        value={posCustomerPhone}
-                        onChange={(e) => setPosCustomerPhone(e.target.value)}
-                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
-                      />
-                    </div>
-
-                    {/* Calculation aggregators */}
-                    <div className="border-t border-gray-200 pt-4 space-y-2.5 text-xs font-semibold text-gray-600">
-                      <div className="flex justify-between">
-                        <span>Cart Subtotal</span>
-                        <span>₹{posSubtotal.toLocaleString()}</span>
+                        <div>
+                          <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">Customer Name</label>
+                          <input
+                            type="text"
+                            placeholder="Enter name"
+                            value={posCustomerName}
+                            onChange={(e) => setPosCustomerName(e.target.value)}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none focus:border-primary font-medium"
+                          />
+                        </div>
                       </div>
-                      <div className="flex justify-between items-center text-rose-600">
-                        <span>Rebate Discount (₹)</span>
-                        <input
-                          type="number"
-                          value={posDiscount}
-                          onChange={(e) => setPosDiscount(Number(e.target.value))}
-                          className="w-20 border border-gray-200 rounded-lg px-2 py-1 text-right text-xs bg-white font-bold"
+                    </div>
+
+                    {/* Payment Details */}
+                    <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm space-y-4">
+                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest border-b border-gray-100 pb-2">
+                        💳 Payment mode
+                      </h4>
+                      
+                      <div className="grid grid-cols-3 gap-2">
+                        {(['Cash', 'UPI', 'Card'] as const).map((mode) => (
+                          <button
+                            type="button"
+                            key={mode}
+                            onClick={() => setPosPaymentMethod(mode)}
+                            className={`py-2.5 px-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                              posPaymentMethod === mode
+                                ? 'bg-[#C9A96E] border-[#C9A96E] text-gray-900 font-extrabold shadow-md'
+                                : 'bg-white border-gray-200 hover:border-gray-400 text-gray-600'
+                            }`}
+                          >
+                            {mode === 'Cash' ? '💵 Cash' : mode === 'UPI' ? '📱 UPI' : '💳 Card'}
+                          </button>
+                        ))}
+                      </div>
+
+                      {posPaymentMethod !== 'Cash' && (
+                        <div className="animate-fadeIn">
+                          <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">Transaction Ref #</label>
+                          <input
+                            type="text"
+                            placeholder="Reference / Transaction ID"
+                            value={posPaymentRef}
+                            onChange={(e) => setPosPaymentRef(e.target.value)}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none focus:border-primary font-medium"
+                          />
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">Remarks</label>
+                        <textarea
+                          placeholder="Store notes or order descriptions..."
+                          value={posNotes}
+                          onChange={(e) => setPosNotes(e.target.value)}
+                          rows={2}
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none focus:border-primary font-medium"
                         />
                       </div>
-                      <div className="flex justify-between font-bold border-t border-gray-200 pt-3 text-sm text-gray-950">
-                        <span>Terminal Total</span>
-                        <span className="text-base text-primary">₹{posTotal.toLocaleString()}</span>
+                    </div>
+
+                    {/* Order Summary & Submit */}
+                    <div className="bg-[#faf8f4] border border-[#ead2ae] rounded-2xl p-5 shadow-sm space-y-4">
+                      <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest border-b border-gray-200/80 pb-2">
+                        🧾 Order summary
+                      </h4>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-xs font-bold text-gray-600">
+                          <span>Apply flat discount (₹)</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={posDiscount || ''}
+                            onChange={(e) => setPosDiscount(Number(e.target.value))}
+                            className="w-24 border border-gray-200 rounded-lg px-2.5 py-1 text-right text-xs bg-white font-bold"
+                          />
+                        </div>
+
+                        <div className="border-t border-gray-200/60 pt-3 space-y-2 text-xs text-gray-600 font-semibold">
+                          <div className="flex justify-between">
+                            <span>Subtotal</span>
+                            <span className="text-gray-950 font-bold">₹{posSubtotal.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-emerald-700">
+                            <span>Discount Flat</span>
+                            <span>-₹{posDiscount.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-gray-500">
+                            <span>Included GST (18% inclusive)</span>
+                            <span>₹{(posTotal * 18 / 118).toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="border-t border-gray-200/80 pt-3 flex justify-between font-extrabold text-sm text-gray-950">
+                            <span>Grand Total</span>
+                            <span className="text-base text-[#C9A96E]">₹{posTotal.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handlePosCheckout}
+                          className="w-full py-4 bg-gray-950 hover:bg-black text-white text-xs font-bold rounded-xl uppercase tracking-widest transition-colors shadow-md mt-2 cursor-pointer flex items-center justify-center gap-2"
+                        >
+                          Complete POS Transaction
+                        </button>
                       </div>
                     </div>
 
-                    <button
-                      onClick={handlePosCheckout}
-                      disabled={posCart.length === 0}
-                      className="w-full py-3.5 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl uppercase tracking-widest transition-colors disabled:opacity-50 shadow-md mt-2"
-                    >
-                      Complete POS Transaction
-                    </button>
                   </div>
                 </div>
               </div>
@@ -2187,13 +2474,14 @@ export default function Admin() {
                     </div>
                   </div>
 
-                  {/* R2 Image Uploader */}
-                  <div className="md:col-span-2 border border-dashed border-gray-250 rounded-2xl p-4 bg-white space-y-4">
-                    <div className="flex justify-between items-center">
+                  {/* R2 Image Uploader & Gallery Control (Overhauled Premium Design) */}
+                  <div className="md:col-span-2 border border-[#ead2ae]/60 rounded-2xl p-6 bg-white/80 backdrop-blur-md shadow-sm space-y-4">
+                    <div className="flex justify-between items-center border-b border-gray-100 pb-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider">Product Gallery Images</label>
-                        <p className="text-[9px] text-gray-400">First image serves as primary display card on storefront grid</p>
+                        <label className="block text-xs font-bold text-gray-800 uppercase tracking-wider">Product Gallery Images</label>
+                        <p className="text-[10px] text-gray-400 mt-0.5">Upload photos of this style. The first image will be the primary storefront listing image.</p>
                       </div>
+                      
                       <div>
                         <input
                           type="file"
@@ -2207,57 +2495,63 @@ export default function Admin() {
                           type="button"
                           disabled={uploadingImage}
                           onClick={() => document.getElementById('product-image-upload-input')?.click()}
-                          className="px-3.5 py-1.5 border border-gray-200 hover:border-gray-900 rounded-lg text-[9px] font-bold uppercase tracking-wider bg-[#fcfbf9] hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+                          className="px-4 py-2 bg-gray-900 text-white hover:bg-black rounded-xl text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-sm"
                         >
-                          {uploadingImage ? 'Uploading to R2...' : 'Upload Photos'}
+                          <UploadCloud className="w-4 h-4" /> {uploadingImage ? 'Uploading to R2...' : 'Upload Photos'}
                         </button>
                       </div>
                     </div>
 
                     {/* Previews Grid */}
                     {productFormImages.length > 0 ? (
-                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
                         {productFormImages.map((img, idx) => (
-                          <div key={idx} className="relative group rounded-xl border border-gray-100 overflow-hidden aspect-square shadow-sm bg-gray-50">
+                          <div key={idx} className="relative group rounded-xl border border-gray-200 overflow-hidden aspect-square shadow-sm bg-gray-50 hover:border-[#C9A96E] transition-colors">
                             <img src={img} alt="Preview" className="w-full h-full object-cover" />
-                            {idx === 0 && (
-                              <span className="absolute top-1 left-1 bg-[#C9A96E] text-gray-900 font-extrabold text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded shadow">
+                            {idx === 0 ? (
+                              <span className="absolute top-2 left-2 bg-[#C9A96E] text-gray-900 font-extrabold text-[8px] uppercase tracking-widest px-2 py-0.5 rounded shadow-md border border-white/20">
                                 Primary
                               </span>
-                            )}
-                            {/* Actions overlay */}
-                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
-                              {idx > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setProductFormImages(prev => {
-                                      const next = [...prev]
-                                      const item = next.splice(idx, 1)[0]
-                                      return [item, ...next]
-                                    })
-                                  }}
-                                  className="p-1 bg-white hover:bg-gray-100 text-gray-800 rounded text-[8px] font-bold uppercase transition-colors"
-                                >
-                                  Star
-                                </button>
-                              )}
+                            ) : (
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setProductFormImages(prev => prev.filter((_, i) => i !== idx))
+                                  setProductFormImages(prev => {
+                                    const next = [...prev];
+                                    const item = next.splice(idx, 1)[0];
+                                    return [item, ...next];
+                                  });
+                                  showToast('info', 'Primary Set 🌟', 'Selected image moved to display listing cover.');
                                 }}
-                                className="p-1 bg-red-650 hover:bg-red-700 text-white rounded text-[8px] font-bold uppercase transition-colors"
+                                className="absolute top-2 left-2 bg-black/60 hover:bg-gray-900 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Make Primary"
                               >
-                                Del
+                                🌟
                               </button>
-                            </div>
+                            )}
+                            
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setProductFormImages(prev => prev.filter((_, i) => i !== idx));
+                                showToast('info', 'Image Removed', 'Removed thumbnail from gallery.');
+                              }}
+                              className="absolute top-2 right-2 bg-rose-600 hover:bg-rose-700 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                              title="Delete Image"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center text-[10px] text-gray-400 italic py-3 select-none">
-                        No product images uploaded yet. Upload images to serve from Cloudflare CDN.
+                      <div 
+                        onClick={() => document.getElementById('product-image-upload-input')?.click()}
+                        className="border-2 border-dashed border-gray-200 hover:border-[#C9A96E] rounded-2xl p-8 text-center cursor-pointer bg-gray-50/50 hover:bg-[#faf7f2]/20 transition-all duration-300 flex flex-col items-center justify-center gap-2"
+                      >
+                        <UploadCloud className="w-8 h-8 text-gray-400 animate-bounce" />
+                        <span className="text-xs font-bold text-gray-600">Drag & drop files here or click to browse</span>
+                        <span className="text-[10px] text-gray-400">Supports JPG, PNG, WEBP, GIF (Up to 10MB each)</span>
                       </div>
                     )}
                   </div>
@@ -3298,9 +3592,485 @@ export default function Admin() {
               </form>
             )}
 
+            {activeTab === 'reports' && (
+              <div className="space-y-6 animate-fadeIn print-container">
+                {/* Header Section */}
+                <div className="flex justify-between items-center border-b border-gray-150 pb-4 no-print">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 font-display italic">
+                      📊 Enterprise Analytics & Reporting
+                    </h3>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      Fetch, filter, print, and export ledger logs from the SQLite D1 database.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {reportsData && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={handlePrintReport}
+                          className="px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-200 hover:border-gray-400 text-gray-700 hover:text-black rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                        >
+                          Print Report
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleExportCSV}
+                          className="px-3 py-2 bg-[#C9A96E] hover:bg-[#b17e3f] text-gray-955 border border-[#C9A96E] text-gray-900 hover:text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer font-extrabold"
+                        >
+                          Export CSV
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Filter Section Card */}
+                <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm space-y-4 no-print">
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2">
+                    <span>🔍 Filter Report Parameters</span>
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div>
+                      <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">Report Dataset</label>
+                      <select
+                        value={reportType}
+                        onChange={(e) => setReportType(e.target.value as any)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white font-medium focus:outline-none focus:border-primary"
+                      >
+                        <option value="sales">Sales & Revenue</option>
+                        <option value="inventory">Inventory Metrics</option>
+                        <option value="customers">Customers Insights</option>
+                        <option value="orders">Orders Distribution</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">From Date</label>
+                      <input
+                        type="date"
+                        value={reportFrom}
+                        onChange={(e) => setReportFrom(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white font-medium focus:outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">To Date</label>
+                      <input
+                        type="date"
+                        value={reportTo}
+                        onChange={(e) => setReportTo(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white font-medium focus:outline-none focus:border-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <button
+                        type="button"
+                        onClick={loadReport}
+                        disabled={loadingReport}
+                        className="w-full py-2.5 bg-gray-950 hover:bg-black text-white text-[10px] font-bold rounded-xl uppercase tracking-widest transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                      >
+                        {loadingReport ? 'Loading...' : 'Generate Report'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Print Header (Visible only when printing) */}
+                <div className="print-only mb-6 border-b-2 border-gray-900 pb-4">
+                  <h1 className="text-2xl font-serif italic text-gray-900">HeelsUp Control Center Report</h1>
+                  <p className="text-xs text-gray-500">
+                    Dataset: <strong className="uppercase font-bold">{reportType}</strong> &middot; Date Range: {reportFrom} to {reportTo}
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-1">Generated on: {new Date().toLocaleString()}</p>
+                </div>
+
+                {/* Report Content Panel */}
+                {loadingReport ? (
+                  <div className="py-20 text-center space-y-4">
+                    <span className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Compiling database rows...</p>
+                  </div>
+                ) : !reportsData ? (
+                  <div className="py-20 border border-dashed border-gray-200 rounded-2xl text-center no-print">
+                    <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                    <h5 className="text-sm font-bold text-gray-700">No Report Generated</h5>
+                    <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">Select a dataset and date range from above to query the live transactional ledger.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-8 print-area">
+                    {/* Sales Report View */}
+                    {reportType === 'sales' && (
+                      <>
+                        {/* Sales Summary Cards */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                          <div className="p-5 bg-gradient-to-br from-[#faf6ee] to-[#f5ebd6] border border-[#ead2ae]/60 rounded-xl">
+                            <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest">Total Orders</span>
+                            <span className="text-xl font-bold text-gray-955 mt-1.5 block">{reportsData.summary?.total_orders || 0}</span>
+                          </div>
+                          <div className="p-5 bg-gradient-to-br from-[#faf6ee] to-[#f5ebd6] border border-[#ead2ae]/60 rounded-xl">
+                            <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest">Total Revenue</span>
+                            <span className="text-xl font-bold text-[#C9A96E] mt-1.5 block">₹{((reportsData.summary?.total_revenue || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="p-5 bg-gradient-to-br from-[#faf6ee] to-[#f5ebd6] border border-[#ead2ae]/60 rounded-xl">
+                            <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest">Average Order Value</span>
+                            <span className="text-xl font-bold text-gray-955 mt-1.5 block">₹{((reportsData.summary?.avg_order_value || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                          <div className="p-5 bg-gradient-to-br from-[#faf6ee] to-[#f5ebd6] border border-[#ead2ae]/60 rounded-xl">
+                            <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest">Unique Customers</span>
+                            <span className="text-xl font-bold text-gray-955 mt-1.5 block">{reportsData.summary?.unique_customers || 0}</span>
+                          </div>
+                        </div>
+
+                        {/* Top Products Table */}
+                        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm overflow-hidden">
+                          <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">🏆 Top Selling Products (By Revenue)</h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse text-xs font-medium">
+                              <thead>
+                                <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase font-bold">
+                                  <th className="py-2.5">Product Style</th>
+                                  <th className="py-2.5">SKU</th>
+                                  <th className="py-2.5 text-right">Units Sold</th>
+                                  <th className="py-2.5 text-right">Gross Revenue</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {(reportsData.top_products || []).map((item: any, idx: number) => (
+                                  <tr key={idx} className="hover:bg-gray-50/50">
+                                    <td className="py-3 font-semibold text-gray-950">{item.name}</td>
+                                    <td className="py-3 font-mono text-[10px] text-gray-500">{item.product_sku}</td>
+                                    <td className="py-3 text-right font-bold text-gray-700">{item.units_sold}</td>
+                                    <td className="py-3 text-right font-bold text-[#C9A96E]">₹{(item.revenue / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                  </tr>
+                                ))}
+                                {(!reportsData.top_products || reportsData.top_products.length === 0) && (
+                                  <tr>
+                                    <td colSpan={4} className="py-6 text-center text-gray-400 italic">No sales recorded in this interval.</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* Two Columns for Daily Breakdown & Sales by Category */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Daily Breakdown */}
+                          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm overflow-hidden">
+                            <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">📅 Daily Revenue Breakdown</h4>
+                            <div className="overflow-x-auto max-h-72 overflow-y-auto">
+                              <table className="w-full text-left border-collapse text-xs font-medium">
+                                <thead>
+                                  <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase font-bold sticky top-0 bg-white">
+                                    <th className="py-2">Date</th>
+                                    <th className="py-2 text-right">Orders</th>
+                                    <th className="py-2 text-right">Revenue</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                  {(reportsData.daily || []).map((day: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-gray-50/50">
+                                      <td className="py-2.5 font-bold text-gray-750">{day.date}</td>
+                                      <td className="py-2.5 text-right text-gray-700">{day.orders}</td>
+                                      <td className="py-2.5 text-right font-bold text-[#C9A96E]">₹{(day.revenue / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    </tr>
+                                  ))}
+                                  {(!reportsData.daily || reportsData.daily.length === 0) && (
+                                    <tr>
+                                      <td colSpan={3} className="py-6 text-center text-gray-400 italic">No daily breakdown recorded.</td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          {/* Category Sales */}
+                          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm overflow-hidden">
+                            <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">👠 Sales by Category</h4>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left border-collapse text-xs font-medium">
+                                <thead>
+                                  <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase font-bold">
+                                    <th className="py-2">Category</th>
+                                    <th className="py-2 text-right">Items Sold</th>
+                                    <th className="py-2 text-right">Revenue</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                  {(reportsData.by_category || []).map((cat: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-gray-50/50">
+                                      <td className="py-2.5 font-bold text-gray-800 capitalize">{cat.category}</td>
+                                      <td className="py-2.5 text-right text-gray-700">{cat.items_sold}</td>
+                                      <td className="py-2.5 text-right font-bold text-[#C9A96E]">₹{(cat.revenue / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    </tr>
+                                  ))}
+                                  {(!reportsData.by_category || reportsData.by_category.length === 0) && (
+                                    <tr>
+                                      <td colSpan={3} className="py-6 text-center text-gray-400 italic">No category data.</td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Inventory Report View */}
+                    {reportType === 'inventory' && (
+                      <>
+                        <div className="p-5 bg-gradient-to-br from-[#faf6ee] to-[#f5ebd6] border border-[#ead2ae]/60 rounded-xl max-w-sm">
+                          <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest">Total Active Inventory Book Value</span>
+                          <span className="text-xl font-bold text-[#C9A96E] mt-1.5 block">₹{((reportsData.total_inventory_value || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Low Stock Items */}
+                          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm">
+                            <h4 className="text-xs font-bold text-amber-900 bg-amber-50 border border-amber-100 px-3 py-1.5 rounded-lg inline-block uppercase tracking-wider mb-4 font-extrabold">
+                              ⚠️ Low Stock Alert (5 Units or Less)
+                            </h4>
+                            <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                              <table className="w-full text-left border-collapse text-xs font-medium">
+                                <thead>
+                                  <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase font-bold sticky top-0 bg-white">
+                                    <th className="py-2">Product</th>
+                                    <th className="py-2">SKU</th>
+                                    <th className="py-2 text-right">Units Remaining</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                  {(reportsData.low_stock || []).map((prod: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-gray-50/50">
+                                      <td className="py-2.5 font-bold text-gray-900">{prod.name}</td>
+                                      <td className="py-2.5 font-mono text-[10px] text-gray-500">{prod.sku}</td>
+                                      <td className="py-2.5 text-right font-extrabold text-amber-600">{prod.stock}</td>
+                                    </tr>
+                                  ))}
+                                  {(!reportsData.low_stock || reportsData.low_stock.length === 0) && (
+                                    <tr>
+                                      <td colSpan={3} className="py-6 text-center text-gray-400 italic">No low stock items. All healthy!</td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          {/* Out of Stock Items */}
+                          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm">
+                            <h4 className="text-xs font-bold text-rose-900 bg-rose-50 border border-rose-100 px-3 py-1.5 rounded-lg inline-block uppercase tracking-wider mb-4 font-extrabold">
+                              🚨 Out of Stock (0 Units Remaining)
+                            </h4>
+                            <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                              <table className="w-full text-left border-collapse text-xs font-medium">
+                                <thead>
+                                  <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase font-bold sticky top-0 bg-white">
+                                    <th className="py-2">Product Name</th>
+                                    <th className="py-2">SKU</th>
+                                    <th className="py-2 text-right">Status</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                  {(reportsData.out_of_stock || []).map((prod: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-gray-50/50">
+                                      <td className="py-2.5 font-bold text-gray-900">{prod.name}</td>
+                                      <td className="py-2.5 font-mono text-[10px] text-gray-500">{prod.sku}</td>
+                                      <td className="py-2.5 text-right text-rose-600 font-bold uppercase tracking-wider text-[9px]">Empty Stock</td>
+                                    </tr>
+                                  ))}
+                                  {(!reportsData.out_of_stock || reportsData.out_of_stock.length === 0) && (
+                                    <tr>
+                                      <td colSpan={3} className="py-6 text-center text-gray-400 italic">Zero out of stock styles. Brilliant!</td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Customers Report View */}
+                    {reportType === 'customers' && (
+                      <>
+                        {/* Retention Summary Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div className="p-5 bg-gradient-to-br from-[#faf6ee] to-[#f5ebd6] border border-[#ead2ae]/60 rounded-xl">
+                            <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest">Repeat Buyers</span>
+                            <span className="text-xl font-bold text-[#C9A96E] mt-1.5 block">{reportsData.retention?.repeat_customers || 0}</span>
+                          </div>
+                          <div className="p-5 bg-gradient-to-br from-[#faf6ee] to-[#f5ebd6] border border-[#ead2ae]/60 rounded-xl">
+                            <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest">One-Time Buyers</span>
+                            <span className="text-xl font-bold text-gray-955 mt-1.5 block">{reportsData.retention?.one_time_customers || 0}</span>
+                          </div>
+                          <div className="p-5 bg-gradient-to-br from-[#faf6ee] to-[#f5ebd6] border border-[#ead2ae]/60 rounded-xl">
+                            <span className="block text-[9px] font-bold text-gray-400 uppercase tracking-widest">Customer Retention Rate</span>
+                            <span className="text-xl font-bold text-gray-955 mt-1.5 block">
+                              {reportsData.retention?.repeat_customers || reportsData.retention?.one_time_customers
+                                ? `${(
+                                    (reportsData.retention.repeat_customers /
+                                      (reportsData.retention.repeat_customers + reportsData.retention.one_time_customers)) *
+                                    100
+                                  ).toFixed(1)}%`
+                                : '0.0%'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Top Spenders Table */}
+                        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm overflow-hidden">
+                          <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">👑 Top Customer Accounts (By Lifetime Spend)</h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse text-xs font-medium">
+                              <thead>
+                                <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase font-bold">
+                                  <th className="py-2.5">Customer Name</th>
+                                  <th className="py-2.5">Email</th>
+                                  <th className="py-2.5">Phone Number</th>
+                                  <th className="py-2.5 text-right">Orders</th>
+                                  <th className="py-2.5 text-right">Total Spent</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {(reportsData.top_customers || []).map((cust: any, idx: number) => (
+                                  <tr key={idx} className="hover:bg-gray-50/50">
+                                    <td className="py-3 font-semibold text-gray-900">{cust.first_name}</td>
+                                    <td className="py-3 text-gray-500 font-mono text-[10px]">{cust.email}</td>
+                                    <td className="py-3 text-gray-500 font-mono text-[10px]">{cust.phone}</td>
+                                    <td className="py-3 text-right text-gray-700 font-bold">{cust.total_orders}</td>
+                                    <td className="py-3 text-right font-bold text-[#C9A96E]">₹{(cust.total_spent / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                  </tr>
+                                ))}
+                                {(!reportsData.top_customers || reportsData.top_customers.length === 0) && (
+                                  <tr>
+                                    <td colSpan={5} className="py-6 text-center text-gray-400 italic">No customer orders recorded.</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
+                        {/* Daily Registrations Table */}
+                        <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm max-w-xl">
+                          <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">👤 New Account Signups Trend</h4>
+                          <div className="overflow-x-auto max-h-64 overflow-y-auto">
+                            <table className="w-full text-left border-collapse text-xs font-medium">
+                              <thead>
+                                <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase font-bold sticky top-0 bg-white">
+                                  <th className="py-2">Date</th>
+                                  <th className="py-2 text-right">New Registrations</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {(reportsData.new_customers || []).map((item: any, idx: number) => (
+                                  <tr key={idx} className="hover:bg-gray-50/50">
+                                    <td className="py-2 font-bold text-gray-700">{item.date}</td>
+                                    <td className="py-2 text-right font-bold text-[#C9A96E]">{item.count}</td>
+                                  </tr>
+                                ))}
+                                {(!reportsData.new_customers || reportsData.new_customers.length === 0) && (
+                                  <tr>
+                                    <td colSpan={2} className="py-6 text-center text-gray-400 italic">No new registrations in this interval.</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Orders Report View */}
+                    {reportType === 'orders' && (
+                      <>
+                        {/* Refund Summary Card */}
+                        <div className="p-5 bg-rose-50 border border-rose-200/60 rounded-xl max-w-sm">
+                          <span className="block text-[9px] font-bold text-rose-800 uppercase tracking-widest">Total Returned / Refunded Value</span>
+                          <span className="text-xl font-bold text-rose-600 mt-1.5 block font-serif italic">
+                            ₹{((reportsData.refunds?.total || 0) / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                            <span className="text-[10px] text-rose-500 font-semibold ml-2 font-body not-italic font-bold">({reportsData.refunds?.count || 0} claims)</span>
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Orders by Status */}
+                          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm overflow-hidden">
+                            <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">📊 Orders by Status</h4>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left border-collapse text-xs font-medium">
+                                <thead>
+                                  <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase font-bold">
+                                    <th className="py-2">Fulfillment Status</th>
+                                    <th className="py-2 text-right">Orders</th>
+                                    <th className="py-2 text-right">Total Revenue Value</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                  {(reportsData.by_status || []).map((status: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-gray-50/50">
+                                      <td className="py-2.5 font-bold text-gray-800 capitalize">{status.status}</td>
+                                      <td className="py-2.5 text-right text-gray-700">{status.count}</td>
+                                      <td className="py-2.5 text-right font-bold text-[#C9A96E]">₹{(status.total / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    </tr>
+                                  ))}
+                                  {(!reportsData.by_status || reportsData.by_status.length === 0) && (
+                                    <tr>
+                                      <td colSpan={3} className="py-6 text-center text-gray-400 italic">No orders logged.</td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+                          {/* Orders by Payment Mode */}
+                          <div className="bg-white border border-gray-150 rounded-2xl p-5 shadow-sm overflow-hidden">
+                            <h4 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-4">💳 Orders by Payment Mode</h4>
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left border-collapse text-xs font-medium">
+                                <thead>
+                                  <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase font-bold">
+                                    <th className="py-2">Payment Method</th>
+                                    <th className="py-2 text-right">Orders</th>
+                                    <th className="py-2 text-right">Total Revenue Value</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                  {(reportsData.by_payment || []).map((pay: any, idx: number) => (
+                                    <tr key={idx} className="hover:bg-gray-50/50">
+                                      <td className="py-2.5 font-bold text-gray-850 uppercase tracking-wide">{pay.payment_method || 'Offline/POS'}</td>
+                                      <td className="py-2.5 text-right text-gray-700">{pay.count}</td>
+                                      <td className="py-2.5 text-right font-bold text-[#C9A96E]">₹{(pay.total / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                                    </tr>
+                                  ))}
+                                  {(!reportsData.by_payment || reportsData.by_payment.length === 0) && (
+                                    <tr>
+                                      <td colSpan={3} className="py-6 text-center text-gray-400 italic">No orders logged.</td>
+                                    </tr>
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
           </div>
         </div>
-      </div>
 
       {/* CSV/JSON Bulk Upload Modal */}
       {showBulkModal && (
