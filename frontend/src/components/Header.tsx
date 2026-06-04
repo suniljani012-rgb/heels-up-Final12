@@ -16,6 +16,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [announcementIndex, setAnnouncementIndex] = useState(0)
   const [logoFailed, setLogoFailed] = useState(false)
+  const [categories, setCategories] = useState<any[]>([])
 
   const announcements = [
     "🎉 NEW ARRIVALS — Summer Collection is Live!",
@@ -34,6 +35,16 @@ export default function Header() {
       setAnnouncementIndex((prev) => (prev + 1) % announcements.length)
     }, 4500)
 
+    // Fetch live categories
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setCategories(data.data)
+        }
+      })
+      .catch(err => console.error("Error loading categories in header:", err))
+
     return () => {
       window.removeEventListener('scroll', handleScroll)
       clearInterval(interval)
@@ -46,10 +57,10 @@ export default function Header() {
   const navLinks = [
     { to: '/', label: 'Home' },
     { to: '/shop', label: 'Shop All' },
-    { to: '/shop?cat=heels', label: 'Heels' },
-    { to: '/shop?cat=sandals', label: 'Sandals' },
-    { to: '/shop?cat=flats', label: 'Flats' },
-    { to: '/shop?cat=bags', label: 'Bags' },
+    ...categories.map(cat => ({
+      to: `/shop?cat=${cat.slug}`,
+      label: cat.name
+    }))
   ]
 
   return (

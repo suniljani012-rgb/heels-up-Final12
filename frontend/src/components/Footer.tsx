@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import { useToastStore } from '../store/useToastStore'
@@ -8,6 +8,18 @@ export default function Footer() {
   const [submitting, setSubmitting] = useState(false)
   const [logoFailed, setLogoFailed] = useState(false)
   const { showToast } = useToastStore()
+  const [categories, setCategories] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setCategories(data.data)
+        }
+      })
+      .catch(err => console.error("Error loading categories in footer:", err))
+  }, [])
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -77,14 +89,26 @@ export default function Footer() {
           </form>
         </div>
 
-        {/* Categories */}
+        {/* Collections */}
         <div className="flex flex-col gap-4">
           <h4 className="text-[10px] font-bold uppercase tracking-widest text-white">Collections</h4>
           <ul className="space-y-2.5">
-            <li><Link to="/shop?cat=heels" className="hover:text-white transition-colors">Premium Heels</Link></li>
-            <li><Link to="/shop?cat=flats" className="hover:text-text-muted hover:text-white transition-colors">Comfort Flats</Link></li>
-            <li><Link to="/shop?cat=sandals" className="hover:text-white transition-colors">Chic Sandals</Link></li>
-            <li><Link to="/shop?cat=bags" className="hover:text-white transition-colors">Luxury Handbags</Link></li>
+            {categories.length === 0 ? (
+              <>
+                <li><Link to="/shop?cat=heels" className="hover:text-white transition-colors">Premium Heels</Link></li>
+                <li><Link to="/shop?cat=flats" className="hover:text-white transition-colors">Comfort Flats</Link></li>
+                <li><Link to="/shop?cat=sandals" className="hover:text-white transition-colors">Chic Sandals</Link></li>
+                <li><Link to="/shop?cat=bags" className="hover:text-white transition-colors">Luxury Handbags</Link></li>
+              </>
+            ) : (
+              categories.map((cat) => (
+                <li key={cat.id}>
+                  <Link to={`/shop?cat=${cat.slug || cat.name.toLowerCase()}`} className="hover:text-white transition-colors">
+                    {cat.name}
+                  </Link>
+                </li>
+              ))
+            )}
           </ul>
         </div>
 
@@ -96,6 +120,8 @@ export default function Footer() {
             <li><Link to="/returns" className="hover:text-white transition-colors">Exchange & Returns</Link></li>
             <li><Link to="/size-guide" className="hover:text-white transition-colors">Size Guide</Link></li>
             <li><Link to="/faq" className="hover:text-white transition-colors">FAQs</Link></li>
+            <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+            <li><Link to="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
           </ul>
         </div>
 

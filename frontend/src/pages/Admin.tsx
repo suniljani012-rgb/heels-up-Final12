@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, ShoppingCart, Package, ListChecks,
-  ShieldAlert, LogOut, Plus, Edit3, Settings
+  ShieldAlert, LogOut, Plus, Edit3, Settings, Tag, Star, Users, FileText, Image
 } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
@@ -40,8 +40,8 @@ export default function Admin() {
   const [password, setPassword] = useState('')
   const [loggingIn, setLoggingIn] = useState(false)
 
-  // Current tab view: 'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings'
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings'>('dashboard')
+  // Current tab view: 'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings' | 'categories' | 'coupons' | 'banners' | 'reviews' | 'pages' | 'staff'
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings' | 'categories' | 'coupons' | 'banners' | 'reviews' | 'pages' | 'staff'>('dashboard')
 
   // Shared data states
   const [products, setProducts] = useState<Product[]>([])
@@ -62,6 +62,46 @@ export default function Admin() {
   const [savingSettings, setSavingSettings] = useState(false)
   const [testingRzp, setTestingRzp] = useState(false)
 
+  // New list states for extended modules
+  const [categoriesList, setCategoriesList] = useState<any[]>([])
+  const [couponsList, setCouponsList] = useState<any[]>([])
+  const [bannersList, setBannersList] = useState<any[]>([])
+  const [reviewsList, setReviewsList] = useState<any[]>([])
+  const [pagesList, setPagesList] = useState<any[]>([])
+  const [staffList, setStaffList] = useState<any[]>([])
+
+  // Editor states
+  const [editingItem, setEditingItem] = useState<any | null>(null)
+
+  // Category editor form states
+  const [catFormName, setCatFormName] = useState('')
+  const [catFormSlug, setCatFormSlug] = useState('')
+  const [catFormDesc, setCatFormDesc] = useState('')
+  const [catFormImg, setCatFormImg] = useState('')
+  const [catFormSort, setCatFormSort] = useState(0)
+
+  // Coupon editor form states
+  const [couponCode, setCouponCode] = useState('')
+  const [couponDiscType, setCouponDiscType] = useState<'percentage' | 'fixed'>('percentage')
+  const [couponDiscValue, setCouponDiscValue] = useState(0)
+  const [couponMinPurchase, setCouponMinPurchase] = useState(0)
+
+  // Banner editor form states
+  const [bannerTitle, setBannerTitle] = useState('')
+  const [bannerSubtitle, setBannerSubtitle] = useState('')
+  const [bannerImg, setBannerImg] = useState('')
+  const [bannerLink, setBannerLink] = useState('')
+
+  // Pages editor form states
+  const [pageTitle, setPageTitle] = useState('')
+  const [pageContent, setPageContent] = useState('')
+
+  // Staff editor form states
+  const [staffName, setStaffName] = useState('')
+  const [staffEmail, setStaffEmail] = useState('')
+  const [staffPassword, setStaffPassword] = useState('')
+  const [staffRole, setStaffRole] = useState<'admin' | 'staff'>('staff')
+
   // POS billing ticket states
   const [posCart, setPosCart] = useState<any[]>([])
   const [posCustomerName, setPosCustomerName] = useState('')
@@ -81,6 +121,35 @@ export default function Admin() {
 
   // Fetch dashboard and tab-specific details
   const isStaff = token && (user?.role === 'admin' || user?.role === 'staff')
+
+  const handleStaffLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !password) return
+    setLoggingIn(true)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      const data = await res.json()
+      if (data.success && data.data) {
+        const { token: newToken, user: newUser } = data.data
+        if (newUser.role === 'admin' || newUser.role === 'staff') {
+          login(newToken, newUser)
+          showToast('success', 'Workspace Unlocked! 🔑', `Welcome ${newUser.name} to HeelsUp Admin dashboard.`)
+        } else {
+          showToast('error', 'Unauthorized', 'You do not have staff permissions to access this workspace.')
+        }
+      } else {
+        showToast('error', 'Login Failed', data.error || 'Invalid credentials.')
+      }
+    } catch {
+      showToast('error', 'Auth Error', 'Failed to connect to authentication backend.')
+    } finally {
+      setLoggingIn(false)
+    }
+  }
 
   useEffect(() => {
     if (!isStaff) return
@@ -113,6 +182,60 @@ export default function Admin() {
         const data = await res.json()
         if (data.success) {
           setStoreSettings(data.data || {})
+        }
+      }
+      if (activeTab === 'categories' || activeTab === 'products') {
+        const res = await fetch('/api/admin/categories', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.success) {
+          setCategoriesList(data.data || [])
+        }
+      }
+      if (activeTab === 'coupons') {
+        const res = await fetch('/api/admin/coupons', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.success) {
+          setCouponsList(data.data || [])
+        }
+      }
+      if (activeTab === 'banners') {
+        const res = await fetch('/api/admin/banners', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.success) {
+          setBannersList(data.data || [])
+        }
+      }
+      if (activeTab === 'reviews') {
+        const res = await fetch('/api/admin/reviews', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.success) {
+          setReviewsList(data.data || [])
+        }
+      }
+      if (activeTab === 'pages') {
+        const res = await fetch('/api/admin/pages', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.success) {
+          setPagesList(data.data || [])
+        }
+      }
+      if (activeTab === 'staff') {
+        const res = await fetch('/api/admin/staff', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.success) {
+          setStaffList(data.data || [])
         }
       }
     } catch {
@@ -180,34 +303,332 @@ export default function Admin() {
     }
   }
 
-  // Handle Staff Login
-  const handleStaffLogin = async (e: React.FormEvent) => {
+  // CRUD handlers for extended admin modules
+  const handleCategorySubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || !password) return
-
-    setLoggingIn(true)
+    if (!catFormName || !catFormSlug) return
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-      const data = await res.json()
-      if (data.success && data.data) {
-        const { token: staffToken, user: staffUser } = data.data
-        if (staffUser.role === 'admin' || staffUser.role === 'staff') {
-          login(staffToken, staffUser)
-          showToast('success', 'Access Granted', `Administrative session initiated for ${staffUser.name}.`)
-        } else {
-          showToast('error', 'Access Denied', 'Access restricted to store staff and administrators.')
-        }
+      const body = {
+        name: catFormName,
+        slug: catFormSlug,
+        description: catFormDesc,
+        image_url: catFormImg,
+        sort_order: catFormSort,
+        active: 1
+      }
+      let res
+      if (editingItem) {
+        res = await fetch(`/api/admin/categories/${editingItem.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
       } else {
-        showToast('error', 'Login Failed', data.error || 'Invalid credentials.')
+        res = await fetch('/api/admin/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Categories Synchronized', 'Database category details modified.')
+        setEditingItem(null)
+        setCatFormName('')
+        setCatFormSlug('')
+        setCatFormDesc('')
+        setCatFormImg('')
+        setCatFormSort(0)
+        loadTabDetails()
+      } else {
+        showToast('error', 'Categories Failed', data.error || 'Failed to modify database.')
       }
     } catch {
-      showToast('error', 'Auth Error', 'Failed to authenticate staff credentials.')
-    } finally {
-      setLoggingIn(false)
+      showToast('error', 'Network error', 'Catalog category save request failed.')
+    }
+  }
+
+  const handleDeleteCategory = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this category?')) return
+    try {
+      const res = await fetch(`/api/admin/categories/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Category Deleted', 'The category has been removed.')
+        loadTabDetails()
+      }
+    } catch {
+      showToast('error', 'Network error', 'Failed to delete category.')
+    }
+  }
+
+  const handleCouponSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!couponCode || !couponDiscValue) return
+    try {
+      const body = {
+        code: couponCode,
+        discount_type: couponDiscType,
+        discount_value: couponDiscValue,
+        min_purchase: couponMinPurchase,
+        active: 1
+      }
+      let res
+      if (editingItem) {
+        res = await fetch(`/api/admin/coupons/${editingItem.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+      } else {
+        res = await fetch('/api/admin/coupons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Coupons Modified', 'Active promo codes catalog updated.')
+        setEditingItem(null)
+        setCouponCode('')
+        setCouponDiscType('percentage')
+        setCouponDiscValue(0)
+        setCouponMinPurchase(0)
+        loadTabDetails()
+      } else {
+        showToast('error', 'Coupons Save Failed', data.error || 'Failed to edit database.')
+      }
+    } catch {
+      showToast('error', 'Network error', 'Catalog coupon save request failed.')
+    }
+  }
+
+  const handleDeleteCoupon = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this coupon?')) return
+    try {
+      const res = await fetch(`/api/admin/coupons/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Coupon Deleted', 'Promo code removed.')
+        loadTabDetails()
+      }
+    } catch {
+      showToast('error', 'Network error', 'Failed to delete coupon.')
+    }
+  }
+
+  const handleBannerSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!bannerTitle || !bannerImg) return
+    try {
+      const body = {
+        title: bannerTitle,
+        subtitle: bannerSubtitle,
+        image_url: bannerImg,
+        link: bannerLink,
+        active: 1
+      }
+      let res
+      if (editingItem) {
+        res = await fetch(`/api/admin/banners/${editingItem.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+      } else {
+        res = await fetch('/api/admin/banners', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Banners Updated', 'Storefront slideshow configuration modified.')
+        setEditingItem(null)
+        setBannerTitle('')
+        setBannerSubtitle('')
+        setBannerImg('')
+        setBannerLink('')
+        loadTabDetails()
+      } else {
+        showToast('error', 'Banners Save Failed', data.error || 'Failed to edit database.')
+      }
+    } catch {
+      showToast('error', 'Network error', 'Banners save request failed.')
+    }
+  }
+
+  const handleDeleteBanner = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this banner?')) return
+    try {
+      const res = await fetch(`/api/admin/banners/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Banner Deleted', 'Slideshow entry removed.')
+        loadTabDetails()
+      }
+    } catch {
+      showToast('error', 'Network error', 'Failed to delete banner.')
+    }
+  }
+
+  const handleToggleReviewStatus = async (id: number, currentApproved: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/reviews/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ approved: currentApproved ? 0 : 1 })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Review Moderated', 'Review publication status toggled.')
+        loadTabDetails()
+      }
+    } catch {
+      showToast('error', 'Network error', 'Failed to moderate review.')
+    }
+  }
+
+  const handleDeleteReview = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this review?')) return
+    try {
+      const res = await fetch(`/api/admin/reviews/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Review Deleted', 'User review deleted from catalog.')
+        loadTabDetails()
+      }
+    } catch {
+      showToast('error', 'Network error', 'Failed to delete review.')
+    }
+  }
+
+  const handlePageSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!pageTitle || !pageContent) return
+    try {
+      const body = {
+        title: pageTitle,
+        content: pageContent,
+        active: 1
+      }
+      let res
+      if (editingItem) {
+        res = await fetch(`/api/admin/pages/${editingItem.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+      } else {
+        res = await fetch('/api/admin/pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Policy Saved', 'Static pages & conditions details modified.')
+        setEditingItem(null)
+        setPageTitle('')
+        setPageContent('')
+        loadTabDetails()
+      } else {
+        showToast('error', 'Pages Save Failed', data.error || 'Failed to edit database.')
+      }
+    } catch {
+      showToast('error', 'Network error', 'Policy save request failed.')
+    }
+  }
+
+  const handleDeletePage = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this policy page?')) return
+    try {
+      const res = await fetch(`/api/admin/pages/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Page Deleted', 'Dynamic page removed.')
+        loadTabDetails()
+      }
+    } catch {
+      showToast('error', 'Network error', 'Failed to delete page.')
+    }
+  }
+
+  const handleStaffSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!staffName || !staffEmail) return
+    try {
+      const body: any = {
+        name: staffName,
+        email: staffEmail,
+        role: staffRole,
+        active: 1
+      }
+      if (staffPassword) body.password = staffPassword
+
+      let res
+      if (editingItem) {
+        res = await fetch(`/api/admin/staff/${editingItem.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+      } else {
+        res = await fetch('/api/admin/staff', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify(body)
+        })
+      }
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Staff Synced', 'Active staff credentials modified.')
+        setEditingItem(null)
+        setStaffName('')
+        setStaffEmail('')
+        setStaffPassword('')
+        setStaffRole('staff')
+        loadTabDetails()
+      } else {
+        showToast('error', 'Staff Save Failed', data.error || 'Failed to edit database.')
+      }
+    } catch {
+      showToast('error', 'Network error', 'Staff credentials save request failed.')
+    }
+  }
+
+  const handleDeleteStaff = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this staff user?')) return
+    try {
+      const res = await fetch(`/api/admin/staff/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Staff Removed', 'The staff account was deleted.')
+        loadTabDetails()
+      }
+    } catch {
+      showToast('error', 'Network error', 'Failed to delete staff user.')
     }
   }
 
@@ -417,13 +838,19 @@ export default function Admin() {
             <p className="text-[10px] text-gray-500 capitalize">{user?.role} &middot; {user?.name}</p>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 max-h-[70vh] overflow-y-auto pr-1">
             {[
               { id: 'dashboard', label: 'Summary Metrics', icon: <LayoutDashboard className="w-4 h-4" /> },
               { id: 'pos', label: 'POS Billing Terminal', icon: <ShoppingCart className="w-4 h-4" /> },
               { id: 'products', label: 'Products Manager', icon: <Package className="w-4 h-4" /> },
+              { id: 'categories', label: 'Categories Manager', icon: <Tag className="w-4 h-4" /> },
               { id: 'orders', label: 'Online Orders', icon: <ListChecks className="w-4 h-4" /> },
               { id: 'inventory', label: 'Stock Manager', icon: <Plus className="w-4 h-4" /> },
+              { id: 'coupons', label: 'Coupons Manager', icon: <Tag className="w-4 h-4" /> },
+              { id: 'banners', label: 'Banners Manager', icon: <Image className="w-4 h-4" /> },
+              { id: 'reviews', label: 'Reviews Moderation', icon: <Star className="w-4 h-4" /> },
+              { id: 'pages', label: 'Policies & Pages', icon: <FileText className="w-4 h-4" /> },
+              { id: 'staff', label: 'Staff Accounts', icon: <Users className="w-4 h-4" /> },
               { id: 'settings', label: 'Store Settings', icon: <Settings className="w-4 h-4" /> }
             ].map((tab) => (
               <button
@@ -673,10 +1100,18 @@ export default function Admin() {
                     onChange={(e) => setProductFormCategory(e.target.value)}
                     className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white"
                   >
-                    <option value="heels">Heels</option>
-                    <option value="sandals">Sandals</option>
-                    <option value="flats">Flats</option>
-                    <option value="bags">Bags</option>
+                    {categoriesList.length === 0 ? (
+                      <>
+                        <option value="heels">Heels</option>
+                        <option value="sandals">Sandals</option>
+                        <option value="flats">Flats</option>
+                        <option value="bags">Bags</option>
+                      </>
+                    ) : (
+                      categoriesList.map((cat) => (
+                        <option key={cat.id} value={cat.slug || cat.name.toLowerCase()}>{cat.name}</option>
+                      ))
+                    )}
                   </select>
                 </div>
                 <div className="md:col-span-2 pt-2 text-right">
@@ -771,6 +1206,647 @@ export default function Admin() {
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Active Tab: Categories Manager */}
+          {activeTab === 'categories' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 className="text-base font-semibold text-gray-900 font-display italic">
+                  {editingItem ? 'Edit Category' : 'Store Categories'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setEditingItem(null)
+                    setCatFormName('')
+                    setCatFormSlug('')
+                    setCatFormDesc('')
+                    setCatFormImg('')
+                    setCatFormSort(0)
+                  }}
+                  className="px-2.5 py-1.5 bg-gray-900 text-white rounded-md text-[10px] font-semibold uppercase tracking-wider"
+                >
+                  Create Category
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleCategorySubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-[#ead2ae] p-4 rounded-xl bg-[#f7f5f0] shadow-sm">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Category Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={catFormName}
+                    onChange={(e) => setCatFormName(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                    placeholder="e.g. Wedges"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Category Slug</label>
+                  <input
+                    type="text"
+                    required
+                    value={catFormSlug}
+                    onChange={(e) => setCatFormSlug(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                    placeholder="e.g. wedges"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Image URL</label>
+                  <input
+                    type="text"
+                    value={catFormImg}
+                    onChange={(e) => setCatFormImg(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Sort Order</label>
+                  <input
+                    type="number"
+                    value={catFormSort}
+                    onChange={(e) => setCatFormSort(Number(e.target.value))}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Description</label>
+                  <textarea
+                    value={catFormDesc}
+                    onChange={(e) => setCatFormDesc(e.target.value)}
+                    rows={2}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                    placeholder="Category details..."
+                  />
+                </div>
+                <div className="md:col-span-2 text-right">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-gray-900 text-white rounded-lg text-xs font-semibold uppercase tracking-wider"
+                  >
+                    Save Category
+                  </button>
+                </div>
+              </form>
+
+              {/* List */}
+              <div className="max-h-[300px] overflow-y-auto border border-gray-100 rounded-xl">
+                <table className="w-full text-xs text-left border-collapse bg-white">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-100 font-semibold">
+                      <th className="p-3">Category Name</th>
+                      <th className="p-3">Slug</th>
+                      <th className="p-3">Sort Order</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categoriesList.map((cat) => (
+                      <tr key={cat.id} className="border-b border-gray-100 hover:bg-[#fcfbf9]">
+                        <td className="p-3 font-semibold text-gray-900">{cat.name}</td>
+                        <td className="p-3 text-gray-500">{cat.slug}</td>
+                        <td className="p-3 font-semibold">{cat.sort_order}</td>
+                        <td className="p-3 text-right space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingItem(cat)
+                              setCatFormName(cat.name)
+                              setCatFormSlug(cat.slug)
+                              setCatFormDesc(cat.description || '')
+                              setCatFormImg(cat.image_url || '')
+                              setCatFormSort(cat.sort_order || 0)
+                            }}
+                            className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 inline-block"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCategory(cat.id)}
+                            className="p-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 inline-block"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Active Tab: Coupons Manager */}
+          {activeTab === 'coupons' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 className="text-base font-semibold text-gray-900 font-display italic">
+                  {editingItem ? 'Edit Coupon' : 'Promo Codes'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setEditingItem(null)
+                    setCouponCode('')
+                    setCouponDiscType('percentage')
+                    setCouponDiscValue(0)
+                    setCouponMinPurchase(0)
+                  }}
+                  className="px-2.5 py-1.5 bg-gray-900 text-white rounded-md text-[10px] font-semibold uppercase tracking-wider"
+                >
+                  Create Coupon
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleCouponSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-[#ead2ae] p-4 rounded-xl bg-[#f7f5f0] shadow-sm">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Coupon Code</label>
+                  <input
+                    type="text"
+                    required
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                    placeholder="e.g. WELCOME50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Discount Type</label>
+                  <select
+                    value={couponDiscType}
+                    onChange={(e) => setCouponDiscType(e.target.value as any)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white"
+                  >
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed Amount (₹)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Discount Value</label>
+                  <input
+                    type="number"
+                    required
+                    value={couponDiscValue}
+                    onChange={(e) => setCouponDiscValue(Number(e.target.value))}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Min Purchase (₹)</label>
+                  <input
+                    type="number"
+                    value={couponMinPurchase}
+                    onChange={(e) => setCouponMinPurchase(Number(e.target.value))}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                  />
+                </div>
+                <div className="md:col-span-2 text-right">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-gray-900 text-white rounded-lg text-xs font-semibold uppercase tracking-wider"
+                  >
+                    Save Coupon
+                  </button>
+                </div>
+              </form>
+
+              {/* List */}
+              <div className="max-h-[300px] overflow-y-auto border border-gray-100 rounded-xl">
+                <table className="w-full text-xs text-left border-collapse bg-white">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-100 font-semibold">
+                      <th className="p-3">Coupon Code</th>
+                      <th className="p-3">Discount</th>
+                      <th className="p-3">Min Purchase</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {couponsList.map((cp) => (
+                      <tr key={cp.id} className="border-b border-gray-100 hover:bg-[#fcfbf9]">
+                        <td className="p-3 font-semibold text-gray-900 uppercase">{cp.code}</td>
+                        <td className="p-3 text-gray-500">
+                          {cp.discount_type === 'percentage' ? `${cp.discount_value}%` : `₹${cp.discount_value}`}
+                        </td>
+                        <td className="p-3 font-semibold">₹{cp.min_purchase}</td>
+                        <td className="p-3 text-right space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingItem(cp)
+                              setCouponCode(cp.code)
+                              setCouponDiscType(cp.discount_type)
+                              setCouponDiscValue(cp.discount_value)
+                              setCouponMinPurchase(cp.min_purchase || 0)
+                            }}
+                            className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 inline-block"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCoupon(cp.id)}
+                            className="p-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 inline-block"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Active Tab: Banners Manager */}
+          {activeTab === 'banners' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 className="text-base font-semibold text-gray-900 font-display italic">
+                  {editingItem ? 'Edit Banner' : 'Slideshow Banners'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setEditingItem(null)
+                    setBannerTitle('')
+                    setBannerSubtitle('')
+                    setBannerImg('')
+                    setBannerLink('')
+                  }}
+                  className="px-2.5 py-1.5 bg-gray-900 text-white rounded-md text-[10px] font-semibold uppercase tracking-wider"
+                >
+                  Create Banner
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleBannerSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-[#ead2ae] p-4 rounded-xl bg-[#f7f5f0] shadow-sm">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Banner Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={bannerTitle}
+                    onChange={(e) => setBannerTitle(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                    placeholder="e.g. Comfort Redefined"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Image URL</label>
+                  <input
+                    type="text"
+                    required
+                    value={bannerImg}
+                    onChange={(e) => setBannerImg(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Subtitle</label>
+                  <input
+                    type="text"
+                    value={bannerSubtitle}
+                    onChange={(e) => setBannerSubtitle(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Target Link</label>
+                  <input
+                    type="text"
+                    value={bannerLink}
+                    onChange={(e) => setBannerLink(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                    placeholder="e.g. /shop?cat=heels"
+                  />
+                </div>
+                <div className="md:col-span-2 text-right">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-gray-900 text-white rounded-lg text-xs font-semibold uppercase tracking-wider"
+                  >
+                    Save Banner
+                  </button>
+                </div>
+              </form>
+
+              {/* List */}
+              <div className="max-h-[300px] overflow-y-auto border border-gray-100 rounded-xl">
+                <table className="w-full text-xs text-left border-collapse bg-white">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-100 font-semibold">
+                      <th className="p-3">Banner Title</th>
+                      <th className="p-3">Link</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bannersList.map((bn) => (
+                      <tr key={bn.id} className="border-b border-gray-100 hover:bg-[#fcfbf9]">
+                        <td className="p-3 font-semibold text-gray-900">{bn.title}</td>
+                        <td className="p-3 text-gray-500">{bn.link}</td>
+                        <td className="p-3 text-right space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingItem(bn)
+                              setBannerTitle(bn.title)
+                              setBannerSubtitle(bn.subtitle || '')
+                              setBannerImg(bn.image_url)
+                              setBannerLink(bn.link || '')
+                            }}
+                            className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 inline-block"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBanner(bn.id)}
+                            className="p-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 inline-block"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Active Tab: Reviews Moderation */}
+          {activeTab === 'reviews' && (
+            <div className="space-y-6">
+              <h3 className="text-base font-semibold text-gray-900 font-display italic border-b border-gray-100 pb-3">
+                Reviews & Moderation
+              </h3>
+
+              <div className="divide-y divide-gray-100 max-h-[450px] overflow-y-auto">
+                {reviewsList.length === 0 ? (
+                  <p className="text-xs text-gray-400 italic py-6 text-center">No reviews submitted</p>
+                ) : (
+                  reviewsList.map((rev) => (
+                    <div key={rev.id} className="py-4 flex justify-between items-start text-xs">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-gray-900">{rev.user_name || 'Anonymous'}</span>
+                          <span className="flex text-amber-500">
+                            {[...Array(rev.rating || 5)].map((_, i) => (
+                              <Star key={i} className="w-3 h-3 fill-current" />
+                            ))}
+                          </span>
+                        </div>
+                        <p className="text-gray-600 italic">"{rev.comment}"</p>
+                        <p className="text-[10px] text-gray-400">Date: {new Date(rev.created_at).toLocaleDateString()}</p>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleToggleReviewStatus(rev.id, rev.approved)}
+                          className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            rev.approved
+                              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                              : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                          }`}
+                        >
+                          {rev.approved ? 'Approved' : 'Pending'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteReview(rev.id)}
+                          className="px-2.5 py-1 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 text-[10px] font-bold uppercase tracking-wider"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Active Tab: Policies & Dynamic Pages */}
+          {activeTab === 'pages' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 className="text-base font-semibold text-gray-900 font-display italic">
+                  {editingItem ? 'Edit Document' : 'Static Policies & Pages'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setEditingItem(null)
+                    setPageTitle('')
+                    setPageContent('')
+                  }}
+                  className="px-2.5 py-1.5 bg-gray-900 text-white rounded-md text-[10px] font-semibold uppercase tracking-wider"
+                >
+                  Create Document
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handlePageSubmit} className="space-y-4 border border-[#ead2ae] p-4 rounded-xl bg-[#f7f5f0] shadow-sm">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Page Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={pageTitle}
+                    onChange={(e) => setPageTitle(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2.5 text-xs bg-white focus:outline-none"
+                    placeholder="e.g. Privacy Policy"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">HTML / Markdown Content</label>
+                  <textarea
+                    required
+                    rows={8}
+                    value={pageContent}
+                    onChange={(e) => setPageContent(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2.5 text-xs bg-white focus:outline-none font-mono"
+                    placeholder="<h3>Privacy Policy</h3><p>We respect your privacy...</p>"
+                  />
+                </div>
+                <div className="text-right">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-gray-900 text-white rounded-lg text-xs font-semibold uppercase tracking-wider"
+                  >
+                    Save Document
+                  </button>
+                </div>
+              </form>
+
+              {/* List */}
+              <div className="max-h-[250px] overflow-y-auto border border-gray-100 rounded-xl">
+                <table className="w-full text-xs text-left border-collapse bg-white">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-100 font-semibold">
+                      <th className="p-3">Page Title</th>
+                      <th className="p-3">Slug</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagesList.map((pg) => (
+                      <tr key={pg.id} className="border-b border-gray-100 hover:bg-[#fcfbf9]">
+                        <td className="p-3 font-semibold text-gray-900">{pg.title}</td>
+                        <td className="p-3 text-gray-500">{pg.slug}</td>
+                        <td className="p-3 text-right space-x-2">
+                          <button
+                            onClick={async () => {
+                              // Fetch full content for editing
+                              const res = await fetch(`/api/admin/pages/${pg.id}`, {
+                                headers: { 'Authorization': `Bearer ${token}` }
+                              })
+                              const data = await res.json()
+                              if (data.success) {
+                                setEditingItem(data.data)
+                                setPageTitle(data.data.title)
+                                setPageContent(data.data.content)
+                              }
+                            }}
+                            className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 inline-block"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePage(pg.id)}
+                            className="p-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 inline-block"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Active Tab: Staff Accounts */}
+          {activeTab === 'staff' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 className="text-base font-semibold text-gray-900 font-display italic">
+                  {editingItem ? 'Edit Staff Account' : 'Staff Accounts'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setEditingItem(null)
+                    setStaffName('')
+                    setStaffEmail('')
+                    setStaffPassword('')
+                    setStaffRole('staff')
+                  }}
+                  className="px-2.5 py-1.5 bg-gray-900 text-white rounded-md text-[10px] font-semibold uppercase tracking-wider"
+                >
+                  Create Account
+                </button>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleStaffSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 border border-[#ead2ae] p-4 rounded-xl bg-[#f7f5f0] shadow-sm">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={staffName}
+                    onChange={(e) => setStaffName(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Role</label>
+                  <select
+                    value={staffRole}
+                    onChange={(e) => setStaffRole(e.target.value as any)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white"
+                  >
+                    <option value="staff">Staff Member</option>
+                    <option value="admin">Administrator</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={staffEmail}
+                    onChange={(e) => setStaffEmail(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">
+                    Password {editingItem && '(Leave empty to keep current)'}
+                  </label>
+                  <input
+                    type="password"
+                    value={staffPassword}
+                    onChange={(e) => setStaffPassword(e.target.value)}
+                    className="w-full border border-gray-200 rounded-md p-2 text-xs bg-white focus:outline-none"
+                  />
+                </div>
+                <div className="md:col-span-2 text-right">
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-gray-900 text-white rounded-lg text-xs font-semibold uppercase tracking-wider"
+                  >
+                    Save Staff
+                  </button>
+                </div>
+              </form>
+
+              {/* List */}
+              <div className="max-h-[300px] overflow-y-auto border border-gray-100 rounded-xl">
+                <table className="w-full text-xs text-left border-collapse bg-white">
+                  <thead>
+                    <tr className="bg-gray-50 text-gray-500 border-b border-gray-100 font-semibold">
+                      <th className="p-3">Staff Name</th>
+                      <th className="p-3">Email</th>
+                      <th className="p-3">Role</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {staffList.map((st) => (
+                      <tr key={st.id} className="border-b border-gray-100 hover:bg-[#fcfbf9]">
+                        <td className="p-3 font-semibold text-gray-900">{st.name}</td>
+                        <td className="p-3 text-gray-500">{st.email}</td>
+                        <td className="p-3 font-semibold capitalize">{st.role}</td>
+                        <td className="p-3 text-right space-x-2">
+                          <button
+                            onClick={() => {
+                              setEditingItem(st)
+                              setStaffName(st.name)
+                              setStaffEmail(st.email)
+                              setStaffPassword('')
+                              setStaffRole(st.role)
+                            }}
+                            className="p-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 inline-block"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteStaff(st.id)}
+                            className="p-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 inline-block"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
           )}

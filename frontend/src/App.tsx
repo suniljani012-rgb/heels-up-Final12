@@ -18,6 +18,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import OrderConfirmation from './pages/OrderConfirmation'
 import OrderTracking from './pages/OrderTracking'
 import Admin from './pages/Admin'
+import DynamicPage from './pages/DynamicPage'
 
 const queryClient = new QueryClient()
 
@@ -64,6 +65,22 @@ function App() {
               <Route path="/order-tracking" element={<OrderTracking />} />
               <Route path="/order-tracking.html" element={<OrderTracking />} />
               
+              {/* Dynamic content & policy pages */}
+              <Route path="/privacy" element={<DynamicPage />} />
+              <Route path="/privacy.html" element={<DynamicPage />} />
+              <Route path="/terms" element={<DynamicPage />} />
+              <Route path="/terms.html" element={<DynamicPage />} />
+              <Route path="/returns" element={<DynamicPage />} />
+              <Route path="/returns.html" element={<DynamicPage />} />
+              <Route path="/shipping-info" element={<DynamicPage />} />
+              <Route path="/shipping-info.html" element={<DynamicPage />} />
+              <Route path="/faq" element={<DynamicPage />} />
+              <Route path="/faq.html" element={<DynamicPage />} />
+              <Route path="/about" element={<DynamicPage />} />
+              <Route path="/about.html" element={<DynamicPage />} />
+              <Route path="/size-guide" element={<DynamicPage />} />
+              <Route path="/size-guide.html" element={<DynamicPage />} />
+
               {/* Admin Portal routes */}
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin.html" element={<Admin />} />

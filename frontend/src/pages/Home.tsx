@@ -27,6 +27,7 @@ export default function Home() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [bannerIndex, setBannerIndex] = useState(0)
   const [timeLeft, setTimeLeft] = useState({ hours: 8, minutes: 47, seconds: 23 })
+  const [categories, setCategories] = useState<any[]>([])
 
   // Static Fallback Banners if database is empty
   const defaultBanners = [
@@ -67,6 +68,12 @@ export default function Home() {
         if (prodData.success) {
           setFeaturedProducts(prodData.data)
         }
+
+        const catRes = await fetch('/api/categories')
+        const catData = await catRes.json()
+        if (catData.success && catData.data) {
+          setCategories(catData.data)
+        }
       } catch {
         setBanners(defaultBanners)
       }
@@ -101,12 +108,37 @@ export default function Home() {
 
   const currentBanner = banners[bannerIndex] || defaultBanners[0]
 
-  const categoryCards = [
-    { cat: 'heels', label: 'Premium Heels', emoji: '👠', img: 'https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=600&auto=format&fit=crop' },
-    { cat: 'flats', label: 'Everyday Flats', emoji: '🥿', img: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop' },
-    { cat: 'sandals', label: 'Chic Sandals', emoji: '👡', img: 'https://images.unsplash.com/photo-1562273138-f46be4ebdf33?q=80&w=600&auto=format&fit=crop' },
-    { cat: 'bags', label: 'Luxe Bags', emoji: '👜', img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&auto=format&fit=crop' },
-  ]
+  const getCategoryEmoji = (slug: string) => {
+    const s = slug.toLowerCase()
+    if (s.includes('heel')) return '👠'
+    if (s.includes('flat')) return '🥿'
+    if (s.includes('sandal')) return '👡'
+    if (s.includes('bag')) return '👜'
+    return '✨'
+  }
+
+  const getCategoryFallbackImage = (slug: string) => {
+    const s = slug.toLowerCase()
+    if (s.includes('heel')) return 'https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=600&auto=format&fit=crop'
+    if (s.includes('flat')) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop'
+    if (s.includes('sandal')) return 'https://images.unsplash.com/photo-1562273138-f46be4ebdf33?q=80&w=600&auto=format&fit=crop'
+    if (s.includes('bag')) return 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&auto=format&fit=crop'
+    return 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=600&auto=format&fit=crop'
+  }
+
+  const categoryCards = categories.length === 0
+    ? [
+        { cat: 'heels', label: 'Premium Heels', emoji: '👠', img: 'https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=600&auto=format&fit=crop' },
+        { cat: 'flats', label: 'Everyday Flats', emoji: '🥿', img: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop' },
+        { cat: 'sandals', label: 'Chic Sandals', emoji: '👡', img: 'https://images.unsplash.com/photo-1562273138-f46be4ebdf33?q=80&w=600&auto=format&fit=crop' },
+        { cat: 'bags', label: 'Luxe Bags', emoji: '👜', img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&auto=format&fit=crop' },
+      ]
+    : categories.map(cat => ({
+        cat: cat.slug || cat.name.toLowerCase(),
+        label: cat.name,
+        emoji: getCategoryEmoji(cat.slug || cat.name),
+        img: cat.image_url || getCategoryFallbackImage(cat.slug || cat.name)
+      }))
 
   const handleWishlistToggle = (e: any, prodId: number, name: string) => {
     e.preventDefault()

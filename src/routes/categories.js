@@ -10,11 +10,14 @@ export async function categoriesRouter(request, env) {
     if (path === '/' && method === 'GET') {
         try {
             const cats = await env.DB.prepare(
-                `SELECT c.*, (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id AND p.active = 1) as product_count
+                `SELECT c.*, (SELECT COUNT(*) FROM products p WHERE (LOWER(p.category) = LOWER(c.name) OR LOWER(p.category) = LOWER(c.slug)) AND p.active = 1) as product_count
          FROM categories c WHERE c.active = 1 ORDER BY c.sort_order ASC`
             ).all();
             return list(cats.results);
-        } catch (e) { return serverError('Failed to fetch categories'); }
+        } catch (e) {
+            console.error('Failed to fetch categories:', e);
+            return serverError('Failed to fetch categories');
+        }
     }
 
     if (path === '/' && method === 'POST') {

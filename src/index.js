@@ -21,6 +21,7 @@ import { handleReports } from './routes/reports.js';
 import { handleNotifications } from './routes/notifications.js';
 import { handleShipping } from './routes/shipping.js';
 import { blogsPublicRouter } from './routes/blogs.js';
+import { pagesPublicRouter } from './routes/pages.js';
 import { adminRouter } from './routes/admin.js';
 import { json } from './utils/response.js';
 import { authRateLimit, apiRateLimit, paymentRateLimit, adminRateLimit } from './middleware/ratelimit.js';
@@ -144,6 +145,7 @@ export default {
         else if (path.startsWith('/api/inventory')) response = await inventoryRouter(request, env);
         else if (path.startsWith('/api/reports')) response = await handleReports(request, env, path, method);
         else if (path.startsWith('/api/blogs')) response = await blogsPublicRouter(request, env);
+        else if (path.startsWith('/api/pages')) response = await pagesPublicRouter(request, env);
         else response = json({ success: false, error: 'API route not found' }, 404);
 
       } catch (err) {

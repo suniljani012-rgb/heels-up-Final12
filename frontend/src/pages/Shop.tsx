@@ -29,6 +29,18 @@ export default function Shop() {
   const [loading, setLoading] = useState(true)
   const [totalPages, setTotalPages] = useState(1)
   const [totalProducts, setTotalProducts] = useState(0)
+  const [categories, setCategories] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setCategories(data.data)
+        }
+      })
+      .catch(err => console.error("Error loading categories in shop:", err))
+  }, [])
 
   // URL Params mapping
   const category = searchParams.get('cat') || ''
@@ -108,10 +120,17 @@ export default function Shop() {
 
   const categoriesList = [
     { value: '', label: 'All Products' },
-    { value: 'heels', label: 'Premium Heels' },
-    { value: 'sandals', label: 'Chic Sandals' },
-    { value: 'flats', label: 'Comfort Flats' },
-    { value: 'bags', label: 'Luxury Bags' }
+    ...(categories.length === 0
+      ? [
+          { value: 'heels', label: 'Premium Heels' },
+          { value: 'sandals', label: 'Chic Sandals' },
+          { value: 'flats', label: 'Comfort Flats' },
+          { value: 'bags', label: 'Luxury Bags' }
+        ]
+      : categories.map((cat) => ({
+          value: cat.slug || cat.name.toLowerCase(),
+          label: cat.name
+        })))
   ]
 
   const sortOptions = [
