@@ -10,7 +10,14 @@ const ALLOWED_ORIGINS = [
 
 export function corsHeaders(request) {
     const origin = request.headers.get('Origin') || '';
-    const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+    let allowed = ALLOWED_ORIGINS[0];
+    if (origin && (
+        origin.startsWith('http://localhost:') || 
+        origin.startsWith('http://127.0.0.1:') || 
+        ALLOWED_ORIGINS.includes(origin)
+    )) {
+        allowed = origin;
+    }
     return {
         'Access-Control-Allow-Origin': allowed,
         'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
