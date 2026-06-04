@@ -26,5 +26,4 @@
 /privacy        /policy/privacy.html    200
 /terms          /policy/terms.html      200
 
-# ── SPA fallback — 404s go to 404 page ─────────────────────────────
-/*              /404.html       404
+# Cloudflare automatically serves /404.html for unmatched routes.
