@@ -5,6 +5,7 @@ import {
   ShieldAlert, LogOut, Plus, Edit3, Settings, Tag, Star, Users, FileText, Image,
   UploadCloud, AlertTriangle, CheckCircle2, X
 } from 'lucide-react'
+import '../admin.css'
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
 
@@ -237,19 +238,19 @@ export default function Admin() {
   const getAllowedTabs = () => {
     const role = user?.role || 'staff'
     const allTabs = [
-      { id: 'dashboard', label: 'Dashboard Stats', icon: <LayoutDashboard className="w-4 h-4" /> },
-      { id: 'pos', label: 'POS Terminal', icon: <ShoppingCart className="w-4 h-4" /> },
-      { id: 'products', label: 'Products', icon: <Package className="w-4 h-4" /> },
-      { id: 'categories', label: 'Categories', icon: <Tag className="w-4 h-4" /> },
-      { id: 'orders', label: 'Online Orders', icon: <ListChecks className="w-4 h-4" /> },
-      { id: 'inventory', label: 'Stock Levels', icon: <Plus className="w-4 h-4" /> },
-      { id: 'coupons', label: 'Promo Coupons', icon: <Tag className="w-4 h-4" /> },
-      { id: 'banners', label: 'Home Banners', icon: <Image className="w-4 h-4" /> },
-      { id: 'reviews', label: 'User Reviews', icon: <Star className="w-4 h-4" /> },
-      { id: 'pages', label: 'Store Policies', icon: <FileText className="w-4 h-4" /> },
-      { id: 'staff', label: 'Staff Accounts', icon: <Users className="w-4 h-4" /> },
-      { id: 'settings', label: 'Store Settings', icon: <Settings className="w-4 h-4" /> },
-      { id: 'reports', label: 'Reports & Export', icon: <FileText className="w-4 h-4" /> }
+      { id: 'dashboard', label: 'Dashboard', icon: <i className="fa-solid fa-gauge nav-icon" /> },
+      { id: 'pos', label: 'POS Terminal', icon: <i className="fa-solid fa-cash-register nav-icon" /> },
+      { id: 'products', label: 'Products', icon: <i className="fa-solid fa-shoe-prints nav-icon" /> },
+      { id: 'categories', label: 'Categories', icon: <i className="fa-solid fa-tags nav-icon" /> },
+      { id: 'orders', label: 'Orders', icon: <i className="fa-solid fa-bag-shopping nav-icon" /> },
+      { id: 'inventory', label: 'Inventory', icon: <i className="fa-solid fa-boxes-stacked nav-icon" /> },
+      { id: 'coupons', label: 'Coupons', icon: <i className="fa-solid fa-ticket nav-icon" /> },
+      { id: 'banners', label: 'Banners', icon: <i className="fa-solid fa-image nav-icon" /> },
+      { id: 'reviews', label: 'Reviews', icon: <i className="fa-solid fa-star nav-icon" /> },
+      { id: 'pages', label: 'Pages', icon: <i className="fa-solid fa-file-lines nav-icon" /> },
+      { id: 'staff', label: 'Staff Accounts', icon: <i className="fa-solid fa-user-shield nav-icon" /> },
+      { id: 'settings', label: 'Settings', icon: <i className="fa-solid fa-gear nav-icon" /> },
+      { id: 'reports', label: 'Reports', icon: <i className="fa-solid fa-chart-bar nav-icon" /> }
     ]
 
     let allowed = allTabs
@@ -1494,122 +1495,244 @@ export default function Admin() {
   }
 
    return (
-    <div className="min-h-screen bg-[#faf8f5] text-gray-800 font-sans pb-12 select-none">
-      {/* Top Header Bar */}
-      <header className="bg-white border-b border-gray-150 px-6 py-4 sticky top-0 z-40 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gray-900 flex items-center justify-center text-white shadow-md">
-            <span className="font-serif italic font-light text-xl">HU</span>
-          </div>
-          <div>
-            <h1 className="text-base font-semibold tracking-wide text-gray-900 font-display italic">HeelsUp Control Center</h1>
-            <p className="text-[10px] text-gray-400 font-medium">Enterprise Suite v4.1 &middot; Database: SQLite D1</p>
-          </div>
-        </div>
-
-        <div className="flex items-center flex-wrap gap-4 text-xs font-semibold">
-          {/* Live Visitor Tracker */}
-          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1.5 text-emerald-800 text-[10px]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span>Live Traffic: <strong className="font-bold">{liveTraffic}</strong> shoppers online</span>
-          </div>
-
-          <div className="text-gray-400 hidden sm:inline-block">|</div>
-
-          {/* User Meta */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-[#ead2ae] text-gray-800 flex items-center justify-center font-bold text-xs uppercase shadow-inner">
-              {user?.name ? user.name[0] : 'S'}
-            </div>
+    <div className="admin-layout">
+      {/* Left Sidebar */}
+      <aside className={`admin-sidebar ${sidebarCollapsed ? 'mini' : ''}`} id="admin-sidebar">
+        <div className="admin-sidebar-header">
+          <div className="admin-sidebar-logo">
             <div>
-              <div className="text-gray-900 font-bold text-[11px] leading-tight capitalize">{user?.name}</div>
-              <div className="text-[9px] text-gray-400 font-medium capitalize">{user?.role}</div>
+              <div className="sidebar-brand">Heels<span>Up</span></div>
+              <div className="sidebar-version">Admin Panel v2.0</div>
             </div>
           </div>
+          <button 
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="admin-sidebar-toggle" 
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            <i className={`fa-solid ${sidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`} />
+          </button>
         </div>
-      </header>
 
-      {/* Full-Page Edge-to-Edge Layout */}
-      <div className="w-full flex items-stretch mt-0 min-h-[calc(100vh-73px)]">
-        {/* Left Sidebar */}
-        <div className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-gray-950 text-gray-300 p-5 shadow-xl border-r border-gray-900 space-y-6 flex flex-col transition-all duration-300 shrink-0`}>
-          <div className="border-b border-gray-900 pb-3 flex items-center justify-between">
-            {!sidebarCollapsed ? (
-              <div className="flex items-center gap-2">
-                <img 
-                  src="/logo.png" 
-                  alt="HeelsUp" 
-                  className="h-8 object-contain brightness-0 invert filter" 
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
-                <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Main Menu</h2>
-              </div>
-            ) : (
-              <span className="mx-auto text-[10px] font-bold text-gray-500">Menu</span>
-            )}
-            <button 
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="text-gray-400 hover:text-white p-1 rounded bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer text-xs"
-              title={sidebarCollapsed ? "Expand Menu" : "Collapse Menu"}
-            >
-              {sidebarCollapsed ? "➡️" : "⬅️"}
-            </button>
-          </div>
-
-            {/* Sidebar Search (AdminLTE v4 inspired) */}
-            {!sidebarCollapsed && (
-              <div className="relative animate-fadeIn">
-                <input
-                  type="text"
-                  placeholder="Search modules..."
-                  value={sidebarQuery}
-                  onChange={(e) => setSidebarQuery(e.target.value)}
-                  className="w-full bg-gray-800 text-gray-100 border border-gray-700/60 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#C9A96E] placeholder-gray-500 transition-colors"
-                />
-                <span className="absolute right-3.5 top-2.5 text-xs text-gray-500 pointer-events-none">🔍</span>
-              </div>
-            )}
-
-            <div className="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto pr-1 select-none scrollbar-thin">
-              {getAllowedTabs().map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center ${sidebarCollapsed ? 'justify-center p-3' : 'gap-2.5 p-3'} text-xs font-semibold rounded-xl text-left transition-all duration-200 cursor-pointer ${
-                    activeTab === tab.id
-                      ? 'bg-[#C9A96E] text-gray-900 shadow-md font-bold'
-                      : 'hover:bg-gray-800/80 hover:text-white'
-                  }`}
-                  title={sidebarCollapsed ? tab.label : undefined}
-                >
-                  {tab.icon}
-                  {!sidebarCollapsed && <span className="truncate">{tab.label}</span>}
-                </button>
-              ))}
-              {getAllowedTabs().length === 0 && !sidebarCollapsed && (
-                <div className="text-center text-[10px] text-gray-500 italic py-4">No matching tabs</div>
-              )}
+        <nav className="admin-nav">
+          {/* Sidebar Search */}
+          {!sidebarCollapsed && (
+            <div className="admin-search" style={{ width: '100%', margin: '0 0 20px 0', padding: '10px 16px' }}>
+              <i className="fa-solid fa-magnifying-glass admin-search-icon" />
+              <input
+                type="text"
+                placeholder="Search modules..."
+                value={sidebarQuery}
+                onChange={(e) => setSidebarQuery(e.target.value)}
+                style={{ fontSize: '12px' }}
+              />
             </div>
+          )}
 
-            <div className="pt-4 border-t border-gray-800">
+          {/* Section: Main */}
+          <div className="admin-nav-section">
+            <div className="admin-nav-title">Main</div>
+            {getAllowedTabs().filter(t => ['dashboard', 'reports'].includes(t.id)).map(tab => (
               <button
-                onClick={() => {
-                  logout()
-                  showToast('info', 'Logged Out', 'Staff session closed.')
-                  navigate('/')
-                }}
-                className={`w-full py-2.5 border border-gray-800 hover:border-rose-900/50 text-gray-400 hover:text-rose-400 hover:bg-rose-950/20 text-xs font-semibold rounded-xl uppercase tracking-widest flex items-center justify-center ${sidebarCollapsed ? 'px-1' : 'gap-2'} transition-all duration-200`}
-                title={sidebarCollapsed ? "Sign Out" : undefined}
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`admin-nav-link ${activeTab === tab.id ? 'active' : ''}`}
+                style={{ width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}
               >
-                <LogOut className="w-4 h-4 shrink-0" /> {!sidebarCollapsed && <span>Sign Out</span>}
+                {tab.icon}
+                <span>{tab.label}</span>
               </button>
+            ))}
+          </div>
+
+          {/* Section: Catalogue */}
+          <div className="admin-nav-section">
+            <div className="admin-nav-title">Catalogue</div>
+            {getAllowedTabs().filter(t => ['products', 'categories', 'inventory'].includes(t.id)).map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`admin-nav-link ${activeTab === tab.id ? 'active' : ''}`}
+                style={{ width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+                {tab.id === 'inventory' && products.filter(p => p.stock <= 3).length > 0 && (
+                  <span className="admin-nav-badge" style={{ background: 'var(--color-warning)' }}>
+                    {products.filter(p => p.stock <= 3).length}
+                  </span>
+                )}
+                {tab.id === 'products' && products.length > 0 && (
+                  <span className="admin-nav-badge">
+                    {products.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Section: Sales */}
+          <div className="admin-nav-section">
+            <div className="admin-nav-title">Sales</div>
+            {getAllowedTabs().filter(t => ['pos', 'orders', 'coupons', 'reviews'].includes(t.id)).map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`admin-nav-link ${activeTab === tab.id ? 'active' : ''}`}
+                style={{ width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+                {tab.id === 'orders' && orders.filter(o => o.order_status === 'pending').length > 0 && (
+                  <span className="admin-nav-badge" style={{ background: 'var(--color-accent)' }}>
+                    {orders.filter(o => o.order_status === 'pending').length}
+                  </span>
+                )}
+                {tab.id === 'reviews' && reviewsList.filter(r => !r.approved).length > 0 && (
+                  <span className="admin-nav-badge" style={{ background: 'var(--color-success)' }}>
+                    {reviewsList.filter(r => !r.approved).length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Section: Content */}
+          <div className="admin-nav-section">
+            <div className="admin-nav-title">Content</div>
+            {getAllowedTabs().filter(t => ['banners', 'blog', 'pages'].includes(t.id)).map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`admin-nav-link ${activeTab === tab.id ? 'active' : ''}`}
+                style={{ width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Section: System */}
+          <div className="admin-nav-section">
+            <div className="admin-nav-title">System</div>
+            {getAllowedTabs().filter(t => ['staff', 'settings'].includes(t.id)).map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`admin-nav-link ${activeTab === tab.id ? 'active' : ''}`}
+                style={{ width: '100%', border: 'none', background: 'none', textAlign: 'left', cursor: 'pointer' }}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        <div className="admin-sidebar-footer">
+          <div className="admin-user-info" style={{ marginBottom: '16px' }}>
+            <div className="admin-user-avatar">{user?.name ? user.name[0].toUpperCase() : 'A'}</div>
+            {!sidebarCollapsed && (
+              <div>
+                <div className="admin-user-name">{user?.name}</div>
+                <div className="admin-user-role">{user?.role}</div>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              logout()
+              showToast('info', 'Logged Out', 'Staff session closed.')
+              navigate('/')
+            }}
+            className="btn btn-ghost"
+            style={{ width: '100%', color: 'var(--color-gray-400)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px 0', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px' }}
+            title={sidebarCollapsed ? "Sign Out" : undefined}
+          >
+            <i className="fa-solid fa-right-from-bracket" /> {!sidebarCollapsed && <span>Sign Out</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* Sidebar mobile overlay */}
+      <div className="admin-sidebar-overlay" id="sidebar-overlay" onClick={() => {
+        const sb = document.getElementById('admin-sidebar');
+        if (sb) sb.classList.remove('open');
+      }} />
+
+      {/* MAIN CONTENT AREA */}
+      <main className="admin-main">
+        {/* TOPBAR */}
+        <header className="admin-topbar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+            <button 
+              className="nav-icon-btn" 
+              id="sidebar-toggle-mobile"
+              onClick={() => {
+                const sb = document.getElementById('admin-sidebar');
+                if (sb) sb.classList.toggle('open');
+              }}
+              style={{ background: 'var(--color-light)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '8px' }}
+            >
+              <i className="fa-solid fa-bars" />
+            </button>
+            <div className="admin-page-title capitalize">
+              {activeTab === 'pos' ? 'POS Terminal' : activeTab === 'dashboard' ? 'Dashboard Overview' : activeTab}
             </div>
           </div>
 
-          {/* Dynamic Tab view */}
+          <div className="admin-topbar-actions">
+            {/* Live Visitor Tracker */}
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1.5 text-emerald-800 text-[10px] select-none font-semibold">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span>Live Traffic: <strong className="font-bold">{liveTraffic}</strong> active</span>
+            </div>
+
+            <button 
+              onClick={() => { loadTabDetails(); showToast('success', 'Sync Successful', 'Live data refreshed.'); }}
+              className="admin-action-icon"
+              title="Refresh Data"
+            >
+              <i className="fa-solid fa-rotate" />
+            </button>
+
+            <button className="admin-action-icon" style={{ position: 'relative' }}>
+              <i className="fa-regular fa-bell" />
+              <span className="admin-action-badge" />
+            </button>
+            
+            <div 
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg,var(--color-primary),var(--color-primary-dark))',
+                display: 'flex',
+                alignItems: 'center',
+                justify-content: 'center',
+                fontWeight: 700,
+                color: 'white',
+                fontSize: '14px',
+                cursor: 'pointer'
+              }}
+              title={`${user?.name} (${user?.role})`}
+            >
+              {user?.name ? user.name[0].toUpperCase() : 'A'}
+            </div>
+          </div>
+        </header>
+
+        {/* CONTENT */}
+        <div className="admin-content">
           <div className="flex-1 bg-white border border-gray-150 rounded-2xl p-6 md:p-8 shadow-sm min-h-[75vh]">
             
             {/* TABS 1: Summary Analytics Dashboard */}
@@ -1636,45 +1759,65 @@ export default function Admin() {
                 </div>
                 
                 {/* Metrics Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="p-4 bg-gradient-to-br from-[#faf6ee] to-[#f5ebd6] border border-[#ead2ae]/60 rounded-xl relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Live Gross Sales</span>
-                    <span className="text-2xl font-light text-gray-900 block mt-2 font-display">
-                      ₹{stats ? (stats.revenue / 100).toLocaleString('en-IN') : '0'}
-                    </span>
-                    <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-2">
-                      +14.2% Growth
-                    </span>
+                <div className="kpi-grid">
+                  <div className="kpi-card">
+                    <div className="kpi-info">
+                      <div className="kpi-label">Live Gross Sales</div>
+                      <div className="kpi-value">₹{stats ? (stats.revenue / 100).toLocaleString('en-IN') : '0'}</div>
+                      <div className="kpi-trend up">
+                        <span className="kpi-trend-bg">
+                          <i className="fa-solid fa-arrow-up" /> +14.2% Growth
+                        </span>
+                      </div>
+                    </div>
+                    <div className="kpi-icon-wrap icon-primary">
+                      <i className="fa-solid fa-indian-rupee-sign" />
+                    </div>
                   </div>
 
-                  <div className="p-4 bg-gradient-to-br from-emerald-50/50 to-emerald-100/20 border border-emerald-100 rounded-xl relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Online Orders</span>
-                    <span className="text-2xl font-light text-emerald-800 block mt-2 font-display">
-                      {stats ? stats.total_orders : '0'}
-                    </span>
-                    <span className="text-[9px] text-emerald-700 font-semibold bg-emerald-100/50 px-2 py-0.5 rounded-full inline-block mt-2">
-                      {stats ? stats.delivered : '0'} Delivered
-                    </span>
+                  <div className="kpi-card">
+                    <div className="kpi-info">
+                      <div className="kpi-label">Online Orders</div>
+                      <div className="kpi-value">{stats ? stats.total_orders : '0'}</div>
+                      <div className="kpi-trend up">
+                        <span className="kpi-trend-bg">
+                          <i className="fa-solid fa-arrow-up" /> {stats ? stats.delivered : '0'} Delivered
+                        </span>
+                      </div>
+                    </div>
+                    <div className="kpi-icon-wrap icon-blue">
+                      <i className="fa-solid fa-bag-shopping" />
+                    </div>
                   </div>
 
-                  <div className="p-4 bg-gradient-to-br from-rose-50/50 to-rose-100/20 border border-rose-100 rounded-xl relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Unique Shoppers</span>
-                    <span className="text-2xl font-light text-[#d4456b] block mt-2 font-display">
-                      {stats ? stats.unique_customers : '0'}
-                    </span>
-                    <span className="text-[9px] text-rose-700 font-semibold bg-rose-100/50 px-2 py-0.5 rounded-full inline-block mt-2">
-                      Active LTV Account
-                    </span>
+                  <div className="kpi-card">
+                    <div className="kpi-info">
+                      <div className="kpi-label">Unique Shoppers</div>
+                      <div className="kpi-value">{stats ? stats.unique_customers : '0'}</div>
+                      <div className="kpi-trend up">
+                        <span className="kpi-trend-bg">
+                          <i className="fa-solid fa-arrow-up" /> Active LTV
+                        </span>
+                      </div>
+                    </div>
+                    <div className="kpi-icon-wrap" style={{ width: '56px', height: '56px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0, background: 'var(--color-accent-50)', color: 'var(--color-accent)' }}>
+                      <i className="fa-solid fa-users" />
+                    </div>
                   </div>
 
-                  <div className="p-4 bg-gradient-to-br from-amber-50/50 to-amber-100/20 border border-amber-100 rounded-xl relative overflow-hidden group hover:shadow-md transition-all duration-300">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Average Order (AOV)</span>
-                    <span className="text-2xl font-light text-amber-800 block mt-2 font-display">
-                      ₹{stats && stats.delivered ? Math.round((stats.revenue / 100) / stats.delivered).toLocaleString('en-IN') : '0'}
-                    </span>
-                    <span className="text-[9px] text-amber-700 font-semibold bg-amber-100/50 px-2 py-0.5 rounded-full inline-block mt-2">
-                      INR per basket
-                    </span>
+                  <div className="kpi-card">
+                    <div className="kpi-info">
+                      <div className="kpi-label">Average Order (AOV)</div>
+                      <div className="kpi-value">₹{stats && stats.delivered ? Math.round((stats.revenue / 100) / stats.delivered).toLocaleString('en-IN') : '0'}</div>
+                      <div className="kpi-trend up">
+                        <span className="kpi-trend-bg">
+                          <i className="fa-solid fa-arrow-up" /> Per basket
+                        </span>
+                      </div>
+                    </div>
+                    <div className="kpi-icon-wrap" style={{ width: '56px', height: '56px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', flexShrink: 0, background: 'var(--color-warning-100)', color: 'var(--color-warning-700)' }}>
+                      <i className="fa-solid fa-cart-shopping" />
+                    </div>
                   </div>
                 </div>
 
