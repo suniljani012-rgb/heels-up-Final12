@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
@@ -8,6 +8,8 @@ export default function Login() {
   const { login } = useAuthStore()
   const { showToast } = useToastStore()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const redirect = searchParams.get('redirect') || ''
 
   // Form states
   const [email, setEmail] = useState('')
@@ -33,7 +35,9 @@ export default function Login() {
         showToast('success', 'Welcome Back! 👋', `Logged in successfully as ${user.name}.`)
         
         // Redirect based on role
-        if (user.role === 'admin' || user.role === 'staff') {
+        if (redirect) {
+          navigate(redirect)
+        } else if (user.role === 'admin' || user.role === 'staff') {
           navigate('/admin')
         } else {
           navigate('/profile')

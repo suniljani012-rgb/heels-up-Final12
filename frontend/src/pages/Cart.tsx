@@ -3,11 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag } from 'lucide-react'
 import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
+import { useAuthStore } from '../store/useAuthStore'
 
 export default function Cart() {
   const { items, updateQty, removeItem, getCartSubtotal, clearCart } = useCartStore()
   const { showToast } = useToastStore()
   const navigate = useNavigate()
+  const { token } = useAuthStore()
 
   // Coupon states
   const [couponCode, setCouponCode] = useState('')
@@ -60,8 +62,12 @@ export default function Cart() {
   }
 
   const handleProceedToCheckout = () => {
-    // Navigate passing applied coupon context if any
-    navigate('/checkout', { state: { couponCode: appliedCoupon, discount: discountVal } })
+    if (!token) {
+      showToast('info', 'Sign In Required 🔐', 'Please sign in to your account to proceed to checkout.')
+      navigate('/login?redirect=/checkout')
+    } else {
+      navigate('/checkout', { state: { couponCode: appliedCoupon, discount: discountVal } })
+    }
   }
 
   return (
