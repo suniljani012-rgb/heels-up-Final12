@@ -349,6 +349,57 @@ export async function productsRouter(request, env) {
         }
     }
 
+    // POST /api/products/bulk — admin only: bulk upload products
+    if (path === '/bulk' && method === 'POST') {
+        const { error: authError } = await requireAdmin(request, env);
+        if (authError) return authError;
+        try {
+            const body = await request.json();
+            const { products } = body;
+            if (!products || !Array.isArray(products)) {
+                return error('products array is required', 400);
+            }
+
+            const results = [];
+            for (const item of products) {
+                const { name, sku, category, description, price, mrp, stock, sizes, images, brand, tags, is_new, is_trending, is_featured, size_stock } = item;
+                if (!name || !sku || !price) {
+                    continue; // Skip invalid products
+                }
+
+                // Insert into products table
+                const result = await env.DB.prepare(
+                    `INSERT INTO products (name, sku, category, description, price, original_price, stock, active, featured, is_new, is_trending, show_mrp, sizes_json, images_json, brand, tags, created_at, updated_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 1, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *`
+                ).bind(
+                    name, sku, category || null, description || null,
+                    parseFloat(price), mrp ? parseFloat(mrp) : null,
+                    parseInt(stock || 0), is_featured ? 1 : 0, is_new ? 1 : 0, is_trending ? 1 : 0,
+                    JSON.stringify(sizes || []), JSON.stringify(images || []),
+                    brand || null, JSON.stringify(tags || [])
+                ).first();
+
+                if (result) {
+                    // Size stock handling
+                    if (size_stock && Array.isArray(size_stock) && size_stock.length > 0) {
+                        await upsertSizeStock(env, result.id, size_stock);
+                    } else if (sizes && sizes.length > 0 && stock) {
+                        const perSize = Math.floor(parseInt(stock || 0) / sizes.length);
+                        const autoSizeStock = sizes.map(s => ({ size_label: String(s), stock: perSize }));
+                        await upsertSizeStock(env, result.id, autoSizeStock);
+                    }
+                    const sizeStockRows = await fetchSizeStock(env, result.id);
+                    results.push(mapProduct(result, sizeStockRows));
+                }
+            }
+
+            return ok(results, `${results.length} products created successfully`);
+        } catch (e) {
+            console.error('Bulk product create error:', e);
+            return serverError('Failed to bulk upload products');
+        }
+    }
+
     // POST /api/products — admin only
     if (path === '/' && method === 'POST') {
         const { error: authError } = await requireAdmin(request, env);

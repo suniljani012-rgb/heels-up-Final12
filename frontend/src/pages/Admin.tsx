@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, ShoppingCart, Package, ListChecks,
-  ShieldAlert, LogOut, Plus, Edit3, Settings, Tag, Star, Users, FileText, Image
+  ShieldAlert, LogOut, Plus, Edit3, Settings, Tag, Star, Users, FileText, Image,
+  UploadCloud, AlertTriangle, CheckCircle2, X
 } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
@@ -17,6 +18,8 @@ interface Product {
   stock: number;
   active: boolean;
   featured: boolean;
+  images?: string[];
+  sizes?: string[];
 }
 
 interface Order {
@@ -30,6 +33,7 @@ interface Order {
   created_at: string;
   tracking_number?: string;
   tracking_url?: string;
+  courier_name?: string;
 }
 
 export default function Admin() {
@@ -102,7 +106,7 @@ export default function Admin() {
   const [staffName, setStaffName] = useState('')
   const [staffEmail, setStaffEmail] = useState('')
   const [staffPassword, setStaffPassword] = useState('')
-  const [staffRole, setStaffRole] = useState<'admin' | 'staff'>('staff')
+  const [staffRole, setStaffRole] = useState<'admin' | 'manager' | 'staff'>('staff')
 
   // POS billing ticket states
   const [posCart, setPosCart] = useState<any[]>([])
@@ -128,7 +132,18 @@ export default function Admin() {
   const [loadingOrderDetail, setLoadingOrderDetail] = useState(false)
   const [orderTrackingNum, setOrderTrackingNum] = useState('')
   const [orderTrackingUrl, setOrderTrackingUrl] = useState('')
+  const [orderCourierName, setOrderCourierName] = useState('')
+  const [sendSmsNotification, setSendSmsNotification] = useState(true)
   const [liveTraffic, setLiveTraffic] = useState(24)
+  const [sidebarQuery, setSidebarQuery] = useState('')
+  const [productFormImages, setProductFormImages] = useState<string[]>([])
+  const [productFormSizes, setProductFormSizes] = useState<string[]>(['36', '37', '38', '39', '40', '41'])
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [showBulkModal, setShowBulkModal] = useState(false)
+  const [bulkInput, setBulkInput] = useState('')
+  const [bulkUploading, setBulkUploading] = useState(false)
+  const [parsedProducts, setParsedProducts] = useState<any[]>([])
+  const [parseErrors, setParseErrors] = useState<string[]>([])
   const [chartMetric, setChartMetric] = useState<'revenue' | 'orders' | 'aov'>('revenue')
   const [liveSessions, setLiveSessions] = useState<{ id: string; location: string; action: string; time: string; status: 'active' | 'success' | 'warning' }[]>([
     { id: '1', location: 'Mumbai, MH', action: 'Viewing Bridal Heels collection', time: 'Just now', status: 'active' },
@@ -208,12 +223,55 @@ export default function Admin() {
     return () => clearInterval(interval)
   }, [token, user])
 
+  const getAllowedTabs = () => {
+    const role = user?.role || 'staff'
+    const allTabs = [
+      { id: 'dashboard', label: 'Dashboard Stats', icon: <LayoutDashboard className="w-4 h-4" /> },
+      { id: 'pos', label: 'POS Terminal', icon: <ShoppingCart className="w-4 h-4" /> },
+      { id: 'products', label: 'Products', icon: <Package className="w-4 h-4" /> },
+      { id: 'categories', label: 'Categories', icon: <Tag className="w-4 h-4" /> },
+      { id: 'orders', label: 'Online Orders', icon: <ListChecks className="w-4 h-4" /> },
+      { id: 'inventory', label: 'Stock Levels', icon: <Plus className="w-4 h-4" /> },
+      { id: 'coupons', label: 'Promo Coupons', icon: <Tag className="w-4 h-4" /> },
+      { id: 'banners', label: 'Home Banners', icon: <Image className="w-4 h-4" /> },
+      { id: 'reviews', label: 'User Reviews', icon: <Star className="w-4 h-4" /> },
+      { id: 'pages', label: 'Store Policies', icon: <FileText className="w-4 h-4" /> },
+      { id: 'staff', label: 'Staff Accounts', icon: <Users className="w-4 h-4" /> },
+      { id: 'settings', label: 'Store Settings', icon: <Settings className="w-4 h-4" /> }
+    ]
+
+    let allowed = allTabs
+    if (role === 'manager') {
+      allowed = allTabs.filter(t => ['dashboard', 'pos', 'products', 'categories', 'orders', 'inventory', 'coupons', 'reviews'].includes(t.id))
+    } else if (role !== 'admin') {
+      allowed = allTabs.filter(t => ['pos', 'orders', 'inventory', 'reviews'].includes(t.id))
+    }
+
+    if (sidebarQuery.trim()) {
+      const q = sidebarQuery.toLowerCase()
+      allowed = allowed.filter(t => t.label.toLowerCase().includes(q))
+    }
+
+    return allowed
+  }
+
+  useEffect(() => {
+    if (token) {
+      const allowed = getAllowedTabs()
+      if (allowed.length > 0 && !allowed.find(t => t.id === activeTab)) {
+        setActiveTab(allowed[0].id as any)
+      }
+    }
+  }, [user, token, activeTab, sidebarQuery])
+
   const handleSelectOrder = async (order: Order) => {
     setSelectedOrder(order)
     setLoadingOrderDetail(true)
     setSelectedOrderDetail(null)
     setOrderTrackingNum(order.tracking_number || '')
     setOrderTrackingUrl(order.tracking_url || '')
+    setOrderCourierName(order.courier_name || '')
+    setSendSmsNotification(true)
     try {
       const res = await fetch(`/api/orders/admin/${order.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -243,7 +301,9 @@ export default function Admin() {
         body: JSON.stringify({
           status: newStatus,
           tracking_number: orderTrackingNum,
-          tracking_url: orderTrackingUrl
+          tracking_url: orderTrackingUrl,
+          courier_name: orderCourierName,
+          send_sms: sendSmsNotification
         })
       })
       const data = await res.json()
@@ -256,6 +316,194 @@ export default function Admin() {
       }
     } catch {
       showToast('error', 'Network error', 'Failed to update order status.')
+    }
+  }
+
+  const handleParseBulkInput = (inputVal: string) => {
+    const trimmed = inputVal.trim()
+    if (!trimmed) {
+      setParsedProducts([])
+      setParseErrors([])
+      return
+    }
+
+    try {
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        const parsed = JSON.parse(trimmed)
+        const productsArr = Array.isArray(parsed) ? parsed : (parsed.products || [])
+        if (!Array.isArray(productsArr)) {
+          setParseErrors(['JSON must be an array or contain a "products" array'])
+          setParsedProducts([])
+          return
+        }
+
+        const validated = productsArr.map((item: any, index: number) => {
+          const errors: string[] = []
+          if (!item.name) errors.push('Missing Name')
+          if (!item.sku) errors.push('Missing SKU')
+          if (item.price === undefined || isNaN(Number(item.price)) || Number(item.price) <= 0) {
+            errors.push('Price must be a positive number')
+          }
+          return {
+            ...item,
+            name: item.name || '',
+            sku: item.sku || '',
+            price: Number(item.price) || 0,
+            mrp: Number(item.mrp) || Number(item.price) || 0,
+            stock: Number(item.stock) || 0,
+            category: item.category || 'heels',
+            sizes: Array.isArray(item.sizes) ? item.sizes : (item.sizes ? String(item.sizes).split(',').map((s: string) => s.trim()) : ['36', '37', '38', '39', '40', '41']),
+            images: Array.isArray(item.images) ? item.images : (item.images ? String(item.images).split(',').map((img: string) => img.trim()) : []),
+            errors,
+            isValid: errors.length === 0,
+            index
+          }
+        })
+        setParsedProducts(validated)
+        setParseErrors([])
+        return
+      }
+    } catch (e: any) {
+      if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+        setParseErrors([`Failed to parse JSON: ${e.message}`])
+        setParsedProducts([])
+        return
+      }
+    }
+
+    try {
+      const lines = trimmed.split(/\r?\n/).filter(line => line.trim() !== '')
+      if (lines.length === 0) {
+        setParsedProducts([])
+        setParseErrors([])
+        return
+      }
+
+      const firstLine = lines[0]
+      const parseCSVLine = (text: string) => {
+        const r: string[] = []
+        let p = ''
+        let q = false
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i]
+          if (c === '"') {
+            q = !q
+          } else if (c === ',' && !q) {
+            r.push(p.trim())
+            p = ''
+          } else {
+            p += c
+          }
+        }
+        r.push(p.trim())
+        return r.map(v => v.replace(/^"|"$/g, '').trim())
+      }
+
+      const headers = parseCSVLine(firstLine).map(h => h.toLowerCase())
+      
+      const results: any[] = []
+      for (let i = 1; i < lines.length; i++) {
+        const columns = parseCSVLine(lines[i])
+        const item: any = {}
+        headers.forEach((header, index) => {
+          item[header] = columns[index] || ''
+        })
+
+        const name = item.name || item.title || ''
+        const sku = item.sku || item.code || item.product_code || ''
+        const price = Number(item.price) || 0
+        const mrp = Number(item.mrp || item.original_price) || price
+        const stock = Number(item.stock || item.quantity || item.qty) || 0
+        const category = item.category || 'heels'
+        
+        let sizes = ['36', '37', '38', '39', '40', '41']
+        if (item.sizes) {
+          sizes = String(item.sizes).split(/[;|]/).map((s: string) => s.trim())
+        }
+        
+        let images: string[] = []
+        if (item.images) {
+          images = String(item.images).split(/[;|]/).map((img: string) => img.trim())
+        }
+
+        const errors: string[] = []
+        if (!name) errors.push('Missing Name')
+        if (!sku) errors.push('Missing SKU')
+        if (!item.price || isNaN(price) || price <= 0) errors.push('Price must be a positive number')
+
+        results.push({
+          name,
+          sku,
+          price,
+          mrp,
+          stock,
+          category,
+          sizes,
+          images,
+          errors,
+          isValid: errors.length === 0,
+          index: i - 1
+        })
+      }
+
+      setParsedProducts(results)
+      setParseErrors([])
+    } catch (e: any) {
+      setParseErrors([`Failed to parse CSV: ${e.message}`])
+      setParsedProducts([])
+    }
+  }
+
+  useEffect(() => {
+    handleParseBulkInput(bulkInput)
+  }, [bulkInput])
+
+  const handleBulkUploadSubmit = async () => {
+    const validProducts = parsedProducts.filter(p => p.isValid)
+    if (validProducts.length === 0) {
+      showToast('error', 'Validation Error', 'No valid products to upload.')
+      return
+    }
+
+    setBulkUploading(true)
+    try {
+      const payload = {
+        products: validProducts.map(p => ({
+          name: p.name,
+          sku: p.sku,
+          price: p.price,
+          mrp: p.mrp,
+          stock: p.stock,
+          category: p.category,
+          sizes: p.sizes,
+          images: p.images,
+          brand: 'HeelsUp'
+        }))
+      }
+
+      const res = await fetch('/api/products/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Bulk Upload Successful', `${data.message || `${validProducts.length} products uploaded successfully.`}`)
+        setShowBulkModal(false)
+        setBulkInput('')
+        setParsedProducts([])
+        loadTabDetails()
+      } else {
+        showToast('error', 'Bulk Upload Failed', data.error || 'Failed to bulk create products.')
+      }
+    } catch {
+      showToast('error', 'Network error', 'Failed to submit bulk upload request.')
+    } finally {
+      setBulkUploading(false)
     }
   }
 
@@ -1037,6 +1285,44 @@ export default function Admin() {
   }
 
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    setUploadingImage(true)
+    
+    try {
+      const urls: string[] = []
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        const res = await fetch('/api/admin/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        })
+        
+        const data = await res.json()
+        if (data.success && data.data?.url) {
+          urls.push(data.data.url)
+        } else {
+          showToast('error', 'Upload failed', data.error || 'Failed to upload image.')
+        }
+      }
+      if (urls.length > 0) {
+        setProductFormImages(prev => [...prev, ...urls])
+        showToast('success', 'Images Uploaded', `${urls.length} image(s) uploaded successfully to Cloudflare.`)
+      }
+    } catch {
+      showToast('error', 'Network error', 'Failed to upload images.')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
   // Edit/Add product submit
   const handleProductFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -1050,8 +1336,8 @@ export default function Admin() {
         mrp: productFormMrp || productFormPrice,
         stock: productFormStock,
         category: productFormCategory,
-        sizes: ['36', '37', '38', '39', '40', '41'],
-        images: ['https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=400&auto=format&fit=crop'],
+        sizes: productFormSizes,
+        images: productFormImages,
         brand: 'HeelsUp'
       }
 
@@ -1188,32 +1474,30 @@ export default function Admin() {
       {/* Main Panel Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
           {/* Collapsible Left Sidebar */}
           <div className="lg:col-span-3 bg-gray-900 text-gray-300 rounded-2xl p-5 shadow-xl border border-gray-800 space-y-6">
             <div className="border-b border-gray-800 pb-3">
               <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Main Modules</h2>
             </div>
 
-            <div className="flex flex-col gap-1.5 max-h-[70vh] overflow-y-auto pr-1 select-none scrollbar-thin">
-              {[
-                { id: 'dashboard', label: 'Dashboard Stats', icon: <LayoutDashboard className="w-4 h-4" /> },
-                { id: 'pos', label: 'POS Terminal', icon: <ShoppingCart className="w-4 h-4" /> },
-                { id: 'products', label: 'Products', icon: <Package className="w-4 h-4" /> },
-                { id: 'categories', label: 'Categories', icon: <Tag className="w-4 h-4" /> },
-                { id: 'orders', label: 'Online Orders', icon: <ListChecks className="w-4 h-4" /> },
-                { id: 'inventory', label: 'Stock Levels', icon: <Plus className="w-4 h-4" /> },
-                { id: 'coupons', label: 'Promo Coupons', icon: <Tag className="w-4 h-4" /> },
-                { id: 'banners', label: 'Home Banners', icon: <Image className="w-4 h-4" /> },
-                { id: 'reviews', label: 'User Reviews', icon: <Star className="w-4 h-4" /> },
-                { id: 'pages', label: 'Store Policies', icon: <FileText className="w-4 h-4" /> },
-                { id: 'staff', label: 'Staff Accounts', icon: <Users className="w-4 h-4" /> },
-                { id: 'settings', label: 'Store Settings', icon: <Settings className="w-4 h-4" /> }
-              ].map((tab) => (
+            {/* Sidebar Search (AdminLTE v4 inspired) */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search modules..."
+                value={sidebarQuery}
+                onChange={(e) => setSidebarQuery(e.target.value)}
+                className="w-full bg-gray-800 text-gray-100 border border-gray-700/60 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#C9A96E] placeholder-gray-500 transition-colors"
+              />
+              <span className="absolute right-3.5 top-2.5 text-xs text-gray-500 pointer-events-none">🔍</span>
+            </div>
+
+            <div className="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto pr-1 select-none scrollbar-thin">
+              {getAllowedTabs().map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2.5 text-xs font-semibold p-3 rounded-xl text-left transition-all duration-200 ${
+                  className={`flex items-center gap-2.5 text-xs font-semibold p-3 rounded-xl text-left transition-all duration-200 cursor-pointer ${
                     activeTab === tab.id
                       ? 'bg-[#C9A96E] text-gray-900 shadow-md font-bold'
                       : 'hover:bg-gray-800/80 hover:text-white'
@@ -1223,6 +1507,9 @@ export default function Admin() {
                   <span>{tab.label}</span>
                 </button>
               ))}
+              {getAllowedTabs().length === 0 && (
+                <div className="text-center text-[10px] text-gray-500 italic py-4">No matching tabs</div>
+              )}
             </div>
 
             <div className="pt-4 border-t border-gray-800">
@@ -1785,20 +2072,37 @@ export default function Admin() {
                     </h3>
                     <p className="text-[10px] text-gray-400 mt-0.5">Manage style designs, sizes, stock levels, and category listings</p>
                   </div>
-                  <button
-                    onClick={() => {
-                      setEditingProduct(null)
-                      setProductFormName('')
-                      setProductFormSKU('')
-                      setProductFormPrice(0)
-                      setProductFormMrp(0)
-                      setProductFormStock(5)
-                      showToast('info', 'Create Product', 'Form reset. Add new style below.')
-                    }}
-                    className="px-3.5 py-2 bg-gray-900 hover:bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm"
-                  >
-                    Add Product
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBulkInput('')
+                        setParsedProducts([])
+                        setParseErrors([])
+                        setShowBulkModal(true)
+                      }}
+                      className="px-3.5 py-2 border border-gray-300 hover:border-gray-900 bg-white text-gray-700 hover:text-black rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm"
+                    >
+                      Bulk Upload
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingProduct(null)
+                        setProductFormName('')
+                        setProductFormSKU('')
+                        setProductFormPrice(0)
+                        setProductFormMrp(0)
+                        setProductFormStock(5)
+                        setProductFormImages([])
+                        setProductFormSizes(['36', '37', '38', '39', '40', '41'])
+                        showToast('info', 'Create Product', 'Form reset. Add new style below.')
+                      }}
+                      className="px-3.5 py-2 bg-gray-900 hover:bg-black text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm"
+                    >
+                      Add Product
+                    </button>
+                  </div>
                 </div>
 
                 {/* Slide Form Panel */}
@@ -1853,6 +2157,111 @@ export default function Admin() {
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
                     />
                   </div>
+                  {/* Size Selector */}
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Size Configuration</label>
+                    <div className="flex flex-wrap gap-2">
+                      {['36', '37', '38', '39', '40', '41', '42'].map(sz => {
+                        const checked = productFormSizes.includes(sz)
+                        return (
+                          <button
+                            type="button"
+                            key={sz}
+                            onClick={() => {
+                              if (checked) {
+                                setProductFormSizes(prev => prev.filter(s => s !== sz))
+                              } else {
+                                setProductFormSizes(prev => [...prev, sz].sort())
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                              checked 
+                                ? 'bg-gray-900 text-white border-gray-900' 
+                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400'
+                            }`}
+                          >
+                            Size {sz}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* R2 Image Uploader */}
+                  <div className="md:col-span-2 border border-dashed border-gray-250 rounded-2xl p-4 bg-white space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wider">Product Gallery Images</label>
+                        <p className="text-[9px] text-gray-400">First image serves as primary display card on storefront grid</p>
+                      </div>
+                      <div>
+                        <input
+                          type="file"
+                          id="product-image-upload-input"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          disabled={uploadingImage}
+                          onClick={() => document.getElementById('product-image-upload-input')?.click()}
+                          className="px-3.5 py-1.5 border border-gray-200 hover:border-gray-900 rounded-lg text-[9px] font-bold uppercase tracking-wider bg-[#fcfbf9] hover:bg-gray-50 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {uploadingImage ? 'Uploading to R2...' : 'Upload Photos'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Previews Grid */}
+                    {productFormImages.length > 0 ? (
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                        {productFormImages.map((img, idx) => (
+                          <div key={idx} className="relative group rounded-xl border border-gray-100 overflow-hidden aspect-square shadow-sm bg-gray-50">
+                            <img src={img} alt="Preview" className="w-full h-full object-cover" />
+                            {idx === 0 && (
+                              <span className="absolute top-1 left-1 bg-[#C9A96E] text-gray-900 font-extrabold text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded shadow">
+                                Primary
+                              </span>
+                            )}
+                            {/* Actions overlay */}
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                              {idx > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setProductFormImages(prev => {
+                                      const next = [...prev]
+                                      const item = next.splice(idx, 1)[0]
+                                      return [item, ...next]
+                                    })
+                                  }}
+                                  className="p-1 bg-white hover:bg-gray-100 text-gray-800 rounded text-[8px] font-bold uppercase transition-colors"
+                                >
+                                  Star
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setProductFormImages(prev => prev.filter((_, i) => i !== idx))
+                                }}
+                                className="p-1 bg-red-650 hover:bg-red-700 text-white rounded text-[8px] font-bold uppercase transition-colors"
+                              >
+                                Del
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-[10px] text-gray-400 italic py-3 select-none">
+                        No product images uploaded yet. Upload images to serve from Cloudflare CDN.
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Style Category</label>
                     <select
@@ -1925,6 +2334,8 @@ export default function Admin() {
                                   setProductFormMrp(p.original_price ? p.original_price / 100 : p.price / 100)
                                   setProductFormStock(p.stock)
                                   setProductFormCategory(p.category)
+                                  setProductFormImages(p.images || [])
+                                  setProductFormSizes(p.sizes || ['36', '37', '38', '39', '40', '41'])
                                 }}
                                 className="p-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 inline-block transition-colors"
                                 title="Edit design properties"
@@ -2669,6 +3080,7 @@ export default function Admin() {
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white font-semibold"
                     >
                       <option value="staff">Staff Assistant</option>
+                      <option value="manager">Manager (Inventory/Orders)</option>
                       <option value="admin">Administrator (2FA Access)</option>
                     </select>
                   </div>
@@ -2890,6 +3302,175 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* CSV/JSON Bulk Upload Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center select-none bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-gray-100 animate-fadeIn">
+            {/* Modal Header */}
+            <div className="border-b border-gray-100 px-6 py-5 flex justify-between items-center bg-gray-50/50">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-gray-900 rounded-xl text-white">
+                  <UploadCloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-gray-900 uppercase tracking-widest font-mono">Bulk Products Catalog Upload</h4>
+                  <p className="text-[10px] text-gray-400 font-semibold mt-0.5">Parse and upload multiple styles using raw CSV columns or standard JSON listings</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowBulkModal(false)
+                  setBulkInput('')
+                  setParsedProducts([])
+                }}
+                className="text-gray-400 hover:text-black p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col md:flex-row gap-6">
+              
+              {/* Input section */}
+              <div className="flex-1 space-y-4 flex flex-col min-w-0">
+                <div className="border border-gray-150 rounded-xl p-4 bg-gray-50/50">
+                  <h5 className="text-[10px] font-extrabold text-gray-900 uppercase tracking-widest mb-2">Instructions</h5>
+                  <p className="text-[10px] text-gray-500 leading-relaxed">
+                    Paste raw text in CSV or JSON format.
+                  </p>
+                  <div className="mt-2.5 bg-gray-900 rounded-xl p-3 text-[10px] text-gray-300 font-mono overflow-x-auto">
+                    <div><strong>CSV Headers (First Line):</strong></div>
+                    <div className="text-white mt-1">name,sku,price,mrp,stock,category,sizes,images</div>
+                    <div className="mt-2"><strong>JSON Format:</strong></div>
+                    <div className="text-white mt-1">{"[ { \"name\": \"Val\", \"sku\": \"SK\", \"price\": 1200 } ]"}</div>
+                  </div>
+                </div>
+
+                <div className="flex-1 flex flex-col min-h-[250px]">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Paste CSV / JSON Payload</label>
+                  <textarea
+                    value={bulkInput}
+                    onChange={(e) => setBulkInput(e.target.value)}
+                    className="w-full flex-1 min-h-[200px] border border-gray-200 rounded-xl p-4 text-xs font-mono bg-white focus:outline-none focus:ring-1 focus:ring-gray-900/10 focus:border-gray-900"
+                    placeholder={`name,sku,price,mrp,stock,category,sizes,images\nMidnight Heel,MN-89,1499,1999,25,heels,"36,37,38","img1.jpg"\nBridal Sandal,BS-99,1899,2499,15,heels,"37,38,39","img2.jpg"`}
+                  />
+                </div>
+              </div>
+
+              {/* Parsing Live Stats & Preview */}
+              <div className="w-full md:w-[45%] flex flex-col space-y-4 border-t md:border-t-0 md:border-l border-gray-100 pt-6 md:pt-0 md:pl-6 min-w-0">
+                <h5 className="text-[10px] font-extrabold text-gray-900 uppercase tracking-widest">Live Parse & Validation Analytics</h5>
+
+                {/* Counter Badges */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="border border-gray-150 rounded-xl p-3 bg-gray-50 text-center">
+                    <span className="text-[9px] font-bold text-gray-400 uppercase">Parsed</span>
+                    <span className="text-lg font-bold text-gray-900 block mt-0.5">{parsedProducts.length}</span>
+                  </div>
+                  <div className="border border-emerald-100 rounded-xl p-3 bg-emerald-50/30 text-center">
+                    <span className="text-[9px] font-bold text-emerald-600 uppercase">Valid</span>
+                    <span className="text-lg font-bold text-emerald-700 block mt-0.5">
+                      {parsedProducts.filter(p => p.isValid).length}
+                    </span>
+                  </div>
+                  <div className="border border-rose-100 rounded-xl p-3 bg-rose-50/30 text-center">
+                    <span className="text-[9px] font-bold text-rose-500 uppercase">Errors</span>
+                    <span className="text-lg font-bold text-rose-600 block mt-0.5">
+                      {parsedProducts.filter(p => !p.isValid).length}
+                    </span>
+                  </div>
+                </div>
+
+                {parseErrors.length > 0 && (
+                  <div className="bg-rose-50 border border-rose-100 rounded-xl p-3.5 text-[11px] text-rose-600 flex gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold">Parsing Error:</span>
+                      <ul className="list-disc pl-4 mt-1 space-y-0.5">
+                        {parseErrors.map((err, i) => <li key={i}>{err}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* Table Preview Grid */}
+                <div className="flex-1 border border-gray-150 rounded-xl overflow-hidden bg-gray-50/50 flex flex-col min-h-[220px]">
+                  <div className="bg-gray-100 border-b border-gray-150 px-3 py-2 text-[9px] font-bold text-gray-500 uppercase tracking-wider flex justify-between shrink-0">
+                    <span>Parsed Items Registry</span>
+                    <span>Status</span>
+                  </div>
+                  <div className="flex-1 overflow-y-auto divide-y divide-gray-100 text-xs">
+                    {parsedProducts.length === 0 ? (
+                      <div className="h-full flex items-center justify-center text-gray-400 italic text-[11px] py-16">
+                        No parsed items to display. Paste payload in the left box.
+                      </div>
+                    ) : (
+                      parsedProducts.map((p, idx) => (
+                        <div key={idx} className="p-3 bg-white flex justify-between gap-3 min-w-0">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className="font-bold text-gray-900 truncate">{p.name || <span className="italic text-gray-400">Unnamed</span>}</span>
+                              <span className="text-[9px] font-mono bg-gray-100 text-gray-500 px-1 py-0.5 rounded shrink-0">{p.sku || 'N/A'}</span>
+                            </div>
+                            <div className="text-[10px] text-gray-400 mt-0.5">
+                              Price: ₹{p.price} &middot; Stock: {p.stock} &middot; Cat: {p.category}
+                            </div>
+                            {p.errors.length > 0 && (
+                              <div className="text-[9px] text-rose-600 font-medium mt-1">
+                                {p.errors.join(', ')}
+                              </div>
+                            )}
+                          </div>
+                          <div className="shrink-0 flex items-center">
+                            {p.isValid ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                            ) : (
+                              <AlertTriangle className="w-4 h-4 text-rose-500" />
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Modal Actions Footer */}
+            <div className="border-t border-gray-100 px-6 py-4 bg-gray-50/50 flex justify-between items-center">
+              <span className="text-[10px] text-gray-400 font-bold uppercase">
+                {parsedProducts.filter(p => p.isValid).length} of {parsedProducts.length} items ready to commit
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowBulkModal(false)
+                    setBulkInput('')
+                    setParsedProducts([])
+                  }}
+                  className="px-4 py-2 bg-white border border-gray-200 text-gray-700 hover:text-black hover:border-gray-900 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all select-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBulkUploadSubmit}
+                  disabled={bulkUploading || parsedProducts.filter(p => p.isValid).length === 0}
+                  className="px-4 py-2 bg-gray-900 hover:bg-black text-white disabled:bg-gray-200 disabled:text-gray-400 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm select-none"
+                >
+                  {bulkUploading ? 'Uploading Batch...' : `Upload Valid Products`}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* Detailed Order Viewer Drawer/Modal Overlay */}
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-end select-none">
@@ -3014,14 +3595,24 @@ export default function Admin() {
                     {selectedOrderDetail.source !== 'pos' && (
                       <div className="border border-gray-150 rounded-xl p-4 bg-gray-50/50 space-y-3">
                         <h5 className="text-[10px] font-extrabold text-gray-900 uppercase tracking-widest">Shipping & Courier Tracking</h5>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-[9px] font-bold text-gray-400 uppercase mb-1">Courier Carrier</label>
+                            <input
+                              type="text"
+                              value={orderCourierName}
+                              onChange={(e) => setOrderCourierName(e.target.value)}
+                              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px] bg-white focus:outline-none focus:border-gray-400"
+                              placeholder="e.g. Delhivery, BlueDart"
+                            />
+                          </div>
                           <div>
                             <label className="block text-[9px] font-bold text-gray-400 uppercase mb-1">Tracking Number</label>
                             <input
                               type="text"
                               value={orderTrackingNum}
                               onChange={(e) => setOrderTrackingNum(e.target.value)}
-                              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px] bg-white"
+                              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px] bg-white focus:outline-none focus:border-gray-400"
                               placeholder="e.g. AW-9012389"
                             />
                           </div>
@@ -3031,10 +3622,22 @@ export default function Admin() {
                               type="text"
                               value={orderTrackingUrl}
                               onChange={(e) => setOrderTrackingUrl(e.target.value)}
-                              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px] bg-white"
+                              className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px] bg-white focus:outline-none focus:border-gray-400"
                               placeholder="https://delhivery.com/..."
                             />
                           </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200/50">
+                          <input
+                            type="checkbox"
+                            id="sendSmsCheckbox"
+                            checked={sendSmsNotification}
+                            onChange={(e) => setSendSmsNotification(e.target.checked)}
+                            className="rounded text-primary focus:ring-primary h-3.5 w-3.5 border-gray-300"
+                          />
+                          <label htmlFor="sendSmsCheckbox" className="text-[9px] font-bold text-gray-600 uppercase select-none cursor-pointer">
+                            Trigger automated SMS dispatch notification to customer
+                          </label>
                         </div>
                       </div>
                     )}

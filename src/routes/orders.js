@@ -62,6 +62,7 @@ function formatOrder(o, items = null) {
         coupon_code: o.coupon_code || null,
         tracking_number: o.tracking_number || null,
         tracking_url: o.tracking_url || null,
+        courier_name: o.courier_name || null,
         exchange_reason: o.exchange_reason || null,
         exchange_product: o.exchange_product || null,
         paid_at: o.paid_at || null,
@@ -611,11 +612,12 @@ export async function ordersRouter(request, env) {
         const id = parseInt(path.match(/(\d+)/)?.[1]);
         try {
             const body = await request.json();
-            const { status, tracking_number, tracking_url } = body;
+            const { status, tracking_number, tracking_url, courier_name, send_sms } = body;
             if (!status) return error('Status is required', 400);
 
             // Get current status before updating
-            const currentOrder = await env.DB.prepare('SELECT order_status FROM orders WHERE id = ?').bind(id).first();
+            const currentOrder = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
+            if (!currentOrder) return error('Order not found', 404);
 
             const sets = ['order_status = ?', "updated_at = datetime('now')"];
             const binds = [status];
@@ -633,6 +635,10 @@ export async function ordersRouter(request, env) {
                 sets.push('tracking_url = ?');
                 binds.push(tracking_url);
             }
+            if (courier_name !== undefined) {
+                sets.push('courier_name = ?');
+                binds.push(courier_name);
+            }
 
             binds.push(id);
 
@@ -644,6 +650,31 @@ export async function ordersRouter(request, env) {
             }
 
             const updated = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
+
+            // SMS Dispatch triggers
+            if (send_sms && updated && updated.customer_phone) {
+                let smsText = '';
+                const cName = courier_name || updated.courier_name || 'our shipping provider';
+                const tNum = tracking_number || updated.tracking_number || '';
+                const tUrl = tracking_url || updated.tracking_url || 'https://heelsup.in/track';
+
+                if (status === 'shipped') {
+                    smsText = `Dear ${updated.customer_name}, your HeelsUp order #${updated.order_number} has been shipped via ${cName}. Tracking Number: ${tNum}. Track here: ${tUrl}. Thank you for shopping with us!`;
+                } else if (status === 'delivered') {
+                    smsText = `Dear ${updated.customer_name}, your HeelsUp order #${updated.order_number} has been successfully delivered. We hope you love your new footwear! Rate your style here: https://heelsup.in/reviews.`;
+                } else if (status === 'cancelled') {
+                    smsText = `Dear ${updated.customer_name}, your HeelsUp order #${updated.order_number} has been cancelled. If any payment was made, your refund will be processed in 3-5 business days.`;
+                } else if (status === 'confirmed') {
+                    smsText = `Dear ${updated.customer_name}, your HeelsUp order #${updated.order_number} has been confirmed. We are packing your premium styles for dispatch!`;
+                }
+
+                if (smsText) {
+                    sendInfobipSms(env, updated.customer_phone, smsText).catch(err => {
+                        console.error('Failed to send status update SMS:', err);
+                    });
+                }
+            }
+
             return ok(formatOrder(updated), 'Order status updated');
         } catch (e) {
             console.error('Update status error:', e);
