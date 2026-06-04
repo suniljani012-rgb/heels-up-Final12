@@ -31,7 +31,7 @@
   Cache-Control: public, max-age=31536000, immutable
 
 # Fonts cached for 1 year
-*.woff2
+/*.woff2
   Cache-Control: public, max-age=31536000, immutable
 
 # HTML pages — short cache (always revalidate)
