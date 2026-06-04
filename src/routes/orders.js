@@ -2,6 +2,7 @@
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { ok, list, created, error, notFound, serverError } from '../utils/response.js';
 import { razorpay } from '../utils/razorpay.js';
+import { sendInfobipSms } from '../utils/sms.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -239,6 +240,12 @@ export async function createOrderRecord(env, input) {
         if (item.productId) {
             await deductSizeStock(env, item.productId, item.size, item.qty);
         }
+    }
+
+    if (customerPhone && (input.paymentStatus === 'paid' || input.orderStatus === 'confirmed')) {
+        sendInfobipSms(env, customerPhone, `Dear ${customerName}, your HeelsUp order #${orderNumber} has been placed successfully! Total amount: INR ${totalAmount}. Thank you for shopping with us!`).catch(err => {
+            console.error('Failed to send order SMS:', err);
+        });
     }
 
     return { ok: true, order: { id: orderId, order_number: orderNumber, total_amount: totalAmount, subtotal_amount: subtotalAmount, shipping_amount: shippingAmount, discount_amount: discountAmount } };

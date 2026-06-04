@@ -3,6 +3,7 @@ import { signJWT, verifyJWT } from '../utils/jwt.js';
 import { hashPassword, verifyPassword } from '../utils/password.js';
 import { requireAuth } from '../middleware/auth.js';
 import { ok, created, error, unauthorized, serverError } from '../utils/response.js';
+import { sendInfobipSms } from '../utils/sms.js';
 
 // ── UTILITY HELPERS ──────────────────────────────────────────────────────────
 async function getSetting(env, key, fallback = '') {
@@ -266,6 +267,12 @@ export async function authRouter(request, env) {
             const userId = result.meta?.last_row_id;
             const user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
             const mapped = mapUser(user);
+
+            if (phone) {
+                sendInfobipSms(env, phone, `Welcome to HeelsUp, ${firstName}! Your account has been registered successfully. Explore our premium footwear collections at https://heelsup.in.`).catch(err => {
+                    console.error('Failed to send welcome SMS:', err);
+                });
+            }
 
             const token = await signJWT({ id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name }, env.JWT_SECRET);
             return created({ token, user: mapped }, 'Registration successful');

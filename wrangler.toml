@@ -13,6 +13,8 @@ JWT_EXPIRES_DAYS = "30"
 OTP_EXPIRY_MINUTES = "10"
 REQUIRE_EMAIL_OTP = "true"
 R2_PUBLIC_URL = "https://media.heelsup.in"
+INFOBIP_API_BASE_URL = "eegg4r.api.infobip.com"
+INFOBIP_SENDER = "HEELUP"
 
 [[d1_databases]]
 binding = "DB"

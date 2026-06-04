@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { Star, Heart, ShoppingBag, Truck, RefreshCw, Ruler, MessageSquare } from 'lucide-react'
 import { useCartStore } from '../store/useCartStore'
 import { useWishlistStore } from '../store/useWishlistStore'
@@ -536,9 +536,9 @@ export default function Product() {
           <h3 className="text-lg font-semibold text-gray-900 font-display italic mb-10 text-center">You May Also Like</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {related.map((prod) => (
-              <a
+              <Link
                 key={prod.id}
-                href={`/product?id=${prod.id}`}
+                to={`/product?id=${prod.id}`}
                 className="group flex flex-col gap-3"
               >
                 <div className="relative rounded-xl overflow-hidden bg-gray-50 aspect-square shadow-sm">
@@ -554,7 +554,7 @@ export default function Product() {
                     ₹{(prod.price / 100).toLocaleString('en-IN')}
                   </span>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </section>
