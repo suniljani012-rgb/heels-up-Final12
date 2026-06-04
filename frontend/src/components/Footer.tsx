@@ -6,6 +6,7 @@ import { useToastStore } from '../store/useToastStore'
 export default function Footer() {
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [logoFailed, setLogoFailed] = useState(false)
   const { showToast } = useToastStore()
 
   const handleSubscribe = async (e: React.FormEvent) => {
@@ -42,7 +43,18 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-gray-900 pb-12">
         {/* Brand & Newsletter */}
         <div className="flex flex-col gap-6">
-          <img src="/logo.png" alt="HeelsUp Logo" className="h-10 w-fit object-contain brightness-0 invert" />
+          {logoFailed ? (
+            <span className="text-lg font-light tracking-widest text-white font-display italic select-none">
+              Heels<span className="font-semibold text-primary">Up</span>
+            </span>
+          ) : (
+            <img
+              src="/logo.png"
+              alt="HeelsUp Logo"
+              className="h-10 w-fit object-contain invert mix-blend-screen"
+              onError={() => setLogoFailed(true)}
+            />
+          )}
           <p className="leading-relaxed text-gray-500">
             India's premier online store for luxury ladies heels, flats, sandals, wedges & bags. 20,000+ happy customers.
           </p>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, ShoppingCart, Package, ListChecks,
-  ShieldAlert, LogOut, Plus, Edit3
+  ShieldAlert, LogOut, Plus, Edit3, Settings
 } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
@@ -40,13 +40,27 @@ export default function Admin() {
   const [password, setPassword] = useState('')
   const [loggingIn, setLoggingIn] = useState(false)
 
-  // Current tab view: 'dashboard' | 'pos' | 'products' | 'orders' | 'inventory'
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'pos' | 'products' | 'orders' | 'inventory'>('dashboard')
+  // Current tab view: 'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings'
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'pos' | 'products' | 'orders' | 'inventory' | 'settings'>('dashboard')
 
   // Shared data states
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [, setLoadingData] = useState(false)
+
+  // Settings Tab states
+  const [storeSettings, setStoreSettings] = useState<any>({
+    store_name: '',
+    store_email: '',
+    support_phone: '',
+    store_address: '',
+    razorpay_key_id: '',
+    razorpay_key_secret: '',
+    google_client_id: '',
+    social_instagram: '',
+  })
+  const [savingSettings, setSavingSettings] = useState(false)
+  const [testingRzp, setTestingRzp] = useState(false)
 
   // POS billing ticket states
   const [posCart, setPosCart] = useState<any[]>([])
@@ -92,10 +106,77 @@ export default function Admin() {
           setOrders(ordData.data)
         }
       }
+      if (activeTab === 'settings') {
+        const res = await fetch('/api/settings', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.success) {
+          setStoreSettings(data.data || {})
+        }
+      }
     } catch {
       showToast('error', 'Error Loading Data', 'Failed to synchronize administrative logs.')
     } finally {
       setLoadingData(false)
+    }
+  }
+
+  // Test Razorpay connection
+  const handleTestRazorpay = async () => {
+    if (!storeSettings.razorpay_key_id || !storeSettings.razorpay_key_secret) {
+      showToast('error', 'Keys Required', 'Please enter both Key ID and Secret to test.')
+      return
+    }
+    setTestingRzp(true)
+    try {
+      const res = await fetch('/api/settings/test/razorpay', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          razorpay_key_id: storeSettings.razorpay_key_id,
+          razorpay_key_secret: storeSettings.razorpay_key_secret
+        })
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Razorpay Connected! ✅', 'Live API connection validated successfully.')
+      } else {
+        showToast('error', 'Connection Failed', data.error || 'Invalid credentials or keys.')
+      }
+    } catch {
+      showToast('error', 'Network Error', 'Failed to connect to the Razorpay test endpoint.')
+    } finally {
+      setTestingRzp(false)
+    }
+  }
+
+  // Update Settings in DB
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSavingSettings(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(storeSettings)
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Settings Saved! 💾', 'Store settings updated in D1 database.')
+      } else {
+        showToast('error', 'Save Failed', data.error || 'Failed to update settings.')
+      }
+    } catch {
+      showToast('error', 'Network Error', 'Failed to save settings changes.')
+    } finally {
+      setSavingSettings(false)
     }
   }
 
@@ -342,7 +423,8 @@ export default function Admin() {
               { id: 'pos', label: 'POS Billing Terminal', icon: <ShoppingCart className="w-4 h-4" /> },
               { id: 'products', label: 'Products Manager', icon: <Package className="w-4 h-4" /> },
               { id: 'orders', label: 'Online Orders', icon: <ListChecks className="w-4 h-4" /> },
-              { id: 'inventory', label: 'Stock Manager', icon: <Plus className="w-4 h-4" /> }
+              { id: 'inventory', label: 'Stock Manager', icon: <Plus className="w-4 h-4" /> },
+              { id: 'settings', label: 'Store Settings', icon: <Settings className="w-4 h-4" /> }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -691,6 +773,140 @@ export default function Admin() {
                 )}
               </div>
             </div>
+          )}
+
+          {/* Active Tab: Store Settings */}
+          {activeTab === 'settings' && (
+            <form onSubmit={handleSaveSettings} className="space-y-6">
+              <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 className="text-base font-semibold text-gray-900 font-display italic">
+                  Store Settings & Gateway Integration
+                </h3>
+                <button
+                  type="submit"
+                  disabled={savingSettings}
+                  className="px-4 py-2 bg-gray-900 hover:bg-black text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors disabled:opacity-50 shadow-sm"
+                >
+                  {savingSettings ? 'Saving...' : 'Save Settings'}
+                </button>
+              </div>
+
+              {/* General Settings */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">General Configurations</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Store Name</label>
+                    <input
+                      type="text"
+                      value={storeSettings.store_name || ''}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, store_name: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none"
+                      placeholder="e.g. HeelsUp Store"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Support Phone</label>
+                    <input
+                      type="text"
+                      value={storeSettings.support_phone || ''}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, support_phone: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none"
+                      placeholder="e.g. +91 98290 12345"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Support Email</label>
+                    <input
+                      type="email"
+                      value={storeSettings.store_email || ''}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, store_email: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none"
+                      placeholder="e.g. support@heelsup.in"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Store Address</label>
+                    <input
+                      type="text"
+                      value={storeSettings.store_address || ''}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, store_address: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none"
+                      placeholder="Jodhpur, Rajasthan, India"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Gateway */}
+              <div className="space-y-4 border-t border-gray-100 pt-6">
+                <div>
+                  <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Razorpay Live Integration</h4>
+                  <p className="text-[10px] text-gray-500 mt-1">Configure your merchant live keys below to route order payments directly to your Razorpay account.</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Razorpay Key ID</label>
+                    <input
+                      type="text"
+                      value={storeSettings.razorpay_key_id || ''}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, razorpay_key_id: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none"
+                      placeholder="rzp_live_xxxxxxxxxxxxxx"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Razorpay Key Secret</label>
+                    <input
+                      type="password"
+                      value={storeSettings.razorpay_key_secret || ''}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, razorpay_key_secret: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none"
+                      placeholder="••••••••••••••••••••"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    disabled={testingRzp}
+                    onClick={handleTestRazorpay}
+                    className="px-4 py-2 border border-gray-200 text-gray-700 hover:text-black hover:border-black text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {testingRzp ? 'Testing Connection...' : 'Test Razorpay Connection'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Other configs */}
+              <div className="space-y-4 border-t border-gray-100 pt-6">
+                <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Socials & Identity</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Instagram Profile</label>
+                    <input
+                      type="text"
+                      value={storeSettings.social_instagram || ''}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, social_instagram: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none"
+                      placeholder="https://instagram.com/..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Google OAuth Client ID</label>
+                    <input
+                      type="text"
+                      value={storeSettings.google_client_id || ''}
+                      onChange={(e) => setStoreSettings({ ...storeSettings, google_client_id: e.target.value })}
+                      className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none"
+                      placeholder="For Google social login integration..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </form>
           )}
 
         </div>

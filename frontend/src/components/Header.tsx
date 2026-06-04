@@ -15,6 +15,7 @@ export default function Header() {
 
   const [scrolled, setScrolled] = useState(false)
   const [announcementIndex, setAnnouncementIndex] = useState(0)
+  const [logoFailed, setLogoFailed] = useState(false)
 
   const announcements = [
     "🎉 NEW ARRIVALS — Summer Collection is Live!",
@@ -70,17 +71,21 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0">
-            <img
-              src="/logo.png"
-              alt="HeelsUp Logo"
-              className={`object-contain transition-all duration-300 ${
-                scrolled ? 'h-8' : 'h-10'
-              }`}
-              onError={(e) => {
-                (e.target as HTMLElement).style.display = 'none'
-              }}
-            />
+          <Link to="/" className="flex-shrink-0 flex items-center">
+            {logoFailed ? (
+              <span className="text-xl font-light tracking-widest text-gray-900 font-display italic select-none">
+                Heels<span className="font-semibold text-primary">Up</span>
+              </span>
+            ) : (
+              <img
+                src="/logo.png"
+                alt="HeelsUp Logo"
+                className={`object-contain mix-blend-multiply transition-all duration-300 ${
+                  scrolled ? 'h-8' : 'h-10'
+                }`}
+                onError={() => setLogoFailed(true)}
+              />
+            )}
           </Link>
 
           {/* Desktop Nav links */}
@@ -185,8 +190,19 @@ export default function Header() {
           }`}
         >
           <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-            <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-              <img src="/logo.png" alt="HeelsUp Logo" className="h-8 object-contain" />
+            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center">
+              {logoFailed ? (
+                <span className="text-lg font-light tracking-widest text-gray-900 font-display italic select-none">
+                  Heels<span className="font-semibold text-primary">Up</span>
+                </span>
+              ) : (
+                <img
+                  src="/logo.png"
+                  alt="HeelsUp Logo"
+                  className="h-8 object-contain mix-blend-multiply"
+                  onError={() => setLogoFailed(true)}
+                />
+              )}
             </Link>
             <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-full text-gray-400 hover:bg-gray-100">
               <X className="w-5 h-5" />
