@@ -238,8 +238,14 @@ export async function authRouter(request, env) {
         try {
             const body = await request.json();
             if (!body) return error('Invalid JSON', 400);
-            const firstName = String(body.firstName || body.first_name || '').trim();
-            const lastName = String(body.lastName || body.last_name || '').trim();
+            let firstName = String(body.firstName || body.first_name || '').trim();
+            let lastName = String(body.lastName || body.last_name || '').trim();
+            const nameVal = String(body.name || body.fullName || body.fullname || '').trim();
+            if (!firstName && nameVal) {
+                const parts = nameVal.split(/\s+/);
+                firstName = parts[0] || '';
+                lastName = parts.slice(1).join(' ') || '';
+            }
             const email = normalizeEmail(body.email);
             const phone = String(body.phone || '').replace(/\D/g, '').slice(-10);
             const password = String(body.password || '');

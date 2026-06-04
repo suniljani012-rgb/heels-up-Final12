@@ -166,12 +166,6 @@ export default function Footer() {
             <a href="https://www.instagram.com/heel_s_up" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
               <i className="fa-brands fa-instagram text-base"></i>
             </a>
-            <a href="https://facebook.com/heelsup.in" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
-              <i className="fa-brands fa-facebook text-base"></i>
-            </a>
-            <a href="https://twitter.com/heelsup.in" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
-              <i className="fa-brands fa-x-twitter text-base"></i>
-            </a>
           </div>
 
           {/* Cards */}
