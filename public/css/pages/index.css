@@ -308,7 +308,7 @@
 
     /* Product Card */
     .product-card {
-      group: relative;
+      position: relative;
       cursor: pointer;
       transition: transform var(--transition-fast);
     }
