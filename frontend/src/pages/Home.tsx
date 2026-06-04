@@ -1,0 +1,460 @@
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ChevronLeft, ChevronRight, Star, Heart, ArrowRight } from 'lucide-react'
+import { useWishlistStore } from '../store/useWishlistStore'
+import { useCartStore } from '../store/useCartStore'
+import { useToastStore } from '../store/useToastStore'
+
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  original_price: number | null;
+  category: string;
+  images: string[];
+  rating: number;
+  is_new: boolean;
+  featured: boolean;
+}
+
+export default function Home() {
+  const { toggleItem, hasItem } = useWishlistStore()
+  const { addItem } = useCartStore()
+  const { showToast } = useToastStore()
+
+  const [banners, setBanners] = useState<any[]>([])
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [bannerIndex, setBannerIndex] = useState(0)
+  const [timeLeft, setTimeLeft] = useState({ hours: 8, minutes: 47, seconds: 23 })
+
+  // Static Fallback Banners if database is empty
+  const defaultBanners = [
+    {
+      image_url: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=1400&auto=format&fit=crop',
+      title: 'Step Into Confidence',
+      subtitle: 'Explore Jodhpur ki sabse stylish ladies footwear collection.',
+      link: '/shop?cat=heels'
+    },
+    {
+      image_url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=1400&auto=format&fit=crop',
+      title: 'Comfort Redefined',
+      subtitle: 'Premium flat sandals, mules, and everyday slip-ons.',
+      link: '/shop?cat=flats'
+    },
+    {
+      image_url: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=1400&auto=format&fit=crop',
+      title: 'The Luxe Bag Collection',
+      subtitle: 'Tote bags, evening clutches and sling bags.',
+      link: '/shop?cat=bags'
+    }
+  ]
+
+  // Fetch Banners & Products
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const bannersRes = await fetch('/api/banners')
+        const bannersData = await bannersRes.json()
+        if (bannersData.success && bannersData.data?.length > 0) {
+          setBanners(bannersData.data)
+        } else {
+          setBanners(defaultBanners)
+        }
+
+        const prodRes = await fetch('/api/products?limit=8&featured=true')
+        const prodData = await prodRes.json()
+        if (prodData.success) {
+          setFeaturedProducts(prodData.data)
+        }
+      } catch {
+        setBanners(defaultBanners)
+      }
+    }
+    fetchData()
+
+    // Slide Interval
+    const slideTimer = setInterval(() => {
+      setBannerIndex((prev) => (prev + 1) % defaultBanners.length)
+    }, 6000)
+
+    // Countdown Timer
+    const countdownTimer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev.seconds > 0) {
+          return { ...prev, seconds: prev.seconds - 1 }
+        } else if (prev.minutes > 0) {
+          return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
+        } else if (prev.hours > 0) {
+          return { hours: prev.hours - 1, minutes: 59, seconds: 59 }
+        } else {
+          return { hours: 8, minutes: 47, seconds: 23 } // Reset
+        }
+      })
+    }, 1000)
+
+    return () => {
+      clearInterval(slideTimer)
+      clearInterval(countdownTimer)
+    }
+  }, [])
+
+  const currentBanner = banners[bannerIndex] || defaultBanners[0]
+
+  const categoryCards = [
+    { cat: 'heels', label: 'Premium Heels', emoji: '👠', img: 'https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=600&auto=format&fit=crop' },
+    { cat: 'flats', label: 'Everyday Flats', emoji: '🥿', img: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop' },
+    { cat: 'sandals', label: 'Chic Sandals', emoji: '👡', img: 'https://images.unsplash.com/photo-1562273138-f46be4ebdf33?q=80&w=600&auto=format&fit=crop' },
+    { cat: 'bags', label: 'Luxe Bags', emoji: '👜', img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&auto=format&fit=crop' },
+  ]
+
+  const handleWishlistToggle = (e: any, prodId: number, name: string) => {
+    e.preventDefault()
+    const added = toggleItem(prodId)
+    if (added) {
+      showToast('success', 'Added to Wishlist ❤️', `${name} is saved to your wishlist.`)
+    } else {
+      showToast('info', 'Removed from Wishlist', `${name} is removed from your wishlist.`)
+    }
+  }
+
+  const handleQuickAdd = (e: any, prod: Product) => {
+    e.preventDefault()
+    addItem({
+      id: prod.id,
+      name: prod.name,
+      price: prod.price,
+      originalPrice: prod.original_price,
+      color: 'Default',
+      size: '38', // Standard default size
+      img: prod.images?.[0] || 'assets/placeholder.jpg',
+      category: prod.category
+    })
+    showToast('success', 'Added to Bag 🛍️', `${prod.name} (Size 38) added to your shopping bag.`)
+  }
+
+  return (
+    <div className="w-full">
+      {/* Hero Carousel */}
+      <section className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden bg-gray-100 select-none">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={bannerIndex}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 w-full h-full bg-cover bg-center flex items-center"
+            style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${currentBanner.image_url})` }}
+          >
+            <div className="max-w-7xl mx-auto px-6 md:px-8 w-full flex flex-col items-start gap-4 text-white">
+              <motion.span
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-xs uppercase tracking-widest text-[#ead2ae] font-bold"
+              >
+                EXCLUSIVELY AT HEELSUP
+              </motion.span>
+              <motion.h1
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-4xl md:text-6xl font-light tracking-wide leading-tight font-display italic"
+              >
+                {currentBanner.title}
+              </motion.h1>
+              <motion.p
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-sm md:text-base max-w-lg text-gray-200"
+              >
+                {currentBanner.subtitle}
+              </motion.p>
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-4"
+              >
+                <Link
+                  to={currentBanner.link || '/shop'}
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-white text-gray-900 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary hover:text-white transition-all shadow-md"
+                >
+                  Shop The Look
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </motion.div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Carousel controls */}
+        <button
+          onClick={() => setBannerIndex((prev) => (prev - 1 + banners.length) % banners.length)}
+          className="absolute left-6 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/35 text-white transition-all backdrop-blur-sm"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button
+          onClick={() => setBannerIndex((prev) => (prev + 1) % banners.length)}
+          className="absolute right-6 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/35 text-white transition-all backdrop-blur-sm"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </section>
+
+      {/* Categories Grid */}
+      <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24">
+        <div className="text-center max-w-xl mx-auto mb-16">
+          <span className="text-xs uppercase tracking-widest text-[#c9a96e] font-bold">Curated Styles</span>
+          <h2 className="text-3xl font-light text-gray-900 mt-2 font-display italic">Shop by Category</h2>
+          <div className="h-[1.5px] w-12 bg-primary mx-auto mt-4" />
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {categoryCards.map((card) => (
+            <Link
+              key={card.cat}
+              to={`/shop?cat=${card.cat}`}
+              className="group relative h-72 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div
+                className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700"
+                style={{ backgroundImage: `url(${card.img})` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute bottom-6 left-6 text-white flex flex-col gap-1">
+                <span className="text-2xl">{card.emoji}</span>
+                <h3 className="text-base font-semibold tracking-wide">{card.label}</h3>
+                <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider flex items-center gap-1 group-hover:text-primary transition-colors">
+                  Explore <ArrowRight className="w-3 h-3" />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Flash Sale Banner with Countdown */}
+      <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24">
+        <div className="bg-[#f7f5f0] border border-[#ead2ae] rounded-2xl p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          <div className="flex flex-col gap-4">
+            <span className="w-fit text-[10px] bg-[#d4456b] text-white font-bold tracking-widest uppercase px-3 py-1 rounded-full">
+              Limited Time Only
+            </span>
+            <h2 className="text-3xl font-light text-gray-900 font-display italic">Deal of the Day</h2>
+            <p className="text-sm text-gray-600 leading-relaxed max-w-md">
+              Grab Jodhpur's finest premium stilettos and flats at special markdown prices. Save up to 30% plus get Free Shipping!
+            </p>
+            {/* Timer */}
+            <div className="flex items-center gap-3 mt-2">
+              <div className="flex flex-col items-center p-3 bg-white border border-gray-100 rounded-xl w-16 shadow-sm">
+                <span className="text-lg font-bold text-gray-900">{String(timeLeft.hours).padStart(2, '0')}</span>
+                <span className="text-[8px] text-gray-400 font-bold uppercase mt-0.5">Hours</span>
+              </div>
+              <span className="text-gray-400 font-bold text-lg">:</span>
+              <div className="flex flex-col items-center p-3 bg-white border border-gray-100 rounded-xl w-16 shadow-sm">
+                <span className="text-lg font-bold text-gray-900">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                <span className="text-[8px] text-gray-400 font-bold uppercase mt-0.5">Min</span>
+              </div>
+              <span className="text-gray-400 font-bold text-lg">:</span>
+              <div className="flex flex-col items-center p-3 bg-white border border-gray-100 rounded-xl w-16 shadow-sm">
+                <span className="text-lg font-bold text-gray-900">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                <span className="text-[8px] text-gray-400 font-bold uppercase mt-0.5">Sec</span>
+              </div>
+            </div>
+          </div>
+          <div className="relative h-64 md:h-80 rounded-xl overflow-hidden shadow-md">
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url('https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=800&auto=format&fit=crop')` }}
+            />
+            <div className="absolute inset-0 bg-black/10" />
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24">
+        <div className="flex items-end justify-between border-b border-gray-100 pb-6 mb-12">
+          <div>
+            <span className="text-xs uppercase tracking-widest text-[#c9a96e] font-bold">Handcrafted Premium</span>
+            <h2 className="text-3xl font-light text-gray-900 mt-2 font-display italic">Trending Arrivals</h2>
+          </div>
+          <Link
+            to="/shop"
+            className="text-xs font-bold uppercase tracking-wider text-gray-700 hover:text-primary transition-colors flex items-center gap-1.5"
+          >
+            Shop All <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {featuredProducts.length === 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-pulse">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="space-y-4">
+                <div className="bg-gray-100 rounded-xl h-64 w-full" />
+                <div className="h-4 bg-gray-100 rounded w-2/3" />
+                <div className="h-4 bg-gray-100 rounded w-1/3" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {featuredProducts.map((prod) => {
+              const inWishlist = hasItem(prod.id)
+              const originalPrice = prod.original_price || prod.price * 1.3
+              const discount = Math.round(100 - (prod.price / originalPrice) * 100)
+
+              return (
+                <Link
+                  key={prod.id}
+                  to={`/product?id=${prod.id}`}
+                  className="group flex flex-col gap-3 relative"
+                >
+                  {/* Image container */}
+                  <div className="relative rounded-xl overflow-hidden bg-gray-50 aspect-square shadow-sm">
+                    <img
+                      src={prod.images?.[0] || 'assets/placeholder.jpg'}
+                      alt={prod.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    
+                    {/* Badges */}
+                    {prod.is_new && (
+                      <span className="absolute top-3 left-3 text-[8px] bg-primary text-white font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
+                        New
+                      </span>
+                    )}
+                    {discount > 0 && (
+                      <span className="absolute top-3 left-3 bg-[#d4456b] text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
+                        -{discount}%
+                      </span>
+                    )}
+
+                    {/* Actions overlay */}
+                    <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/40 via-transparent to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-between items-center">
+                      <button
+                        onClick={(e) => handleQuickAdd(e, prod)}
+                        className="px-3.5 py-1.5 bg-white text-gray-900 hover:bg-primary hover:text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm"
+                      >
+                        Quick Add
+                      </button>
+                      <button
+                        onClick={(e) => handleWishlistToggle(e, prod.id, prod.name)}
+                        className="p-2 rounded-lg bg-white/95 text-gray-600 hover:text-[#d4456b] hover:bg-white shadow-sm transition-colors"
+                      >
+                        <Heart className={`w-4 h-4 ${inWishlist ? 'fill-[#d4456b] text-[#d4456b]' : ''}`} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest capitalize">{prod.category}</span>
+                    <h3 className="text-xs font-semibold text-gray-800 line-clamp-1">{prod.name}</h3>
+                    
+                    {/* Stars */}
+                    <div className="flex items-center gap-1 text-amber-500">
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                      <span className="text-[10px] font-bold text-gray-600 mt-0.5">{prod.rating || 4.5}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-bold text-gray-900">
+                        ₹{(prod.price / 100).toLocaleString('en-IN')}
+                      </span>
+                      {originalPrice && originalPrice > prod.price && (
+                        <span className="text-[10px] text-gray-400 line-through">
+                          ₹{(originalPrice / 100).toLocaleString('en-IN')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* Brand Statistics Banner */}
+      <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10 border-y border-gray-100 text-center">
+          <div className="flex flex-col gap-1">
+            <span className="text-3xl font-light text-gray-900 font-display italic">21K+</span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Happy Customers</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-3xl font-light text-gray-900 font-display italic">799+</span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Free Shipping Limit</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-3xl font-light text-gray-900 font-display italic">7 Days</span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Easy Exchanges</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-3xl font-light text-gray-900 font-display italic">100%</span>
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Handcrafted Quality</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Customer Testimonials Carousel */}
+      <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24 select-none">
+        <div className="text-center max-w-xl mx-auto mb-16">
+          <span className="text-xs uppercase tracking-widest text-[#c9a96e] font-bold">Client Diaries</span>
+          <h2 className="text-3xl font-light text-gray-900 mt-2 font-display italic">What Our Customers Say</h2>
+          <div className="h-[1.5px] w-12 bg-primary mx-auto mt-4" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <p className="text-xs text-gray-600 leading-relaxed italic">
+              "HeelsUp has become my go-to store for weddings! The quality is amazing, and their wedges are super comfortable for dancing all night. Love it!"
+            </p>
+            <div className="flex items-center gap-3 mt-6">
+              <div className="h-8 w-8 rounded-full bg-[#ead2ae] text-gray-700 font-bold text-xs flex items-center justify-center">
+                AK
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-gray-900">Ananya Kapoor</h4>
+                <span className="text-[9px] text-gray-400 font-bold uppercase">Verified Buyer &middot; Jaipur</span>
+              </div>
+            </div>
+          </div>
+          <div className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <p className="text-xs text-gray-600 leading-relaxed italic">
+              "Ordered flat sandals and a tote bag. Delivery was fast, and the items were packed beautifully. Highly recommend!"
+            </p>
+            <div className="flex items-center gap-3 mt-6">
+              <div className="h-8 w-8 rounded-full bg-[#ead2ae] text-gray-700 font-bold text-xs flex items-center justify-center">
+                PS
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-gray-900">Pooja Singh</h4>
+                <span className="text-[9px] text-gray-400 font-bold uppercase">Verified Buyer &middot; Jodhpur</span>
+              </div>
+            </div>
+          </div>
+          <div className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+            <p className="text-xs text-gray-600 leading-relaxed italic">
+              "Size exchange process was extremely smooth. I contacted support, and they arranged a reverse pickup quickly. The fits are spot on!"
+            </p>
+            <div className="flex items-center gap-3 mt-6">
+              <div className="h-8 w-8 rounded-full bg-[#ead2ae] text-gray-700 font-bold text-xs flex items-center justify-center">
+                RV
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-gray-900">Rhea Vyas</h4>
+                <span className="text-[9px] text-gray-400 font-bold uppercase">Verified Buyer &middot; Mumbai</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}

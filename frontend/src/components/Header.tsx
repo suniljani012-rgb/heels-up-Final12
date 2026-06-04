@@ -1,0 +1,222 @@
+import { useState, useEffect } from 'react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { ShoppingBag, Heart, User, Search, Menu, X, ShieldAlert } from 'lucide-react'
+import { useCartStore } from '../store/useCartStore'
+import { useWishlistStore } from '../store/useWishlistStore'
+import { useAuthStore } from '../store/useAuthStore'
+import { useUIStore } from '../store/useUIStore'
+
+export default function Header() {
+  const { getCartCount } = useCartStore()
+  const { items: wishlistItems } = useWishlistStore()
+  const { user, isAuthenticated } = useAuthStore()
+  const { setCartOpen, mobileMenuOpen, setMobileMenuOpen } = useUIStore()
+  const navigate = useNavigate()
+
+  const [scrolled, setScrolled] = useState(false)
+  const [announcementIndex, setAnnouncementIndex] = useState(0)
+
+  const announcements = [
+    "🎉 NEW ARRIVALS — Summer Collection is Live!",
+    "🚚 FREE Shipping on orders above ₹799",
+    "🏷️ Use code HEELS10 for 10% off on first order"
+  ]
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 40)
+    }
+    window.addEventListener('scroll', handleScroll)
+    
+    // Cycle announcements
+    const interval = setInterval(() => {
+      setAnnouncementIndex((prev) => (prev + 1) % announcements.length)
+    }, 4500)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      clearInterval(interval)
+    }
+  }, [])
+
+  const cartCount = getCartCount()
+  const wishlistCount = wishlistItems.length
+
+  const navLinks = [
+    { to: '/', label: 'Home' },
+    { to: '/shop', label: 'Shop All' },
+    { to: '/shop?cat=heels', label: 'Heels' },
+    { to: '/shop?cat=sandals', label: 'Sandals' },
+    { to: '/shop?cat=flats', label: 'Flats' },
+    { to: '/shop?cat=bags', label: 'Bags' },
+  ]
+
+  return (
+    <header className="w-full z-40">
+      {/* Announcement Bar */}
+      <div className="w-full h-10 bg-[#e8ccc5] text-[#2d2a26] text-xs font-semibold flex items-center justify-center transition-all duration-300 relative overflow-hidden px-4 select-none">
+        <div key={announcementIndex} className="animate-fadeIn text-center">
+          {announcements[announcementIndex]}
+        </div>
+      </div>
+
+      {/* Main Navbar */}
+      <nav
+        className={`w-full transition-all duration-300 ${
+          scrolled
+            ? 'fixed top-0 bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100 py-4'
+            : 'bg-[#fcfbf9] border-b border-gray-100 py-6'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex-shrink-0">
+            <img
+              src="/logo.png"
+              alt="HeelsUp Logo"
+              className={`object-contain transition-all duration-300 ${
+                scrolled ? 'h-8' : 'h-10'
+              }`}
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none'
+              }}
+            />
+          </Link>
+
+          {/* Desktop Nav links */}
+          <ul className="hidden md:flex items-center gap-8 text-xs font-semibold tracking-wider uppercase text-gray-700">
+            {navLinks.map((link) => (
+              <li key={link.to}>
+                <NavLink
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `hover:text-[#c9a96e] transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1.5px] after:bg-[#c9a96e] after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform ${
+                      isActive ? 'text-[#c9a96e] after:scale-x-100' : ''
+                    }`
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              </li>
+            ))}
+            {isAuthenticated && (user?.role === 'admin' || user?.role === 'staff') && (
+              <li>
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-1 text-[#d4456b] hover:text-[#be2e54] transition-colors"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Admin Portal
+                </Link>
+              </li>
+            )}
+          </ul>
+
+          {/* Action Icons */}
+          <div className="flex items-center gap-4 text-gray-700">
+            {/* Search */}
+            <button
+              onClick={() => navigate('/shop')}
+              className="p-1.5 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              title="Search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
+            {/* Wishlist */}
+            <Link
+              to="/wishlist"
+              className="p-1.5 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-colors relative"
+              title="Wishlist"
+            >
+              <Heart className="w-5 h-5" />
+              {wishlistCount > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-[#d4456b] text-white text-[9px] font-bold flex items-center justify-center rounded-full">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Profile */}
+            <Link
+              to={isAuthenticated ? '/profile' : '/login'}
+              className="p-1.5 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              title={isAuthenticated ? 'My Profile' : 'Login'}
+            >
+              <User className="w-5 h-5" />
+            </Link>
+
+            {/* Cart */}
+            <button
+              onClick={() => setCartOpen(true)}
+              className="p-1.5 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-colors relative"
+              title="Shopping Cart"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 w-4 h-4 bg-[#c9a96e] text-white text-[9px] font-bold flex items-center justify-center rounded-full">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+
+            {/* Hamburger (Mobile only) */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-1.5 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              aria-label="Toggle Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Navigation Drawer */}
+      <div
+        className={`fixed inset-0 z-50 transition-opacity duration-300 md:hidden ${
+          mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+      >
+        <div onClick={() => setMobileMenuOpen(false)} className="absolute inset-0 bg-black/40" />
+        <aside
+          className={`absolute left-0 top-0 bottom-0 w-4/5 max-w-sm bg-white shadow-2xl flex flex-col p-6 transition-transform duration-300 ${
+            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+            <Link to="/" onClick={() => setMobileMenuOpen(false)}>
+              <img src="/logo.png" alt="HeelsUp Logo" className="h-8 object-contain" />
+            </Link>
+            <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-full text-gray-400 hover:bg-gray-100">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <nav className="mt-8 flex flex-col gap-6 text-sm font-semibold tracking-wider uppercase text-gray-800">
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setMobileMenuOpen(false)}
+                className="hover:text-[#c9a96e] transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+            {isAuthenticated && (user?.role === 'admin' || user?.role === 'staff') && (
+              <Link
+                to="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-[#d4456b] hover:text-[#be2e54] flex items-center gap-1.5"
+              >
+                <ShieldAlert className="w-4 h-4" />
+                Admin Portal
+              </Link>
+            )}
+          </nav>
+        </aside>
+      </div>
+    </header>
+  )
+}

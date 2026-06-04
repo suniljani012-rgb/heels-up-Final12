@@ -172,7 +172,14 @@ export default {
     }
 
     // 4. Static files via Cloudflare Assets
-    const assetRes = await env.ASSETS.fetch(request);
+    let assetRes = await env.ASSETS.fetch(request);
+
+    // Fallback clean SPA paths or legacy .html pages to index.html if not found
+    if (assetRes.status === 404 && (!url.pathname.includes('.') || url.pathname.endsWith('.html'))) {
+      const indexReq = new Request(new URL('/index.html', request.url).toString(), request);
+      assetRes = await env.ASSETS.fetch(indexReq);
+    }
+
     const headers = new Headers(assetRes.headers);
     headers.set('X-Content-Type-Options', 'nosniff');
     headers.set('X-Frame-Options', 'DENY');

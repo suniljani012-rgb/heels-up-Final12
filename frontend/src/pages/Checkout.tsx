@@ -1,0 +1,381 @@
+import React, { useState, useEffect } from 'react'
+import { useLocation, useNavigate, Link } from 'react-router-dom'
+import { ShieldCheck, ArrowLeft, Loader2 } from 'lucide-react'
+import { useCartStore } from '../store/useCartStore'
+import { useAuthStore } from '../store/useAuthStore'
+import { useToastStore } from '../store/useToastStore'
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+export default function Checkout() {
+  const { items, getCartSubtotal, clearCart } = useCartStore()
+  const { user, token } = useAuthStore()
+  const { showToast } = useToastStore()
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  // Coupon variables from cart routing context
+  const stateCouponCode = location.state?.couponCode || ''
+  const stateDiscount = location.state?.discount || 0 // Paise
+
+  // Form states
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [addressLine1, setAddressLine1] = useState('')
+  const [addressLine2, setAddressLine2] = useState('')
+  const [city, setCity] = useState('')
+  const [state, setState] = useState('')
+  const [pincode, setPincode] = useState('')
+  const [notes, setNotes] = useState('')
+  const [processing, setProcessing] = useState(false)
+
+  // Calculations
+  const subtotalPaise = getCartSubtotal()
+  const subtotalRupees = subtotalPaise / 100
+  const freeShippingThreshold = 799
+  const shippingCharge = subtotalRupees >= freeShippingThreshold ? 0 : 60 // ₹60 standard shipping
+  const discountRupees = stateDiscount / 100
+  const totalRupees = Math.max(0, subtotalRupees + shippingCharge - discountRupees)
+
+  // Pre-fill user details if logged in
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '')
+      setEmail(user.email || '')
+      setPhone(user.phone || '')
+    }
+  }, [user])
+
+  // Secure Checkout click
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (items.length === 0) return
+
+    // Quick address validations
+    if (!name || !email || !phone || !addressLine1 || !city || !state || !pincode) {
+      showToast('error', 'Details Required', 'Please fill in all shipping details.')
+      return
+    }
+
+    setProcessing(true)
+    try {
+      const orderBody = {
+        items: items.map(item => ({
+          productId: item.id,
+          name: item.name,
+          sku: item.id.toString(), // SKU matching id or code
+          qty: item.qty,
+          price: item.price / 100, // Rupees to API
+          size: item.size,
+          img: item.img
+        })),
+        customer: {
+          name,
+          email,
+          phone,
+          addressLine1,
+          addressLine2,
+          city,
+          state,
+          pincode,
+          country: 'India'
+        },
+        deliveryMethod: 'Standard',
+        notes,
+        couponCode: stateCouponCode,
+        discountAmount: discountRupees
+      }
+
+      // 1. Call D1 API to initiate order and get Razorpay details
+      const response = await fetch('/api/orders/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(orderBody)
+      })
+
+      const initiateData = await response.json()
+      if (!initiateData.success) {
+        showToast('error', 'Checkout Error', initiateData.error || 'Failed to initialize order.')
+        setProcessing(false)
+        return
+      }
+
+      // If order amount is 0 (fully discounted or free), D1 bypasses payment and places it immediately
+      if (initiateData.data.key === 'free_order') {
+        showToast('success', 'Order Placed!', 'Your order has been successfully placed.')
+        clearCart()
+        navigate(`/order-confirmation?number=${initiateData.data.order.orderNumber}`)
+        return
+      }
+
+      const { key, razorpayOrder, order } = initiateData.data
+
+      // 2. Open Razorpay payment dialog
+      const rzpOptions = {
+        key: key,
+        amount: razorpayOrder.amount,
+        currency: 'INR',
+        name: 'HeelsUp Store',
+        description: `Order #${order.orderNumber}`,
+        image: '/logo.png',
+        order_id: razorpayOrder.id,
+        prefill: {
+          name,
+          email,
+          contact: phone
+        },
+        theme: {
+          color: '#c9a96e'
+        },
+        handler: async function (response: any) {
+          try {
+            setProcessing(true)
+            // 3. Call API to verify payment
+            const verifyRes = await fetch('/api/payment/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              })
+            })
+
+            const verifyData = await verifyRes.json()
+            if (verifyData.success) {
+              showToast('success', 'Payment Confirmed! 🎉', 'Your order was successfully placed.')
+              clearCart()
+              navigate(`/order-confirmation?number=${verifyData.data.order_number}`)
+            } else {
+              showToast('error', 'Payment Verification Failed', verifyData.error || 'Transaction could not be verified.')
+            }
+          } catch {
+            showToast('error', 'Verification Error', 'Could not verify payment. Please contact support.')
+          } finally {
+            setProcessing(false)
+          }
+        },
+        modal: {
+          ondismiss: async function () {
+            // User closed Razorpay popup, cancel payment flow
+            setProcessing(false)
+            try {
+              await fetch('/api/payment/fail', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ razorpay_order_id: razorpayOrder.id })
+              })
+            } catch {}
+          }
+        }
+      }
+
+      const rzp = new window.Razorpay(rzpOptions)
+      rzp.open()
+
+    } catch (e) {
+      console.error('Checkout submit error:', e)
+      showToast('error', 'Checkout Error', 'An error occurred while processing checkout.')
+      setProcessing(false)
+    }
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-6 md:px-8 mt-12 min-h-screen select-none">
+      <Link to="/cart" className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900 mb-6 font-semibold">
+        <ArrowLeft className="w-3.5 h-3.5" /> Back to Cart
+      </Link>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        {/* Shipping Form */}
+        <form onSubmit={handleSubmit} className="lg:col-span-7 space-y-6">
+          <div className="border border-gray-100 rounded-xl p-6 bg-white shadow-sm space-y-5">
+            <h2 className="text-lg font-semibold text-gray-900 font-display italic border-b border-gray-100 pb-3">
+              Shipping Information
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary"
+                  placeholder="e.g. Priyal Sharma"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Contact Phone</label>
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary"
+                  placeholder="e.g. 9829012345"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Email Address</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary"
+                placeholder="e.g. priyal@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Street Address</label>
+              <input
+                type="text"
+                required
+                value={addressLine1}
+                onChange={(e) => setAddressLine1(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary"
+                placeholder="Flat / House / Apartment No. & Street name"
+              />
+              <input
+                type="text"
+                value={addressLine2}
+                onChange={(e) => setAddressLine2(e.target.value)}
+                className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary mt-2"
+                placeholder="Landmark, Area, Colony (Optional)"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">City</label>
+                <input
+                  type="text"
+                  required
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary"
+                  placeholder="e.g. Jodhpur"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">State</label>
+                <input
+                  type="text"
+                  required
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary"
+                  placeholder="e.g. Rajasthan"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Pincode</label>
+                <input
+                  type="text"
+                  required
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value)}
+                  className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary"
+                  placeholder="e.g. 342001"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">Order Notes (Optional)</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                className="w-full border border-gray-200 rounded-lg p-2.5 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary"
+                placeholder="Instructions for delivery..."
+              />
+            </div>
+          </div>
+        </form>
+
+        {/* Order Sidebar */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="border border-gray-100 rounded-xl p-6 bg-[#faf9f6] shadow-sm space-y-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-900 border-b border-gray-200/60 pb-3">
+              Order Review
+            </h2>
+
+            {/* List */}
+            <div className="divide-y divide-gray-200/60 max-h-60 overflow-y-auto pr-2 space-y-3">
+              {items.map((item) => (
+                <div key={`${item.id}-${item.color}-${item.size}`} className="flex items-center gap-3 pt-3 first:pt-0">
+                  <img
+                    src={item.img}
+                    alt={item.name}
+                    className="w-12 h-12 object-cover rounded-lg bg-white border border-gray-100"
+                  />
+                  <div className="flex-1">
+                    <h4 className="text-xs font-bold text-gray-900 line-clamp-1">{item.name}</h4>
+                    <p className="text-[9px] text-gray-500 capitalize">
+                      Qty: {item.qty} &middot; Size: {item.size}
+                    </p>
+                  </div>
+                  <span className="text-xs font-semibold text-gray-900">
+                    ₹{((item.price * item.qty) / 100).toLocaleString('en-IN')}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Price lines */}
+            <div className="border-t border-gray-200 pt-4 space-y-2 text-xs text-gray-600">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>₹{subtotalRupees.toLocaleString('en-IN')}</span>
+              </div>
+              {stateDiscount > 0 && (
+                <div className="flex justify-between text-emerald-700">
+                  <span>Coupon Discount</span>
+                  <span>-₹{discountRupees.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>Shipping Fees</span>
+                <span>{shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}</span>
+              </div>
+              <div className="border-t border-gray-200 pt-3 flex justify-between font-bold text-sm text-gray-900">
+                <span>Total Amount</span>
+                <span>₹{totalRupees.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={processing || items.length === 0}
+              className="w-full py-4 bg-primary hover:bg-[#b17e3f] text-white rounded-lg font-bold text-xs tracking-wider uppercase shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {processing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Processing Payment...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" /> Place Order & Pay Securely
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
