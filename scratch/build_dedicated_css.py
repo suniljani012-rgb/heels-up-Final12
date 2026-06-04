@@ -1,7 +1,7 @@
 import os
 import re
 
-PUBLIC_DIR = r"c:\Users\Cyrix HealthCare\Desktop\other\heels-up-new\heelsup\public"
+PUBLIC_DIR = r"c:\Users\Cyrix HealthCare\Desktop\other\heels-up-new\public"
 
 # Enforce folder existence
 os.makedirs(os.path.join(PUBLIC_DIR, "css", "pages"), exist_ok=True)

@@ -30,3 +30,6 @@ npm-debug.log*
 # Editor directories
 .vscode/
 .idea/
+
+# heelsup sub-folder specific
+dist/
