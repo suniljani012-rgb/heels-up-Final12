@@ -31,7 +31,7 @@ export default function Cart() {
 
     setCheckingCoupon(true)
     try {
-      const res = await fetch('/api/coupons/apply', {
+      const res = await fetch('/api/coupons/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -40,10 +40,10 @@ export default function Cart() {
         })
       })
       const data = await res.json()
-      if (data.success) {
+      if (data.success && data.data) {
         setAppliedCoupon(code)
-        setDiscountVal(data.discount || 0) // Paise
-        showToast('success', 'Coupon Applied! 🏷️', data.message || `You saved ₹${((data.discount || 0) / 100).toFixed(0)}`)
+        setDiscountVal(data.data.discount || 0) // Paise
+        showToast('success', 'Coupon Applied! 🏷️', data.data.message || `You saved ₹${((data.data.discount || 0) / 100).toFixed(0)}`)
       } else {
         showToast('error', 'Invalid Coupon', data.error || 'This coupon code could not be applied.')
       }
