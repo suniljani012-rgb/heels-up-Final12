@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import HeicImage from '../components/HeicImage'
 import {
-  LayoutDashboard, ShoppingCart, Package, ListChecks,
-  LogOut, Plus, Edit3, Settings, Tag, Star, Users, FileText, Image as ImageIcon,
+  ListChecks, LogOut, Plus, Edit3, Star, FileText,
   UploadCloud, AlertTriangle, CheckCircle2, X, ChevronRight, ChevronLeft, Search, Bell,
-  RotateCw, Printer, Download, Trash2, Lock, PlusCircle, Percent, Activity
+  RotateCw, Printer, Download, Trash2, Activity
 } from 'lucide-react'
 
 // --- TypeScript Interfaces ---
@@ -298,14 +297,23 @@ interface Toast {
 
 export default function App() {
   // Authentication State
-  const [user, setUser] = useState<{ name: string; role: string; email: string } | null>({
-    name: 'Abhishek Jodhpur',
-    role: 'admin',
-    email: 'admin@heelsup.in'
+  const [user, setUser] = useState<{ name: string; role: string; email: string } | null>(() => {
+    const savedUser = localStorage.getItem('heelsup_user');
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch {
+        return null;
+      }
+    }
+    return null;
   });
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
+  const [otpRequired, setOtpRequired] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [otpInput, setOtpInput] = useState('');
 
   // Global Toasts State
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -322,8 +330,8 @@ export default function App() {
   const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
   const [sidebarQuery, setSidebarQuery] = useState('');
 
-  // Active view routing ('dashboard' | 'pos' | 'products' | 'categories' | 'collections' | 'orders' | 'inventory' | 'coupons' | 'banners' | 'reviews' | 'pages' | 'staff' | 'customers' | 'settings' | 'reports')
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  // Active view routing
+  const [activeTab, setActiveTab] = useState<string>('db_editor');
 
   // Database State (In-Memory Unified Store)
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -519,6 +527,31 @@ export default function App() {
       fetchDbTableData(selectedDbTable);
     }
   }, [selectedDbTable, activeTab]);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('/api/admin/orders?limit=100', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        setOrders(resData.data);
+      } else {
+        showToast('error', 'Orders Error', resData.error || 'Failed to fetch orders');
+      }
+    } catch (err) {
+      console.error('Fetch orders error:', err);
+      showToast('error', 'Orders Network Error', 'Failed to connect to backend to fetch orders');
+    }
+  };
+
+  useEffect(() => {
+    if (user && activeTab === 'orders') {
+      fetchOrders();
+    }
+  }, [user, activeTab]);
 
   // Search/Filters per section
   const [productFilterQuery, setProductFilterQuery] = useState('');
@@ -766,27 +799,80 @@ export default function App() {
   };
 
   // --- Auth Handlers ---
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput || !passwordInput) {
-      showToast('error', 'Fields Required', 'Please enter your registered staff email and token credentials.');
+      showToast('error', 'Fields Required', 'Please enter your registered staff email and password credentials.');
       return;
     }
     setLoggingIn(true);
-    setTimeout(() => {
-      // Find matching staff member in database
-      const found = staffList.find(s => s.email.toLowerCase() === emailInput.toLowerCase());
-      if (found && found.active) {
-        setUser({ name: found.name, role: found.role, email: found.email });
-        showToast('success', 'Access Granted', `Welcome back ${found.name} (${found.role.toUpperCase()}). Session validated.`);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput, password: passwordInput })
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        if (data.data.step === 'otp_required') {
+          setOtpRequired(true);
+          setSessionToken(data.data.session_token);
+          showToast('info', '2FA OTP Required', 'A verification code has been generated. Please check console/logs.');
+        } else {
+          const { token, user: loggedUser } = data.data;
+          localStorage.setItem('heelsup_token', token);
+          localStorage.setItem('heelsup_user', JSON.stringify(loggedUser));
+          setUser(loggedUser);
+          showToast('success', 'Access Granted', `Welcome back ${loggedUser.name} (${loggedUser.role.toUpperCase()}). Session validated.`);
+        }
       } else {
-        showToast('error', 'Unauthorized Access', 'Access denied. The email or security token credentials did not match active records.');
+        showToast('error', 'Unauthorized Access', data.error || 'Access denied. The email or credentials did not match active records.');
       }
+    } catch (err) {
+      console.error('Login error:', err);
+      showToast('error', 'Authentication Error', 'Could not connect to the auth server.');
+    } finally {
       setLoggingIn(false);
-    }, 1000);
+    }
+  };
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpInput || otpInput.length !== 6) {
+      showToast('error', 'Invalid OTP', 'Please enter a valid 6-digit OTP code.');
+      return;
+    }
+    setLoggingIn(true);
+    try {
+      const res = await fetch('/api/auth/admin-verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: otpInput, session_token: sessionToken })
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const { token, user: loggedUser } = data.data;
+        localStorage.setItem('heelsup_token', token);
+        localStorage.setItem('heelsup_user', JSON.stringify(loggedUser));
+        setUser(loggedUser);
+        setOtpRequired(false);
+        setSessionToken(null);
+        setOtpInput('');
+        showToast('success', 'Access Granted', `Welcome back ${loggedUser.name} (${loggedUser.role.toUpperCase()}). Session validated.`);
+      } else {
+        showToast('error', 'Verification Failed', data.error || 'Invalid verification code.');
+      }
+    } catch (err) {
+      console.error('OTP verify error:', err);
+      showToast('error', 'Verification Error', 'Could not connect to the verification server.');
+    } finally {
+      setLoggingIn(false);
+    }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('heelsup_token');
+    localStorage.removeItem('heelsup_user');
     setUser(null);
     showToast('info', 'Session Terminated', 'You have securely signed out of the HeelsUp administrative control panel.');
   };
@@ -1114,22 +1200,8 @@ export default function App() {
 
   // Collapsible navigational link builder
   const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', section: 'Main', icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: 'pos', label: 'POS Terminal', section: 'Main', icon: <ShoppingCart className="w-4 h-4" /> },
-    { id: 'products', label: 'Styles Directory', section: 'Catalogue', icon: <Package className="w-4 h-4" /> },
-    { id: 'categories', label: 'Categories', section: 'Catalogue', icon: <Tag className="w-4 h-4" /> },
-    { id: 'collections', label: 'Collections', section: 'Catalogue', icon: <PlusCircle className="w-4 h-4" /> },
-    { id: 'orders', label: 'Online Orders', section: 'Sales', icon: <ListChecks className="w-4 h-4" /> },
-    { id: 'customers', label: 'Customers Log', section: 'Sales', icon: <Users className="w-4 h-4" /> },
-    { id: 'inventory', label: 'Inventory Center', section: 'Sales', icon: <Activity className="w-4 h-4" /> },
-    { id: 'coupons', label: 'Promos & Coupons', section: 'Sales', icon: <Percent className="w-4 h-4" /> },
-    { id: 'banners', label: 'Banners Slideshow', section: 'Content', icon: <ImageIcon className="w-4 h-4" /> },
-    { id: 'reviews', label: 'Reviews Moderation', section: 'Content', icon: <Star className="w-4 h-4" /> },
-    { id: 'pages', label: 'Static Policy Pages', section: 'Content', icon: <FileText className="w-4 h-4" /> },
-    { id: 'staff', label: 'Staff Accounts', section: 'System', icon: <Lock className="w-4 h-4" /> },
-    { id: 'settings', label: 'General Configuration', section: 'System', icon: <Settings className="w-4 h-4" /> },
-    { id: 'db_editor', label: 'Database Tables', section: 'System', icon: <Activity className="w-4 h-4" /> },
-    { id: 'reports', label: 'Enterprise Reports', section: 'Main', icon: <FileText className="w-4 h-4" /> }
+    { id: 'db_editor', label: 'Database Tables', section: 'Data Editor', icon: <Activity className="w-4 h-4" /> },
+    { id: 'orders', label: 'Order Fulfillment', section: 'Fulfillment', icon: <ListChecks className="w-4 h-4" /> }
   ];
 
   const allowedNavs = useMemo(() => {
@@ -1205,54 +1277,100 @@ export default function App() {
           ))}
         </div>
 
-        <div className="max-w-md w-full bg-white border border-gray-150 rounded-3xl p-8 shadow-xl space-y-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-serif italic text-gray-900 tracking-wide">
-              Heels<span className="text-[#C9A96E]">Up</span>
-            </h1>
-            <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">Staff Central Workspace</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Staff Email</label>
-              <input
-                type="email"
-                required
-                placeholder="staff@heelsup.in"
-                value={emailInput}
-                onChange={e => setEmailInput(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-medium"
-              />
+        {otpRequired ? (
+          <div className="max-w-md w-full bg-white border border-gray-150 rounded-3xl p-8 shadow-xl space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-serif italic text-gray-900 tracking-wide animate-pulse">
+                2FA Verification
+              </h1>
+              <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">Enter the 6-digit security code</p>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Access Token Security Key</label>
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={passwordInput}
-                onChange={e => setPasswordInput(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-medium"
-              />
+            <form onSubmit={handleOtpVerify} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">One-Time Password (OTP)</label>
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  placeholder="000000"
+                  value={otpInput}
+                  onChange={e => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-center text-lg tracking-widest font-mono bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-bold"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loggingIn}
+                className="w-full py-3.5 bg-gray-950 text-white rounded-xl text-xs uppercase tracking-widest font-bold hover:bg-black transition-colors disabled:opacity-50 shadow-md"
+              >
+                {loggingIn ? 'Verifying Security Code...' : 'Verify OTP & Log In'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setOtpRequired(false);
+                  setSessionToken(null);
+                  setOtpInput('');
+                }}
+                className="w-full text-center text-xs text-gray-500 hover:text-gray-950 font-bold uppercase tracking-wider mt-2"
+              >
+                Back to Login
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="max-w-md w-full bg-white border border-gray-150 rounded-3xl p-8 shadow-xl space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-serif italic text-gray-900 tracking-wide">
+                Heels<span className="text-[#C9A96E]">Up</span>
+              </h1>
+              <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">Staff Central Workspace</p>
             </div>
 
-            <button
-              type="submit"
-              disabled={loggingIn}
-              className="w-full py-3.5 bg-gray-950 text-white rounded-xl text-xs uppercase tracking-widest font-bold hover:bg-black transition-colors disabled:opacity-50 shadow-md"
-            >
-              {loggingIn ? 'Verifying Gateway Signature...' : 'Decrypt & Authenticate'}
-            </button>
-          </form>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Staff Email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="staff@heelsup.in"
+                  value={emailInput}
+                  onChange={e => setEmailInput(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-medium"
+                />
+              </div>
 
-          <div className="border-t border-gray-150 pt-4 text-center">
-            <p className="text-[10px] text-gray-400 leading-relaxed">
-              Protected by military-grade backend tokens & Jodhpur flagship boutique firewall policies. Direct access attempts are permanently logged.
-            </p>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Access Token Security Key</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={passwordInput}
+                  onChange={e => setPasswordInput(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-medium"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loggingIn}
+                className="w-full py-3.5 bg-gray-950 text-white rounded-xl text-xs uppercase tracking-widest font-bold hover:bg-black transition-colors disabled:opacity-50 shadow-md"
+              >
+                {loggingIn ? 'Decrypt & Authenticate...' : 'Decrypt & Authenticate'}
+              </button>
+            </form>
+
+            <div className="border-t border-gray-150 pt-4 text-center">
+              <p className="text-[10px] text-gray-400 leading-relaxed">
+                Protected by military-grade backend tokens & Jodhpur flagship boutique firewall policies. Direct access attempts are permanently logged.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -1276,24 +1394,24 @@ export default function App() {
       </div>
 
       {/* --- SIDEBAR WORKSPACE --- */}
-      <aside className={`bg-gray-950 text-white flex flex-col justify-between transition-all duration-300 z-30 ${sidebarCollapsed ? 'w-20' : 'w-64'
-        } shrink-0 hidden md:flex border-r border-gray-900`}>
+      <aside className={`bg-white text-gray-800 flex flex-col justify-between transition-all duration-300 z-30 ${sidebarCollapsed ? 'w-20' : 'w-64'
+        } shrink-0 hidden md:flex border-r border-gray-205`}>
         <div>
           {/* Logo Brand Header */}
-          <div className="p-5 flex items-center justify-between border-b border-gray-900">
+          <div className="p-5 flex items-center justify-between border-b border-gray-150">
             {!sidebarCollapsed ? (
               <div>
-                <h1 className="text-2xl font-serif italic text-white tracking-wider">
+                <h1 className="text-2xl font-serif italic text-gray-900 tracking-wider">
                   Heels<span className="text-[#C9A96E] font-bold">Up</span>
                 </h1>
-                <span className="text-[8px] tracking-widest uppercase text-gray-500 block font-bold font-mono">Control v2.4 Live</span>
+                <span className="text-[8px] tracking-widest uppercase text-gray-400 block font-bold font-mono">Control v2.4 Live</span>
               </div>
             ) : (
               <span className="text-xl font-serif italic text-[#C9A96E] mx-auto block font-bold">HU</span>
             )}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 rounded-lg bg-gray-900 hover:bg-gray-800 text-gray-400"
+              className="p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-500"
             >
               {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </button>
@@ -1303,13 +1421,13 @@ export default function App() {
           {!sidebarCollapsed && (
             <div className="p-3">
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-500" />
+                <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Filter boutique modules..."
                   value={sidebarQuery}
                   onChange={e => setSidebarQuery(e.target.value)}
-                  className="w-full bg-gray-900 border border-transparent rounded-xl py-2 pl-9 pr-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-gray-800"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 pl-9 pr-3 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-gray-300"
                 />
               </div>
             </div>
@@ -1317,13 +1435,13 @@ export default function App() {
 
           {/* Navigation Links Grouped */}
           <nav className="p-3 space-y-6 max-h-[70vh] overflow-y-auto">
-            {['Main', 'Catalogue', 'Sales', 'Content', 'System'].map(section => {
+            {['Data Editor', 'Fulfillment'].map(section => {
               const items = allowedNavs.filter(i => i.section === section);
               if (items.length === 0) return null;
               return (
                 <div key={section} className="space-y-1">
                   {!sidebarCollapsed && (
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500 block px-3 mb-1">{section}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block px-3 mb-1">{section}</span>
                   )}
                   {items.map(nav => (
                     <button
@@ -1332,9 +1450,9 @@ export default function App() {
                         setActiveTab(nav.id);
                         setSidebarMobileOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-3 py-2 text-xs rounded-xl font-medium transition-all ${activeTab === nav.id
-                          ? 'bg-[#C9A96E] text-gray-950 font-bold'
-                          : 'text-gray-400 hover:bg-gray-900 hover:text-white'
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs rounded-xl font-medium transition-all ${activeTab === nav.id
+                          ? 'bg-gray-100 text-gray-950 font-bold border-l-4 border-gray-800 rounded-none'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                         }`}
                     >
                       {nav.icon}
@@ -1348,21 +1466,21 @@ export default function App() {
         </div>
 
         {/* Staff footer drawer */}
-        <div className="p-4 border-t border-gray-900 space-y-3">
+        <div className="p-4 border-t border-gray-150 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#C9A96E] text-gray-950 font-extrabold flex items-center justify-center text-xs">
+            <div className="w-8 h-8 rounded-full bg-[#C9A96E] text-white font-extrabold flex items-center justify-center text-xs">
               {user.name[0]}
             </div>
             {!sidebarCollapsed && (
               <div className="min-w-0">
-                <span className="text-xs text-white font-bold block truncate">{user.name}</span>
-                <span className="text-[10px] text-gray-500 block capitalize">{user.role} Privilege</span>
+                <span className="text-xs text-gray-800 font-bold block truncate">{user.name}</span>
+                <span className="text-[10px] text-gray-450 block capitalize font-semibold">{user.role} Privilege</span>
               </div>
             )}
           </div>
           <button
             onClick={handleLogout}
-            className="w-full py-2 bg-gray-900 hover:bg-rose-950 hover:text-rose-200 transition-colors rounded-xl text-gray-400 text-xs flex items-center justify-center gap-2"
+            className="w-full py-2 bg-gray-50 hover:bg-rose-50 hover:text-rose-600 border border-gray-200 transition-colors rounded-xl text-gray-600 text-xs flex items-center justify-center gap-2"
           >
             <LogOut className="w-3.5 h-3.5" />
             {!sidebarCollapsed && <span>Sign Out Workspace</span>}
@@ -2655,11 +2773,27 @@ export default function App() {
                           </td>
                           <td className="p-4 text-right">
                             <button
-                              onClick={() => {
-                                setSelectedOrder(ord);
-                                setCourierName(ord.courier_name || '');
-                                setTrackingNumber(ord.tracking_number || '');
-                                setTrackingUrl(ord.tracking_url || '');
+                              onClick={async () => {
+                                try {
+                                  showToast('info', 'Loading Details', 'Fetching order line items...');
+                                  const res = await fetch(`/api/admin/orders/${ord.id}`, {
+                                    headers: {
+                                      'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                                    }
+                                  });
+                                  const resData = await res.json();
+                                  if (resData.success && resData.data) {
+                                    setSelectedOrder(resData.data);
+                                    setCourierName(resData.data.courier_name || '');
+                                    setTrackingNumber(resData.data.tracking_number || '');
+                                    setTrackingUrl(resData.data.tracking_url || '');
+                                  } else {
+                                    showToast('error', 'Details Error', resData.error || 'Failed to fetch details');
+                                  }
+                                } catch (err) {
+                                  console.error('Fetch order details error:', err);
+                                  showToast('error', 'Network Error', 'Failed to fetch order details');
+                                }
                               }}
                               className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-[10px] font-bold uppercase rounded-lg transition-colors border border-gray-200"
                             >
@@ -4292,16 +4426,35 @@ export default function App() {
                   value={selectedOrder.order_status}
                   onChange={e => {
                     const nextStatus = e.target.value as any;
-                    // Update in database
-                    setOrders(prev => prev.map(o => o.id === selectedOrder.id ? {
-                      ...o,
-                      order_status: nextStatus,
-                      courier_name: courierName || undefined,
-                      tracking_number: trackingNumber || undefined,
-                      tracking_url: trackingUrl || undefined
-                    } : o));
-                    showToast('success', 'Fulfillment Updated', `Fulfillment status changed to "${nextStatus.toUpperCase()}".`);
-                    setSelectedOrder(null);
+                    (async () => {
+                      try {
+                        const res = await fetch(`/api/admin/orders/${selectedOrder.id}/status`, {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                          },
+                          body: JSON.stringify({
+                            status: nextStatus,
+                            tracking_number: trackingNumber || undefined,
+                            tracking_url: trackingUrl || undefined,
+                            courier_name: courierName || undefined,
+                            send_sms: triggerSms
+                          })
+                        });
+                        const resData = await res.json();
+                        if (resData.success) {
+                          showToast('success', 'Fulfillment Updated', `Fulfillment status changed to "${nextStatus.toUpperCase()}".`);
+                          fetchOrders();
+                          setSelectedOrder(null);
+                        } else {
+                          showToast('error', 'Fulfillment Error', resData.error || 'Failed to update order status');
+                        }
+                      } catch (err) {
+                        console.error('Fulfillment update error:', err);
+                        showToast('error', 'Network Error', 'Failed to update order status');
+                      }
+                    })();
                   }}
                   className="border rounded-xl px-3 py-1.5 text-xs font-extrabold bg-white text-gray-800 focus:outline-none"
                 >
@@ -4531,23 +4684,23 @@ export default function App() {
       {sidebarMobileOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div onClick={() => setSidebarMobileOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <aside className="w-64 bg-gray-950 text-white flex flex-col justify-between p-5 relative z-10 shadow-2xl h-full border-r border-gray-900 animate-slideRight">
+          <aside className="w-64 bg-white text-gray-800 flex flex-col justify-between p-5 relative z-10 shadow-2xl h-full border-r border-gray-200 animate-slideRight">
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-xl font-serif italic text-white">Heels<span className="text-[#C9A96E]">Up</span></h1>
-                <button onClick={() => setSidebarMobileOpen(false)} className="p-1 rounded bg-gray-900 text-gray-400">
+                <h1 className="text-xl font-serif italic text-gray-900">Heels<span className="text-[#C9A96E]">Up</span></h1>
+                <button onClick={() => setSidebarMobileOpen(false)} className="p-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-650">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="relative mb-6">
-                <Search className="absolute left-3 top-2 w-3.5 h-3.5 text-gray-500" />
+                <Search className="absolute left-3 top-2.5 w-3.5 h-3.5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Filter boutique modules..."
                   value={sidebarQuery}
                   onChange={e => setSidebarQuery(e.target.value)}
-                  className="w-full bg-gray-900 border border-transparent rounded-xl py-1.5 pl-9 pr-3 text-xs text-white"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl py-1.5 pl-9 pr-3 text-xs text-gray-800"
                 />
               </div>
 
@@ -4559,7 +4712,7 @@ export default function App() {
                       setActiveTab(nav.id);
                       setSidebarMobileOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs rounded-xl font-medium transition-all ${activeTab === nav.id ? 'bg-[#C9A96E] text-gray-950 font-bold' : 'text-gray-400 hover:bg-gray-900 hover:text-white'
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs rounded-xl font-medium transition-all ${activeTab === nav.id ? 'bg-gray-100 text-gray-950 font-bold border-l-4 border-gray-800 rounded-none' : 'text-gray-650 hover:bg-gray-50 hover:text-gray-950'
                       }`}
                   >
                     {nav.icon}
@@ -4569,10 +4722,10 @@ export default function App() {
               </nav>
             </div>
 
-            <div className="p-3 border-t border-gray-900">
+            <div className="p-3 border-t border-gray-200">
               <button
                 onClick={handleLogout}
-                className="w-full py-2 bg-gray-900 hover:bg-rose-950 text-gray-400 hover:text-rose-200 transition-colors rounded-xl text-xs flex items-center justify-center gap-2"
+                className="w-full py-2 bg-gray-50 hover:bg-rose-50 hover:text-rose-600 border border-gray-200 transition-colors rounded-xl text-xs flex items-center justify-center gap-2 text-gray-600"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out Workspace</span>

@@ -1,6 +1,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Aptos';
+  src: local('Aptos'), local('Aptos-Regular'), local('Aptos Regular');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Aptos';
+  src: local('Aptos-Bold'), local('Aptos Bold');
+  font-weight: bold;
+  font-style: normal;
+}
+
 @theme {
   --color-primary-50: #fbf7ef;
   --color-primary-100: #f4ead6;
@@ -32,9 +46,9 @@
   --color-accent-light: var(--color-accent-300);
   --color-accent-dark: var(--color-accent-700);
 
-  --font-display: 'Cormorant Garamond', 'Georgia', serif;
-  --font-heading: 'Playfair Display', 'Georgia', serif;
-  --font-body: 'DM Sans', 'Helvetica Neue', sans-serif;
+  --font-display: 'Aptos', 'Cormorant Garamond', 'Georgia', serif;
+  --font-heading: 'Aptos', 'Playfair Display', 'Georgia', serif;
+  --font-body: 'Aptos', 'DM Sans', 'Helvetica Neue', sans-serif;
 }
 
 

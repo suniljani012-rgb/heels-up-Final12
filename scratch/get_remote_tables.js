@@ -5,7 +5,7 @@ const pathEnv = "C:\\Users\\Cyrix HealthCare\\Desktop\\heels-up-new\\heels-up-Fi
 const res = spawnSync('npx.cmd', [
   'wrangler', 'd1', 'execute', 'heelsup-live',
   '--remote',
-  '--command="SELECT name FROM sqlite_master WHERE type=\'table\'"',
+  '--file=scratch/query.sql',
   '--json'
 ], {
   env: { ...process.env, PATH: pathEnv },
