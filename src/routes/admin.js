@@ -188,5 +188,37 @@ export async function adminRouter(request, env) {
         return posRouter(request, env);
     }
 
+    // ── /api/admin/query ───────────────────────────────────────── (ADDED)
+    if (path === '/api/admin/query' && request.method === 'POST') {
+        const { error: authErr } = await requireAdmin(request, env);
+        if (authErr) return authErr;
+        try {
+            const { sql, params } = await request.json();
+            if (!sql) return error('sql is required', 400);
+
+            const isWrite = /^\s*(insert|update|delete|create|drop|alter|replace)/i.test(sql);
+            if (isWrite) {
+                const stmt = env.DB.prepare(sql);
+                const result = params && params.length ? await stmt.bind(...params).run() : await stmt.run();
+                return ok({
+                    success: result.success,
+                    changes: result.meta?.changes || 0,
+                    lastRowId: result.meta?.last_row_id || null
+                }, 'SQL executed successfully');
+            } else {
+                const stmt = env.DB.prepare(sql);
+                const result = params && params.length ? await stmt.bind(...params).all() : await stmt.all();
+                return ok({
+                    results: result.results || [],
+                    meta: result.meta || {},
+                    success: result.success
+                }, 'Query executed');
+            }
+        } catch (e) {
+            console.error('SQL execution error:', e);
+            return error(e.message || 'SQL execution failed', 400);
+        }
+    }
+
     return notFound('Admin route not found');
 }

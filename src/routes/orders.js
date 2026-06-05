@@ -625,6 +625,26 @@ export async function ordersRouter(request, env) {
             const currentOrder = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
             if (!currentOrder) return error('Order not found', 404);
 
+            // Enforce unidirectional status transition validation
+            const allowedTransitions = {
+                'placed': ['confirmed', 'cancelled'],
+                'confirmed': ['shipped', 'cancelled'],
+                'shipped': ['delivered', 'cancelled'],
+                'delivered': [],
+                'cancelled': [],
+                'exchange_requested': ['exchange_approved', 'exchange_rejected'],
+                'exchange_approved': ['shipped', 'cancelled'],
+                'exchange_rejected': []
+            };
+
+            const currentStatus = currentOrder.order_status || 'placed';
+            if (status !== currentStatus) {
+                const allowed = allowedTransitions[currentStatus] || [];
+                if (!allowed.includes(status)) {
+                    return error(`Invalid transition: Cannot change status from "${currentStatus}" to "${status}"`, 400);
+                }
+            }
+
             const sets = ['order_status = ?', "updated_at = datetime('now')"];
             const binds = [status];
 
@@ -761,6 +781,26 @@ export async function ordersRouter(request, env) {
                     // Check current status for stock restoration
                     const current = await env.DB.prepare('SELECT order_status FROM orders WHERE id = ?').bind(id).first();
                     if (!current) { errors.push({ id, error: 'Not found' }); continue; }
+
+                    // Enforce unidirectional status transition validation
+                    const allowedTransitions = {
+                        'placed': ['confirmed', 'cancelled'],
+                        'confirmed': ['shipped', 'cancelled'],
+                        'shipped': ['delivered', 'cancelled'],
+                        'delivered': [],
+                        'cancelled': [],
+                        'exchange_requested': ['exchange_approved', 'exchange_rejected'],
+                        'exchange_approved': ['shipped', 'cancelled'],
+                        'exchange_rejected': []
+                    };
+                    const currentStatus = current.order_status || 'placed';
+                    if (status !== currentStatus) {
+                        const allowed = allowedTransitions[currentStatus] || [];
+                        if (!allowed.includes(status)) {
+                            errors.push({ id, error: `Invalid transition from "${currentStatus}" to "${status}"` });
+                            continue;
+                        }
+                    }
 
                     await env.DB.prepare(
                         `UPDATE orders SET ${sets.join(', ')} WHERE id = ?`
