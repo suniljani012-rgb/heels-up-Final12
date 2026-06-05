@@ -298,14 +298,23 @@ interface Toast {
 
 export default function App() {
   // Authentication State
-  const [user, setUser] = useState<{ name: string; role: string; email: string } | null>({
-    name: 'Abhishek Jodhpur',
-    role: 'admin',
-    email: 'admin@heelsup.in'
+  const [user, setUser] = useState<{ name: string; role: string; email: string } | null>(() => {
+    const savedUser = localStorage.getItem('heelsup_user');
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch {
+        return null;
+      }
+    }
+    return null;
   });
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loggingIn, setLoggingIn] = useState(false);
+  const [otpRequired, setOtpRequired] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [otpInput, setOtpInput] = useState('');
 
   // Global Toasts State
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -322,8 +331,8 @@ export default function App() {
   const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
   const [sidebarQuery, setSidebarQuery] = useState('');
 
-  // Active view routing ('dashboard' | 'pos' | 'products' | 'categories' | 'collections' | 'orders' | 'inventory' | 'coupons' | 'banners' | 'reviews' | 'pages' | 'staff' | 'customers' | 'settings' | 'reports')
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  // Active view routing
+  const [activeTab, setActiveTab] = useState<string>('db_editor');
 
   // Database State (In-Memory Unified Store)
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -336,6 +345,214 @@ export default function App() {
   const [reviewsList, setReviewsList] = useState<Review[]>(initialReviews);
   const [pagesList, setPagesList] = useState<PageConfig[]>(initialPages);
   const [staffList, setStaffList] = useState<Staff[]>(initialStaff);
+
+  // Live DB Editor States
+  const [selectedDbTable, setSelectedDbTable] = useState<string>('products');
+  const [dbRows, setDbRows] = useState<any[]>([]);
+  const [dbColumns, setDbColumns] = useState<string[]>([]);
+  const [dbLoading, setDbLoading] = useState<boolean>(false);
+  const [editingDbRow, setEditingDbRow] = useState<any | null>(null);
+  const [isAddingDbRow, setIsAddingDbRow] = useState<boolean>(false);
+  const [dbSearchQuery, setDbSearchQuery] = useState<string>('');
+
+  const dbTablesList = [
+    { id: 'products', label: 'products' },
+    { id: 'product_images', label: 'product_images' },
+    { id: 'product_size_stock', label: 'product_size_stock' },
+    { id: 'categories', label: 'categories' },
+    { id: 'collections', label: 'collections' },
+    { id: 'collection_products', label: 'collection_products' },
+    { id: 'orders', label: 'orders' },
+    { id: 'order_items', label: 'order_items' },
+    { id: 'users', label: 'users (customers)' },
+    { id: 'addresses', label: 'addresses' },
+    { id: 'payments', label: 'payments' },
+    { id: 'coupons', label: 'coupons' },
+    { id: 'banners', label: 'banners' },
+    { id: 'pages', label: 'pages' },
+    { id: 'product_reviews', label: 'product_reviews' },
+    { id: 'exchanges', label: 'exchanges' },
+    { id: 'exchange_items', label: 'exchange_items' },
+    { id: 'offline_sales', label: 'offline_sales' },
+    { id: 'settings', label: 'settings' },
+    { id: 'staff', label: 'staff' },
+    { id: 'staff_roles', label: 'staff_roles' },
+    { id: 'wishlists', label: 'wishlists' },
+    { id: 'contact_messages', label: 'contact_messages' },
+    { id: 'newsletter', label: 'newsletter' },
+    { id: 'shipping_methods', label: 'shipping_methods' },
+    { id: 'shipping_pincodes', label: 'shipping_pincodes' },
+    { id: 'shipping_couriers', label: 'shipping_couriers' },
+    { id: 'shipping_zones', label: 'shipping_zones' },
+    { id: 'shipping_rates', label: 'shipping_rates' },
+    { id: 'tax_rules', label: 'tax_rules' },
+    { id: 'blog_posts', label: 'blog_posts' },
+    { id: 'notifications', label: 'notifications' },
+    { id: 'inventory_log', label: 'inventory_log' },
+    { id: 'audit_log', label: 'audit_log' },
+    { id: 'login_attempts', label: 'login_attempts' },
+    { id: 'rate_limits', label: 'rate_limits' },
+    { id: 'analytics_events', label: 'analytics_events' },
+    { id: 'otp_tokens', label: 'otp_tokens' },
+    { id: 'sessions', label: 'sessions' }
+  ];
+
+  const fetchDbTableData = async (tableName: string) => {
+    setDbLoading(true);
+    try {
+      const colRes = await fetch('/api/admin/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        },
+        body: JSON.stringify({ sql: `PRAGMA table_info(${tableName})` })
+      });
+      const colData = await colRes.json();
+      const cols = colData.success && colData.data?.results 
+        ? colData.data.results.map((c: any) => c.name) 
+        : [];
+      setDbColumns(cols);
+
+      const rowRes = await fetch('/api/admin/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        },
+        body: JSON.stringify({ sql: `SELECT * FROM ${tableName} ORDER BY id DESC LIMIT 500` })
+      });
+      const rowData = await rowRes.json();
+      if (rowData.success && rowData.data?.results) {
+        setDbRows(rowData.data.results);
+      } else {
+        setDbRows([]);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Database Error', `Failed to load table ${tableName}`);
+    } finally {
+      setDbLoading(false);
+    }
+  };
+
+  const handleDeleteRow = async (id: any) => {
+    if (!confirm('Are you sure you want to delete this row?')) return;
+    try {
+      const res = await fetch('/api/admin/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        },
+        body: JSON.stringify({
+          sql: `DELETE FROM ${selectedDbTable} WHERE id = ?`,
+          params: [id]
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('success', 'Deleted successfully', `Row with ID ${id} deleted.`);
+        fetchDbTableData(selectedDbTable);
+      } else {
+        showToast('error', 'Delete failed', data.error);
+      }
+    } catch (err) {
+      showToast('error', 'Delete failed', 'Network error');
+    }
+  };
+
+  const handleUpdateRow = async (updatedRow: any) => {
+    try {
+      const keys = Object.keys(updatedRow).filter(k => k !== 'id');
+      const sets = keys.map(k => `${k} = ?`).join(', ');
+      const params = keys.map(k => updatedRow[k]);
+      params.push(updatedRow.id);
+
+      const res = await fetch('/api/admin/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        },
+        body: JSON.stringify({
+          sql: `UPDATE ${selectedDbTable} SET ${sets} WHERE id = ?`,
+          params
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('success', 'Updated successfully', `Row with ID ${updatedRow.id} updated.`);
+        setEditingDbRow(null);
+        fetchDbTableData(selectedDbTable);
+      } else {
+        showToast('error', 'Update failed', data.error);
+      }
+    } catch (err) {
+      showToast('error', 'Update failed', 'Network error');
+    }
+  };
+
+  const handleInsertRow = async (newRow: any) => {
+    try {
+      const keys = Object.keys(newRow).filter(k => k !== 'id');
+      const placeholders = keys.map(() => '?').join(', ');
+      const params = keys.map(k => newRow[k]);
+
+      const res = await fetch('/api/admin/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        },
+        body: JSON.stringify({
+          sql: `INSERT INTO ${selectedDbTable} (${keys.join(', ')}) VALUES (${placeholders})`,
+          params
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('success', 'Inserted successfully', 'New row created.');
+        setIsAddingDbRow(false);
+        fetchDbTableData(selectedDbTable);
+      } else {
+        showToast('error', 'Insert failed', data.error);
+      }
+    } catch (err) {
+      showToast('error', 'Insert failed', 'Network error');
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'db_editor') {
+      fetchDbTableData(selectedDbTable);
+    }
+  }, [selectedDbTable, activeTab]);
+
+  const fetchOrders = async () => {
+    try {
+      const res = await fetch('/api/admin/orders?limit=100', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        setOrders(resData.data);
+      } else {
+        showToast('error', 'Orders Error', resData.error || 'Failed to fetch orders');
+      }
+    } catch (err) {
+      console.error('Fetch orders error:', err);
+      showToast('error', 'Orders Network Error', 'Failed to connect to backend to fetch orders');
+    }
+  };
+
+  useEffect(() => {
+    if (user && activeTab === 'orders') {
+      fetchOrders();
+    }
+  }, [user, activeTab]);
 
   // Search/Filters per section
   const [productFilterQuery, setProductFilterQuery] = useState('');
@@ -479,11 +696,82 @@ export default function App() {
   const [generatedReport, setGeneratedReport] = useState<any | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
+  // --- File Compression & HEIC Conversion Helper ---
+  const compressAndResizeImage = async (file: File): Promise<Blob> => {
+    let activeFile = file;
+    const isHeic = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif') || file.type === 'image/heic' || file.type === 'image/heif';
+    
+    if (isHeic) {
+      try {
+        const heic2anyModule = await import('heic2any');
+        const heic2any = heic2anyModule.default;
+        const conversionResult = await heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: 0.8
+        });
+        const singleBlob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
+        activeFile = new File([singleBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
+      } catch (err) {
+        console.error('HEIC pre-conversion failed:', err);
+      }
+    }
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                resolve(activeFile);
+              }
+            }, 'image/jpeg', 0.8);
+          } else {
+            resolve(activeFile);
+          }
+        };
+        img.onerror = () => resolve(activeFile);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve(activeFile);
+      reader.readAsDataURL(activeFile);
+    });
+  };
+
   // --- File Upload Helper ---
   const handleUploadImage = async (file: File): Promise<string | null> => {
     try {
+      const compressedBlob = await compressAndResizeImage(file);
+      const compressedFile = new File([compressedBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', compressedFile);
       
       const token = localStorage.getItem('heelsup_token');
       const headers: Record<string, string> = {};
@@ -512,27 +800,80 @@ export default function App() {
   };
 
   // --- Auth Handlers ---
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput || !passwordInput) {
-      showToast('error', 'Fields Required', 'Please enter your registered staff email and token credentials.');
+      showToast('error', 'Fields Required', 'Please enter your registered staff email and password credentials.');
       return;
     }
     setLoggingIn(true);
-    setTimeout(() => {
-      // Find matching staff member in database
-      const found = staffList.find(s => s.email.toLowerCase() === emailInput.toLowerCase());
-      if (found && found.active) {
-        setUser({ name: found.name, role: found.role, email: found.email });
-        showToast('success', 'Access Granted', `Welcome back ${found.name} (${found.role.toUpperCase()}). Session validated.`);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailInput, password: passwordInput })
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        if (data.data.step === 'otp_required') {
+          setOtpRequired(true);
+          setSessionToken(data.data.session_token);
+          showToast('info', '2FA OTP Required', 'A verification code has been generated. Please check console/logs.');
+        } else {
+          const { token, user: loggedUser } = data.data;
+          localStorage.setItem('heelsup_token', token);
+          localStorage.setItem('heelsup_user', JSON.stringify(loggedUser));
+          setUser(loggedUser);
+          showToast('success', 'Access Granted', `Welcome back ${loggedUser.name} (${loggedUser.role.toUpperCase()}). Session validated.`);
+        }
       } else {
-        showToast('error', 'Unauthorized Access', 'Access denied. The email or security token credentials did not match active records.');
+        showToast('error', 'Unauthorized Access', data.error || 'Access denied. The email or credentials did not match active records.');
       }
+    } catch (err) {
+      console.error('Login error:', err);
+      showToast('error', 'Authentication Error', 'Could not connect to the auth server.');
+    } finally {
       setLoggingIn(false);
-    }, 1000);
+    }
+  };
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpInput || otpInput.length !== 6) {
+      showToast('error', 'Invalid OTP', 'Please enter a valid 6-digit OTP code.');
+      return;
+    }
+    setLoggingIn(true);
+    try {
+      const res = await fetch('/api/auth/admin-verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: otpInput, session_token: sessionToken })
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        const { token, user: loggedUser } = data.data;
+        localStorage.setItem('heelsup_token', token);
+        localStorage.setItem('heelsup_user', JSON.stringify(loggedUser));
+        setUser(loggedUser);
+        setOtpRequired(false);
+        setSessionToken(null);
+        setOtpInput('');
+        showToast('success', 'Access Granted', `Welcome back ${loggedUser.name} (${loggedUser.role.toUpperCase()}). Session validated.`);
+      } else {
+        showToast('error', 'Verification Failed', data.error || 'Invalid verification code.');
+      }
+    } catch (err) {
+      console.error('OTP verify error:', err);
+      showToast('error', 'Verification Error', 'Could not connect to the verification server.');
+    } finally {
+      setLoggingIn(false);
+    }
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('heelsup_token');
+    localStorage.removeItem('heelsup_user');
     setUser(null);
     showToast('info', 'Session Terminated', 'You have securely signed out of the HeelsUp administrative control panel.');
   };
@@ -874,6 +1215,7 @@ export default function App() {
     { id: 'pages', label: 'Static Policy Pages', section: 'Content', icon: <FileText className="w-4 h-4" /> },
     { id: 'staff', label: 'Staff Accounts', section: 'System', icon: <Lock className="w-4 h-4" /> },
     { id: 'settings', label: 'General Configuration', section: 'System', icon: <Settings className="w-4 h-4" /> },
+    { id: 'db_editor', label: 'Database Tables', section: 'System', icon: <Activity className="w-4 h-4" /> },
     { id: 'reports', label: 'Enterprise Reports', section: 'Main', icon: <FileText className="w-4 h-4" /> }
   ];
 
@@ -950,54 +1292,100 @@ export default function App() {
           ))}
         </div>
 
-        <div className="max-w-md w-full bg-white border border-gray-150 rounded-3xl p-8 shadow-xl space-y-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-serif italic text-gray-900 tracking-wide">
-              Heels<span className="text-[#C9A96E]">Up</span>
-            </h1>
-            <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">Staff Central Workspace</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Staff Email</label>
-              <input
-                type="email"
-                required
-                placeholder="staff@heelsup.in"
-                value={emailInput}
-                onChange={e => setEmailInput(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-medium"
-              />
+        {otpRequired ? (
+          <div className="max-w-md w-full bg-white border border-gray-150 rounded-3xl p-8 shadow-xl space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-serif italic text-gray-900 tracking-wide animate-pulse">
+                2FA Verification
+              </h1>
+              <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">Enter the 6-digit security code</p>
             </div>
 
-            <div>
-              <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Access Token Security Key</label>
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={passwordInput}
-                onChange={e => setPasswordInput(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-medium"
-              />
+            <form onSubmit={handleOtpVerify} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">One-Time Password (OTP)</label>
+                <input
+                  type="text"
+                  required
+                  maxLength={6}
+                  placeholder="000000"
+                  value={otpInput}
+                  onChange={e => setOtpInput(e.target.value.replace(/\D/g, ''))}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-center text-lg tracking-widest font-mono bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-bold"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loggingIn}
+                className="w-full py-3.5 bg-gray-950 text-white rounded-xl text-xs uppercase tracking-widest font-bold hover:bg-black transition-colors disabled:opacity-50 shadow-md"
+              >
+                {loggingIn ? 'Verifying Security Code...' : 'Verify OTP & Log In'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setOtpRequired(false);
+                  setSessionToken(null);
+                  setOtpInput('');
+                }}
+                className="w-full text-center text-xs text-gray-500 hover:text-gray-950 font-bold uppercase tracking-wider mt-2"
+              >
+                Back to Login
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="max-w-md w-full bg-white border border-gray-150 rounded-3xl p-8 shadow-xl space-y-6">
+            <div className="text-center">
+              <h1 className="text-3xl font-serif italic text-gray-900 tracking-wide">
+                Heels<span className="text-[#C9A96E]">Up</span>
+              </h1>
+              <p className="text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">Staff Central Workspace</p>
             </div>
 
-            <button
-              type="submit"
-              disabled={loggingIn}
-              className="w-full py-3.5 bg-gray-950 text-white rounded-xl text-xs uppercase tracking-widest font-bold hover:bg-black transition-colors disabled:opacity-50 shadow-md"
-            >
-              {loggingIn ? 'Verifying Gateway Signature...' : 'Decrypt & Authenticate'}
-            </button>
-          </form>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Staff Email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="staff@heelsup.in"
+                  value={emailInput}
+                  onChange={e => setEmailInput(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-medium"
+                />
+              </div>
 
-          <div className="border-t border-gray-150 pt-4 text-center">
-            <p className="text-[10px] text-gray-400 leading-relaxed">
-              Protected by military-grade backend tokens & Jodhpur flagship boutique firewall policies. Direct access attempts are permanently logged.
-            </p>
+              <div>
+                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Access Token Security Key</label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={passwordInput}
+                  onChange={e => setPasswordInput(e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-xs bg-gray-50 focus:outline-none focus:ring-1 focus:ring-[#C9A96E] focus:bg-white font-medium"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loggingIn}
+                className="w-full py-3.5 bg-gray-950 text-white rounded-xl text-xs uppercase tracking-widest font-bold hover:bg-black transition-colors disabled:opacity-50 shadow-md"
+              >
+                {loggingIn ? 'Decrypt & Authenticate...' : 'Decrypt & Authenticate'}
+              </button>
+            </form>
+
+            <div className="border-t border-gray-150 pt-4 text-center">
+              <p className="text-[10px] text-gray-400 leading-relaxed">
+                Protected by military-grade backend tokens & Jodhpur flagship boutique firewall policies. Direct access attempts are permanently logged.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   }
@@ -2400,11 +2788,27 @@ export default function App() {
                           </td>
                           <td className="p-4 text-right">
                             <button
-                              onClick={() => {
-                                setSelectedOrder(ord);
-                                setCourierName(ord.courier_name || '');
-                                setTrackingNumber(ord.tracking_number || '');
-                                setTrackingUrl(ord.tracking_url || '');
+                              onClick={async () => {
+                                try {
+                                  showToast('info', 'Loading Details', 'Fetching order line items...');
+                                  const res = await fetch(`/api/admin/orders/${ord.id}`, {
+                                    headers: {
+                                      'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                                    }
+                                  });
+                                  const resData = await res.json();
+                                  if (resData.success && resData.data) {
+                                    setSelectedOrder(resData.data);
+                                    setCourierName(resData.data.courier_name || '');
+                                    setTrackingNumber(resData.data.tracking_number || '');
+                                    setTrackingUrl(resData.data.tracking_url || '');
+                                  } else {
+                                    showToast('error', 'Details Error', resData.error || 'Failed to fetch details');
+                                  }
+                                } catch (err) {
+                                  console.error('Fetch order details error:', err);
+                                  showToast('error', 'Network Error', 'Failed to fetch order details');
+                                }
                               }}
                               className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-[10px] font-bold uppercase rounded-lg transition-colors border border-gray-200"
                             >
@@ -3265,6 +3669,328 @@ export default function App() {
           )}
 
           {/* =======================================
+              D1 LIVE DATABASE TABLES TAB
+              ======================================= */}
+          {activeTab === 'db_editor' && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="border-b border-gray-150 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-xl font-serif italic text-gray-950">D1 Live Database Table Editor</h3>
+                  <p className="text-xs text-gray-400 mt-1">Directly view and edit raw rows in the D1 SQL database tables.</p>
+                </div>
+                <button
+                  onClick={() => setIsAddingDbRow(true)}
+                  className="px-4 py-2 bg-gray-950 hover:bg-black text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors uppercase shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add New Row
+                </button>
+              </div>
+
+              {/* Controls bar */}
+              <div className="bg-white border border-gray-150 rounded-3xl p-5 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Select Database Table:</span>
+                  <select
+                    value={selectedDbTable}
+                    onChange={(e) => setSelectedDbTable(e.target.value)}
+                    className="border rounded-xl px-3 py-1.5 text-xs font-extrabold bg-white text-gray-800 focus:outline-none"
+                  >
+                    {dbTablesList.map(t => (
+                      <option key={t.id} value={t.id}>{t.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => fetchDbTableData(selectedDbTable)}
+                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-600 transition-colors"
+                    title="Reload data"
+                  >
+                    <RotateCw className={'w-4 h-4 ' + (dbLoading ? 'animate-spin' : '')} />
+                  </button>
+                </div>
+
+                <div className="admin-search w-full md:w-80">
+                  <Search className="w-4 h-4 text-gray-400 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Search database rows..."
+                    value={dbSearchQuery}
+                    onChange={e => setDbSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Table rendering */}
+              <div className="bg-white border border-gray-150 rounded-3xl overflow-hidden shadow-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="bg-[#faf9f6] text-gray-500 font-bold uppercase text-[9px] tracking-widest border-b border-gray-150">
+                        {dbColumns.map(col => (
+                          <th key={col} className="p-4 whitespace-nowrap">{col}</th>
+                        ))}
+                        <th className="p-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {dbLoading ? (
+                        <tr>
+                          <td colSpan={dbColumns.length + 1} className="p-8 text-center text-gray-400">
+                            <div className="flex items-center justify-center gap-2">
+                              <div className="w-4 h-4 border-2 border-[#C9A96E] border-t-transparent rounded-full animate-spin" />
+                              <span>Fetching live records from D1...</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : dbRows.length === 0 ? (
+                        <tr>
+                          <td colSpan={dbColumns.length + 1} className="p-8 text-center text-gray-400">No rows found in this table.</td>
+                        </tr>
+                      ) : (
+                        dbRows.filter(row => {
+                          if (!dbSearchQuery.trim()) return true;
+                          const q = dbSearchQuery.toLowerCase();
+                          return Object.values(row).some(val => String(val).toLowerCase().includes(q));
+                        }).map((row, idx) => (
+                          <tr key={row.id || idx} className="hover:bg-gray-50/70 transition-colors font-medium">
+                            {dbColumns.map(col => {
+                              const val = row[col];
+                              const isImg = typeof val === 'string' && (val.startsWith('http') || val.startsWith('/')) && (val.match(/\.(jpeg|jpg|gif|png|webp|heic)$/i) || val.includes('key='));
+                              return (
+                                <td key={col} className="p-4 max-w-xs truncate text-gray-700">
+                                  {isImg ? (
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden border bg-gray-50">
+                                      <HeicImage src={val} className="w-full h-full object-cover" />
+                                    </div>
+                                  ) : val === null ? (
+                                    <span className="text-gray-350 italic">null</span>
+                                  ) : typeof val === 'object' ? (
+                                    JSON.stringify(val)
+                                  ) : (
+                                    String(val)
+                                  )}
+                                </td>
+                              );
+                            })}
+                            <td className="p-4 text-right whitespace-nowrap">
+                              <div className="flex justify-end gap-2">
+                                <button
+                                  onClick={() => setEditingDbRow({ ...row })}
+                                  className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-[10px] font-bold uppercase transition-colors"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteRow(row.id)}
+                                  className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-bold uppercase transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Add Modal */}
+              {isAddingDbRow && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                  <div className="bg-white border border-gray-150 rounded-3xl shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col animate-scaleUp">
+                    <div className="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-3xl">
+                      <h3 className="font-serif italic text-lg text-gray-900">Add Row to {selectedDbTable}</h3>
+                      <button onClick={() => setIsAddingDbRow(false)} className="text-gray-400 hover:text-gray-650">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData: Record<string, any> = {};
+                      const formElements = e.currentTarget.elements;
+                      dbColumns.forEach(c => {
+                        if (c === 'id') return;
+                        const inputEl = formElements.namedItem(c) as HTMLInputElement | null;
+                        if (inputEl) {
+                          const val = inputEl.value;
+                          formData[c] = val === '' ? null : (isNaN(Number(val)) || val.trim() === '' ? val : Number(val));
+                        }
+                      });
+                      handleInsertRow(formData);
+                    }} className="flex-1 overflow-y-auto p-6 space-y-4">
+                      {dbColumns.map(col => {
+                        if (col === 'id') return null;
+                        const isImg = col.toLowerCase().includes('image') || col.toLowerCase().includes('url');
+                        return (
+                          <div key={col} className="space-y-1">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase">{col}</label>
+                            {isImg ? (
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  name={col}
+                                  id={col}
+                                  placeholder={'Enter ' + col + '...'}
+                                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                                />
+                                <label className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl cursor-pointer transition-colors border border-gray-250 flex items-center gap-1 shrink-0">
+                                  <UploadCloud className="w-3.5 h-3.5" />
+                                  Upload
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        showToast('info', 'Uploading...', 'Uploading database asset...');
+                                        const url = await handleUploadImage(file);
+                                        if (url) {
+                                          const inputEl = document.getElementById(col) as HTMLInputElement | null;
+                                          if (inputEl) inputEl.value = url;
+                                          showToast('success', 'Upload Complete', 'Asset uploaded.');
+                                        }
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            ) : (
+                              <input
+                                type="text"
+                                name={col}
+                                placeholder={'Enter ' + col + '...'}
+                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                      <div className="pt-4 border-t flex justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingDbRow(false)}
+                          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl uppercase transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-5 py-2 bg-gray-950 hover:bg-black text-white text-xs font-bold rounded-xl uppercase transition-colors"
+                        >
+                          Save Row
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* Edit Modal */}
+              {editingDbRow && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                  <div className="bg-white border border-gray-150 rounded-3xl shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col animate-scaleUp">
+                    <div className="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-3xl">
+                      <h3 className="font-serif italic text-lg text-gray-900 font-display">Edit Row {editingDbRow.id} in {selectedDbTable}</h3>
+                      <button onClick={() => setEditingDbRow(null)} className="text-gray-400 hover:text-gray-655">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData: Record<string, any> = { id: editingDbRow.id };
+                      const formElements = e.currentTarget.elements;
+                      dbColumns.forEach(c => {
+                        if (c === 'id') return;
+                        const inputEl = formElements.namedItem(c) as HTMLInputElement | null;
+                        if (inputEl) {
+                          const val = inputEl.value;
+                          formData[c] = val === '' ? null : (isNaN(Number(val)) || val.trim() === '' ? val : Number(val));
+                        }
+                      });
+                      handleUpdateRow(formData);
+                    }} className="flex-1 overflow-y-auto p-6 space-y-4">
+                      {dbColumns.map(col => {
+                        const isImg = col.toLowerCase().includes('image') || col.toLowerCase().includes('url');
+                        return (
+                          <div key={col} className="space-y-1">
+                            <label className="block text-[10px] font-bold text-gray-500 uppercase">{col}</label>
+                            {col === 'id' ? (
+                              <input
+                                type="text"
+                                disabled
+                                value={editingDbRow.id}
+                                className="w-full border border-gray-150 rounded-xl px-3 py-2 text-xs bg-gray-50 text-gray-450 focus:outline-none font-bold"
+                              />
+                            ) : isImg ? (
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  name={col}
+                                  id={'edit_' + col}
+                                  defaultValue={editingDbRow[col] === null ? '' : String(editingDbRow[col])}
+                                  placeholder={'Enter ' + col + '...'}
+                                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                                />
+                                <label className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl cursor-pointer transition-colors border border-gray-250 flex items-center gap-1 shrink-0">
+                                  <UploadCloud className="w-3.5 h-3.5" />
+                                  Upload
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        showToast('info', 'Uploading...', 'Uploading database asset...');
+                                        const url = await handleUploadImage(file);
+                                        if (url) {
+                                          const inputEl = document.getElementById('edit_' + col) as HTMLInputElement | null;
+                                          if (inputEl) inputEl.value = url;
+                                          showToast('success', 'Upload Complete', 'Asset uploaded.');
+                                        }
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            ) : (
+                              <input
+                                type="text"
+                                name={col}
+                                defaultValue={editingDbRow[col] === null ? '' : String(editingDbRow[col])}
+                                placeholder={'Enter ' + col + '...'}
+                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                      <div className="pt-4 border-t flex justify-end gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setEditingDbRow(null)}
+                          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl uppercase transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-5 py-2 bg-gray-950 hover:bg-black text-white text-xs font-bold rounded-xl uppercase transition-colors"
+                        >
+                          Save Changes
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* =======================================
               ENTERPRISE REPORTS TAB
               ======================================= */}
           {activeTab === 'reports' && (
@@ -3715,24 +4441,57 @@ export default function App() {
                   value={selectedOrder.order_status}
                   onChange={e => {
                     const nextStatus = e.target.value as any;
-                    // Update in database
-                    setOrders(prev => prev.map(o => o.id === selectedOrder.id ? {
-                      ...o,
-                      order_status: nextStatus,
-                      courier_name: courierName || undefined,
-                      tracking_number: trackingNumber || undefined,
-                      tracking_url: trackingUrl || undefined
-                    } : o));
-                    showToast('success', 'Fulfillment Updated', `Fulfillment status changed to "${nextStatus.toUpperCase()}".`);
-                    setSelectedOrder(null);
+                    (async () => {
+                      try {
+                        const res = await fetch(`/api/admin/orders/${selectedOrder.id}/status`, {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                          },
+                          body: JSON.stringify({
+                            status: nextStatus,
+                            tracking_number: trackingNumber || undefined,
+                            tracking_url: trackingUrl || undefined,
+                            courier_name: courierName || undefined,
+                            send_sms: triggerSms
+                          })
+                        });
+                        const resData = await res.json();
+                        if (resData.success) {
+                          showToast('success', 'Fulfillment Updated', `Fulfillment status changed to "${nextStatus.toUpperCase()}".`);
+                          fetchOrders();
+                          setSelectedOrder(null);
+                        } else {
+                          showToast('error', 'Fulfillment Error', resData.error || 'Failed to update order status');
+                        }
+                      } catch (err) {
+                        console.error('Fulfillment update error:', err);
+                        showToast('error', 'Network Error', 'Failed to update order status');
+                      }
+                    })();
                   }}
                   className="border rounded-xl px-3 py-1.5 text-xs font-extrabold bg-white text-gray-800 focus:outline-none"
                 >
-                  <option value="placed">Placed</option>
-                  <option value="confirmed">Confirmed</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
+                  {(() => {
+                    const allowedTransitions = {
+                      'placed': ['placed', 'confirmed', 'cancelled'],
+                      'confirmed': ['confirmed', 'shipped', 'cancelled'],
+                      'shipped': ['shipped', 'delivered', 'cancelled'],
+                      'delivered': ['delivered'],
+                      'cancelled': ['cancelled']
+                    };
+                    const allowed = allowedTransitions[selectedOrder.order_status] || [selectedOrder.order_status];
+                    return (
+                      <>
+                        <option value="placed" disabled={!allowed.includes('placed')}>Placed</option>
+                        <option value="confirmed" disabled={!allowed.includes('confirmed')}>Confirmed</option>
+                        <option value="shipped" disabled={!allowed.includes('shipped')}>Shipped</option>
+                        <option value="delivered" disabled={!allowed.includes('delivered')}>Delivered</option>
+                        <option value="cancelled" disabled={!allowed.includes('cancelled')}>Cancelled</option>
+                      </>
+                    );
+                  })()}
                 </select>
               </div>
 
