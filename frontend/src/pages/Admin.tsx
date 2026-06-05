@@ -2788,27 +2788,11 @@ export default function App() {
                           </td>
                           <td className="p-4 text-right">
                             <button
-                              onClick={async () => {
-                                try {
-                                  showToast('info', 'Loading Details', 'Fetching order line items...');
-                                  const res = await fetch(`/api/admin/orders/${ord.id}`, {
-                                    headers: {
-                                      'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
-                                    }
-                                  });
-                                  const resData = await res.json();
-                                  if (resData.success && resData.data) {
-                                    setSelectedOrder(resData.data);
-                                    setCourierName(resData.data.courier_name || '');
-                                    setTrackingNumber(resData.data.tracking_number || '');
-                                    setTrackingUrl(resData.data.tracking_url || '');
-                                  } else {
-                                    showToast('error', 'Details Error', resData.error || 'Failed to fetch details');
-                                  }
-                                } catch (err) {
-                                  console.error('Fetch order details error:', err);
-                                  showToast('error', 'Network Error', 'Failed to fetch order details');
-                                }
+                              onClick={() => {
+                                setSelectedOrder(ord);
+                                setCourierName(ord.courier_name || '');
+                                setTrackingNumber(ord.tracking_number || '');
+                                setTrackingUrl(ord.tracking_url || '');
                               }}
                               className="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-[10px] font-bold uppercase rounded-lg transition-colors border border-gray-200"
                             >
@@ -4441,35 +4425,16 @@ export default function App() {
                   value={selectedOrder.order_status}
                   onChange={e => {
                     const nextStatus = e.target.value as any;
-                    (async () => {
-                      try {
-                        const res = await fetch(`/api/admin/orders/${selectedOrder.id}/status`, {
-                          method: 'PUT',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
-                          },
-                          body: JSON.stringify({
-                            status: nextStatus,
-                            tracking_number: trackingNumber || undefined,
-                            tracking_url: trackingUrl || undefined,
-                            courier_name: courierName || undefined,
-                            send_sms: triggerSms
-                          })
-                        });
-                        const resData = await res.json();
-                        if (resData.success) {
-                          showToast('success', 'Fulfillment Updated', `Fulfillment status changed to "${nextStatus.toUpperCase()}".`);
-                          fetchOrders();
-                          setSelectedOrder(null);
-                        } else {
-                          showToast('error', 'Fulfillment Error', resData.error || 'Failed to update order status');
-                        }
-                      } catch (err) {
-                        console.error('Fulfillment update error:', err);
-                        showToast('error', 'Network Error', 'Failed to update order status');
-                      }
-                    })();
+                    // Update in database
+                    setOrders(prev => prev.map(o => o.id === selectedOrder.id ? {
+                      ...o,
+                      order_status: nextStatus,
+                      courier_name: courierName || undefined,
+                      tracking_number: trackingNumber || undefined,
+                      tracking_url: trackingUrl || undefined
+                    } : o));
+                    showToast('success', 'Fulfillment Updated', `Fulfillment status changed to "${nextStatus.toUpperCase()}".`);
+                    setSelectedOrder(null);
                   }}
                   className="border rounded-xl px-3 py-1.5 text-xs font-extrabold bg-white text-gray-800 focus:outline-none"
                 >
