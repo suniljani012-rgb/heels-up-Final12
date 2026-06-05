@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import HeicImage from '../components/HeicImage'
 import {
   LayoutDashboard, ShoppingCart, Package, ListChecks,
   LogOut, Plus, Edit3, Settings, Tag, Star, Users, FileText, Image as ImageIcon,
@@ -1655,7 +1656,7 @@ export default function App() {
             <div className="space-y-8 animate-fadeIn">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-150 pb-4">
                 <div>
-                  <h3 className="text-xl font-serif italic text-gray-955">Style Directory Database</h3>
+                  <h3 className="text-xl font-serif italic text-gray-950">Style Directory Database</h3>
                   <p className="text-xs text-gray-400 mt-1">Configure active pricing grids, imagery references, and size distributions.</p>
                 </div>
 
@@ -1826,7 +1827,7 @@ export default function App() {
                     <div className="flex flex-wrap gap-4 pt-2">
                       {prodFormImages.map((img, idx) => (
                         <div key={idx} className="relative w-16 h-16 rounded-xl border border-gray-200 overflow-hidden shadow-sm shrink-0">
-                          <img src={img} alt="Preview" className="w-full h-full object-cover" />
+                          <HeicImage src={img} alt="Preview" className="w-full h-full object-cover" />
                           <button
                             type="button"
                             onClick={() => setProdFormImages(prev => prev.filter((_, i) => i !== idx))}
@@ -1892,7 +1893,7 @@ export default function App() {
                         return (
                           <tr key={p.id} className="hover:bg-gray-50/30 transition-colors">
                             <td className="p-4 flex items-center gap-3">
-                              <img src={p.images[0]} alt={p.name} className="w-10 h-10 object-cover rounded-lg border border-gray-100 shrink-0" />
+                              <HeicImage src={p.images[0]} alt={p.name} className="w-10 h-10 object-cover rounded-lg border border-gray-100 shrink-0" />
                               <div>
                                 <span className="font-bold text-gray-900 block">{p.name}</span>
                                 <span className="text-[10px] text-gray-400 block font-mono">Sizes: {p.sizes.join(', ')}</span>
@@ -1955,7 +1956,7 @@ export default function App() {
             <div className="space-y-6 animate-fadeIn">
               <div className="flex justify-between items-center border-b border-gray-150 pb-4">
                 <div>
-                  <h3 className="text-xl font-serif italic text-gray-955">Style Categories Catalogue</h3>
+                  <h3 className="text-xl font-serif italic text-gray-950">Style Categories Catalogue</h3>
                   <p className="text-xs text-gray-400 mt-1">Configure parent categories that dynamically structures the online storefront.</p>
                 </div>
               </div>
@@ -2102,7 +2103,7 @@ export default function App() {
             <div className="space-y-6 animate-fadeIn">
               <div className="flex justify-between items-center border-b border-gray-150 pb-4">
                 <div>
-                  <h3 className="text-xl font-serif italic text-gray-955">Automated Collections Panel</h3>
+                  <h3 className="text-xl font-serif italic text-gray-950">Automated Collections Panel</h3>
                   <p className="text-xs text-gray-400 mt-1">Structure virtual smart collections based on pricing triggers or title keywords.</p>
                 </div>
               </div>
@@ -2261,7 +2262,7 @@ export default function App() {
           {activeTab === 'orders' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="border-b border-gray-150 pb-4">
-                <h3 className="text-xl font-serif italic text-gray-955">Online Orders Timeline Manager</h3>
+                <h3 className="text-xl font-serif italic text-gray-950">Online Orders Timeline Manager</h3>
                 <p className="text-xs text-gray-400 mt-1">Track payments status, manage shipment channels, and trigger customer dispatches.</p>
               </div>
 
@@ -2351,7 +2352,7 @@ export default function App() {
           {activeTab === 'customers' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="border-b border-gray-150 pb-4">
-                <h3 className="text-xl font-serif italic text-gray-955">Acquired Customers Directory</h3>
+                <h3 className="text-xl font-serif italic text-gray-950">Acquired Customers Directory</h3>
                 <p className="text-xs text-gray-400 mt-1">Monitor buyer history log profiles, transaction rates, and loyalty tag states.</p>
               </div>
 
@@ -2418,7 +2419,7 @@ export default function App() {
           {activeTab === 'inventory' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="border-b border-gray-150 pb-4">
-                <h3 className="text-xl font-serif italic text-gray-955">Warehouse Inventory Control</h3>
+                <h3 className="text-xl font-serif italic text-gray-950">Warehouse Inventory Control</h3>
                 <p className="text-xs text-gray-400 mt-1">One-click adjustments for safe stock reserves and automatic out-of-stock indicators.</p>
               </div>
 
@@ -2531,7 +2532,7 @@ export default function App() {
             <div className="space-y-6 animate-fadeIn">
               <div className="flex justify-between items-center border-b border-gray-150 pb-4">
                 <div>
-                  <h3 className="text-xl font-serif italic text-gray-955">Promo Coupons directory</h3>
+                  <h3 className="text-xl font-serif italic text-gray-950">Promo Coupons directory</h3>
                   <p className="text-xs text-gray-400 mt-1">Configure active codes, flat vs. percentage discounts, and minimum order values.</p>
                 </div>
               </div>
@@ -2653,7 +2654,7 @@ export default function App() {
             <div className="space-y-6 animate-fadeIn">
               <div className="flex justify-between items-center border-b border-gray-150 pb-4">
                 <div>
-                  <h3 className="text-xl font-serif italic text-gray-955">Homepage Banners Slideshow</h3>
+                  <h3 className="text-xl font-serif italic text-gray-950">Homepage Banners Slideshow</h3>
                   <p className="text-xs text-gray-400 mt-1">Configure slideshow campaigns for promotional announcements and new launches.</p>
                 </div>
               </div>
@@ -2736,7 +2737,7 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {bannersList.map(bn => (
                   <div key={bn.id} className="bg-white border border-gray-150 rounded-3xl overflow-hidden shadow-sm relative group">
-                    <img src={bn.image_url} alt={bn.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <HeicImage src={bn.image_url} alt={bn.title} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 flex flex-col justify-end text-white">
                       <strong className="text-sm font-serif italic block text-[#C9A96E]">{bn.title}</strong>
                       <p className="text-[10px] text-gray-300 mt-1">{bn.subtitle || 'Active slide campaign'}</p>
@@ -2764,7 +2765,7 @@ export default function App() {
           {activeTab === 'reviews' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="border-b border-gray-150 pb-4">
-                <h3 className="text-xl font-serif italic text-gray-955">Boutique Reviews Moderation</h3>
+                <h3 className="text-xl font-serif italic text-gray-950">Boutique Reviews Moderation</h3>
                 <p className="text-xs text-gray-400 mt-1">Moderate customer feedback before publishing it live on the footwear catalogue details.</p>
               </div>
 
@@ -2822,7 +2823,7 @@ export default function App() {
             <div className="space-y-6 animate-fadeIn">
               <div className="flex justify-between items-center border-b border-gray-150 pb-4">
                 <div>
-                  <h3 className="text-xl font-serif italic text-gray-955">Static policy Pages</h3>
+                  <h3 className="text-xl font-serif italic text-gray-950">Static policy Pages</h3>
                   <p className="text-xs text-gray-400 mt-1">Configure static terms & conditions pages like exchange policy or privacy details.</p>
                 </div>
               </div>
@@ -2935,7 +2936,7 @@ export default function App() {
             <div className="space-y-6 animate-fadeIn">
               <div className="flex justify-between items-center border-b border-gray-150 pb-4">
                 <div>
-                  <h3 className="text-xl font-serif italic text-gray-955">Administrative Staff Accounts</h3>
+                  <h3 className="text-xl font-serif italic text-gray-950">Administrative Staff Accounts</h3>
                   <p className="text-xs text-gray-400 mt-1">Configure roles (Admin, Manager, Staff assistant) and revoke credentials access.</p>
                 </div>
               </div>
@@ -3055,7 +3056,7 @@ export default function App() {
           {activeTab === 'settings' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="border-b border-gray-150 pb-4">
-                <h3 className="text-xl font-serif italic text-gray-955">Boutique Configuration Panel</h3>
+                <h3 className="text-xl font-serif italic text-gray-950">Boutique Configuration Panel</h3>
                 <p className="text-xs text-gray-400 mt-1">Configure Razorpay webhooks, brand details, SMS gateways and support channels.</p>
               </div>
 
@@ -3173,7 +3174,7 @@ export default function App() {
           {activeTab === 'reports' && (
             <div className="space-y-6 animate-fadeIn">
               <div className="border-b border-gray-150 pb-4">
-                <h3 className="text-xl font-serif italic text-gray-955">Enterprise Ledger Reporting</h3>
+                <h3 className="text-xl font-serif italic text-gray-950">Enterprise Ledger Reporting</h3>
                 <p className="text-xs text-gray-400 mt-1">Compile comprehensive financial audit reports directly from database query logs.</p>
               </div>
 
@@ -3275,7 +3276,7 @@ export default function App() {
                   {/* Print Container wrapper */}
                   <div id="print-report-container" className="bg-white border border-gray-150 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
                     <div className="border-b-2 border-gray-900 pb-4">
-                      <h2 className="text-2xl font-serif italic text-gray-955">HeelsUp Audited Data Ledger Report</h2>
+                      <h2 className="text-2xl font-serif italic text-gray-950">HeelsUp Audited Data Ledger Report</h2>
                       <div className="flex justify-between items-center text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1 font-mono">
                         <span>Calendar Range: {reportFrom} to {reportTo}</span>
                         <span>Generated on: {new Date().toLocaleString('en-IN')}</span>
@@ -3542,12 +3543,12 @@ export default function App() {
                     <div key={item.id} className="p-4 bg-white flex items-center justify-between gap-4 text-xs">
                       <div className="flex items-center gap-3">
                         {item.image ? (
-                          <img src={item.image} alt={item.product_name} className="w-12 h-12 object-cover rounded-xl border" />
+                          <HeicImage src={item.image} alt={item.product_name} className="w-12 h-12 object-cover rounded-xl border" />
                         ) : (
                           <div className="w-12 h-12 bg-gray-100 rounded-xl" />
                         )}
                         <div>
-                          <strong className="text-gray-955 font-bold block">{item.product_name}</strong>
+                          <strong className="text-gray-950 font-bold block">{item.product_name}</strong>
                           <span className="text-[10px] text-gray-400 block font-mono">Size Code: {item.size} &middot; Qty: {item.quantity}</span>
                         </div>
                       </div>
@@ -3843,7 +3844,7 @@ export default function App() {
       {sidebarMobileOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div onClick={() => setSidebarMobileOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <aside className="w-64 bg-gray-955 text-white flex flex-col justify-between p-5 relative z-10 shadow-2xl h-full border-r border-gray-900 animate-slideRight">
+          <aside className="w-64 bg-gray-950 text-white flex flex-col justify-between p-5 relative z-10 shadow-2xl h-full border-r border-gray-900 animate-slideRight">
             <div>
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-xl font-serif italic text-white">Heels<span className="text-[#C9A96E]">Up</span></h1>

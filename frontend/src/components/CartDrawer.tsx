@@ -3,6 +3,7 @@ import { X, Trash2, Plus, Minus, ShoppingBag } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '../store/useCartStore'
 import { useUIStore } from '../store/useUIStore'
+import HeicImage from './HeicImage'
 
 export default function CartDrawer() {
   const { items, updateQty, removeItem, getCartSubtotal } = useCartStore()
@@ -94,7 +95,7 @@ export default function CartDrawer() {
               ) : (
                 items.map((item) => (
                   <div key={`${item.id}-${item.color}-${item.size}`} className="flex gap-4 p-3 border border-gray-100 rounded-xl bg-white hover:shadow-sm transition-shadow">
-                    <img
+                    <HeicImage
                       src={item.img || '/assets/placeholder.jpg'}
                       alt={item.name}
                       className="w-20 h-20 object-cover bg-gray-50 rounded-lg flex-shrink-0"

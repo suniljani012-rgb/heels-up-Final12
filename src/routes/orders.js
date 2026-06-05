@@ -3,6 +3,7 @@ import { requireAuth, requireAdmin, optionalAuth } from '../middleware/auth.js';
 import { ok, list, created, error, notFound, serverError } from '../utils/response.js';
 import { razorpay } from '../utils/razorpay.js';
 import { sendInfobipSms } from '../utils/sms.js';
+import { sendOrderStatusEmail } from '../utils/email.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -246,6 +247,12 @@ export async function createOrderRecord(env, input) {
     if (customerPhone && (input.paymentStatus === 'paid' || input.orderStatus === 'confirmed')) {
         sendInfobipSms(env, customerPhone, `Dear ${customerName}, your HeelsUp order #${orderNumber} has been placed successfully! Total amount: INR ${totalAmount}. Thank you for shopping with us!`).catch(err => {
             console.error('Failed to send order SMS:', err);
+        });
+    }
+
+    if (orderId && (input.paymentStatus === 'paid' || input.orderStatus === 'confirmed' || input.orderStatus === 'placed')) {
+        sendOrderStatusEmail(env, orderId, 'placed').catch(err => {
+            console.error('Failed to send placement email:', err);
         });
     }
 
@@ -674,6 +681,12 @@ export async function ordersRouter(request, env) {
                 }
             }
 
+            if (updated && updated.customer_email) {
+                sendOrderStatusEmail(env, id, status).catch(err => {
+                    console.error('Failed to send status update email:', err);
+                });
+            }
+
             return ok(formatOrder(updated), 'Order status updated');
         } catch (e) {
             console.error('Update status error:', e);
@@ -757,6 +770,11 @@ export async function ordersRouter(request, env) {
                     if (status === 'cancelled' && current.order_status !== 'cancelled') {
                         await restoreSizeStock(env, id);
                     }
+
+                    // Dispatch status update email
+                    sendOrderStatusEmail(env, id, status).catch(err => {
+                        console.error(`Failed to send bulk status email for order ${id}:`, err);
+                    });
 
                     updated++;
                 } catch (err) {

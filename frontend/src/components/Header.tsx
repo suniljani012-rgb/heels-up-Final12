@@ -79,20 +79,22 @@ export default function Header() {
   ]
 
   return (
-    <header className="w-full z-40">
+    <header className="w-full z-40 sticky top-0 bg-[#fcfbf9] transition-all duration-300 shadow-sm">
       {/* Announcement Bar */}
-      <div className="w-full h-10 bg-[#e8ccc5] text-[#2d2a26] text-xs font-semibold flex items-center justify-center transition-all duration-300 relative overflow-hidden px-4 select-none">
-        <div key={announcementIndex} className="animate-fadeIn text-center">
-          {announcements[announcementIndex]}
+      {!scrolled && (
+        <div className="w-full h-10 bg-[#e8ccc5] text-[#2d2a26] text-xs font-semibold flex items-center justify-center transition-all duration-300 relative overflow-hidden px-4 select-none">
+          <div key={announcementIndex} className="animate-fadeIn text-center">
+            {announcements[announcementIndex]}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Navbar */}
       <nav
         className={`w-full transition-all duration-300 ${
           scrolled
-            ? 'fixed top-0 bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-100 py-4'
-            : 'bg-[#fcfbf9] border-b border-gray-100 py-6'
+            ? 'bg-white/90 backdrop-blur-md py-4'
+            : 'bg-transparent py-6'
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between">

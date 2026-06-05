@@ -4,6 +4,7 @@ import { Filter, Star, Heart, ArrowUpDown, ChevronLeft, ChevronRight } from 'luc
 import { useWishlistStore } from '../store/useWishlistStore'
 import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
+import HeicImage from '../components/HeicImage'
 
 interface Product {
   id: number;
@@ -50,6 +51,7 @@ export default function Shop() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalProducts, setTotalProducts] = useState(0)
   const [categories, setCategories] = useState<any[]>([])
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
   useEffect(() => {
     fetch('/api/categories')
@@ -183,9 +185,21 @@ export default function Shop() {
         </div>
       </div>
 
+      {/* Mobile Filters Toggle Button */}
+      <div className="lg:hidden mb-6">
+        <button
+          type="button"
+          onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+          className="w-full flex items-center justify-center gap-2 border border-gray-200 rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider bg-white text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-all shadow-sm"
+        >
+          <Filter className="w-4 h-4 text-primary" />
+          {mobileFiltersOpen ? 'Hide Filters' : 'Show Filters'}
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Filters Sidebar */}
-        <div className="lg:col-span-1 space-y-8 select-none">
+        <div className={`${mobileFiltersOpen ? 'block' : 'hidden'} lg:block lg:col-span-1 space-y-8 select-none`}>
           {/* Category Filter */}
           <div className="border border-gray-100 rounded-xl p-6 bg-white shadow-sm">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-4 flex items-center gap-1.5">
@@ -287,7 +301,7 @@ export default function Shop() {
                   >
                     {/* Image container */}
                     <div className="relative rounded-xl overflow-hidden bg-gray-50 aspect-square shadow-sm">
-                      <img
+                      <HeicImage
                         src={prod.images?.[0] || 'assets/placeholder.jpg'}
                         alt={prod.name}
                         className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"

@@ -4,6 +4,7 @@ import { Star, Heart, ShoppingBag, Truck, RefreshCw, Ruler, MessageSquare } from
 import { useCartStore } from '../store/useCartStore'
 import { useWishlistStore } from '../store/useWishlistStore'
 import { useToastStore } from '../store/useToastStore'
+import HeicImage from '../components/HeicImage'
 
 interface ProductDetail {
   id: number;
@@ -230,7 +231,7 @@ export default function Product() {
                     activeImage === imgUrl ? 'border-primary ring-1 ring-primary' : 'border-gray-200'
                   }`}
                 >
-                  <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                  <HeicImage src={imgUrl} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -238,7 +239,7 @@ export default function Product() {
 
           {/* Main Image */}
           <div className="flex-1 rounded-xl overflow-hidden bg-white border border-gray-100 aspect-square order-1 md:order-2 relative shadow-sm flex items-center justify-center p-4">
-            <img src={activeImage || 'assets/placeholder.jpg'} alt={product.name} className="max-w-full max-h-full object-contain" />
+            <HeicImage src={activeImage || 'assets/placeholder.jpg'} alt={product.name} className="max-w-full max-h-full object-contain" />
           </div>
         </div>
 
@@ -591,7 +592,7 @@ export default function Product() {
                 className="group flex flex-col gap-3"
               >
                 <div className="relative rounded-xl overflow-hidden bg-gray-50 aspect-square shadow-sm">
-                  <img
+                  <HeicImage
                     src={prod.images?.[0] || 'assets/placeholder.jpg'}
                     alt={prod.name}
                     className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
