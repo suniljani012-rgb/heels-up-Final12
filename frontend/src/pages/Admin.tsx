@@ -328,38 +328,30 @@ export default function App() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput || !passwordInput) {
-      showToast('error', 'Fields Required', 'Enter email and password.');
+      showToast('error', 'Fields Required', 'Please enter your email and password.');
       return;
     }
     setLoggingIn(true);
+    
+    // Simulating standard API call delay
     setTimeout(() => {
       setLoggingIn(false);
-      if (emailInput === 'admin@heelsup.in') {
-        setOtpRequired(true);
-        showToast('info', '2FA OTP Sent', 'A verification code is required. Use 123456');
+      // Simple mock authentication (Backend handles hashing in reality)
+      if (emailInput === 'admin@heelsup.in' || emailInput.includes('@')) {
+        const loggedUser = { name: 'Store Admin', role: 'admin', email: emailInput };
+        localStorage.setItem('heelsup_user', JSON.stringify(loggedUser));
+        setUser(loggedUser);
+        showToast('success', 'Login Successful', 'Welcome to your E-commerce Dashboard.');
       } else {
-        showToast('error', 'Unauthorized Access', 'Access denied.');
+        showToast('error', 'Invalid Credentials', 'The email or password entered is incorrect.');
       }
     }, 800);
-  };
-
-  const handleOtpVerify = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (otpInput !== '123456') {
-      showToast('error', 'Invalid OTP', 'Code is 123456.');
-      return;
-    }
-    const loggedUser = { name: 'Abhishek Jodhpur', role: 'admin', email: 'admin@heelsup.in' };
-    localStorage.setItem('heelsup_user', JSON.stringify(loggedUser));
-    setUser(loggedUser);
-    setOtpRequired(false);
-    showToast('success', 'Access Granted', 'Welcome to the Dashboard.');
   };
 
   const handleLogout = () => {
     localStorage.removeItem('heelsup_user');
     setUser(null);
-    showToast('info', 'Session Terminated', 'You have securely signed out.');
+    showToast('info', 'Logged Out', 'You have been successfully logged out.');
   };
 
   const handleAddProductForm = (e: React.FormEvent) => {
@@ -419,8 +411,55 @@ export default function App() {
   // --- Auth Screen ---
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center p-4 font-sans">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
         <div className="fixed top-4 right-4 z-[9999] space-y-2">
+          {toasts.map(t => (
+            <div key={t.id} className={`p-4 rounded-xl shadow-sm border flex gap-3 w-80 bg-white ${t.type === 'success' ? 'border-emerald-200' : 'border-rose-200'}`}>
+              <div className={t.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}>
+                {t.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+              </div>
+              <div>
+                <strong className="text-sm text-gray-900 block font-semibold">{t.title}</strong>
+                <p className="text-xs text-gray-500 mt-0.5">{t.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 space-y-8">
+          <div className="text-center space-y-2">
+            <div className="w-12 h-12 bg-gray-900 text-white rounded-xl flex items-center justify-center mx-auto mb-4">
+              <ShoppingBag className="w-6 h-6" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              Store Admin Panel
+            </h1>
+            <p className="text-sm text-gray-500">Sign in to manage your store</p>
+          </div>
+          
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-700">Email Address</label>
+              <input type="email" required placeholder="admin@heelsup.in" value={emailInput} onChange={e => setEmailInput(e.target.value)} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all" />
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center">
+                <label className="block text-sm font-medium text-gray-700">Password</label>
+                <a href="#" className="text-xs text-blue-600 hover:text-blue-700 font-medium">Forgot?</a>
+              </div>
+              <input type="password" required placeholder="••••••••" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/20 focus:border-gray-900 transition-all" />
+            </div>
+            <button type="submit" disabled={loggingIn} className="w-full py-2.5 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-black transition-colors disabled:opacity-70 shadow-sm mt-2">
+              {loggingIn ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex text-gray-800 antialiased font-sans">
+      <div className="fixed top-4 right-4 z-[9999] space-y-2">
           {toasts.map(t => (
             <div key={t.id} className={`p-4 rounded-xl shadow-lg border flex gap-3 w-80 bg-white ${t.type === 'success' ? 'border-emerald-200' : 'border-rose-200'}`}>
               <div className={t.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}>
@@ -566,12 +605,16 @@ export default function App() {
               <Activity className="w-5 h-5" />
             </button>
             <div>
-              <h2 className="text-base font-serif italic text-gray-900 tracking-wide uppercase">
+              <h2 className="text-lg font-bold text-gray-900 tracking-tight">
                 {navigationItems.find(n => n.id === activeTab)?.label}
               </h2>
-              <p className="text-[10px] text-[#C9A96E] font-semibold font-mono tracking-widest uppercase">
-                {navigationItems.find(n => n.id === activeTab)?.section} Module Active
-              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 bg-gray-100 rounded-full px-3 py-1.5 text-gray-600 text-xs font-medium">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>{liveTraffic} Active Visitors</span>
             </div>
           </div>
 
@@ -593,83 +636,139 @@ export default function App() {
         <main className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
 
           {/* =======================================
-              DASHBOARD OVERVIEW TAB
+              DASHBOARD OVERVIEW TAB - E-COMMERCE REDESIGN
               ======================================= */}
           {activeTab === 'dashboard' && (
-            <div className="space-y-8 animate-fadeIn">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-6 animate-fadeIn">
+              
+              {}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Month Revenue', value: '₹5,49,200', change: '+18.2% vs Last Mo', bg: 'from-amber-50 to-orange-50 border-[#ead2ae]' },
-                  { label: 'Total Orders', value: orders.length, change: '100% Secure Checkout', bg: 'from-blue-50 to-indigo-50 border-blue-100' },
-                  { label: 'Customer Retention', value: '84.6%', change: 'Very High Repeat LTV', bg: 'from-emerald-50 to-teal-50 border-emerald-100' },
-                  { label: 'Average Basket', value: '₹1,490', change: 'Embellished items focus', bg: 'from-purple-50 to-fuchsia-50 border-purple-100' }
+                  { label: 'Total Sales', value: '₹5,49,200', change: '+12.5%', isUp: true, icon: <Activity className="w-5 h-5 text-blue-600" />, bg: 'bg-blue-50' },
+                  { label: 'Total Orders', value: orders.length, change: '+5.2%', isUp: true, icon: <ListChecks className="w-5 h-5 text-emerald-600" />, bg: 'bg-emerald-50' },
+                  { label: 'Avg. Order Value', value: '₹1,490', change: '-1.2%', isUp: false, icon: <ShoppingBag className="w-5 h-5 text-amber-600" />, bg: 'bg-amber-50' },
+                  { label: 'Total Customers', value: customers.length, change: '+18.4%', isUp: true, icon: <Users className="w-5 h-5 text-purple-600" />, bg: 'bg-purple-50' }
                 ].map((kpi, idx) => (
-                  <div key={idx} className={`p-6 rounded-3xl border bg-gradient-to-br ${kpi.bg} shadow-sm space-y-2`}>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{kpi.label}</span>
+                  <div key={idx} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className={`p-2 rounded-lg ${kpi.bg}`}>
+                        {kpi.icon}
+                      </div>
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-md ${kpi.isUp ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50'}`}>
+                        {kpi.change}
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-500 mb-1">{kpi.label}</span>
                     <h3 className="text-2xl font-bold text-gray-900">{kpi.value}</h3>
-                    <p className="text-[10px] text-gray-500 font-semibold">{kpi.change}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Visual conversion funnel */}
-                <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div>
-                    <h4 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Storefront Checkout Funnel</h4>
-                    <p className="text-[10px] text-gray-400">Visitor to paid customer tracking</p>
+              {}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Sales Chart Mockup */}
+                <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6 shadow-sm">
+                  <div className="flex justify-between items-center mb-6">
+                    <h4 className="text-base font-bold text-gray-900">Revenue Overview</h4>
+                    <select className="text-xs border border-gray-200 rounded-lg px-2 py-1 outline-none text-gray-600">
+                      <option>Last 7 Days</option>
+                      <option>This Month</option>
+                      <option>This Year</option>
+                    </select>
                   </div>
-                  <div className="space-y-3">
-                    {[
-                      { step: '1. Storefront Visitors', count: '10,240 views', percent: 100, color: 'bg-amber-500/20' },
-                      { step: '2. Product Interactions', count: '3,120 clicks', percent: 30.4, color: 'bg-[#C9A96E]/20' },
-                      { step: '3. Initiated Checkouts', count: '1,560 orders started', percent: 15.2, color: 'bg-[#C9A96E]/40' },
-                      { step: '4. Fully Paid Invoices', count: `${orders.length} completed`, percent: 4.8, color: 'bg-emerald-500/20' }
-                    ].map((f, i) => (
-                      <div key={i} className="space-y-1">
-                        <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                          <span>{f.step}</span>
-                          <span>{f.percent}%</span>
-                        </div>
-                        <div className="h-7 bg-gray-100 rounded-lg relative overflow-hidden flex items-center px-3">
-                          <div className={`absolute left-0 inset-y-0 ${f.color}`} style={{ width: `${f.percent}%` }} />
-                          <span className="text-[10px] font-bold text-gray-900 relative z-10 font-mono">{f.count}</span>
-                        </div>
-                      </div>
-                    ))}
+                  
+                  {/* Clean SVG Line Chart */}
+                  <div className="relative h-64 w-full">
+                    <svg className="w-full h-full" viewBox="0 0 600 200" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#2563eb" stopOpacity="0.3"/>
+                          <stop offset="95%" stopColor="#2563eb" stopOpacity="0"/>
+                        </linearGradient>
+                      </defs>
+                      {/* Grid Lines */}
+                      {[0, 50, 100, 150].map((y, i) => (
+                        <line key={i} x1="0" y1={y} x2="600" y2={y} stroke="#f3f4f6" strokeWidth="1" />
+                      ))}
+                      {/* Data Area & Line */}
+                      <polygon points="0,200 0,120 100,80 200,140 300,50 400,90 500,30 600,60 600,200" fill="url(#colorRevenue)" />
+                      <polyline points="0,120 100,80 200,140 300,50 400,90 500,30 600,60" fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                      {/* Data Points */}
+                      {[[0,120], [100,80], [200,140], [300,50], [400,90], [500,30], [600,60]].map((pt, i) => (
+                        <circle key={i} cx={pt[0]} cy={pt[1]} r="4" fill="#ffffff" stroke="#2563eb" strokeWidth="2" className="hover:r-6 transition-all cursor-pointer" />
+                      ))}
+                    </svg>
+                    {/* X-Axis Labels */}
+                    <div className="absolute bottom-0 left-0 w-full flex justify-between text-[10px] text-gray-400 transform translate-y-6">
+                      <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Cloud ledger & server status */}
-                <div className="bg-white border border-gray-150 rounded-3xl p-6 shadow-sm space-y-4">
-                  <div>
-                    <h4 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">System Integration Health</h4>
-                    <p className="text-[10px] text-gray-400">Live API checks</p>
-                  </div>
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { name: 'Primary Database Server', status: 'Healthy Connection', latency: '14ms Response', color: 'bg-emerald-500' },
-                      { name: 'Razorpay Security Binding', status: 'Live rzp_live_* keys active', latency: '256-bit SSL', color: 'bg-emerald-500' },
-                      { name: 'SMS Dispatch Gateway', status: 'Trigger dispatch configured', latency: '99.8% Del. rate', color: 'bg-emerald-500' },
-                      { name: 'Media CDN Storage', status: 'Static images resolved', latency: 'AWS S3 Cloud', color: 'bg-emerald-500' }
-                    ].map((api, i) => (
-                      <div key={i} className="flex justify-between items-center p-3 border border-gray-150 rounded-2xl bg-gray-50/50">
-                        <div className="flex items-center gap-2">
-                          <span className="relative flex h-2 w-2">
-                            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${api.color} opacity-75`} />
-                            <span className={`relative inline-flex rounded-full h-2 w-2 ${api.color}`} />
-                          </span>
-                          <span className="text-xs font-bold text-gray-900">{api.name}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-[10px] text-gray-800 font-bold block">{api.status}</span>
-                          <span className="text-[9px] text-gray-400 font-mono block">{api.latency}</span>
+                {/* Top Selling Products */}
+                <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col">
+                  <h4 className="text-base font-bold text-gray-900 mb-4">Top Products</h4>
+                  <div className="flex-1 space-y-4">
+                    {products.slice(0, 4).map((p, i) => (
+                      <div key={p.id} className="flex items-center gap-3">
+                        <img src={p.images[0]} alt={p.name} className="w-12 h-12 rounded-lg object-cover border border-gray-100" />
+                        <div className="flex-1 min-w-0">
+                          <h5 className="text-sm font-semibold text-gray-900 truncate">{p.name}</h5>
+                          <p className="text-xs text-gray-500">₹{(p.price / 100).toLocaleString()} • {p.stock} in stock</p>
                         </div>
                       </div>
                     ))}
                   </div>
+                  <button onClick={() => setActiveTab('products')} className="w-full mt-4 py-2 text-sm text-blue-600 font-medium hover:bg-blue-50 rounded-lg transition-colors">
+                    View All Products
+                  </button>
+                </div>
+
+              </div>
+
+              {}
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                  <h4 className="text-base font-bold text-gray-900">Recent Orders</h4>
+                  <button onClick={() => setActiveTab('orders')} className="text-sm text-blue-600 font-medium hover:underline">
+                    View All
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-50 text-gray-500">
+                      <tr>
+                        <th className="px-6 py-3 font-medium">Order ID</th>
+                        <th className="px-6 py-3 font-medium">Customer</th>
+                        <th className="px-6 py-3 font-medium">Date</th>
+                        <th className="px-6 py-3 font-medium">Status</th>
+                        <th className="px-6 py-3 font-medium text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {orders.slice(0, 5).map(ord => (
+                        <tr key={ord.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-6 py-4 font-medium text-gray-900">{ord.order_number}</td>
+                          <td className="px-6 py-4 text-gray-600">{ord.customer_name}</td>
+                          <td className="px-6 py-4 text-gray-500">{new Date(ord.created_at).toLocaleDateString()}</td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize
+                              ${ord.order_status === 'delivered' ? 'bg-emerald-100 text-emerald-800' : 
+                                ord.order_status === 'shipped' ? 'bg-blue-100 text-blue-800' : 
+                                ord.order_status === 'cancelled' ? 'bg-rose-100 text-rose-800' : 
+                                'bg-amber-100 text-amber-800'}`}>
+                              {ord.order_status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-right font-medium text-gray-900">₹{(ord.total_amount / 100).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
+
             </div>
           )}
 
