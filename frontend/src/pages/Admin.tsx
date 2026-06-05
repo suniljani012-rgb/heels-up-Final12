@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   LayoutDashboard, ShoppingCart, Package, ListChecks,
-  ShieldAlert, LogOut, Plus, Edit3, Settings, Tag, Star, Users, FileText, Image as ImageIcon,
+  LogOut, Plus, Edit3, Settings, Tag, Star, Users, FileText, Image as ImageIcon,
   UploadCloud, AlertTriangle, CheckCircle2, X, ChevronRight, ChevronLeft, Search, Bell,
-  RotateCw, Printer, Download, Filter, Trash2, Lock, PlusCircle, Eye, Percent, Activity
+  RotateCw, Printer, Download, Trash2, Lock, PlusCircle, Percent, Activity
 } from 'lucide-react'
 
 // --- TypeScript Interfaces ---
@@ -297,9 +297,10 @@ interface Toast {
 
 export default function App() {
   // Authentication State
-  const [user, setUser] = useState<{ name: string; role: string } | null>({
+  const [user, setUser] = useState<{ name: string; role: string; email: string } | null>({
     name: 'Abhishek Jodhpur',
-    role: 'admin'
+    role: 'admin',
+    email: 'admin@heelsup.in'
   });
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
@@ -343,7 +344,6 @@ export default function App() {
   // Dynamic Metrics Simulation
   const [liveTraffic, setLiveTraffic] = useState(38);
   const [chartMetric, setChartMetric] = useState<'revenue' | 'orders' | 'aov'>('revenue');
-  const [chartPeriod, setChartPeriod] = useState<'7days' | '30days'>('7days');
 
   // Live session event simulation
   const [liveSessions, setLiveSessions] = useState([
@@ -373,7 +373,7 @@ export default function App() {
 
       const randomLoc = locations[Math.floor(Math.random() * locations.length)];
       const randomAct = actions[Math.floor(Math.random() * actions.length)];
-      const status = randomAct.includes('Completed Checkout') ? 'success' : 'active';
+      const status: 'success' | 'active' | 'warning' = randomAct.includes('Completed Checkout') ? 'success' : 'active';
 
       setLiveSessions(prev => [
         { id: Math.random().toString(36).substring(2, 6).toUpperCase(), location: randomLoc, action: randomAct, time: 'Just now', status },
@@ -385,7 +385,6 @@ export default function App() {
   }, []);
 
   // --- Sub-module Form States & Editors ---
-  const [editingItem, setEditingItem] = useState<any | null>(null);
 
   // Category Form
   const [catName, setCatName] = useState('');
@@ -491,7 +490,7 @@ export default function App() {
       // Find matching staff member in database
       const found = staffList.find(s => s.email.toLowerCase() === emailInput.toLowerCase());
       if (found && found.active) {
-        setUser({ name: found.name, role: found.role });
+        setUser({ name: found.name, role: found.role, email: found.email });
         showToast('success', 'Access Granted', `Welcome back ${found.name} (${found.role.toUpperCase()}). Session validated.`);
       } else {
         showToast('error', 'Unauthorized Access', 'Access denied. The email or security token credentials did not match active records.');
@@ -1175,7 +1174,7 @@ export default function App() {
                   {/* Area Chart Rendering */}
                   <div className="relative h-44 border-b border-gray-100">
                     {(() => {
-                      const { coords, linePointsStr, areaPointsStr, maxVal } = getTimelinePoints();
+                      const { coords, linePointsStr, areaPointsStr } = getTimelinePoints();
                       const colorHex = chartMetric === 'orders' ? '#10B981' : chartMetric === 'aov' ? '#8B5CF6' : '#C9A96E';
                       return (
                         <svg className="w-full h-full" viewBox="0 0 500 140" preserveAspectRatio="none">

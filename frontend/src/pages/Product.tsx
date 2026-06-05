@@ -19,6 +19,26 @@ interface ProductDetail {
   size_stock: Record<string, number>;
   images: string[];
   stock: number;
+  colors?: string[];
+}
+
+const getColorHex = (name: string) => {
+  const clean = name.toLowerCase().trim()
+  const map: Record<string, string> = {
+    black: '#1a1a1a',
+    cream: '#f9f1e3',
+    white: '#ffffff',
+    cherry: '#7a1b32',
+    brown: '#8b5a2b',
+    nude: '#e3bc9a',
+    beige: '#f5f5dc',
+    tan: '#b08d57',
+    gold: '#d4af37',
+    silver: '#c0c0c0',
+    grey: '#808080',
+    pink: '#ffb6c1'
+  }
+  return map[clean] || clean
 }
 
 interface Review {
@@ -47,7 +67,7 @@ export default function Product() {
 
   const [activeImage, setActiveImage] = useState('')
   const [selectedSize, setSelectedSize] = useState('')
-  const [selectedColor] = useState('Default')
+  const [selectedColor, setSelectedColor] = useState('Default')
   const [qty, setQty] = useState(1)
   const [showSizeGuide, setShowSizeGuide] = useState(false)
 
@@ -80,6 +100,9 @@ export default function Product() {
           // Sizes default selector
           if (detail.sizes?.length > 0) {
             setSelectedSize(detail.sizes[0])
+          }
+          if (detail.colors?.length > 0) {
+            setSelectedColor(detail.colors[0])
           }
 
           // Fetch related products
@@ -214,8 +237,8 @@ export default function Product() {
           )}
 
           {/* Main Image */}
-          <div className="flex-1 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 aspect-square order-1 md:order-2 relative shadow-sm">
-            <img src={activeImage || 'assets/placeholder.jpg'} alt={product.name} className="w-full h-full object-cover" />
+          <div className="flex-1 rounded-xl overflow-hidden bg-white border border-gray-100 aspect-square order-1 md:order-2 relative shadow-sm flex items-center justify-center p-4">
+            <img src={activeImage || 'assets/placeholder.jpg'} alt={product.name} className="max-w-full max-h-full object-contain" />
           </div>
         </div>
 
@@ -260,6 +283,32 @@ export default function Product() {
               </>
             )}
           </div>
+
+          {/* Color Picker */}
+          {product.colors && product.colors.length > 0 && (
+            <div className="space-y-3">
+              <span className="text-xs font-semibold text-gray-900 block">Select Color: <span className="text-gray-500 font-normal">{selectedColor}</span></span>
+              <div className="flex items-center gap-2.5">
+                {product.colors.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setSelectedColor(color)}
+                    className={`h-9 px-4 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                      selectedColor === color
+                        ? 'border-primary bg-primary text-white shadow-sm'
+                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-black/10"
+                      style={{ backgroundColor: getColorHex(color) }}
+                    />
+                    <span>{color}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Size picker */}
           {product.sizes?.length > 0 && (
@@ -545,11 +594,26 @@ export default function Product() {
                   <img
                     src={prod.images?.[0] || 'assets/placeholder.jpg'}
                     alt={prod.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
                   />
                 </div>
                 <div>
                   <h4 className="text-xs font-semibold text-gray-800 line-clamp-1">{prod.name}</h4>
+
+                  {/* Related Color Options */}
+                  {prod.colors && prod.colors.length > 0 && (
+                    <div className="flex items-center gap-1 mt-0.5 mb-0.5">
+                      {prod.colors.map((colorName: string) => (
+                        <span
+                          key={colorName}
+                          title={colorName}
+                          className="w-2.5 h-2.5 rounded-full border border-gray-200 shadow-sm"
+                          style={{ backgroundColor: getColorHex(colorName) }}
+                        />
+                      ))}
+                    </div>
+                  )}
+
                   <span className="text-xs font-bold text-gray-900 mt-1 block">
                     ₹{(prod.price / 100).toLocaleString('en-IN')}
                   </span>

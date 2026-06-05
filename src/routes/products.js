@@ -15,7 +15,7 @@ function safeJsonParse(str, fallback = []) {
   }
 }
 
-function mapProduct(p, sizeStock = []) {
+function mapProduct(p, sizeStock = [], colors = []) {
   if (!p) return null;
   const sizes = safeJsonParse(p.sizes_json, []);
 
@@ -60,6 +60,7 @@ function mapProduct(p, sizeStock = []) {
     sizes: sizes,
     size_stock: sizeStockMap,   // NEW: per-size stock map
     images: safeJsonParse(p.images_json, p.image_url ? [p.image_url] : []),
+    colors: colors,
   };
 }
 
@@ -91,6 +92,38 @@ async function fetchSizeStockBatch(env, productIds) {
     return map;
   } catch {
     return {};
+  }
+}
+
+// Helper: fetch distinct colors for multiple products as a map { productId: [colors] }
+async function fetchColorsBatch(env, productIds) {
+  if (!productIds.length) return {};
+  try {
+    const placeholders = productIds.map(() => '?').join(',');
+    const res = await env.DB.prepare(
+      `SELECT DISTINCT product_id, color FROM inventory WHERE product_id IN (${placeholders}) ORDER BY product_id, color ASC`
+    ).bind(...productIds).all();
+    const map = {};
+    for (const row of (res.results || [])) {
+      if (!row.color || row.color === 'Default' || row.color === 'Nude/Default') continue;
+      if (!map[row.product_id]) map[row.product_id] = [];
+      map[row.product_id].push(row.color);
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+// Helper: fetch distinct colors for a single product
+async function fetchColorsForProduct(env, productId) {
+  try {
+    const res = await env.DB.prepare(
+      "SELECT DISTINCT color FROM inventory WHERE product_id = ? ORDER BY color ASC"
+    ).bind(productId).all();
+    return (res.results || []).map(r => r.color).filter(c => c && c !== 'Default' && c !== 'Nude/Default');
+  } catch {
+    return [];
   }
 }
 
@@ -208,7 +241,8 @@ export async function productsRouter(request, env) {
             const rawProducts = productsRes.results || [];
             const productIds = rawProducts.map(p => p.id);
             const sizeStockBatch = await fetchSizeStockBatch(env, productIds);
-            const products = rawProducts.map(p => mapProduct(p, sizeStockBatch[p.id] || []));
+            const colorsBatch = await fetchColorsBatch(env, productIds);
+            const products = rawProducts.map(p => mapProduct(p, sizeStockBatch[p.id] || [], colorsBatch[p.id] || []));
 
             return list(products, {
                 page, limit,
@@ -240,7 +274,7 @@ export async function productsRouter(request, env) {
             ).bind(id).first();
             if (!product) return notFound('Product not found');
 
-            const [reviews, images, related, sizeStock] = await Promise.all([
+            const [reviews, images, related, sizeStock, colors] = await Promise.all([
               env.DB.prepare(
                 `SELECT r.id, r.rating, r.title, r.body, r.created_at, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name
          FROM product_reviews r LEFT JOIN users u ON r.user_id = u.id
@@ -253,14 +287,20 @@ export async function productsRouter(request, env) {
               env.DB.prepare(
                 "SELECT p.*, c.id as category_id FROM products p LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category) WHERE p.category=? AND p.id!=? AND p.active=1 ORDER BY p.featured DESC LIMIT 4"
               ).bind(product.category, product.id).all(),
-              fetchSizeStock(env, product.id)
+              fetchSizeStock(env, product.id),
+              fetchColorsForProduct(env, product.id)
             ]);
 
+            const relatedRaw = related.results || [];
+            const relatedIds = relatedRaw.map(r => r.id);
+            const relatedSizeStock = await fetchSizeStockBatch(env, relatedIds);
+            const relatedColors = await fetchColorsBatch(env, relatedIds);
+
             return ok({
-                product: mapProduct(product, sizeStock),
+                product: mapProduct(product, sizeStock, colors),
                 reviews: reviews.results || [],
                 images: images.results || [],
-                related: (related.results || []).map(r => mapProduct(r))
+                related: relatedRaw.map(r => mapProduct(r, relatedSizeStock[r.id] || [], relatedColors[r.id] || []))
             });
         } catch (e) {
             console.error('Slug fetch error:', e);
@@ -282,7 +322,7 @@ export async function productsRouter(request, env) {
             ).bind(id).first();
             if (!product) return notFound('Product not found');
 
-            const [reviews, images, sizeStock] = await Promise.all([
+            const [reviews, images, sizeStock, colors] = await Promise.all([
               env.DB.prepare(
                 `SELECT r.id, r.rating, r.title, r.body, r.created_at, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name
          FROM product_reviews r LEFT JOIN users u ON r.user_id = u.id
@@ -292,11 +332,12 @@ export async function productsRouter(request, env) {
               env.DB.prepare(
                 "SELECT id, url, alt, sort_order, is_primary FROM product_images WHERE product_id=? ORDER BY sort_order ASC, id ASC"
               ).bind(id).all(),
-              fetchSizeStock(env, id)
+              fetchSizeStock(env, id),
+              fetchColorsForProduct(env, id)
             ]);
 
             return ok({
-                product: mapProduct(product, sizeStock),
+                product: mapProduct(product, sizeStock, colors),
                 reviews: reviews.results || [],
                 images: images.results || []
             });
@@ -389,7 +430,8 @@ export async function productsRouter(request, env) {
                         await upsertSizeStock(env, result.id, autoSizeStock);
                     }
                     const sizeStockRows = await fetchSizeStock(env, result.id);
-                    results.push(mapProduct(result, sizeStockRows));
+                    const colorsList = await fetchColorsForProduct(env, result.id);
+                    results.push(mapProduct(result, sizeStockRows, colorsList));
                 }
             }
 
@@ -433,7 +475,8 @@ export async function productsRouter(request, env) {
             }
 
             const sizeStock2 = await fetchSizeStock(env, result.id);
-            return created(mapProduct(result, sizeStock2), 'Product created');
+            const colorsList = await fetchColorsForProduct(env, result.id);
+            return created(mapProduct(result, sizeStock2, colorsList), 'Product created');
         } catch (e) {
             console.error('Create product error:', e);
             if (e.message?.includes('UNIQUE')) return error('SKU already exists', 409);
@@ -475,7 +518,8 @@ export async function productsRouter(request, env) {
                 "SELECT p.*, c.id as category_id FROM products p LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category) WHERE p.id=?"
             ).bind(id).first();
             const sizeStockRows = await fetchSizeStock(env, id);
-            return ok(mapProduct(product, sizeStockRows), 'Product updated');
+            const colorsList = await fetchColorsForProduct(env, id);
+            return ok(mapProduct(product, sizeStockRows, colorsList), 'Product updated');
         } catch (e) {
             console.error('Update product error:', e);
             return serverError('Failed to update product');
@@ -560,7 +604,8 @@ export async function productsRouter(request, env) {
                 "SELECT p.*, c.id as category_id FROM products p LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category) WHERE p.id=?"
             ).bind(id).first();
             const sizeStockRows = await fetchSizeStock(env, id);
-            return ok(mapProduct(product, sizeStockRows), 'Product updated');
+            const colorsList = await fetchColorsForProduct(env, id);
+            return ok(mapProduct(product, sizeStockRows, colorsList), 'Product updated');
         } catch (e) {
             console.error('PATCH product error:', e);
             return serverError('Failed to patch product');
@@ -586,7 +631,8 @@ export async function productsRouter(request, env) {
             ).bind(id).first();
             if (!product) return notFound('Product not found');
             const sizeStockRows = await fetchSizeStock(env, id);
-            return ok(mapProduct(product, sizeStockRows), showMrp ? 'MRP is now visible to customers' : 'MRP is now hidden from customers');
+            const colorsList = await fetchColorsForProduct(env, id);
+            return ok(mapProduct(product, sizeStockRows, colorsList), showMrp ? 'MRP is now visible to customers' : 'MRP is now hidden from customers');
         } catch (e) {
             console.error('MRP visibility toggle error:', e);
             return serverError('Failed to update MRP visibility');

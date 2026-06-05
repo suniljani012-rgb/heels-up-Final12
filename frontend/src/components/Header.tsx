@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { ShoppingBag, Heart, User, Search, Menu, X, ShieldAlert } from 'lucide-react'
 import { useCartStore } from '../store/useCartStore'
 import { useWishlistStore } from '../store/useWishlistStore'
@@ -12,6 +12,21 @@ export default function Header() {
   const { user, isAuthenticated } = useAuthStore()
   const { setCartOpen, mobileMenuOpen, setMobileMenuOpen } = useUIStore()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const isLinkActive = (to: string) => {
+    if (to === '/') {
+      return location.pathname === '/'
+    }
+    if (to === '/shop') {
+      return location.pathname === '/shop' && !new URLSearchParams(location.search).get('cat')
+    }
+    if (to.startsWith('/shop?cat=')) {
+      const catSlug = to.split('cat=')[1]
+      return location.pathname === '/shop' && new URLSearchParams(location.search).get('cat') === catSlug
+    }
+    return false
+  }
 
   const [scrolled, setScrolled] = useState(false)
   const [announcementIndex, setAnnouncementIndex] = useState(0)
@@ -101,20 +116,21 @@ export default function Header() {
 
           {/* Desktop Nav links */}
           <ul className="hidden md:flex items-center gap-8 text-xs font-semibold tracking-wider uppercase text-gray-700">
-            {navLinks.map((link) => (
-              <li key={link.to}>
-                <NavLink
-                  to={link.to}
-                  className={({ isActive }) =>
-                    `hover:text-[#c9a96e] transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1.5px] after:bg-[#c9a96e] after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform ${
-                      isActive ? 'text-[#c9a96e] after:scale-x-100' : ''
-                    }`
-                  }
-                >
-                  {link.label}
-                </NavLink>
-              </li>
-            ))}
+            {navLinks.map((link) => {
+              const active = isLinkActive(link.to)
+              return (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    className={`hover:text-[#c9a96e] transition-colors py-2 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[1.5px] after:bg-[#c9a96e] after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform ${
+                      active ? 'text-[#c9a96e] after:scale-x-100' : ''
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              )
+            })}
             {isAuthenticated && (user?.role === 'admin' || user?.role === 'staff') && (
               <li>
                 <Link
@@ -226,7 +242,9 @@ export default function Header() {
                 key={link.to}
                 to={link.to}
                 onClick={() => setMobileMenuOpen(false)}
-                className="hover:text-[#c9a96e] transition-colors"
+                className={`hover:text-[#c9a96e] transition-colors ${
+                  isLinkActive(link.to) ? 'text-[#c9a96e] font-semibold' : ''
+                }`}
               >
                 {link.label}
               </Link>

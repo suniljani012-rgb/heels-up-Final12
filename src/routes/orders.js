@@ -1,5 +1,5 @@
 // worker/src/routes/orders.js
-import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { requireAuth, requireAdmin, optionalAuth } from '../middleware/auth.js';
 import { ok, list, created, error, notFound, serverError } from '../utils/response.js';
 import { razorpay } from '../utils/razorpay.js';
 import { sendInfobipSms } from '../utils/sms.js';
@@ -262,8 +262,7 @@ export async function ordersRouter(request, env) {
     // ── POST /api/orders/initiate ───────────────────────────────────────────
     if (path === '/initiate' && method === 'POST') {
         try {
-            const { user, error: authErr } = await requireAuth(request, env);
-            if (authErr) return authErr;
+            const user = await optionalAuth(request, env);
 
             const body = await request.json();
             if (!body) return error('Invalid JSON', 400);
@@ -347,11 +346,11 @@ export async function ordersRouter(request, env) {
             // Free order bypass
             if (amountPaise <= 0) {
                 const createdRes = await createOrderRecord(env, {
-                    userId: user.id,
+                    userId: user?.id || null,
                     customer: body.customer || {
-                        name: `${user.first_name} ${user.last_name || ""}`.trim(),
-                        email: user.email,
-                        phone: user.phone || body.phone || ""
+                        name: user ? `${user.first_name} ${user.last_name || ""}`.trim() : (body.name || "Guest"),
+                        email: user ? user.email : (body.email || ""),
+                        phone: user ? (user.phone || body.phone || "") : (body.phone || "")
                     },
                     items: itemsValidated,
                     deliveryMethod: body.deliveryMethod || "standard",
@@ -383,11 +382,11 @@ export async function ordersRouter(request, env) {
 
             // Save pending payload in KV (expires in 24 hours)
             const pendingPayload = {
-                userId: user.id,
+                userId: user?.id || null,
                 customer: body.customer || {
-                    name: `${user.first_name} ${user.last_name || ""}`.trim(),
-                    email: user.email,
-                    phone: user.phone || body.phone || ""
+                    name: user ? `${user.first_name} ${user.last_name || ""}`.trim() : (body.name || "Guest"),
+                    email: user ? user.email : (body.email || ""),
+                    phone: user ? (user.phone || body.phone || "") : (body.phone || "")
                 },
                 items: itemsValidated,
                 deliveryMethod: body.deliveryMethod || "standard",
