@@ -479,6 +479,38 @@ export default function App() {
   const [generatedReport, setGeneratedReport] = useState<any | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
 
+  // --- File Upload Helper ---
+  const handleUploadImage = async (file: File): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const token = localStorage.getItem('heelsup_token');
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+      
+      const result = await response.json();
+      if (result.success && result.data?.url) {
+        return result.data.url;
+      } else {
+        showToast('error', 'Upload Failed', result.error || 'Server rejected file upload');
+        return null;
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      showToast('error', 'Upload Error', 'Could not connect to the upload service');
+      return null;
+    }
+  };
+
   // --- Auth Handlers ---
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1820,6 +1852,26 @@ export default function App() {
                     >
                       Attach
                     </button>
+                    <label className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl cursor-pointer transition-colors border border-gray-250 flex items-center gap-1 shrink-0">
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      Upload
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            showToast('info', 'Uploading...', 'Uploading image to media storage...');
+                            const url = await handleUploadImage(file);
+                            if (url) {
+                              setProdFormImages(prev => [...prev, url]);
+                              showToast('success', 'Upload Complete', 'Uploaded and added image to product.');
+                            }
+                          }
+                        }}
+                      />
+                    </label>
                   </div>
 
                   {/* Preview grid */}
@@ -2013,13 +2065,35 @@ export default function App() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Image URL reference</label>
-                    <input
-                      type="text"
-                      placeholder="https://images.unsplash.com/..."
-                      value={catImg}
-                      onChange={e => setCatImg(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="https://images.unsplash.com/..."
+                        value={catImg}
+                        onChange={e => setCatImg(e.target.value)}
+                        className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                      />
+                      <label className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl cursor-pointer transition-colors border border-gray-250 flex items-center gap-1 shrink-0">
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        Upload
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              showToast('info', 'Uploading...', 'Uploading category image...');
+                              const url = await handleUploadImage(file);
+                              if (url) {
+                                setCatImg(url);
+                                showToast('success', 'Upload Complete', 'Uploaded and set category image.');
+                              }
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Sorting Priority</label>
@@ -2695,14 +2769,36 @@ export default function App() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Image URL reference</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="https://images.unsplash.com/..."
-                      value={bannerImg}
-                      onChange={e => setBannerImg(e.target.value)}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        required
+                        placeholder="https://images.unsplash.com/..."
+                        value={bannerImg}
+                        onChange={e => setBannerImg(e.target.value)}
+                        className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs bg-white focus:outline-none"
+                      />
+                      <label className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl cursor-pointer transition-colors border border-gray-250 flex items-center gap-1 shrink-0">
+                        <UploadCloud className="w-3.5 h-3.5" />
+                        Upload
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              showToast('info', 'Uploading...', 'Uploading banner image...');
+                              const url = await handleUploadImage(file);
+                              if (url) {
+                                setBannerImg(url);
+                                showToast('success', 'Upload Complete', 'Uploaded and set banner image.');
+                              }
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Subtitle</label>

@@ -8,6 +8,24 @@ interface HeicImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 // Global cache for converted HEIC image URLs
 const heicCache = new Map<string, string>();
 
+// Helper function to resolve/proxy R2 urls to same-origin to avoid CORS and domain issues
+const getProxyUrl = (urlStr: string) => {
+  if (!urlStr) return '';
+  if (urlStr.startsWith('/') || urlStr.startsWith('data:') || urlStr.startsWith('blob:')) {
+    return urlStr;
+  }
+  try {
+    const parsed = new URL(urlStr);
+    if (parsed.hostname.includes('r2.dev') || parsed.hostname.includes('heelsup.in')) {
+      const key = parsed.pathname.substring(1); // Remove leading slash
+      return `/api/upload?key=${encodeURIComponent(decodeURIComponent(key))}`;
+    }
+  } catch (e) {
+    console.error('Failed to parse URL for proxy:', urlStr, e);
+  }
+  return urlStr;
+};
+
 export default function HeicImage({ src, fallback = 'assets/placeholder.jpg', className, ...props }: HeicImageProps) {
   const [displaySrc, setDisplaySrc] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -18,10 +36,12 @@ export default function HeicImage({ src, fallback = 'assets/placeholder.jpg', cl
       return;
     }
 
+    const proxyUrl = getProxyUrl(src);
+
     // Support both HEIC and HEIF formats case-insensitively
-    const isHeic = src.toLowerCase().endsWith('.heic') || src.toLowerCase().endsWith('.heif');
+    const isHeic = proxyUrl.toLowerCase().includes('.heic') || proxyUrl.toLowerCase().includes('.heif');
     if (!isHeic) {
-      setDisplaySrc(src);
+      setDisplaySrc(proxyUrl);
       return;
     }
 
@@ -35,7 +55,7 @@ export default function HeicImage({ src, fallback = 'assets/placeholder.jpg', cl
     const convertHeic = async () => {
       setLoading(true);
       try {
-        const response = await fetch(src);
+        const response = await fetch(proxyUrl);
         if (!response.ok) throw new Error('Failed to fetch image');
         const blob = await response.blob();
         

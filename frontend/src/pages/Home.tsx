@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Star, Heart, ArrowRight } from 'lucide-react
 import { useWishlistStore } from '../store/useWishlistStore'
 import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
+import HeicImage from '../components/HeicImage'
 
 interface Product {
   id: number;
@@ -196,10 +197,19 @@ export default function Home() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
-            className="absolute inset-0 w-full h-full bg-cover bg-center flex items-center"
-            style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${currentBanner.image_url})` }}
+            className="absolute inset-0 w-full h-full flex items-center"
           >
-            <div className="max-w-7xl mx-auto px-6 md:px-8 w-full flex flex-col items-start gap-4 text-white">
+            {/* Background Image using HeicImage for full format support */}
+            <div className="absolute inset-0 z-0 select-none pointer-events-none">
+              <HeicImage
+                src={currentBanner.image_url}
+                alt={currentBanner.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/30" />
+            </div>
+
+            <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8 w-full flex flex-col items-start gap-4 text-white">
               <motion.span
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -272,11 +282,14 @@ export default function Home() {
               to={`/shop?cat=${card.cat}`}
               className="group relative h-72 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
             >
-              <div
-                className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700"
-                style={{ backgroundImage: `url(${card.img})` }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute inset-0 overflow-hidden z-0 select-none pointer-events-none">
+                <HeicImage
+                  src={card.img}
+                  alt={card.label}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
               <div className="absolute bottom-6 left-6 text-white flex flex-col gap-1">
                 <span className="text-2xl">{card.emoji}</span>
                 <h3 className="text-base font-semibold tracking-wide">{card.label}</h3>
@@ -319,9 +332,10 @@ export default function Home() {
             </div>
           </div>
           <div className="relative h-64 md:h-80 rounded-xl overflow-hidden shadow-md">
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url('https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=800&auto=format&fit=crop')` }}
+            <HeicImage
+              src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=800&auto=format&fit=crop"
+              alt="Deal of the Day"
+              className="absolute inset-0 w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-black/10" />
           </div>
@@ -368,7 +382,7 @@ export default function Home() {
                 >
                   {/* Image container */}
                   <div className="relative rounded-xl overflow-hidden bg-gray-50 aspect-square shadow-sm">
-                    <img
+                    <HeicImage
                       src={prod.images?.[0] || 'assets/placeholder.jpg'}
                       alt={prod.name}
                       className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
