@@ -341,59 +341,14 @@ export async function authRouter(request, env) {
             const mapped = mapUser(user);
             const isAdminUser = ['admin', 'staff', 'manager'].includes(mapped.role);
 
-            // ── Admin 2FA: OTP step ───────────────────────────────────────────
-            // Admin users ALWAYS require OTP 2FA login (as requested by user)
+            // Log successful admin login to audit log
             if (isAdminUser) {
-                // Issue short-lived session token (5 min) — cannot access admin routes
-                const sessionToken = await signJWT(
-                    { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name, otp_pending: true },
-                    env.JWT_SECRET,
-                    300  // 5 minute expiry
-                );
-
-                // Generate OTP
-                const otp = String(Math.floor(100000 + Math.random() * 900000));
-                
-                // Write to D1 (otp_tokens table) with purpose 'login'
-                const expiresAt = nowIso(parseInt(await getSetting(env, 'otp_expiry_minutes', '10')));
-                await env.DB.prepare(
-                    'INSERT INTO otp_tokens (email, otp_hash, purpose, attempts, verified, expires_at, created_at) VALUES (?, ?, ?, 0, 0, ?, ?)'
-                ).bind(email, otp, 'login', expiresAt, nowIso()).run();
-
-                // Optional KV operations wrapped in try-catch
-                const resendKey = `otp_resend:admin_login:${email}`;
-                let resendCount = 0;
+                const now = nowIso();
                 try {
-                    resendCount = parseInt(await env.KV.get(resendKey) || '0');
-                } catch (_) {}
-                if (resendCount >= 5) {
-                    return error('Too many OTP requests. Wait 1 hour.', 429);
-                }
-                try {
-                    await env.KV.put(resendKey, String(resendCount + 1), { expirationTtl: 3600 }); // 1 hour
-                } catch (_) {}
-
-                // ALWAYS print to console for development/debugging ease
-                console.log(`[ADMIN 2FA] Generated OTP for ${email}: ${otp}`);
-
-                // Send OTP email via Resend
-                const emailResult = await sendOtpEmail(env, email, otp, 'login');
-                if (!emailResult.ok) {
-                    console.error('Failed to send admin OTP:', emailResult.error);
-                    return ok({
-                        step: 'otp_required',
-                        session_token: sessionToken,
-                        email: mapped.email,
-                        warning: `OTP email delivery failed: ${emailResult.error || 'unknown error'}. Use code ${otp} to bypass lockout.`
-                    }, `OTP generated (email delivery failed)`);
-                } else {
-                    // OTP sent successfully — require 2FA step
-                    return ok({
-                        step: 'otp_required',
-                        session_token: sessionToken,
-                        email: masked(email),
-                    }, `OTP sent to ${masked(email)}`);
-                }
+                    await env.DB.prepare(
+                        "INSERT OR IGNORE INTO admin_audit_logs (admin_id, action, details, created_at) VALUES (?, 'admin_login', 'Login successful', ?)"
+                    ).bind(mapped.id, now).run();
+                } catch (_) { /* audit log insert error */ }
             }
 
             // ── Normal login (customer) ──
