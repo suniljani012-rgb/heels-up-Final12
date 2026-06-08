@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { LogOut, Package, Mail, User, Shield } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
+import HeicImage from '../components/HeicImage'
 
 interface Order {
   id: number;
@@ -11,7 +12,7 @@ interface Order {
   order_status: string;
   payment_status: string;
   created_at: string;
-  items?: { name: string; image: string; size: string; qty: number; price: number }[];
+  items?: { name: string; image: string; size: string; color?: string; qty: number; price: number }[];
 }
 
 export default function Profile() {
@@ -164,14 +165,16 @@ export default function Profile() {
                       <div className="mt-3 space-y-3">
                         {order.items.map((item, idx) => (
                           <div key={idx} className="flex items-center gap-3">
-                            <img
-                              src={item.image || '/assets/placeholder.jpg'}
+                            <HeicImage
+                              src={item.image}
                               alt=""
                               className="w-10 h-10 object-cover rounded-md bg-white border border-gray-100 flex-shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <h4 className="text-xs font-semibold text-gray-800 truncate">{item.name}</h4>
-                              <p className="text-[9px] text-gray-400">Qty: {item.qty} &middot; Size: {item.size}</p>
+                              <p className="text-[9px] text-gray-400">
+                                Qty: {item.qty} &middot; Color: {item.color || 'Default'} &middot; Size: {item.size}
+                              </p>
                             </div>
                           </div>
                         ))}

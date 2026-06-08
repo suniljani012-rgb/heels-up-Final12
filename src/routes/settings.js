@@ -16,7 +16,8 @@ const PUBLIC_SETTING_KEYS = new Set([
     'gst_registered', 'gst_number',
     'invoice_prefix',
     'google_client_id',   // public OAuth client ID is fine to expose
-    'support_phone', 'site_email', 'shipping_free_above', 'shipping_standard_charge'
+    'support_phone', 'site_email', 'shipping_free_above', 'shipping_standard_charge',
+    'offer_title', 'offer_description', 'offer_hours', 'offer_minutes', 'offer_seconds'
 ]);
 
 

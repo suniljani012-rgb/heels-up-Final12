@@ -69,7 +69,7 @@ export default function Register() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary/20 transition-all duration-300 placeholder-gray-400"
-                placeholder="e.g. Sunil Bishnoi"
+                placeholder="Enter your full name"
               />
             </div>
           </div>
@@ -104,7 +104,7 @@ export default function Register() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary/20 transition-all duration-300 placeholder-gray-400"
-                placeholder="e.g. 8302419219"
+                placeholder="Enter 10-digit mobile number"
               />
             </div>
           </div>

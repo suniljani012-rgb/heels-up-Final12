@@ -4,6 +4,7 @@ import { ShieldCheck, ArrowLeft, Loader2 } from 'lucide-react'
 import { useCartStore } from '../store/useCartStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
+import HeicImage from '../components/HeicImage'
 
 declare global {
   interface Window {
@@ -49,7 +50,7 @@ export default function Checkout() {
   // Calculations
   const subtotalPaise = getCartSubtotal()
   const subtotalRupees = subtotalPaise / 100
-  const freeShippingThreshold = 799
+  const freeShippingThreshold = 999
   const shippingCharge = subtotalRupees >= freeShippingThreshold ? 0 : 60 // ₹60 standard shipping
   const discountRupees = discountVal / 100
   const totalRupees = Math.max(0, subtotalRupees + shippingCharge - discountRupees)
@@ -121,6 +122,7 @@ export default function Checkout() {
           qty: item.qty,
           price: item.price / 100, // Rupees to API
           size: item.size,
+          color: item.color,
           img: item.img
         })),
         customer: {
@@ -367,7 +369,7 @@ export default function Checkout() {
             <div className="divide-y divide-gray-200/60 max-h-60 overflow-y-auto pr-2 space-y-3">
               {items.map((item) => (
                 <div key={`${item.id}-${item.color}-${item.size}`} className="flex items-center gap-3 pt-3 first:pt-0">
-                  <img
+                  <HeicImage
                     src={item.img}
                     alt={item.name}
                     className="w-12 h-12 object-cover rounded-lg bg-white border border-gray-100"
@@ -375,7 +377,7 @@ export default function Checkout() {
                   <div className="flex-1">
                     <h4 className="text-xs font-bold text-gray-900 line-clamp-1">{item.name}</h4>
                     <p className="text-[9px] text-gray-500 capitalize">
-                      Qty: {item.qty} &middot; Size: {item.size}
+                      Qty: {item.qty} &middot; Color: {item.color} &middot; Size: {item.size}
                     </p>
                   </div>
                   <span className="text-xs font-semibold text-gray-900">

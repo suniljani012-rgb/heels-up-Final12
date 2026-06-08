@@ -35,7 +35,7 @@ export default function Header() {
 
   const announcements = [
     "🎉 NEW ARRIVALS — Summer Collection is Live!",
-    "🚚 FREE Shipping on orders above ₹799",
+    "🚚 FREE Shipping on orders above ₹999",
     "🏷️ Use code HEELS10 for 10% off on first order"
   ]
 

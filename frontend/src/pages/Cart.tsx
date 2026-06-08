@@ -4,6 +4,7 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag } from 'lucide-react'
 import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
 import { useAuthStore } from '../store/useAuthStore'
+import HeicImage from '../components/HeicImage'
 
 export default function Cart() {
   const { items, updateQty, removeItem, getCartSubtotal, clearCart } = useCartStore()
@@ -19,7 +20,7 @@ export default function Cart() {
 
   const subtotalPaise = getCartSubtotal()
   const subtotalRupees = subtotalPaise / 100
-  const freeShippingThreshold = 799
+  const freeShippingThreshold = 999
   const shippingCharge = subtotalRupees >= freeShippingThreshold || subtotalRupees === 0 ? 0 : 60 // ₹60 standard shipping
   
   const finalTotalPaise = Math.max(0, subtotalPaise - discountVal + (shippingCharge * 100))
@@ -96,8 +97,8 @@ export default function Cart() {
                 key={`${item.id}-${item.color}-${item.size}`}
                 className="flex flex-col sm:flex-row gap-4 p-4 border border-gray-100 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow relative"
               >
-                <img
-                  src={item.img || '/assets/placeholder.jpg'}
+                <HeicImage
+                  src={item.img}
                   alt={item.name}
                   className="w-24 h-24 object-cover bg-gray-50 rounded-lg flex-shrink-0 mx-auto sm:mx-0"
                 />

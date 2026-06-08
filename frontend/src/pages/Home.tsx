@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Star, Heart, ArrowRight } from 'lucide-react'
@@ -62,6 +62,19 @@ export default function Home() {
   })
   const [bannerIndex, setBannerIndex] = useState(0)
   const [timeLeft, setTimeLeft] = useState({ hours: 8, minutes: 47, seconds: 23 })
+  const [offerTitle, setOfferTitle] = useState('Deal of the Day')
+  const [offerDescription, setOfferDescription] = useState("Grab Jodhpur's finest premium stilettos and flats at special markdown prices. Save up to 30% plus get Free Shipping!")
+  const initialTimeRef = useRef({ hours: 8, minutes: 47, seconds: 23 })
+
+  const resolveBannerLink = (link: string | null | undefined) => {
+    if (!link) return '/shop';
+    if (link.startsWith('/category/')) {
+      const cat = link.replace('/category/', '');
+      const correctCat = cat === 'flate' ? 'flats' : cat;
+      return `/shop?cat=${correctCat}`;
+    }
+    return link;
+  };
   const [categories, setCategories] = useState<any[]>(() => {
     try {
       const cached = localStorage.getItem('heelsup_cached_categories')
@@ -120,6 +133,27 @@ export default function Home() {
           localStorage.setItem('heelsup_cached_categories', JSON.stringify(catData.data))
         }
 
+        // Fetch public settings for dynamic Deal of the Day banner
+        try {
+          const settingsRes = await fetch('/api/settings/public')
+          const settingsData = await settingsRes.json()
+          if (settingsData.success && settingsData.data) {
+            const settingsMap = settingsData.data
+            const titleSetting = settingsMap.find((s: any) => s.key === 'offer_title')?.value
+            const descSetting = settingsMap.find((s: any) => s.key === 'offer_description')?.value
+            const hoursSetting = parseInt(settingsMap.find((s: any) => s.key === 'offer_hours')?.value || '8', 10)
+            const minutesSetting = parseInt(settingsMap.find((s: any) => s.key === 'offer_minutes')?.value || '47', 10)
+            const secondsSetting = parseInt(settingsMap.find((s: any) => s.key === 'offer_seconds')?.value || '23', 10)
+
+            if (titleSetting) setOfferTitle(titleSetting)
+            if (descSetting) setOfferDescription(descSetting)
+            initialTimeRef.current = { hours: hoursSetting, minutes: minutesSetting, seconds: secondsSetting }
+            setTimeLeft({ hours: hoursSetting, minutes: minutesSetting, seconds: secondsSetting })
+          }
+        } catch (settingsErr) {
+          console.error("Error fetching settings:", settingsErr)
+        }
+
         // PREFETCH: Fetch ALL products (limit=100) and cache them so that clicking them load detail page instantly!
         const allProdsRes = await fetch('/api/products?limit=100')
         const allProdsData = await allProdsRes.json()
@@ -156,7 +190,7 @@ export default function Home() {
         } else if (prev.hours > 0) {
           return { hours: prev.hours - 1, minutes: 59, seconds: 59 }
         } else {
-          return { hours: 8, minutes: 47, seconds: 23 } // Reset
+          return { ...initialTimeRef.current } // Reset to initial values (either settings or fallback)
         }
       })
     }, 1000)
@@ -281,7 +315,7 @@ export default function Home() {
                 className="mt-4"
               >
                 <Link
-                  to={currentBanner.link || '/shop'}
+                  to={resolveBannerLink(currentBanner.link)}
                   className="inline-flex items-center gap-2 px-8 py-3 bg-white text-gray-900 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-primary hover:text-white transition-all shadow-md"
                 >
                   Shop The Look
@@ -329,11 +363,11 @@ export default function Home() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
-              <div className="absolute bottom-6 left-6 text-white flex flex-col gap-1">
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white/95 via-white/50 to-transparent h-1/2 z-10" />
+              <div className="absolute bottom-6 left-6 text-gray-900 flex flex-col gap-1 z-20">
                 <span className="text-2xl">{card.emoji}</span>
                 <h3 className="text-base font-semibold tracking-wide">{card.label}</h3>
-                <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider flex items-center gap-1 group-hover:text-primary transition-colors">
+                <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider flex items-center gap-1 group-hover:text-primary transition-colors">
                   Explore <ArrowRight className="w-3 h-3" />
                 </span>
               </div>
@@ -349,9 +383,9 @@ export default function Home() {
             <span className="w-fit text-[10px] bg-[#d4456b] text-white font-bold tracking-widest uppercase px-3 py-1 rounded-full">
               Limited Time Only
             </span>
-            <h2 className="text-3xl font-light text-gray-900 font-display italic">Deal of the Day</h2>
+            <h2 className="text-3xl font-light text-gray-900 font-display italic">{offerTitle}</h2>
             <p className="text-sm text-gray-600 leading-relaxed max-w-md">
-              Grab Jodhpur's finest premium stilettos and flats at special markdown prices. Save up to 30% plus get Free Shipping!
+              {offerDescription}
             </p>
             {/* Timer */}
             <div className="flex items-center gap-3 mt-2">
@@ -411,8 +445,6 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {featuredProducts.map((prod) => {
               const inWishlist = hasItem(prod.id)
-              const originalPrice = prod.original_price || prod.price * 1.3
-              const discount = Math.round(100 - (prod.price / originalPrice) * 100)
 
               return (
                 <Link
@@ -434,11 +466,7 @@ export default function Home() {
                         New
                       </span>
                     )}
-                    {discount > 0 && (
-                      <span className="absolute top-3 left-3 bg-[#d4456b] text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
-                        -{discount}%
-                      </span>
-                    )}
+
 
                     {/* Actions overlay */}
                     <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/40 via-transparent to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-between items-center">
@@ -486,11 +514,7 @@ export default function Home() {
                       <span className="text-xs font-bold text-gray-900">
                         ₹{(prod.price / 100).toLocaleString('en-IN')}
                       </span>
-                      {originalPrice && originalPrice > prod.price && (
-                        <span className="text-[10px] text-gray-400 line-through">
-                          ₹{(originalPrice / 100).toLocaleString('en-IN')}
-                        </span>
-                      )}
+
                     </div>
                   </div>
                 </Link>
@@ -504,11 +528,11 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-10 border-y border-gray-100 text-center">
           <div className="flex flex-col gap-1">
-            <span className="text-3xl font-light text-gray-900 font-display italic">21K+</span>
+            <span className="text-3xl font-light text-gray-900 font-display italic">22.1K+</span>
             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Happy Customers</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-3xl font-light text-gray-900 font-display italic">799+</span>
+            <span className="text-3xl font-light text-gray-900 font-display italic">999+</span>
             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Free Shipping Limit</span>
           </div>
           <div className="flex flex-col gap-1">

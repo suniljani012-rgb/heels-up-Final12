@@ -70,7 +70,7 @@ export default function Footer() {
             </div>
           )}
           <p className="leading-relaxed text-gray-500">
-            India's premier online store for luxury ladies heels, flats, sandals, wedges & bags. 20,000+ happy customers.
+            India's premier online store for luxury ladies heels, flats, sandals, wedges & bags. 22.1K+ happy customers.
           </p>
           <form onSubmit={handleSubscribe} className="flex gap-2 max-w-sm">
             <input

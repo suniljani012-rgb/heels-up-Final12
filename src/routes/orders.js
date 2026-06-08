@@ -87,7 +87,7 @@ function formatItem(it) {
         sku: it.product_sku || null,
         image: it.image_url || null,
         size: it.size_label || null,
-        color: null,
+        color: it.color || null,
         quantity: it.quantity || 1,
         price: it.unit_price || 0,
         total_price: it.line_total || 0,
@@ -197,6 +197,7 @@ export async function createOrderRecord(env, input) {
             qty, unitPrice,
             lineTotal: Number((unitPrice * qty).toFixed(2)),
             size: String(item.size || ""),
+            color: String(item.color || ""),
             image: String(item.image || item.img || "")
         });
     }
@@ -232,11 +233,11 @@ export async function createOrderRecord(env, input) {
     for (const item of items) {
         await env.DB.prepare(
             `INSERT INTO order_items (
-                order_id, product_id, product_name, product_sku, quantity, unit_price, line_total, size_label, image_url, created_at
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                order_id, product_id, product_name, product_sku, quantity, unit_price, line_total, size_label, color, image_url, created_at
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
             orderId, item.productId, item.name, item.sku, item.qty,
-            item.unitPrice * 100, item.lineTotal * 100, item.size || 'Default', item.image, createdAt
+            item.unitPrice * 100, item.lineTotal * 100, item.size || 'Default', item.color || null, item.image, createdAt
         ).run();
         // Deduct stock per size
         if (item.productId) {
@@ -344,6 +345,7 @@ export async function ordersRouter(request, env) {
                     unitPrice,
                     lineTotal: Number((unitPrice * qty).toFixed(2)),
                     size: String(item.size || ""),
+                    color: String(item.color || ""),
                     image: String(item.image || item.img || "")
                 };
             });
@@ -441,12 +443,13 @@ export async function ordersRouter(request, env) {
             const orders = [];
             for (const o of (ordersRes.results || [])) {
                 const itemsRes = await env.DB.prepare(
-                    `SELECT product_name, image_url, size_label, quantity, unit_price FROM order_items WHERE order_id = ? LIMIT 4`
+                    `SELECT product_name, image_url, size_label, color, quantity, unit_price FROM order_items WHERE order_id = ? LIMIT 4`
                 ).bind(o.id).all();
                 const items = (itemsRes.results || []).map(it => ({
                     name: it.product_name,
                     image: it.image_url,
                     size: it.size_label,
+                    color: it.color,
                     qty: it.quantity,
                     price: it.unit_price
                 }));

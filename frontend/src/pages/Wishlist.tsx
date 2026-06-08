@@ -4,6 +4,7 @@ import { Heart, ShoppingBag, Trash2, ArrowRight } from 'lucide-react'
 import { useWishlistStore } from '../store/useWishlistStore'
 import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
+import HeicImage from '../components/HeicImage'
 
 interface Product {
   id: number;
@@ -104,8 +105,8 @@ export default function Wishlist() {
             >
               {/* Image */}
               <div className="relative rounded-lg overflow-hidden bg-gray-50 aspect-square">
-                <img
-                  src={prod.images?.[0] || 'assets/placeholder.jpg'}
+                <HeicImage
+                  src={prod.images?.[0]}
                   alt={prod.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />

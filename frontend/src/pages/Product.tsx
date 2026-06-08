@@ -4,6 +4,7 @@ import { Star, Heart, ShoppingBag, Truck, RefreshCw, Ruler, MessageSquare } from
 import { useCartStore } from '../store/useCartStore'
 import { useWishlistStore } from '../store/useWishlistStore'
 import { useToastStore } from '../store/useToastStore'
+import { useAuthStore } from '../store/useAuthStore'
 import HeicImage from '../components/HeicImage'
 
 interface ProductDetail {
@@ -58,6 +59,7 @@ export default function Product() {
   const { addItem } = useCartStore()
   const { toggleItem, hasItem } = useWishlistStore()
   const { showToast } = useToastStore()
+  const { token } = useAuthStore()
 
   // Dynamic States
   const [product, setProduct] = useState<ProductDetail | null>(null)
@@ -182,8 +184,6 @@ export default function Product() {
 
   const inWishlist = hasItem(product.id)
   const isOutOfStock = product.size_stock && selectedSize ? (product.size_stock[selectedSize] || 0) <= 0 : product.stock <= 0
-  const originalPrice = product.original_price
-  const discount = originalPrice ? Math.round(100 - (product.price / originalPrice) * 100) : 0
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -215,6 +215,10 @@ export default function Product() {
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!token) {
+      showToast('error', 'Authentication Required 🔐', 'Please log in to submit a review.')
+      return
+    }
     if (!reviewName.trim() || !reviewTitle.trim() || !reviewBody.trim()) {
       showToast('error', 'Incomplete Form', 'Please complete all review fields.')
       return
@@ -224,7 +228,10 @@ export default function Product() {
     try {
       const res = await fetch('/api/reviews', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           product_id: product.id,
           rating: reviewRating,
@@ -309,16 +316,7 @@ export default function Product() {
             <span className="text-2xl font-bold text-gray-950">
               ₹{(product.price / 100).toLocaleString('en-IN')}
             </span>
-            {originalPrice && originalPrice > product.price && (
-              <>
-                <span className="text-sm text-gray-400 line-through">
-                  ₹{(originalPrice / 100).toLocaleString('en-IN')}
-                </span>
-                <span className="text-xs bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded-md uppercase">
-                  Save {discount}%
-                </span>
-              </>
-            )}
+            {/* MRP Cross-out and percentage removed as per requirements */}
           </div>
 
           {/* Color Picker */}
@@ -438,7 +436,7 @@ export default function Product() {
           {/* Guarantees */}
           <div className="grid grid-cols-2 gap-4 text-[10px] text-gray-500 font-medium pt-4 bg-[#fcfbf9] border border-gray-100 rounded-xl p-4">
             <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-primary" /> Free Shipping above ₹799
+              <Truck className="w-4 h-4 text-primary" /> Free Shipping above ₹999
             </div>
             <div className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4 text-primary" /> 7-Day Easy Exchange Only

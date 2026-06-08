@@ -335,8 +335,6 @@ export default function Shop() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               {products.map((prod) => {
                 const inWishlist = hasItem(prod.id)
-                const originalPrice = prod.original_price
-                const discount = originalPrice ? Math.round(100 - (prod.price / originalPrice) * 100) : 0
 
                 return (
                   <Link
@@ -358,11 +356,7 @@ export default function Shop() {
                           New
                         </span>
                       )}
-                      {discount > 0 && (
-                        <span className="absolute top-3 left-3 bg-[#d4456b] text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full">
-                          -{discount}%
-                        </span>
-                      )}
+
 
                       {/* Actions overlay */}
                       <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/40 via-transparent to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-300 flex justify-between items-center">
@@ -410,11 +404,7 @@ export default function Shop() {
                         <span className="text-xs font-bold text-gray-900">
                           ₹{(prod.price / 100).toLocaleString('en-IN')}
                         </span>
-                        {originalPrice && originalPrice > prod.price && (
-                          <span className="text-[10px] text-gray-400 line-through">
-                            ₹{(originalPrice / 100).toLocaleString('en-IN')}
-                          </span>
-                        )}
+
                       </div>
                     </div>
                   </Link>
