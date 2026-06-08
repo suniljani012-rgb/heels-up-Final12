@@ -62,6 +62,7 @@ export default {
         pathNormalized === "/api/products" ||
         pathNormalized === "/api/reviews" ||
         pathNormalized === "/api/search" ||
+        pathNormalized === "/api/upload" ||
         /^\/api\/products\/(\d+)$/.test(pathNormalized) ||
         /^\/api\/products\/(\d+)\/reviews$/.test(pathNormalized)
       );
@@ -159,7 +160,9 @@ export default {
       if (isCacheable && response && response.status === 200 && cache && cacheKey) {
         try {
           const cacheableRes = new Response(corsResponse.clone().body, corsResponse);
-          cacheableRes.headers.set("Cache-Control", "public, max-age=60"); // 60s
+          if (pathNormalized !== "/api/upload") {
+            cacheableRes.headers.set("Cache-Control", "public, max-age=60"); // 60s for standard API
+          }
           if (ctx && ctx.waitUntil) {
             ctx.waitUntil(cache.put(cacheKey, cacheableRes).catch(() => {}));
           } else {

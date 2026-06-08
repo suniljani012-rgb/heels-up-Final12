@@ -28,7 +28,24 @@ function AppContent() {
   const isAdmin = location.pathname.startsWith('/admin')
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' })
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual'
+    }
+  }, [])
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+
+    // Fallback scroll to top for async content load & layout shifts
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    }, 50)
+
+    return () => clearTimeout(timer)
   }, [location.pathname, location.search])
 
   return (
