@@ -158,10 +158,24 @@ export default {
 
       const corsResponse = addCors(response, request);
 
+      // Add security headers to API responses
+      const apiHeaders = new Headers(corsResponse.headers);
+      apiHeaders.set('X-Content-Type-Options', 'nosniff');
+      apiHeaders.set('X-Frame-Options', 'DENY');
+      apiHeaders.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+      apiHeaders.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+      apiHeaders.set('X-XSS-Protection', '1; mode=block');
+
+      const secureCorsResponse = new Response(corsResponse.body, {
+        status: corsResponse.status,
+        statusText: corsResponse.statusText,
+        headers: apiHeaders
+      });
+
       // Store in cache if cacheable and status is 200 OK
       if (isCacheable && response && response.status === 200 && cache && cacheKey) {
         try {
-          const cacheableRes = new Response(corsResponse.clone().body, corsResponse);
+          const cacheableRes = new Response(secureCorsResponse.clone().body, secureCorsResponse);
           if (pathNormalized !== "/api/upload") {
             cacheableRes.headers.set("Cache-Control", "public, max-age=60"); // 60s for standard API
           }
@@ -175,7 +189,7 @@ export default {
         }
       }
 
-      return corsResponse;
+      return secureCorsResponse;
     }
 
     // 4. Static files via Cloudflare Assets
@@ -191,8 +205,11 @@ export default {
     headers.set('X-Content-Type-Options', 'nosniff');
     headers.set('X-Frame-Options', 'DENY');
     headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    headers.set('X-XSS-Protection', '1; mode=block');
+
     if (url.pathname.endsWith('.html') || !url.pathname.includes('.')) {
-      headers.set('Content-Security-Policy', "default-src 'self' https://*.razorpay.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https://media.heelsup.in https://*.unsplash.com https://*.razorpay.com; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; frame-src https://*.razorpay.com; connect-src 'self' https://heelsupnew.heelsup.workers.dev https://api.razorpay.com;");
+      headers.set('Content-Security-Policy', "default-src 'self' https://*.razorpay.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https://media.heelsup.in https://*.unsplash.com https://*.razorpay.com; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; frame-src https://*.razorpay.com; connect-src 'self' https://*.heelsup.workers.dev https://api.razorpay.com;");
     }
     return new Response(assetRes.body, { status: assetRes.status, headers });
   }
