@@ -214,7 +214,7 @@ export default function Header() {
       >
         <div onClick={() => setMobileMenuOpen(false)} className="absolute inset-0 bg-black/40" />
         <aside
-          className={`absolute left-0 top-0 bottom-0 w-4/5 max-w-sm bg-white shadow-2xl flex flex-col p-6 transition-transform duration-300 ${
+          className={`absolute left-0 top-0 bottom-0 w-4/5 max-w-sm bg-white shadow-2xl flex flex-col p-6 overflow-y-auto transition-transform duration-300 ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >

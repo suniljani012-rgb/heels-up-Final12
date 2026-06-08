@@ -44,11 +44,32 @@ export default function Home() {
   const { addItem } = useCartStore()
   const { showToast } = useToastStore()
 
-  const [banners, setBanners] = useState<any[]>([])
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [banners, setBanners] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('heelsup_cached_banners')
+      return cached ? JSON.parse(cached) : []
+    } catch {
+      return []
+    }
+  })
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(() => {
+    try {
+      const cached = localStorage.getItem('heelsup_cached_featured_products')
+      return cached ? JSON.parse(cached) : []
+    } catch {
+      return []
+    }
+  })
   const [bannerIndex, setBannerIndex] = useState(0)
   const [timeLeft, setTimeLeft] = useState({ hours: 8, minutes: 47, seconds: 23 })
-  const [categories, setCategories] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('heelsup_cached_categories')
+      return cached ? JSON.parse(cached) : []
+    } catch {
+      return []
+    }
+  })
 
   // Static Fallback Banners if database is empty
   const defaultBanners = [
@@ -80,7 +101,8 @@ export default function Home() {
         const bannersData = await bannersRes.json()
         if (bannersData.success && bannersData.data?.length > 0) {
           setBanners(bannersData.data)
-        } else {
+          localStorage.setItem('heelsup_cached_banners', JSON.stringify(bannersData.data))
+        } else if (banners.length === 0) {
           setBanners(defaultBanners)
         }
 
@@ -88,15 +110,33 @@ export default function Home() {
         const prodData = await prodRes.json()
         if (prodData.success) {
           setFeaturedProducts(prodData.data)
+          localStorage.setItem('heelsup_cached_featured_products', JSON.stringify(prodData.data))
         }
 
         const catRes = await fetch('/api/categories')
         const catData = await catRes.json()
         if (catData.success && catData.data) {
           setCategories(catData.data)
+          localStorage.setItem('heelsup_cached_categories', JSON.stringify(catData.data))
         }
-      } catch {
-        setBanners(defaultBanners)
+
+        // PREFETCH: Fetch ALL products (limit=100) and cache them so that clicking them load detail page instantly!
+        const allProdsRes = await fetch('/api/products?limit=100')
+        const allProdsData = await allProdsRes.json()
+        if (allProdsData.success && allProdsData.data) {
+          localStorage.setItem('heelsup_cached_shop_products', JSON.stringify(allProdsData.data))
+          allProdsData.data.forEach((p: any) => {
+            localStorage.setItem(`heelsup_cached_product_${p.id}`, JSON.stringify({
+              product: p,
+              reviews: p.reviews || [],
+              images: p.images || [],
+              related: []
+            }))
+          })
+        }
+      } catch (err) {
+        console.error("Error fetching homepage data:", err)
+        if (banners.length === 0) setBanners(defaultBanners)
       }
     }
     fetchData()

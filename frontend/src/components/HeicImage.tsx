@@ -36,14 +36,14 @@ export default function HeicImage({ src, fallback = 'assets/placeholder.jpg', cl
       return;
     }
 
-    const proxyUrl = getProxyUrl(src);
-
     // Support both HEIC and HEIF formats case-insensitively
-    const isHeic = proxyUrl.toLowerCase().includes('.heic') || proxyUrl.toLowerCase().includes('.heif');
+    const isHeic = src.toLowerCase().includes('.heic') || src.toLowerCase().includes('.heif');
     if (!isHeic) {
-      setDisplaySrc(proxyUrl);
+      setDisplaySrc(src);
       return;
     }
+
+    const proxyUrl = getProxyUrl(src);
 
     // Serve from cache if already converted
     if (heicCache.has(src)) {

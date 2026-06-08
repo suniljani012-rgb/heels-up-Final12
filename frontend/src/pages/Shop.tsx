@@ -46,24 +46,15 @@ export default function Shop() {
   const { showToast } = useToastStore()
 
   // States
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalProducts, setTotalProducts] = useState(0)
-  const [categories, setCategories] = useState<any[]>([])
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-
-  useEffect(() => {
-    fetch('/api/categories')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data) {
-          setCategories(data.data)
-        }
-      })
-      .catch(err => console.error("Error loading categories in shop:", err))
-  }, [])
-
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      const cached = localStorage.getItem('heelsup_cached_shop_products')
+      return cached ? JSON.parse(cached) : []
+    } catch {
+      return []
+    }
+  })
+  
   // URL Params mapping
   const category = searchParams.get('cat') || ''
   const page = parseInt(searchParams.get('page') || '1')
@@ -72,10 +63,52 @@ export default function Shop() {
   const priceMin = searchParams.get('min') || ''
   const priceMax = searchParams.get('max') || ''
 
+  const [loading, setLoading] = useState(() => {
+    const isInitial = !category && page === 1 && sort === 'newest' && !searchQ && !priceMin && !priceMax
+    if (isInitial) {
+      const cached = localStorage.getItem('heelsup_cached_shop_products')
+      return !cached
+    }
+    return true
+  })
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalProducts, setTotalProducts] = useState(() => {
+    try {
+      const cached = localStorage.getItem('heelsup_cached_shop_products')
+      return cached ? JSON.parse(cached).length : 0
+    } catch {
+      return 0
+    }
+  })
+  const [categories, setCategories] = useState<any[]>(() => {
+    try {
+      const cached = localStorage.getItem('heelsup_cached_categories')
+      return cached ? JSON.parse(cached) : []
+    } catch {
+      return []
+    }
+  })
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setCategories(data.data)
+          localStorage.setItem('heelsup_cached_categories', JSON.stringify(data.data))
+        }
+      })
+      .catch(err => console.error("Error loading categories in shop:", err))
+  }, [])
+
   // Fetch product list
   useEffect(() => {
     async function fetchProducts() {
-      setLoading(true)
+      const isInitial = !category && page === 1 && sort === 'newest' && !searchQ && !priceMin && !priceMax
+      if (!isInitial) {
+        setLoading(true)
+      }
       try {
         const queryParams = new URLSearchParams()
         queryParams.set('page', String(page))
@@ -90,6 +123,18 @@ export default function Shop() {
         const data = await res.json()
         if (data.success) {
           setProducts(data.data)
+          if (isInitial) {
+            localStorage.setItem('heelsup_cached_shop_products', JSON.stringify(data.data))
+          }
+          // Cache individual product pages pre-loaded
+          data.data.forEach((p: any) => {
+            localStorage.setItem(`heelsup_cached_product_${p.id}`, JSON.stringify({
+              product: p,
+              reviews: p.reviews || [],
+              images: p.images || [],
+              related: []
+            }))
+          })
           if (data.pagination) {
             setTotalPages(data.pagination.pages || 1)
             setTotalProducts(data.pagination.total || 0)

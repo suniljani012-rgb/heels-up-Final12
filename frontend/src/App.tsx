@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Header from './components/Header'
@@ -25,6 +26,10 @@ const queryClient = new QueryClient()
 function AppContent() {
   const location = useLocation()
   const isAdmin = location.pathname.startsWith('/admin')
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [location.pathname, location.search])
 
   return (
     <div className={isAdmin ? "w-full" : "flex flex-col min-h-screen bg-[#fcfbf9] text-[#1a1816]"}>

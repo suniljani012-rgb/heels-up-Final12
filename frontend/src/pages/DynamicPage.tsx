@@ -16,14 +16,28 @@ export default function DynamicPage() {
   if (rawPath === 'size' || rawPath === 'size-guide') slug = 'size-guide'
 
   useEffect(() => {
-    async function fetchPage() {
+    const cached = localStorage.getItem('heelsup_cached_page_' + slug)
+    let hasCached = false
+    if (cached) {
+      try {
+        setPageData(JSON.parse(cached))
+        setLoading(false)
+        hasCached = true
+      } catch {}
+    }
+    
+    if (!hasCached) {
       setLoading(true)
-      setErrorMsg('')
+    }
+    setErrorMsg('')
+
+    async function fetchPage() {
       try {
         const res = await fetch(`/api/pages/${slug}`)
         const data = await res.json()
         if (data.success && data.data) {
           setPageData(data.data)
+          localStorage.setItem('heelsup_cached_page_' + slug, JSON.stringify(data.data))
         } else {
           setErrorMsg(data.error || 'This policy page does not exist.')
         }

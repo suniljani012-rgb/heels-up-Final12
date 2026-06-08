@@ -82,8 +82,32 @@ export default function Product() {
   // Fetch details
   useEffect(() => {
     if (!productId) return
-    async function fetchDetails() {
+    
+    // 1. Read and load from Cache synchronously to render instantly (0.01 ms)
+    const cachedData = localStorage.getItem(`heelsup_cached_product_${productId}`)
+    let hasCached = false
+    if (cachedData) {
+      try {
+        const parsed = JSON.parse(cachedData)
+        setProduct(parsed.product)
+        setReviews(parsed.reviews || [])
+        setImages(parsed.images || [])
+        if (parsed.images?.length > 0) setActiveImage(parsed.images[0])
+        if (parsed.product.sizes?.length > 0) setSelectedSize(parsed.product.sizes[0])
+        if (parsed.product.colors?.length > 0) setSelectedColor(parsed.product.colors[0])
+        setRelated(parsed.related || [])
+        setLoading(false)
+        hasCached = true
+      } catch (err) {
+        console.error("Error parsing cached product:", err)
+      }
+    }
+
+    if (!hasCached) {
       setLoading(true)
+    }
+
+    async function fetchDetails() {
       try {
         const res = await fetch(`/api/products/${productId}`)
         const data = await res.json()
@@ -96,22 +120,34 @@ export default function Product() {
           const fetchedImgs = data.data.images?.map((i: any) => i.url) || []
           const allImages = fetchedImgs.length > 0 ? fetchedImgs : (detail.images || [])
           setImages(allImages)
-          if (allImages.length > 0) setActiveImage(allImages[0])
+          if (allImages.length > 0 && (!activeImage || !hasCached)) {
+            setActiveImage(allImages[0])
+          }
 
           // Sizes default selector
-          if (detail.sizes?.length > 0) {
+          if (detail.sizes?.length > 0 && (!selectedSize || !hasCached)) {
             setSelectedSize(detail.sizes[0])
           }
-          if (detail.colors?.length > 0) {
+          if (detail.colors?.length > 0 && (!selectedColor || !hasCached)) {
             setSelectedColor(detail.colors[0])
           }
 
           // Fetch related products
           const relatedRes = await fetch(`/api/products?limit=4&cat=${detail.category}`)
           const relatedData = await relatedRes.json()
+          let relatedList: any[] = []
           if (relatedData.success) {
-            setRelated(relatedData.data.filter((r: any) => r.id !== detail.id))
+            relatedList = relatedData.data.filter((r: any) => r.id !== detail.id)
+            setRelated(relatedList)
           }
+
+          // Save to cache for 0.01ms rendering on next visit!
+          localStorage.setItem(`heelsup_cached_product_${productId}`, JSON.stringify({
+            product: detail,
+            reviews: data.data.reviews || [],
+            images: allImages,
+            related: relatedList
+          }))
         }
       } catch (e) {
         console.error('Fetch product detail error:', e)
@@ -423,7 +459,7 @@ export default function Product() {
       {showSizeGuide && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div onClick={() => setShowSizeGuide(false)} className="absolute inset-0 bg-black/50 cursor-pointer" />
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl z-10 relative">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl z-10 relative">
             <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-1.5">
               <Ruler className="w-4 h-4 text-primary" /> HeelsUp Footwear Size Chart
             </h3>
