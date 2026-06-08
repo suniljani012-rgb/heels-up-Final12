@@ -143,3 +143,77 @@ export function genId(prefix = '', digits = 6) {
         .padStart(digits, '0');
     return prefix ? `${prefix}-${n}` : n;
 }
+
+/**
+ * Transparent KV get with D1 fallback.
+ * @param {object} env - Cloudflare worker env
+ * @param {string} key - KV key to fetch
+ * @returns {Promise<string|null>}
+ */
+export async function kvGet(env, key) {
+    if (env.KV) {
+        try {
+            const val = await env.KV.get(key);
+            if (val) return val;
+        } catch (kvErr) {
+            console.warn(`KV.get failed for key "${key}", falling back to D1:`, kvErr);
+        }
+    }
+    try {
+        const row = await env.DB.prepare(
+            'SELECT value FROM d1_kv WHERE key = ? AND expires_at > ?'
+        ).bind(key, new Date().toISOString()).first();
+        return row ? row.value : null;
+    } catch (dbErr) {
+        console.error(`D1 KV fallback get failed for key "${key}":`, dbErr);
+        return null;
+    }
+}
+
+/**
+ * Transparent KV put with D1 fallback.
+ * @param {object} env - Cloudflare worker env
+ * @param {string} key - KV key to write
+ * @param {string} value - Value to write
+ * @param {number} ttlSeconds - Expiration TTL in seconds (default 1 day)
+ */
+export async function kvPut(env, key, value, ttlSeconds = 86400) {
+    let kvWritten = false;
+    if (env.KV) {
+        try {
+            await env.KV.put(key, value, { expirationTtl: Math.max(60, ttlSeconds) });
+            kvWritten = true;
+        } catch (kvErr) {
+            console.warn(`KV.put failed for key "${key}", writing to D1:`, kvErr);
+        }
+    }
+    try {
+        const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
+        await env.DB.prepare(
+            'INSERT OR REPLACE INTO d1_kv (key, value, expires_at) VALUES (?, ?, ?)'
+        ).bind(key, value, expiresAt).run();
+    } catch (dbErr) {
+        console.error(`D1 KV fallback put failed for key "${key}":`, dbErr);
+        if (!kvWritten) throw dbErr;
+    }
+}
+
+/**
+ * Transparent KV delete with D1 fallback.
+ * @param {object} env - Cloudflare worker env
+ * @param {string} key - KV key to delete
+ */
+export async function kvDelete(env, key) {
+    if (env.KV) {
+        try {
+            await env.KV.delete(key);
+        } catch (kvErr) {
+            console.warn(`KV.delete failed for key "${key}":`, kvErr);
+        }
+    }
+    try {
+        await env.DB.prepare('DELETE FROM d1_kv WHERE key = ?').bind(key).run();
+    } catch (dbErr) {
+        console.error(`D1 KV fallback delete failed for key "${key}":`, dbErr);
+    }
+}

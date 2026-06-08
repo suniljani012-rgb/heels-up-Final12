@@ -4,6 +4,7 @@ import { ok, list, created, error, notFound, serverError } from '../utils/respon
 import { razorpay } from '../utils/razorpay.js';
 import { sendInfobipSms } from '../utils/sms.js';
 import { sendOrderStatusEmail } from '../utils/email.js';
+import { kvPut } from '../utils/db.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -408,7 +409,7 @@ export async function ordersRouter(request, env) {
                 totalAmount,
                 orderNumber
             };
-            await env.KV.put(`pending_order:${rzpOrder.id}`, JSON.stringify(pendingPayload), { expirationTtl: 86400 });
+            await kvPut(env, `pending_order:${rzpOrder.id}`, JSON.stringify(pendingPayload), 86400);
 
             return ok({
                 key: rzpKeyId,

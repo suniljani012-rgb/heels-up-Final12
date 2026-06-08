@@ -3,6 +3,7 @@ import { razorpay } from '../utils/razorpay.js';
 import { ok, error as err } from '../utils/response.js';
 import { optionalAuth } from '../middleware/auth.js';
 import { createOrderRecord } from './orders.js';
+import { kvGet, kvDelete } from '../utils/db.js';
 
 export async function paymentRouter(request, env) {
   const url = new URL(request.url);
@@ -35,7 +36,7 @@ export async function paymentRouter(request, env) {
     if (!isValid) return err('Invalid payment signature', 400);
 
     // Get pending order details from KV
-    const pendingStr = await env.KV.get(`pending_order:${razorpay_order_id}`);
+    const pendingStr = await kvGet(env, `pending_order:${razorpay_order_id}`);
     if (!pendingStr) {
       return err("Order details not found or expired. If amount was debited, please contact support.", 404);
     }
@@ -79,7 +80,7 @@ export async function paymentRouter(request, env) {
     }
 
     // Delete pending KV draft order
-    await env.KV.delete(`pending_order:${razorpay_order_id}`).catch(() => {});
+    await kvDelete(env, `pending_order:${razorpay_order_id}`);
 
     return ok({
       success: true,
@@ -97,7 +98,7 @@ export async function paymentRouter(request, env) {
 
     const rzpOrderId = String(body.razorpay_order_id || "").trim();
     if (rzpOrderId) {
-      await env.KV.delete(`pending_order:${rzpOrderId}`).catch(() => {});
+      await kvDelete(env, `pending_order:${rzpOrderId}`);
     }
 
     const localOrderId = parseInt(body.orderId || 0);

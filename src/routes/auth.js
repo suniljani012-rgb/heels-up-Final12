@@ -309,21 +309,34 @@ export async function authRouter(request, env) {
             // Rate limit check (per IP)
             const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
             const rateLimitKey = `ratelimit:login:${ip}`;
-            const attempts = parseInt(await env.KV.get(rateLimitKey) || '0');
+            let attempts = 0;
+            try {
+                attempts = parseInt(await env.KV.get(rateLimitKey) || '0');
+            } catch (kvErr) {
+                console.warn('KV read failed, skipping rate limit check:', kvErr);
+            }
             if (attempts >= 5) return error('Too many login attempts. Try after 1 minute.', 429);
 
             const user = await env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
             const tableName = 'users';
 
             if (!user || !(await verifyPassword(password, user.password_hash))) {
-                await env.KV.put(rateLimitKey, String(attempts + 1), { expirationTtl: 60 });
+                try {
+                    await env.KV.put(rateLimitKey, String(attempts + 1), { expirationTtl: 60 });
+                } catch (kvErr) {
+                    console.warn('KV put failed:', kvErr);
+                }
                 return unauthorized('Invalid email or password');
             }
 
             if (user.is_blocked) return unauthorized('Your account has been suspended. Contact support.');
 
             // Reset rate limit on success
-            await env.KV.delete(rateLimitKey);
+            try {
+                await env.KV.delete(rateLimitKey);
+            } catch (kvErr) {
+                console.warn('KV delete failed:', kvErr);
+            }
 
             const mapped = mapUser(user);
             const isAdminUser = ['admin', 'staff', 'manager'].includes(mapped.role);
@@ -335,27 +348,30 @@ export async function authRouter(request, env) {
                 const sessionToken = await signJWT(
                     { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name, otp_pending: true },
                     env.JWT_SECRET,
-                    5  // 5 minute expiry
+                    300  // 5 minute expiry
                 );
 
-                // Generate & store OTP in KV (10 min TTL)
+                // Generate OTP
                 const otp = String(Math.floor(100000 + Math.random() * 900000));
-                const otpKey = `otp:admin_login:${email}`;
+                
+                // Write to D1 (otp_tokens table) with purpose 'login'
+                const expiresAt = nowIso(parseInt(await getSetting(env, 'otp_expiry_minutes', '10')));
+                await env.DB.prepare(
+                    'INSERT INTO otp_tokens (email, otp_hash, purpose, attempts, verified, expires_at, created_at) VALUES (?, ?, ?, 0, 0, ?, ?)'
+                ).bind(email, otp, 'login', expiresAt, nowIso()).run();
 
-                // Rate limit OTP resends: max 3 per hour
+                // Optional KV operations wrapped in try-catch
                 const resendKey = `otp_resend:admin_login:${email}`;
-                const resendCount = parseInt(await env.KV.get(resendKey) || '0');
-                if (resendCount >= 3) {
+                let resendCount = 0;
+                try {
+                    resendCount = parseInt(await env.KV.get(resendKey) || '0');
+                } catch (_) {}
+                if (resendCount >= 5) {
                     return error('Too many OTP requests. Wait 1 hour.', 429);
                 }
-
-                await env.KV.put(otpKey, JSON.stringify({
-                    otp,
-                    attempts: 0,
-                    created_at: Date.now()
-                }), { expirationTtl: 600 }); // 10 min
-
-                await env.KV.put(resendKey, String(resendCount + 1), { expirationTtl: 3600 }); // 1 hour
+                try {
+                    await env.KV.put(resendKey, String(resendCount + 1), { expirationTtl: 3600 }); // 1 hour
+                } catch (_) {}
 
                 // ALWAYS print to console for development/debugging ease
                 console.log(`[ADMIN 2FA] Generated OTP for ${email}: ${otp}`);
@@ -380,7 +396,7 @@ export async function authRouter(request, env) {
                 }
             }
 
-            // ── Normal login (customer) or admin fallback if OTP email failed ──
+            // ── Normal login (customer) ──
             const now = nowIso();
             await env.DB.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').bind(now, user.id).run();
             user.last_login_at = now;
@@ -405,7 +421,7 @@ export async function authRouter(request, env) {
     }
 
     // POST /api/auth/admin-verify-otp  — Step 2 of admin 2FA login
-    // Verifies OTP from KV, issues real full-duration JWT
+    // Verifies OTP from D1, issues real full-duration JWT
     if (path === '/admin-verify-otp' && method === 'POST') {
         try {
             const body = await request.json();
@@ -424,28 +440,15 @@ export async function authRouter(request, env) {
             if (!payload.otp_pending) return error('Invalid session type', 400);
 
             const email = payload.email;
-            const otpKey = `otp:admin_login:${email}`;
-            const raw = await env.KV.get(otpKey);
-            if (!raw) return error('OTP expired or not found. Please login again.', 400);
 
-            const otpData = JSON.parse(raw);
+            // Verify the OTP via the D1 database
+            const otpResult = await verifyOtp(env, email, inputOtp, 'login');
+            if (!otpResult.ok) return error(otpResult.error, 400);
 
-            // Lock after 5 wrong attempts
-            if (otpData.attempts >= 5) {
-                await env.KV.delete(otpKey);
-                return error('Too many incorrect attempts. Please login again.', 429);
-            }
-
-            if (otpData.otp !== inputOtp) {
-                otpData.attempts++;
-                await env.KV.put(otpKey, JSON.stringify(otpData), { expirationTtl: 600 });
-                const remaining = 5 - otpData.attempts;
-                return error(`Incorrect OTP. ${remaining} attempt${remaining === 1 ? '' : 's'} remaining.`, 400);
-            }
-
-            // ✅ OTP correct — clean up and issue real JWT
-            await env.KV.delete(otpKey);
-            await env.KV.delete(`otp_resend:admin_login:${email}`);
+            // Optional KV cleanup wrapped in try-catch
+            try {
+                await env.KV.delete(`otp_resend:admin_login:${email}`);
+            } catch (_) {}
 
             const user = await env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email).first();
             if (!user || user.is_blocked) return unauthorized('Account not accessible.');
@@ -496,7 +499,11 @@ export async function authRouter(request, env) {
         const authHeader = request.headers.get('Authorization') || '';
         const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
         if (token) {
-            await env.KV.put(`blacklist:${token}`, '1', { expirationTtl: 86400 * 7 });
+            try {
+                await env.KV.put(`blacklist:${token}`, '1', { expirationTtl: 86400 * 7 });
+            } catch (kvErr) {
+                console.warn('KV blacklist put failed:', kvErr);
+            }
         }
         return ok(null, 'Logged out successfully');
     }
