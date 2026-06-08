@@ -329,11 +329,8 @@ export async function authRouter(request, env) {
             const isAdminUser = ['admin', 'staff', 'manager'].includes(mapped.role);
 
             // ── Admin 2FA: OTP step ───────────────────────────────────────────
-            // Only triggered for admin/staff/manager when REQUIRE_EMAIL_OTP = "true"
-            const requireOtp = (env.REQUIRE_EMAIL_OTP === 'true') ||
-                (await getSetting(env, 'require_email_otp', 'false') === 'true');
-
-            if (isAdminUser && requireOtp) {
+            // Admin users ALWAYS require OTP 2FA login (as requested by user)
+            if (isAdminUser) {
                 // Issue short-lived session token (5 min) — cannot access admin routes
                 const sessionToken = await signJWT(
                     { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name, otp_pending: true },
@@ -367,22 +364,18 @@ export async function authRouter(request, env) {
                 const emailResult = await sendOtpEmail(env, email, otp, 'login');
                 if (!emailResult.ok) {
                     console.error('Failed to send admin OTP:', emailResult.error);
-                    if (env.REQUIRE_EMAIL_OTP === 'true') {
-                        return ok({
-                            step: 'otp_required',
-                            session_token: sessionToken,
-                            email: mapped.email,
-                            warning: 'OTP email delivery failed, check worker console/logs'
-                        }, `OTP generated (email delivery failed: ${emailResult.error || 'unknown error'})`);
-                    }
-                    // Otherwise (if requireOtp came from DB settings and env is false), we can fall through.
-                    console.warn('OTP email failed — falling through to direct login for:', email);
+                    return ok({
+                        step: 'otp_required',
+                        session_token: sessionToken,
+                        email: mapped.email,
+                        warning: `OTP email delivery failed: ${emailResult.error || 'unknown error'}. Check worker console/logs.`
+                    }, `OTP generated (email delivery failed)`);
                 } else {
                     // OTP sent successfully — require 2FA step
                     return ok({
                         step: 'otp_required',
                         session_token: sessionToken,
-                        email: mapped.email,
+                        email: masked(email),
                     }, `OTP sent to ${masked(email)}`);
                 }
             }
