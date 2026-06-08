@@ -21,7 +21,33 @@ interface CartState {
   getCartCount: () => number;
   getCartSubtotal: () => number; // in paise
   getCartTotal: () => number; // in paise
+  fetchCartFromBackend: () => Promise<void>;
+  syncCart: () => Promise<void>;
 }
+
+const syncCartToBackend = async (items: CartItem[]) => {
+  const token = localStorage.getItem('heelsup_token');
+  if (!token) return;
+  try {
+    await fetch('/api/cart/sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        items: items.map(item => ({
+          product_id: item.id,
+          size: item.size,
+          color: item.color,
+          qty: item.qty
+        }))
+      })
+    });
+  } catch (err) {
+    console.error('Failed to sync cart to backend:', err);
+  }
+};
 
 export const useCartStore = create<CartState>((set, get) => {
   const savedCart = localStorage.getItem('heelsup_cart');
@@ -37,6 +63,7 @@ export const useCartStore = create<CartState>((set, get) => {
   const saveCart = (items: CartItem[]) => {
     localStorage.setItem('heelsup_cart', JSON.stringify(items));
     set({ items });
+    syncCartToBackend(items);
   };
 
   return {
@@ -52,13 +79,14 @@ export const useCartStore = create<CartState>((set, get) => {
           item.size === newItem.size
       );
 
+      let updated: CartItem[];
       if (existingIndex > -1) {
-        const updated = [...currentItems];
+        updated = [...currentItems];
         updated[existingIndex].qty += qtyToAdd;
-        saveCart(updated);
       } else {
-        saveCart([...currentItems, { ...newItem, qty: qtyToAdd }]);
+        updated = [...currentItems, { ...newItem, qty: qtyToAdd }];
       }
+      saveCart(updated);
     },
     removeItem: (id, color, size) => {
       const filtered = get().items.filter(
@@ -94,8 +122,46 @@ export const useCartStore = create<CartState>((set, get) => {
       return get().items.reduce((sum, item) => sum + item.price * item.qty, 0);
     },
     getCartTotal: () => {
-      // For now total equals subtotal. If coupons or tax apply, they will compute here
       return get().getCartSubtotal();
     },
+    syncCart: async () => {
+      await syncCartToBackend(get().items);
+    },
+    fetchCartFromBackend: async () => {
+      const token = localStorage.getItem('heelsup_token');
+      if (!token) return;
+      try {
+        const res = await fetch('/api/cart', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          const items = data.data.map((item: any) => {
+            let img = 'assets/placeholder.jpg';
+            if (item.images_json) {
+              try {
+                const imgs = JSON.parse(item.images_json);
+                if (imgs && imgs.length > 0) img = imgs[0];
+              } catch {}
+            }
+            return {
+              id: item.product_id,
+              name: item.name,
+              price: item.price,
+              originalPrice: item.original_price,
+              qty: item.qty,
+              color: item.color || 'Default',
+              size: item.size || '38',
+              img: img,
+              category: item.category || ''
+            };
+          });
+          localStorage.setItem('heelsup_cart', JSON.stringify(items));
+          set({ items });
+        }
+      } catch (err) {
+        console.error('Failed to fetch cart from backend:', err);
+      }
+    }
   };
 });

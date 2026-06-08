@@ -33,3 +33,4 @@ npm-debug.log*
 
 # heelsup sub-folder specific
 dist/
+heels-up-new/

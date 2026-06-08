@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Star, Heart, ArrowRight } from 'lucide-react'
@@ -61,10 +61,6 @@ export default function Home() {
     }
   })
   const [bannerIndex, setBannerIndex] = useState(0)
-  const [timeLeft, setTimeLeft] = useState({ hours: 8, minutes: 47, seconds: 23 })
-  const [offerTitle, setOfferTitle] = useState('Deal of the Day')
-  const [offerDescription, setOfferDescription] = useState("Grab Jodhpur's finest premium stilettos and flats at special markdown prices. Save up to 30% plus get Free Shipping!")
-  const initialTimeRef = useRef({ hours: 8, minutes: 47, seconds: 23 })
 
   const resolveBannerLink = (link: string | null | undefined) => {
     if (!link) return '/shop';
@@ -138,17 +134,7 @@ export default function Home() {
           const settingsRes = await fetch('/api/settings/public')
           const settingsData = await settingsRes.json()
           if (settingsData.success && settingsData.data) {
-            const settingsMap = settingsData.data
-            const titleSetting = settingsMap.find((s: any) => s.key === 'offer_title')?.value
-            const descSetting = settingsMap.find((s: any) => s.key === 'offer_description')?.value
-            const hoursSetting = parseInt(settingsMap.find((s: any) => s.key === 'offer_hours')?.value || '8', 10)
-            const minutesSetting = parseInt(settingsMap.find((s: any) => s.key === 'offer_minutes')?.value || '47', 10)
-            const secondsSetting = parseInt(settingsMap.find((s: any) => s.key === 'offer_seconds')?.value || '23', 10)
-
-            if (titleSetting) setOfferTitle(titleSetting)
-            if (descSetting) setOfferDescription(descSetting)
-            initialTimeRef.current = { hours: hoursSetting, minutes: minutesSetting, seconds: secondsSetting }
-            setTimeLeft({ hours: hoursSetting, minutes: minutesSetting, seconds: secondsSetting })
+            // Limited time offer settings are not used in UI
           }
         } catch (settingsErr) {
           console.error("Error fetching settings:", settingsErr)
@@ -180,24 +166,8 @@ export default function Home() {
       setBannerIndex((prev) => (prev + 1) % defaultBanners.length)
     }, 6000)
 
-    // Countdown Timer
-    const countdownTimer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 }
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        } else {
-          return { ...initialTimeRef.current } // Reset to initial values (either settings or fallback)
-        }
-      })
-    }, 1000)
-
     return () => {
       clearInterval(slideTimer)
-      clearInterval(countdownTimer)
     }
   }, [])
 
@@ -235,9 +205,9 @@ export default function Home() {
         img: cat.image_url || getCategoryFallbackImage(cat.slug || cat.name)
       }))
 
-  const handleWishlistToggle = (e: any, prodId: number, name: string) => {
+  const handleWishlistToggle = async (e: any, prodId: number, name: string) => {
     e.preventDefault()
-    const added = toggleItem(prodId)
+    const added = await toggleItem(prodId)
     if (added) {
       showToast('success', 'Added to Wishlist ❤️', `${name} is saved to your wishlist.`)
     } else {
@@ -344,7 +314,7 @@ export default function Home() {
       {/* Categories Grid */}
       <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24">
         <div className="text-center max-w-xl mx-auto mb-16">
-          <span className="text-xs uppercase tracking-widest text-[#c9a96e] font-bold">Curated Styles</span>
+          <span className="text-xs uppercase tracking-widest text-primary font-bold">Choose Your Style</span>
           <h2 className="text-3xl font-light text-gray-900 mt-2 font-display italic">Shop by Category</h2>
           <div className="h-[1.5px] w-12 bg-primary mx-auto mt-4" />
         </div>
@@ -363,56 +333,15 @@ export default function Home() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 />
               </div>
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white/95 via-white/50 to-transparent h-1/2 z-10" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white/98 via-white/70 to-transparent h-2/3 z-10" />
               <div className="absolute bottom-6 left-6 text-gray-900 flex flex-col gap-1 z-20">
-                <span className="text-2xl">{card.emoji}</span>
-                <h3 className="text-base font-semibold tracking-wide">{card.label}</h3>
-                <span className="text-[10px] text-gray-600 font-bold uppercase tracking-wider flex items-center gap-1 group-hover:text-primary transition-colors">
+                <h3 className="text-lg font-bold tracking-wide text-gray-950">{card.label}</h3>
+                <span className="text-[10px] text-gray-700 font-bold uppercase tracking-wider flex items-center gap-1 group-hover:text-primary transition-colors">
                   Explore <ArrowRight className="w-3 h-3" />
                 </span>
               </div>
             </Link>
           ))}
-        </div>
-      </section>
-
-      {/* Flash Sale Banner with Countdown */}
-      <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24">
-        <div className="bg-[#f7f5f0] border border-[#ead2ae] rounded-2xl p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          <div className="flex flex-col gap-4">
-            <span className="w-fit text-[10px] bg-[#d4456b] text-white font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-              Limited Time Only
-            </span>
-            <h2 className="text-3xl font-light text-gray-900 font-display italic">{offerTitle}</h2>
-            <p className="text-sm text-gray-600 leading-relaxed max-w-md">
-              {offerDescription}
-            </p>
-            {/* Timer */}
-            <div className="flex items-center gap-3 mt-2">
-              <div className="flex flex-col items-center p-3 bg-white border border-gray-100 rounded-xl w-16 shadow-sm">
-                <span className="text-lg font-bold text-gray-900">{String(timeLeft.hours).padStart(2, '0')}</span>
-                <span className="text-[8px] text-gray-400 font-bold uppercase mt-0.5">Hours</span>
-              </div>
-              <span className="text-gray-400 font-bold text-lg">:</span>
-              <div className="flex flex-col items-center p-3 bg-white border border-gray-100 rounded-xl w-16 shadow-sm">
-                <span className="text-lg font-bold text-gray-900">{String(timeLeft.minutes).padStart(2, '0')}</span>
-                <span className="text-[8px] text-gray-400 font-bold uppercase mt-0.5">Min</span>
-              </div>
-              <span className="text-gray-400 font-bold text-lg">:</span>
-              <div className="flex flex-col items-center p-3 bg-white border border-gray-100 rounded-xl w-16 shadow-sm">
-                <span className="text-lg font-bold text-gray-900">{String(timeLeft.seconds).padStart(2, '0')}</span>
-                <span className="text-[8px] text-gray-400 font-bold uppercase mt-0.5">Sec</span>
-              </div>
-            </div>
-          </div>
-          <div className="relative h-64 md:h-80 rounded-xl overflow-hidden shadow-md">
-            <HeicImage
-              src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=800&auto=format&fit=crop"
-              alt="Deal of the Day"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/10" />
-          </div>
         </div>
       </section>
 

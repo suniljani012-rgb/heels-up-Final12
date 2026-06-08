@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, Mail, Lock, Phone, Loader2, ArrowRight } from 'lucide-react'
+import { User, Mail, Lock, Phone, Loader2, ArrowRight, Eye, EyeOff } from 'lucide-react'
 import { useToastStore } from '../store/useToastStore'
 
 export default function Register() {
@@ -12,11 +12,27 @@ export default function Register() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name || !email || !password) return
+    if (!name || !email || !phone || !password || !confirmPassword) {
+      showToast('warning', 'Missing Details', 'Please fill in all the required fields.')
+      return
+    }
+
+    if (password.length < 8) {
+      showToast('warning', 'Weak Password', 'Password must be at least 8 characters long.')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      showToast('warning', 'Passwords Mismatch', 'Password and Confirm Password do not match.')
+      return
+    }
 
     setLoading(true)
     try {
@@ -94,13 +110,14 @@ export default function Register() {
 
           {/* Phone Number input */}
           <div className="space-y-1.5">
-            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone Number (Optional)</label>
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Phone Number</label>
             <div className="relative group">
               <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-primary transition-colors">
                 <Phone className="w-4 h-4" />
               </span>
               <input
                 type="tel"
+                required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary/20 transition-all duration-300 placeholder-gray-400"
@@ -112,18 +129,50 @@ export default function Register() {
           {/* Password input */}
           <div className="space-y-1.5">
             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Password</label>
-            <div className="relative group">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-primary transition-colors">
+            <div className="relative group flex items-center">
+              <span className="absolute left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-primary transition-colors">
                 <Lock className="w-4 h-4" />
               </span>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary/20 transition-all duration-300 placeholder-gray-400"
+                className="w-full border border-gray-200 rounded-xl pl-10 pr-11 py-3 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary/20 transition-all duration-300 placeholder-gray-400"
                 placeholder="Choose a strong password (min 8 chars)"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 p-1 text-gray-400 hover:text-gray-700 transition-colors focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Confirm Password input */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">Confirm Password</label>
+            <div className="relative group flex items-center">
+              <span className="absolute left-0 pl-3.5 flex items-center text-gray-400 group-focus-within:text-primary transition-colors">
+                <Lock className="w-4 h-4" />
+              </span>
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl pl-10 pr-11 py-3 text-xs bg-[#fcfbf9] focus:outline-none focus:border-primary focus:bg-white focus:ring-1 focus:ring-primary/20 transition-all duration-300 placeholder-gray-400"
+                placeholder="Re-enter your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 p-1 text-gray-400 hover:text-gray-700 transition-colors focus:outline-none"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

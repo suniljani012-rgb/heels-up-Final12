@@ -19,6 +19,13 @@ export default function Checkout() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  useEffect(() => {
+    if (!token || !user) {
+      showToast('error', 'Login Required 🔐', 'Please sign in or create an account to proceed with checkout.')
+      navigate('/login?redirect=/checkout')
+    }
+  }, [token, user, navigate])
+
   // Coupon variables from cart routing context
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState(location.state?.couponCode || '')

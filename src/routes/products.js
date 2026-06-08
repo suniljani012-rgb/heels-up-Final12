@@ -95,6 +95,46 @@ async function fetchSizeStockBatch(env, productIds) {
   }
 }
 
+function getBaseSku(sku) {
+  if (!sku) return '';
+  const part = sku.split('-')[0].trim();
+  return part.replace(/^0+/, '');
+}
+
+function extractColor(name) {
+  if (!name) return 'Default';
+  const parts = name.split(' - ');
+  if (parts.length > 1) {
+    return parts[parts.length - 1].trim();
+  }
+  return 'Default';
+}
+
+async function fetchColorVariants(env, product) {
+  const baseSku = getBaseSku(product.sku);
+  if (!baseSku) return { colors: [], color_to_id: {} };
+
+  // Query other active products in the same category
+  const res = await env.DB.prepare(
+    "SELECT id, name, sku FROM products WHERE category = ? AND active = 1"
+  ).bind(product.category).all();
+
+  const variants = (res.results || []).filter(p => getBaseSku(p.sku) === baseSku);
+  if (variants.length <= 1) {
+    return { colors: [], color_to_id: {} };
+  }
+
+  const colors = [];
+  const colorToId = {};
+  for (const v of variants) {
+    const color = extractColor(v.name);
+    colors.push(color);
+    colorToId[color] = v.id;
+  }
+
+  return { colors, color_to_id: colorToId };
+}
+
 // Helper: fetch distinct colors for multiple products as a map { productId: [colors] }
 async function fetchColorsBatch(env, productIds) {
   if (!productIds.length) return {};
@@ -173,9 +213,9 @@ export async function productsRouter(request, env) {
             const tag = params.get('tag');
             const minPrice = params.get('min_price');
             const maxPrice = params.get('max_price');
-            const sizeFilter = params.get('size'); // NEW: filter by available size
-
-            let where = ['p.active = 1'];
+            const sizeFilter = params.get('size');
+            const isAdmin = request.headers.get('x-is-admin') === 'true' || params.get('all') === 'true';
+            let where = isAdmin ? [] : ['p.active = 1'];
             let binds = [];
 
             if (cat) {
@@ -259,7 +299,8 @@ export async function productsRouter(request, env) {
     if (path.startsWith('/slug/') && method === 'GET') {
         const productSlug = path.replace('/slug/', '');
         try {
-            const allProducts = await env.DB.prepare("SELECT id, name FROM products WHERE active = 1").all();
+            const isAdmin = request.headers.get('x-is-admin') === 'true' || params.get('all') === 'true';
+            const allProducts = await env.DB.prepare("SELECT id, name FROM products" + (isAdmin ? '' : ' WHERE active = 1')).all();
             const matched = (allProducts.results || []).find(p => slug(p.name) === productSlug);
             if (!matched) return notFound('Product not found');
             const id = matched.id;
@@ -270,7 +311,7 @@ export async function productsRouter(request, env) {
                 (SELECT COUNT(*) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as review_count
          FROM products p
          LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category)
-         WHERE p.id = ? AND p.active = 1`
+         WHERE p.id = ?` + (isAdmin ? '' : ' AND p.active = 1')
             ).bind(id).first();
             if (!product) return notFound('Product not found');
 
@@ -296,8 +337,12 @@ export async function productsRouter(request, env) {
             const relatedSizeStock = await fetchSizeStockBatch(env, relatedIds);
             const relatedColors = await fetchColorsBatch(env, relatedIds);
 
+            const variantsData = await fetchColorVariants(env, product);
+            const mappedProduct = mapProduct(product, sizeStock, variantsData.colors.length > 0 ? variantsData.colors : colors);
+            mappedProduct.color_to_id = variantsData.color_to_id;
+
             return ok({
-                product: mapProduct(product, sizeStock, colors),
+                product: mappedProduct,
                 reviews: reviews.results || [],
                 images: images.results || [],
                 related: relatedRaw.map(r => mapProduct(r, relatedSizeStock[r.id] || [], relatedColors[r.id] || []))
@@ -312,13 +357,14 @@ export async function productsRouter(request, env) {
     if (path.match(/^\/\d+$/) && method === 'GET') {
         const id = parseInt(path.slice(1));
         try {
+            const isAdmin = request.headers.get('x-is-admin') === 'true' || params.get('all') === 'true';
             const product = await env.DB.prepare(
                 `SELECT p.*, c.id as category_id,
                 (SELECT ROUND(AVG(rating),1) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as avg_rating,
                 (SELECT COUNT(*) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as review_count
          FROM products p
          LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category)
-         WHERE p.id = ? AND p.active = 1`
+         WHERE p.id = ?` + (isAdmin ? '' : ' AND p.active = 1')
             ).bind(id).first();
             if (!product) return notFound('Product not found');
 
@@ -336,8 +382,12 @@ export async function productsRouter(request, env) {
               fetchColorsForProduct(env, id)
             ]);
 
+            const variantsData = await fetchColorVariants(env, product);
+            const mappedProduct = mapProduct(product, sizeStock, variantsData.colors.length > 0 ? variantsData.colors : colors);
+            mappedProduct.color_to_id = variantsData.color_to_id;
+
             return ok({
-                product: mapProduct(product, sizeStock, colors),
+                product: mappedProduct,
                 reviews: reviews.results || [],
                 images: images.results || []
             });

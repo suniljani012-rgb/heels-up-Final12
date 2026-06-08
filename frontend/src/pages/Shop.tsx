@@ -162,9 +162,9 @@ export default function Shop() {
     setSearchParams(nextParams)
   }
 
-  const handleWishlistToggle = (e: any, prodId: number, name: string) => {
+  const handleWishlistToggle = async (e: any, prodId: number, name: string) => {
     e.preventDefault()
-    const added = toggleItem(prodId)
+    const added = await toggleItem(prodId)
     if (added) {
       showToast('success', 'Added to Wishlist ❤️', `${name} is saved to your wishlist.`)
     } else {

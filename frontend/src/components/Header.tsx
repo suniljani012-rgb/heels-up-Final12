@@ -32,23 +32,17 @@ export default function Header() {
   const [announcementIndex, setAnnouncementIndex] = useState(0)
   const [logoFailed, setLogoFailed] = useState(false)
   const [categories, setCategories] = useState<any[]>([])
-
-  const announcements = [
+  const [announcements, setAnnouncements] = useState<string[]>([
     "🎉 NEW ARRIVALS — Summer Collection is Live!",
     "🚚 FREE Shipping on orders above ₹999",
     "🏷️ Use code HEELS10 for 10% off on first order"
-  ]
+  ])
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 40)
     }
     window.addEventListener('scroll', handleScroll)
-    
-    // Cycle announcements
-    const interval = setInterval(() => {
-      setAnnouncementIndex((prev) => (prev + 1) % announcements.length)
-    }, 4500)
 
     // Fetch live categories
     fetch('/api/categories')
@@ -60,11 +54,29 @@ export default function Header() {
       })
       .catch(err => console.error("Error loading categories in header:", err))
 
+    // Fetch live announcements
+    fetch('/api/announcements')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setAnnouncements(data.data.map((item: any) => item.text))
+        }
+      })
+      .catch(err => console.error("Error loading announcements in header:", err))
+
     return () => {
       window.removeEventListener('scroll', handleScroll)
-      clearInterval(interval)
     }
   }, [])
+
+  // Rotate announcements
+  useEffect(() => {
+    if (announcements.length <= 1) return
+    const interval = setInterval(() => {
+      setAnnouncementIndex((prev) => (prev + 1) % announcements.length)
+    }, 4500)
+    return () => clearInterval(interval)
+  }, [announcements])
 
   const cartCount = getCartCount()
   const wishlistCount = wishlistItems.length

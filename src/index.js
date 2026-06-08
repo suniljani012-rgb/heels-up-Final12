@@ -23,6 +23,7 @@ import { handleShipping } from './routes/shipping.js';
 import { blogsPublicRouter } from './routes/blogs.js';
 import { pagesPublicRouter } from './routes/pages.js';
 import { adminRouter } from './routes/admin.js';
+import { announcementsRouter } from './routes/announcements.js';
 import { json } from './utils/response.js';
 import { authRateLimit, apiRateLimit, paymentRateLimit, adminRateLimit } from './middleware/ratelimit.js';
 
@@ -137,6 +138,7 @@ export default {
         else if (path.startsWith('/api/pos')) response = await posRouter(request, env);
         else if (path.startsWith('/api/analytics')) response = await analyticsRouter(request, env);
         else if (path.startsWith('/api/banners')) response = await bannersRouter(request, env);
+        else if (path.startsWith('/api/announcements')) response = await announcementsRouter(request, env);
         else if (path.startsWith('/api/staff')) response = await staffRouter(request, env);
         else if (path.startsWith('/api/settings')) response = await settingsRouter(request, env);
         else if (path.startsWith('/api/notifications')) response = await handleNotifications(request, env, path, method);

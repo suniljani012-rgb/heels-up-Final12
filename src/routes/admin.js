@@ -19,6 +19,7 @@ import { categoriesRouter } from './categories.js';
 import { couponsRouter } from './coupons.js';
 import { staffRouter } from './staff.js';
 import { settingsRouter } from './settings.js';
+import { announcementsRouter } from './announcements.js';
 import { inventoryRouter } from './misc.js';
 
 // ── New admin-only routers ───────────────────────────────────
@@ -37,9 +38,11 @@ import { posRouter } from './pos.js';
 function rewritePath(request, newPathname) {
     const url = new URL(request.url);
     url.pathname = newPathname;
+    const newHeaders = new Headers(request.headers);
+    newHeaders.set('x-is-admin', 'true');
     return new Request(url.toString(), {
         method: request.method,
-        headers: request.headers,
+        headers: newHeaders,
         body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body,
         duplex: 'half',
     });
@@ -129,6 +132,17 @@ export async function adminRouter(request, env) {
         const sub = path.replace('/api/admin/settings', '') || '/';
         const req = rewritePath(request, '/api/settings' + sub);
         return settingsRouter(req, env);
+    }
+
+    // ── /api/admin/announcements/* → /api/announcements/* ─────
+    if (path.startsWith('/api/admin/announcements')) {
+        const sub = path.replace('/api/admin/announcements', '') || '/';
+        if ((sub === '/' || sub === '') && request.method === 'GET') {
+            const req = rewritePath(request, '/api/announcements/admin/all');
+            return announcementsRouter(req, env);
+        }
+        const req = rewritePath(request, '/api/announcements' + sub);
+        return announcementsRouter(req, env);
     }
 
     // ── /api/admin/inventory/* → /api/inventory/* ─────────────

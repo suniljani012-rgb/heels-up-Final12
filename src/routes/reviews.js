@@ -67,8 +67,13 @@ export async function reviewsRouter(request, env) {
         if (authError) return authError;
         const id = path.match(/(\d+)/)[1];
         try {
-            await env.DB.prepare("UPDATE product_reviews SET status = 'approved' WHERE id = ?").bind(id).run();
-            return ok(null, 'Review approved');
+            let status = 'approved';
+            try {
+                const body = await request.json();
+                if (body.status) status = body.status;
+            } catch {}
+            await env.DB.prepare("UPDATE product_reviews SET status = ? WHERE id = ?").bind(status, id).run();
+            return ok(null, `Review status updated to ${status}`);
         } catch (e) {
             console.error('Approve review error:', e);
             return serverError('Failed to approve review');

@@ -20,6 +20,7 @@ import OrderConfirmation from './pages/OrderConfirmation'
 import OrderTracking from './pages/OrderTracking'
 import Admin from './pages/Admin'
 import DynamicPage from './pages/DynamicPage'
+import NotFound from './pages/NotFound'
 
 const queryClient = new QueryClient()
 
@@ -109,7 +110,7 @@ function AppContent() {
           <Route path="/admin.html" element={<Admin />} />
           
           {/* Fallback route */}
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       {!isAdmin && <Footer />}
@@ -121,7 +122,7 @@ function AppContent() {
       {/* Floating WhatsApp Widget */}
       {!isAdmin && (
         <a
-          href="https://wa.me/917891470935?text=Hello%20HeelsUp!%20I%20have%20a%20question%20about%20your%20footwear%20collection."
+          href="https://wa.me/917891470935?text=Hello%20HeelsUp!%20I%20am%20exploring%20your%20collection%20and%20need%20some%20assistance."
           target="_blank"
           rel="noreferrer"
           className="fixed bottom-6 right-6 z-50 bg-[#25d366] hover:bg-[#20ba5a] text-white p-3.5 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center group"

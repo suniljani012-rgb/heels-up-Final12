@@ -28,6 +28,13 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email }),
       })
       const data = await res.json()
+      if (res.status === 404) {
+        showToast('error', 'Account Not Found 🔍', 'This email is not registered with HeelsUp. Redirecting to registration...')
+        setTimeout(() => {
+          navigate('/register')
+        }, 2000)
+        return
+      }
       if (data.success) {
         setStep('otp')
         showToast('success', 'Reset Code Sent ✉️', 'Please check your mailbox for your recovery link.')

@@ -470,11 +470,12 @@ export async function ordersRouter(request, env) {
         if (!orderNumber) return error('Order number required', 400);
         try {
             const order = await env.DB.prepare(
-                `SELECT order_number, order_status, payment_status, tracking_number, tracking_url, shipped_at, delivered_at, created_at
-                 FROM orders WHERE order_number = ?`
+                `SELECT * FROM orders WHERE order_number = ?`
             ).bind(orderNumber.toUpperCase()).first();
             if (!order) return notFound('Order not found');
-            return ok(order);
+            const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(order.id).all();
+            const items = (itemsRes.results || []).map(formatItem);
+            return ok(formatOrder(order, items));
         } catch (e) {
             return serverError('Tracking lookup failed');
         }

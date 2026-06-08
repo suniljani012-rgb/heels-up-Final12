@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { Star, Heart, ShoppingBag, Truck, RefreshCw, Ruler, MessageSquare } from 'lucide-react'
 import { useCartStore } from '../store/useCartStore'
 import { useWishlistStore } from '../store/useWishlistStore'
@@ -60,6 +60,7 @@ export default function Product() {
   const { toggleItem, hasItem } = useWishlistStore()
   const { showToast } = useToastStore()
   const { token } = useAuthStore()
+  const navigate = useNavigate()
 
   // Dynamic States
   const [product, setProduct] = useState<ProductDetail | null>(null)
@@ -204,8 +205,20 @@ export default function Product() {
     showToast('success', 'Added to Bag 🛍️', `${product.name} (Size ${selectedSize}) has been added.`)
   }
 
-  const handleWishlistClick = () => {
-    const added = toggleItem(product.id)
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color)
+    if (product && (product as any).color_to_id && (product as any).color_to_id[color]) {
+      const targetId = (product as any).color_to_id[color]
+      navigate(`/product?id=${targetId}`)
+    }
+  }
+
+  const handleWishlistClick = async () => {
+    if (!token) {
+      showToast('error', 'Authentication Required 🔐', 'Please log in to add items to your wishlist.')
+      return
+    }
+    const added = await toggleItem(product.id)
     if (added) {
       showToast('success', 'Added to Wishlist ❤️', `${product.name} saved.`)
     } else {
@@ -327,7 +340,7 @@ export default function Product() {
                 {product.colors.map((color) => (
                   <button
                     key={color}
-                    onClick={() => setSelectedColor(color)}
+                    onClick={() => handleColorChange(color)}
                     className={`h-9 px-4 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-2 ${
                       selectedColor === color
                         ? 'border-primary bg-primary text-white shadow-sm'

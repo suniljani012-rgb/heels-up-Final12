@@ -189,6 +189,14 @@ export async function authRouter(request, env) {
                 return error('Invalid purpose', 400);
             }
 
+            // Check if user account exists if requesting OTP for login or forgot password
+            if (purpose === 'forgot' || purpose === 'login') {
+                const user = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+                if (!user) {
+                    return error('Account with this email does not exist. Please create an account.', 404);
+                }
+            }
+
             const hourAgo = new Date(Date.now() - 3600000).toISOString();
             const recent = await env.DB.prepare(
                 'SELECT COUNT(*) as c FROM otp_tokens WHERE email=? AND purpose=? AND created_at>?'
@@ -508,13 +516,15 @@ export async function authRouter(request, env) {
             if (!email) return error('Email is required', 400);
 
             const user = await env.DB.prepare('SELECT id FROM users WHERE email=?').bind(email).first();
-            if (!user) return ok({ email }, 'If this email exists, an OTP has been sent.');
+            if (!user) {
+                return error('Account with this email does not exist. Please create an account.', 404);
+            }
 
             const hourAgo = new Date(Date.now() - 3600000).toISOString();
             const recent = await env.DB.prepare(
                 'SELECT COUNT(*) as c FROM otp_tokens WHERE email=? AND purpose=\'forgot\' AND created_at>?'
             ).bind(email, hourAgo).first();
-            if ((recent?.c || 0) >= 3) return ok({ email }, 'If this email exists, an OTP has been sent.');
+            if ((recent?.c || 0) >= 3) return ok({ email }, 'An OTP has already been sent to your email.');
 
             const otp = String(Math.floor(100000 + Math.random() * 900000));
             const expiresAt = nowIso(parseInt(await getSetting(env, 'otp_expiry_minutes', '10')));
@@ -524,7 +534,7 @@ export async function authRouter(request, env) {
             ).bind(email, otp, expiresAt, nowIso()).run();
 
             await sendOtpEmail(env, email, otp, 'forgot');
-            return ok({ email }, 'If this email exists, an OTP has been sent.');
+            return ok({ email }, 'Recovery OTP has been successfully sent to your email.');
         } catch (e) {
             console.error('Forgot password error:', e);
             return serverError('Failed to process forgot password');

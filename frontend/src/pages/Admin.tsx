@@ -133,160 +133,17 @@ interface Customer {
   tag: 'VIP' | 'Regular' | 'New Customer' | 'Gold';
 }
 
-// --- Pre-populated High-Fidelity Mock Database ---
-const initialProducts: Product[] = [
-  { id: 1, name: 'Royal Golden Zari Block Heels', sku: 'HU-HE-001', category: 'heels', price: 249900, original_price: 349900, stock: 12, active: true, featured: true, images: ['https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&auto=format&fit=crop&q=60'], sizes: ['36', '37', '38', '39', '40', '41'] },
-  { id: 2, name: 'Classic Velvet Black Stiletto', sku: 'HU-HE-002', category: 'heels', price: 189900, original_price: 249900, stock: 2, active: true, featured: true, images: ['https://images.unsplash.com/photo-1596702994230-a843d640f4ca?w=500&auto=format&fit=crop&q=60'], sizes: ['37', '38', '39', '40'] },
-  { id: 3, name: 'Silver Sparkle Pointed Mules', sku: 'HU-FL-003', category: 'flats', price: 149900, original_price: 199900, stock: 0, active: true, featured: false, images: ['https://images.unsplash.com/photo-1535043934128-cf0b28d52f95?w=500&auto=format&fit=crop&q=60'], sizes: ['36', '37', '38', '39', '40', '41', '42'] },
-  { id: 4, name: 'Comfort Soft-Sole Tan Loafers', sku: 'HU-FL-004', category: 'flats', price: 129900, original_price: 159900, stock: 20, active: true, featured: false, images: ['https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=500&auto=format&fit=crop&q=60'], sizes: ['38', '39', '40', '41'] },
-  { id: 5, name: 'Ivory Bridal Pearl Wedges', sku: 'HU-SA-005', category: 'sandals', price: 349900, original_price: 449900, stock: 5, active: true, featured: true, images: ['https://images.unsplash.com/photo-1562273138-f46be4ebdf33?w=500&auto=format&fit=crop&q=60'], sizes: ['36', '37', '38', '39', '40'] },
-  { id: 6, name: 'Dazzling Crystal Rose Strap Slides', sku: 'HU-SA-006', category: 'sandals', price: 169900, original_price: 219900, stock: 8, active: true, featured: false, images: ['https://images.unsplash.com/photo-1607522370275-f14206abe5d3?w=500&auto=format&fit=crop&q=60'], sizes: ['37', '38', '39', '40', '41'] },
-  { id: 7, name: 'Regal Velvet Cushion Juttis', sku: 'HU-FL-007', category: 'flats', price: 159900, original_price: 199900, stock: 15, active: true, featured: true, images: ['https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=500&auto=format&fit=crop&q=60'], sizes: ['36', '37', '38', '39', '40'] }
-];
-
-const initialOrders: Order[] = [
-  {
-    id: 1,
-    order_number: 'HU-OFL-1004',
-    customer_name: 'Priyanka Sharma',
-    customer_phone: '9876543210',
-    customer_email: 'priyanka@gmail.com',
-    subtotal_amount: 389800,
-    shipping_amount: 0,
-    discount_amount: 10000,
-    total_amount: 379800,
-    order_status: 'delivered',
-    payment_status: 'paid',
-    payment_method: 'UPI',
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    source: 'pos',
-    items: [
-      { id: 101, product_name: 'Classic Velvet Black Stiletto', size: '38', quantity: 2, price: 189900, image: 'https://images.unsplash.com/photo-1596702994230-a843d640f4ca?w=500&auto=format&fit=crop&q=60' }
-    ],
-    notes: 'Walk-in buyer, billing handled at Jodhpur flag store.'
-  },
-  {
-    id: 2,
-    order_number: 'HU-ONL-5892',
-    customer_name: 'Ananya Mehta',
-    customer_phone: '8765432109',
-    customer_email: 'ananya.mehta@yahoo.com',
-    subtotal_amount: 249900,
-    shipping_amount: 15000,
-    discount_amount: 0,
-    total_amount: 264900,
-    order_status: 'shipped',
-    payment_status: 'paid',
-    payment_method: 'Razorpay Live',
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    courier_name: 'Delhivery',
-    tracking_number: 'DEL901284712',
-    tracking_url: 'https://www.delhivery.com/track',
-    source: 'web',
-    items: [
-      { id: 102, product_name: 'Royal Golden Zari Block Heels', size: '37', quantity: 1, price: 249900, image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&auto=format&fit=crop&q=60' }
-    ],
-    address_line1: 'B-402, Royal Palms, Link Road',
-    address_line2: 'Andheri West',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    pincode: '400053'
-  },
-  {
-    id: 3,
-    order_number: 'HU-ONL-5893',
-    customer_name: 'Kiran Rathore',
-    customer_phone: '7891470935',
-    customer_email: 'kiran.rathore@outlook.com',
-    subtotal_amount: 309800,
-    shipping_amount: 0,
-    discount_amount: 30000,
-    total_amount: 279800,
-    order_status: 'placed',
-    payment_status: 'paid',
-    payment_method: 'Card Online',
-    created_at: new Date().toISOString(),
-    source: 'web',
-    items: [
-      { id: 103, product_name: 'Classic Velvet Black Stiletto', size: '39', quantity: 1, price: 189900, image: 'https://images.unsplash.com/photo-1596702994230-a843d640f4ca?w=500&auto=format&fit=crop&q=60' },
-      { id: 104, product_name: 'Comfort Soft-Sole Tan Loafers', size: '40', quantity: 1, price: 129900, image: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=500&auto=format&fit=crop&q=60' }
-    ],
-    address_line1: 'Sardarpura 3rd Road',
-    address_line2: 'Near Central Bank',
-    city: 'Jodhpur',
-    state: 'Rajasthan',
-    pincode: '342003'
-  },
-  {
-    id: 4,
-    order_number: 'HU-ONL-5894',
-    customer_name: 'Neha Singhal',
-    customer_phone: '9922883311',
-    customer_email: 'neha.singhal@gmail.com',
-    subtotal_amount: 159900,
-    shipping_amount: 0,
-    discount_amount: 15990,
-    total_amount: 143910,
-    order_status: 'confirmed',
-    payment_status: 'paid',
-    payment_method: 'Razorpay Live',
-    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-    source: 'instagram',
-    items: [
-      { id: 105, product_name: 'Regal Velvet Cushion Juttis', size: '38', quantity: 1, price: 159900, image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=500&auto=format&fit=crop&q=60' }
-    ],
-    address_line1: 'C-72, Malviya Nagar',
-    city: 'Jaipur',
-    state: 'Rajasthan',
-    pincode: '302017'
-  }
-];
-
-const initialCustomers: Customer[] = [
-  { id: 1, name: 'Priyanka Sharma', email: 'priyanka@gmail.com', phone: '9876543210', orders_count: 5, total_spent: 1250000, registered_at: '2025-10-15', tag: 'VIP' },
-  { id: 2, name: 'Ananya Mehta', email: 'ananya.mehta@yahoo.com', phone: '8765432109', orders_count: 3, total_spent: 789000, registered_at: '2026-01-20', tag: 'Gold' },
-  { id: 3, name: 'Kiran Rathore', email: 'kiran.rathore@outlook.com', phone: '7891470935', orders_count: 1, total_spent: 279800, registered_at: '2026-05-01', tag: 'New Customer' },
-  { id: 4, name: 'Neha Singhal', email: 'neha.singhal@gmail.com', phone: '9922883311', orders_count: 8, total_spent: 1890000, registered_at: '2025-06-12', tag: 'VIP' },
-  { id: 5, name: 'Ritu Phogat', email: 'phogat.ritu@gmail.com', phone: '7766554433', orders_count: 2, total_spent: 310000, registered_at: '2026-03-02', tag: 'Regular' }
-];
-
-const initialCategories: Category[] = [
-  { id: 1, name: 'Heels & Stilettos', slug: 'heels', description: 'Premium luxury high heels and stilettos for weddings and parties.', sort_order: 1, active: true },
-  { id: 2, name: 'Flats & Loafers', slug: 'flats', description: 'Chic designer cushion flats, loafers, and traditional cushion juttis.', sort_order: 2, active: true },
-  { id: 3, name: 'Sandals & Slides', slug: 'sandals', description: 'Easy luxury wear slides, bridal wedges, and strappy sandals.', sort_order: 3, active: true },
-  { id: 4, name: 'Premium Bags', slug: 'bags', description: 'Embellished bridal clutches, luxury hand purses.', sort_order: 4, active: true }
-];
-
-const initialCollections: Collection[] = [
-  { id: 1, name: 'Festive Gold Elegance', type: 'automated', rules: [{ field: 'name', relation: 'contains', value: 'Gold' }], description: 'Bridal footwear curated for majestic weddings.', active: true },
-  { id: 2, name: 'Staff Top Choice Picks', type: 'manual', description: 'Selected designs recommended by boutique staff.', active: true }
-];
-
-const initialCoupons: Coupon[] = [
-  { id: 1, code: 'FIRST10', discount_type: 'percentage', discount_value: 10, min_purchase: 100000, active: true },
-  { id: 2, code: 'HEELSPRIDE500', discount_type: 'fixed', discount_value: 50000, min_purchase: 300000, active: true }
-];
-
-const initialBanners: Banner[] = [
-  { id: 1, title: 'Maajisa Royal Wedding Collection 2026', subtitle: 'Indias Premium Hand-Zari Embellished Footwear', image_url: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=1000&auto=format&fit=crop&q=80', link: '/shop?category=heels', active: true },
-  { id: 2, title: 'Luxury Comfort Flats', subtitle: 'Walk of Confidence, Padded Soft-Sole Technology', image_url: 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=1000&auto=format&fit=crop&q=80', link: '/shop?category=flats', active: true }
-];
-
-const initialReviews: Review[] = [
-  { id: 1, user_name: 'Pooja Jindal', rating: 5, comment: 'Perfect match for my wedding lehenga! Truly gorgeous block heels.', product_name: 'Royal Golden Zari Block Heels', created_at: '2026-05-30', approved: true },
-  { id: 2, user_name: 'Supriya Sen', rating: 4, comment: 'Extremely soft padding, did not get any shoe bites at all.', product_name: 'Comfort Soft-Sole Tan Loafers', created_at: '2026-06-02', approved: false }
-];
-
-const initialPages: PageConfig[] = [
-  { id: 1, title: 'Return & Exchange Policy', slug: 'returns', content: '<h3>7-Day Hassle Free Returns</h3><p>We provide complimentary pick-ups for exchanges and returns within 7 days of delivery...</p>', active: true },
-  { id: 2, title: 'Our Heritage craftsmanship', slug: 'heritage', content: '<h3>Crafted in Rajasthan</h3><p>Every single string is woven by master local artisans keeping Indian royal legacy alive...</p>', active: true }
-];
-
-const initialStaff: Staff[] = [
-  { id: 1, name: 'Abhishek Jodhpur', email: 'admin@heelsup.in', role: 'admin', active: true },
-  { id: 2, name: 'Sonal Rathore', email: 'sonal@heelsup.in', role: 'manager', active: true },
-  { id: 3, name: 'Vikram Singh', email: 'vikram@heelsup.in', role: 'staff', active: true }
-];
+// --- Pre-populated High-Fidelity Mock Database (Clear for D1) ---
+const initialProducts: Product[] = [];
+const initialOrders: Order[] = [];
+const initialCustomers: Customer[] = [];
+const initialCategories: Category[] = [];
+const initialCollections: Collection[] = [];
+const initialCoupons: Coupon[] = [];
+const initialBanners: Banner[] = [];
+const initialReviews: Review[] = [];
+const initialPages: PageConfig[] = [];
+const initialStaff: Staff[] = [];
 
 // --- Custom Toast Alert System ---
 interface Toast {
@@ -345,6 +202,7 @@ export default function App() {
   const [reviewsList, setReviewsList] = useState<Review[]>(initialReviews);
   const [pagesList, setPagesList] = useState<PageConfig[]>(initialPages);
   const [staffList, setStaffList] = useState<Staff[]>(initialStaff);
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
 
   // Live DB Editor States
   const [selectedDbTable, setSelectedDbTable] = useState<string>('products');
@@ -529,6 +387,38 @@ export default function App() {
     }
   }, [selectedDbTable, activeTab]);
 
+  const fetchDashboardStats = async () => {
+    try {
+      const res = await fetch('/api/admin/dashboard', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && resData.data) {
+        setDashboardStats(resData.data);
+      }
+    } catch (err) {
+      console.error('Fetch dashboard stats error:', err);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch('/api/admin/products?limit=100&all=true', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        setProducts(resData.data);
+      }
+    } catch (err) {
+      console.error('Fetch products error:', err);
+    }
+  };
+
   const fetchOrders = async () => {
     try {
       const res = await fetch('/api/admin/orders?limit=100', {
@@ -548,9 +438,236 @@ export default function App() {
     }
   };
 
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetch('/api/admin/customers?limit=100', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        setCustomers(resData.data);
+      }
+    } catch (err) {
+      console.error('Fetch customers error:', err);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/admin/categories', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        setCategoriesList(resData.data);
+      }
+    } catch (err) {
+      console.error('Fetch categories error:', err);
+    }
+  };
+
+  const fetchCollections = async () => {
+    try {
+      const res = await fetch('/api/admin/collections', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        const mapped = resData.data.map((c: any) => {
+          let cond = { type: 'manual', rules: undefined };
+          try {
+            if (c.condition) {
+              const parsed = typeof c.condition === 'string' ? JSON.parse(c.condition) : c.condition;
+              if (parsed.type) cond.type = parsed.type;
+              if (parsed.rules) cond.rules = parsed.rules;
+            }
+          } catch (e) {
+            console.error('Parse collection condition error:', e);
+          }
+          return {
+            id: c.id,
+            name: c.name,
+            type: cond.type as any,
+            rules: cond.rules,
+            description: c.description || '',
+            active: c.is_active === 1 || c.is_active === true || !!c.is_active
+          };
+        });
+        setCollectionsList(mapped);
+      }
+    } catch (err) {
+      console.error('Fetch collections error:', err);
+    }
+  };
+
+  const fetchCoupons = async () => {
+    try {
+      const res = await fetch('/api/admin/coupons', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        setCouponsList(resData.data);
+      }
+    } catch (err) {
+      console.error('Fetch coupons error:', err);
+    }
+  };
+
+  const fetchBanners = async () => {
+    try {
+      const res = await fetch('/api/admin/banners', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        setBannersList(resData.data);
+      }
+    } catch (err) {
+      console.error('Fetch banners error:', err);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch('/api/admin/reviews', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        const mapped = resData.data.map((r: any) => ({
+          id: r.id,
+          user_name: r.reviewer_name || 'Anonymous',
+          rating: r.rating,
+          comment: r.body || '',
+          product_name: r.product_name || 'Product ID ' + r.product_id,
+          created_at: r.created_at,
+          approved: r.status === 'approved'
+        }));
+        setReviewsList(mapped);
+      }
+    } catch (err) {
+      console.error('Fetch reviews error:', err);
+    }
+  };
+
+  const fetchPages = async () => {
+    try {
+      const res = await fetch('/api/admin/pages', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        setPagesList(resData.data);
+      }
+    } catch (err) {
+      console.error('Fetch pages error:', err);
+    }
+  };
+
+  const fetchStaff = async () => {
+    try {
+      const res = await fetch('/api/admin/staff', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && Array.isArray(resData.data)) {
+        const mapped = resData.data.map((s: any) => ({
+          id: s.id || s.user_id,
+          name: s.name || 'Staff Member',
+          email: s.email || '',
+          role: s.role || 'staff',
+          active: s.is_active === 1 || s.is_active === true || !!s.is_active
+        }));
+        setStaffList(mapped);
+      }
+    } catch (err) {
+      console.error('Fetch staff error:', err);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/settings', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        }
+      });
+      const resData = await res.json();
+      if (resData.success && resData.data) {
+        const d = resData.data;
+        setSettings({
+          storeName: d.store_name || d.storeName || 'HeelsUp Boutique',
+          storePhone: d.store_phone || d.storePhone || '+91 7891470935',
+          storeEmail: d.store_email || d.storeEmail || 'sales@heelsup.in',
+          storeAddress: d.store_address || d.storeAddress || '3rd Road Sardarpura, Jodhpur, Rajasthan (342003)',
+          razorpayKeyId: d.razorpay_key_id || d.razorpayKeyId || 'rzp_live_76sTba98VscH81',
+          razorpaySecret: d.razorpay_key_secret || d.razorpaySecret || '••••••••••••••••••••••••',
+          smsEnabled: d.sms_enabled === 'true' || d.sms_enabled === true || d.smsEnabled === true
+        });
+      }
+    } catch (err) {
+      console.error('Fetch settings error:', err);
+    }
+  };
+
+  const handleUpdateStock = async (productId: number, newStock: number, sku: string) => {
+    try {
+      const res = await fetch(`/api/admin/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        },
+        body: JSON.stringify({ stock: newStock })
+      });
+      const resData = await res.json();
+      if (resData.success) {
+        setProducts(prev => prev.map(item => item.id === productId ? { ...item, stock: newStock } : item));
+        showToast('success', 'Stock Updated', `Stock level for ${sku} updated to ${newStock}.`);
+      } else {
+        showToast('error', 'Update Failed', resData.message || 'Could not update stock');
+      }
+    } catch (err) {
+      console.error('Update stock error:', err);
+      showToast('error', 'Update Failed', 'Network error');
+    }
+  };
+
+  const fetchAllData = () => {
+    fetchDashboardStats();
+    fetchProducts();
+    fetchOrders();
+    fetchCustomers();
+    fetchCategories();
+    fetchCollections();
+    fetchCoupons();
+    fetchBanners();
+    fetchReviews();
+    fetchPages();
+    fetchStaff();
+    fetchSettings();
+  };
+
   useEffect(() => {
-    if (user && activeTab === 'orders') {
-      fetchOrders();
+    if (user) {
+      fetchAllData();
     }
   }, [user, activeTab]);
 
@@ -891,130 +1008,159 @@ export default function App() {
     return Math.max(0, posSubtotal - posDiscount);
   }, [posSubtotal, posDiscount]);
 
-  const handlePosCheckout = () => {
+  const handlePosCheckout = async () => {
     const validItems = posRows.filter(r => r.selectedProduct !== null);
     if (validItems.length === 0) {
       showToast('error', 'Spreadsheet Grid Empty', 'Please select at least one valid product from search suggestions.');
       return;
     }
 
-    const newOrderNumber = 'HU-POS-' + Math.floor(1000 + Math.random() * 9000);
-    const orderItems: OrderItem[] = validItems.map((r, i) => ({
-      id: 999 + i,
-      product_name: r.selectedProduct.name,
-      size: r.size,
-      quantity: r.qty,
-      price: (r.customPrice > 0 ? r.customPrice : r.selectedProduct.price / 100) * 100, // convert back to paise
-      image: r.selectedProduct.images[0]
-    }));
+    try {
+      const itemsPayload = validItems.map(r => ({
+        product_id: r.selectedProduct.id,
+        unit_price: (r.customPrice > 0 ? r.customPrice : r.selectedProduct.price / 100) * 100, // convert back to paise
+        quantity: r.qty,
+        size: r.size,
+        color: r.selectedProduct.color || ''
+      }));
 
-    const newOrder: Order = {
-      id: orders.length + 1,
-      order_number: newOrderNumber,
-      customer_name: posCustomerName || 'Walk-in Retail Buyer',
-      customer_phone: posCustomerPhone || 'N/A',
-      customer_email: posCustomerEmail || undefined,
-      subtotal_amount: posSubtotal * 100,
-      shipping_amount: 0,
-      discount_amount: posDiscount * 100,
-      total_amount: posGrandTotal * 100,
-      order_status: 'delivered',
-      payment_status: 'paid',
-      payment_method: posPaymentMethod,
-      created_at: new Date().toISOString(),
-      source: 'pos',
-      items: orderItems,
-      notes: posRemarks
-    };
-
-    // Deduct stock
-    setProducts(prevProds => {
-      return prevProds.map(p => {
-        const itemOrdered = orderItems.find(oi => oi.product_name === p.name);
-        if (itemOrdered) {
-          return { ...p, stock: Math.max(0, p.stock - itemOrdered.quantity) };
-        }
-        return p;
+      const res = await fetch('/api/admin/pos/sale', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+        },
+        body: JSON.stringify({
+          customer_name: posCustomerName || 'Walk-in',
+          customer_phone: posCustomerPhone || null,
+          items: itemsPayload,
+          payment_method: posPaymentMethod.toLowerCase(),
+          discount: posDiscount * 100, // in paise
+          notes: posRemarks
+        })
       });
-    });
 
-    // Register Customer if new
-    if (posCustomerPhone && posCustomerPhone !== 'N/A') {
-      const exists = customers.find(c => c.phone === posCustomerPhone);
-      if (!exists) {
-        const newCustomer: Customer = {
-          id: customers.length + 1,
-          name: posCustomerName || 'Walk-in Client',
-          email: posCustomerEmail || 'walkin@heelsup.in',
-          phone: posCustomerPhone,
-          orders_count: 1,
-          total_spent: posGrandTotal * 100,
-          registered_at: new Date().toISOString().split('T')[0],
-          tag: 'New Customer'
-        };
-        setCustomers(prev => [...prev, newCustomer]);
+      const data = await res.json();
+      if (data.success && data.data) {
+        const { bill_number, sale_id } = data.data;
+        showToast('success', 'Sale Recorded', `Transaction logged as ${bill_number}. Inventory amounts updated.`);
+
+        // Fetch complete sale details to populate receipt modal
+        const saleRes = await fetch(`/api/admin/pos/${sale_id}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}` }
+        });
+        const saleData = await saleRes.json();
+        if (saleData.success && saleData.data) {
+          const s = saleData.data;
+          const mappedOrder: Order = {
+            id: s.id,
+            order_number: s.bill_number,
+            customer_name: s.customer_name || 'Walk-in Retail Buyer',
+            customer_phone: s.customer_phone || 'N/A',
+            customer_email: posCustomerEmail || undefined,
+            subtotal_amount: s.subtotal,
+            shipping_amount: 0,
+            discount_amount: s.discount,
+            total_amount: s.total,
+            order_status: 'delivered',
+            payment_status: 'paid',
+            payment_method: s.payment_method.toUpperCase(),
+            created_at: s.created_at,
+            source: 'pos',
+            items: (s.items || []).map((it: any) => ({
+              id: it.id,
+              product_name: it.product_name,
+              size: it.size,
+              quantity: it.quantity,
+              price: it.unit_price,
+              image: `https://media.heelsup.in/products/HEELS/${it.product_code.split('-')[0]}.webp`
+            })),
+            notes: s.notes
+          };
+          setSelectedOrder(mappedOrder);
+        }
+
+        // Clear spreadsheet and reload tables
+        setPosRows([{ id: '1', query: '', selectedProduct: null, size: '38', qty: 1, customPrice: 0 }]);
+        setPosCustomerName('');
+        setPosCustomerPhone('');
+        setPosCustomerEmail('');
+        setPosDiscount(0);
+        setPosCashReceived(0);
+        setPosRemarks('In-Store POS Sale');
+        
+        // Refresh products, orders, customers, and dashboard stats
+        fetchProducts();
+        fetchOrders();
+        fetchCustomers();
+        fetchDashboardStats();
       } else {
-        setCustomers(prev => prev.map(c => c.phone === posCustomerPhone ? {
-          ...c,
-          orders_count: c.orders_count + 1,
-          total_spent: c.total_spent + (posGrandTotal * 100)
-        } : c));
+        showToast('error', 'Checkout Failed', data.error || 'Failed to submit POS checkout');
       }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Checkout Error', 'Network error placing POS checkout');
     }
-
-    setOrders(prev => [newOrder, ...prev]);
-    showToast('success', 'Sale Recorded', `Transaction logged as ${newOrderNumber}. Inventory amounts updated.`);
-
-    // Clear and open receipt
-    setPosRows([{ id: '1', query: '', selectedProduct: null, size: '38', qty: 1, customPrice: 0 }]);
-    setPosCustomerName('');
-    setPosCustomerPhone('');
-    setPosCustomerEmail('');
-    setPosDiscount(0);
-    setPosCashReceived(0);
-    setPosRemarks('In-Store POS Sale');
-    setSelectedOrder(newOrder); // Open invoice detail view with printing features
   };
 
   // --- Product Form Handlers ---
-  const handleAddProductForm = (e: React.FormEvent) => {
+  const handleAddProductForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prodFormName || !prodFormSku || !prodFormPrice) {
       showToast('error', 'Validation Error', 'A design style name, unique SKU, and active catalog price are mandatory fields.');
       return;
     }
 
-    if (editingProduct) {
-      // Edit
-      setProducts(prev => prev.map(p => p.id === editingProduct.id ? {
-        ...p,
+    try {
+      const payload = {
         name: prodFormName,
         sku: prodFormSku,
         category: prodFormCategory,
         price: prodFormPrice * 100,
-        original_price: prodFormMrp ? prodFormMrp * 100 : null,
+        mrp: prodFormMrp ? prodFormMrp * 100 : null,
         stock: prodFormStock,
         sizes: prodFormSizes,
         images: prodFormImages.length > 0 ? prodFormImages : ['https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&auto=format&fit=crop&q=60']
-      } : p));
-      showToast('success', 'Product Synchronized', `Successfully committed changes to SKU: ${prodFormSku}.`);
-    } else {
-      // Create new
-      const newP: Product = {
-        id: products.length + 1,
-        name: prodFormName,
-        sku: prodFormSku,
-        category: prodFormCategory,
-        price: prodFormPrice * 100,
-        original_price: prodFormMrp ? prodFormMrp * 100 : null,
-        stock: prodFormStock,
-        active: true,
-        featured: false,
-        images: prodFormImages.length > 0 ? prodFormImages : ['https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&auto=format&fit=crop&q=60'],
-        sizes: prodFormSizes
       };
-      setProducts(prev => [newP, ...prev]);
-      showToast('success', 'Product Created', `Added style design "${prodFormName}" with stock level ${prodFormStock}.`);
+
+      if (editingProduct) {
+        // Edit
+        const res = await fetch(`/api/admin/products/${editingProduct.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          fetchProducts();
+          showToast('success', 'Product Synchronized', `Successfully committed changes to SKU: ${prodFormSku}.`);
+        } else {
+          showToast('error', 'Update Failed', data.error || 'Failed to update product');
+        }
+      } else {
+        // Create new
+        const res = await fetch('/api/admin/products', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          fetchProducts();
+          showToast('success', 'Product Created', `Added style design "${prodFormName}" with stock level ${prodFormStock}.`);
+        } else {
+          showToast('error', 'Creation Failed', data.error || 'Failed to create product');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Network Error', 'Failed to connect to catalog server');
     }
 
     // Reset Form
@@ -1131,50 +1277,46 @@ export default function App() {
   };
 
   // --- Detailed Reports Generator ---
-  const generateStoreReport = () => {
+  const generateStoreReport = async () => {
     setReportLoading(true);
-    setTimeout(() => {
-      // Calculate report in interval
-      const periodOrders = orders.filter(o => {
-        const oDate = o.created_at.split('T')[0];
-        return oDate >= reportFrom && oDate <= reportTo;
-      });
-
-      const totalRev = periodOrders.reduce((acc, curr) => acc + curr.total_amount, 0);
-      const ordersCount = periodOrders.length;
-      const avgBasket = ordersCount > 0 ? Math.round(totalRev / ordersCount) : 0;
-
-      // Group by payment mode
-      const byPaymentMap: Record<string, { count: number, total: number }> = {};
-      periodOrders.forEach(o => {
-        const mode = o.payment_method || 'Razorpay Live';
-        if (!byPaymentMap[mode]) byPaymentMap[mode] = { count: 0, total: 0 };
-        byPaymentMap[mode].count += 1;
-        byPaymentMap[mode].total += o.total_amount;
-      });
-
-      // Group by category
-      const categorySplit = products.reduce((acc, p) => {
-        acc[p.category] = (acc[p.category] || 0) + p.stock;
-        return acc;
-      }, {} as Record<string, number>);
-
-      setGeneratedReport({
-        summary: {
-          total_orders: ordersCount,
-          total_revenue: totalRev,
-          avg_order_value: avgBasket,
-          unique_customers: periodOrders.map(o => o.customer_phone).filter((v, i, self) => self.indexOf(v) === i).length
-        },
-        by_payment: Object.entries(byPaymentMap).map(([mode, meta]) => ({ payment_method: mode, count: meta.count, total: meta.total })),
-        low_stock: products.filter(p => p.stock <= 5),
-        out_of_stock: products.filter(p => p.stock === 0),
-        top_customers: customers.slice(0, 3),
-        category_levels: Object.entries(categorySplit).map(([cat, stock]) => ({ category: cat, stock }))
-      });
+    try {
+      const token = localStorage.getItem('heelsup_token');
+      const [salesRes, invRes] = await Promise.all([
+        fetch(`/api/reports/sales?from=${reportFrom}&to=${reportTo}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch(`/api/reports/inventory`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+      
+      const salesData = await salesRes.json();
+      const invData = await invRes.json();
+      
+      if (salesData.success && invData.success) {
+        setGeneratedReport({
+          summary: {
+            total_orders: salesData.data.summary?.total_orders || 0,
+            total_revenue: salesData.data.summary?.total_revenue || 0,
+            avg_order_value: salesData.data.summary?.avg_order_value || 0,
+            unique_customers: salesData.data.summary?.unique_customers || 0
+          },
+          by_payment: salesData.data.by_payment || [],
+          low_stock: invData.data.low_stock || [],
+          out_of_stock: invData.data.out_of_stock || [],
+          top_customers: [],
+          category_levels: []
+        });
+        showToast('success', 'Report Resolved', 'D1 Ledger data calculated for requested calendar window.');
+      } else {
+        showToast('error', 'Report Error', 'Failed to resolve store reports');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Report Error', 'Network error generating report');
+    } finally {
       setReportLoading(false);
-      showToast('success', 'Report Resolved', 'D1 Ledger data calculated for requested calendar window.');
-    }, 800);
+    }
   };
 
   // --- Dynamic Search Filters ---
@@ -1556,10 +1698,10 @@ export default function App() {
               {/* Dynamic summary KPI blocks */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: 'Live Month Sales', value: '₹5,49,200', change: '+18.2% vs Last Mo', type: 'revenue', bg: 'from-amber-50 to-orange-50 border-[#ead2ae]' },
-                  { label: 'Total Placed Orders', value: orders.length, change: '100% Secure Checkout', type: 'orders', bg: 'from-blue-50 to-indigo-50 border-blue-100' },
+                  { label: 'Live Month Sales', value: dashboardStats ? `₹${(dashboardStats.totalRevenue / 100).toLocaleString('en-IN')}` : '₹5,49,200', change: '+18.2% vs Last Mo', type: 'revenue', bg: 'from-amber-50 to-orange-50 border-[#ead2ae]' },
+                  { label: 'Total Placed Orders', value: dashboardStats ? dashboardStats.totalOrders : orders.length, change: '100% Secure Checkout', type: 'orders', bg: 'from-blue-50 to-indigo-50 border-blue-100' },
                   { label: 'Customer Retention', value: '84.6%', change: 'Very High Repeat LTV', type: 'aov', bg: 'from-emerald-50 to-teal-50 border-emerald-100' },
-                  { label: 'Average Basket Value', value: '₹1,490', change: 'Embellished items focus', type: 'aov', bg: 'from-purple-50 to-fuchsia-50 border-purple-100' }
+                  { label: 'Average Basket Value', value: dashboardStats && dashboardStats.totalOrders > 0 ? `₹${Math.round(dashboardStats.totalRevenue / dashboardStats.totalOrders / 100).toLocaleString('en-IN')}` : '₹1,490', change: 'Embellished items focus', type: 'aov', bg: 'from-purple-50 to-fuchsia-50 border-purple-100' }
                 ].map((kpi, idx) => (
                   <div key={idx} className={`p-6 rounded-3xl border bg-gradient-to-br ${kpi.bg} shadow-sm space-y-2`}>
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{kpi.label}</span>
@@ -2403,25 +2545,40 @@ export default function App() {
 
               {/* Category creation form */}
               <form
-                onSubmit={e => {
+                onSubmit={async e => {
                   e.preventDefault();
                   if (!catName || !catSlug) return;
-                  const newCat: Category = {
-                    id: categoriesList.length + 1,
-                    name: catName,
-                    slug: catSlug,
-                    description: catDesc,
-                    image_url: catImg,
-                    sort_order: Number(catSort),
-                    active: true
-                  };
-                  setCategoriesList(prev => [newCat, ...prev]);
-                  showToast('success', 'Category Created', `Navigational cluster "${catName}" verified and locked.`);
-                  setCatName('');
-                  setCatSlug('');
-                  setCatDesc('');
-                  setCatImg('');
-                  setCatSort(0);
+                  try {
+                    const res = await fetch('/api/admin/categories', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                      },
+                      body: JSON.stringify({
+                        name: catName,
+                        slug: catSlug,
+                        description: catDesc,
+                        image_url: catImg,
+                        sort_order: Number(catSort),
+                        active: true
+                      })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      fetchCategories();
+                      showToast('success', 'Category Created', `Navigational cluster "${catName}" verified and locked.`);
+                      setCatName('');
+                      setCatSlug('');
+                      setCatDesc('');
+                      setCatImg('');
+                      setCatSort(0);
+                    } else {
+                      showToast('error', 'Category Creation Failed', data.error || 'Failed to create category');
+                    }
+                  } catch (err) {
+                    showToast('error', 'Network Error', 'Failed to create category');
+                  }
                 }}
                 className="bg-white border border-[#ead2ae] p-6 rounded-3xl bg-gradient-to-br from-[#faf8f4] to-[#fcfbf9] shadow-sm space-y-4"
               >
@@ -2541,9 +2698,24 @@ export default function App() {
                         <td className="p-4 font-bold text-gray-800">{cat.sort_order}</td>
                         <td className="p-4 text-right">
                           <button
-                            onClick={() => {
-                              setCategoriesList(prev => prev.filter(c => c.id !== cat.id));
-                              showToast('warning', 'Category Suspended', `Cluster "${cat.name}" removed.`);
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/admin/categories/${cat.id}`, {
+                                  method: 'DELETE',
+                                  headers: {
+                                    'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                                  }
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  fetchCategories();
+                                  showToast('warning', 'Category Suspended', `Cluster "${cat.name}" removed.`);
+                                } else {
+                                  showToast('error', 'Delete Failed', data.error || 'Failed to delete category');
+                                }
+                              } catch (err) {
+                                showToast('error', 'Network Error', 'Failed to delete category');
+                              }
                             }}
                             className="p-2 bg-rose-50 text-rose-600 rounded-lg"
                           >
@@ -2575,19 +2747,39 @@ export default function App() {
                 onSubmit={e => {
                   e.preventDefault();
                   if (!colName) return;
-                  const newCol: Collection = {
-                    id: collectionsList.length + 1,
-                    name: colName,
-                    type: colType,
-                    rules: colType === 'automated' ? [{ field: colRuleField, relation: colRuleRelation, value: colRuleVal }] : undefined,
-                    description: colDesc,
-                    active: true
-                  };
-                  setCollectionsList(prev => [newCol, ...prev]);
-                  showToast('success', 'Collection Configured', `Smart target "${colName}" committed to ledger.`);
-                  setColName('');
-                  setColDesc('');
-                  setColRuleVal('');
+                  const condition = colType === 'automated'
+                    ? { type: 'automated', rules: [{ field: colRuleField, relation: colRuleRelation, value: colRuleVal }] }
+                    : { type: 'manual' };
+
+                  fetch('/api/admin/collections', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                    },
+                    body: JSON.stringify({
+                      name: colName,
+                      description: colDesc,
+                      condition: condition,
+                      is_active: 1
+                    })
+                  })
+                    .then(res => res.json())
+                    .then(resData => {
+                      if (resData.success) {
+                        showToast('success', 'Collection Configured', `Smart target "${colName}" committed to ledger.`);
+                        fetchCollections();
+                        setColName('');
+                        setColDesc('');
+                        setColRuleVal('');
+                      } else {
+                        showToast('error', 'Configuration Failed', resData.message || 'Error occurred');
+                      }
+                    })
+                    .catch(err => {
+                      console.error('Create collection error:', err);
+                      showToast('error', 'Configuration Failed', 'Network error');
+                    });
                 }}
                 className="bg-white border border-[#ead2ae] p-6 rounded-3xl bg-gradient-to-br from-[#faf8f4] to-[#fcfbf9] shadow-sm space-y-4"
               >
@@ -2702,8 +2894,25 @@ export default function App() {
                         <td className="p-4 text-right">
                           <button
                             onClick={() => {
-                              setCollectionsList(prev => prev.filter(c => c.id !== col.id));
-                              showToast('warning', 'Collection Suspended', `Target "${col.name}" deleted.`);
+                              fetch(`/api/admin/collections/${col.id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                  'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                                }
+                              })
+                                .then(res => res.json())
+                                .then(resData => {
+                                  if (resData.success) {
+                                    showToast('warning', 'Collection Suspended', `Target "${col.name}" deleted.`);
+                                    fetchCollections();
+                                  } else {
+                                    showToast('error', 'Deletion Failed', resData.message || 'Error occurred');
+                                  }
+                                })
+                                .catch(err => {
+                                  console.error('Delete collection error:', err);
+                                  showToast('error', 'Deletion Failed', 'Network error');
+                                });
                             }}
                             className="p-2 bg-rose-50 text-rose-600 rounded-lg"
                           >
@@ -2966,28 +3175,19 @@ export default function App() {
                           <td className="p-4 text-right">
                             <div className="inline-flex items-center gap-1.5">
                               <button
-                                onClick={() => {
-                                  setProducts(prev => prev.map(item => item.id === p.id ? { ...item, stock: Math.max(0, item.stock - 1) } : item));
-                                  showToast('info', 'Stock Deducted', `Decremented safe-stock level for ${p.sku}`);
-                                }}
+                                onClick={() => handleUpdateStock(p.id, Math.max(0, p.stock - 1), p.sku)}
                                 className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-extrabold flex items-center justify-center text-sm"
                               >
                                 -
                               </button>
                               <button
-                                onClick={() => {
-                                  setProducts(prev => prev.map(item => item.id === p.id ? { ...item, stock: item.stock + 1 } : item));
-                                  showToast('success', 'Stock Incremented', `Added single stock unit for ${p.sku}`);
-                                }}
+                                onClick={() => handleUpdateStock(p.id, p.stock + 1, p.sku)}
                                 className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-extrabold flex items-center justify-center text-sm"
                               >
                                 +
                               </button>
                               <button
-                                onClick={() => {
-                                  setProducts(prev => prev.map(item => item.id === p.id ? { ...item, stock: item.stock + 10 } : item));
-                                  showToast('success', 'Bulk Added (+10)', `Added 10 stock units to ${p.sku}.`);
-                                }}
+                                onClick={() => handleUpdateStock(p.id, p.stock + 10, p.sku)}
                                 className="px-3.5 py-1.5 rounded-lg bg-gray-950 hover:bg-black text-white text-[10px] font-bold uppercase tracking-wider"
                               >
                                 +10 Batch
@@ -3020,19 +3220,36 @@ export default function App() {
                 onSubmit={e => {
                   e.preventDefault();
                   if (!coupCode || !coupValue) return;
-                  const newC: Coupon = {
-                    id: couponsList.length + 1,
-                    code: coupCode.toUpperCase(),
-                    discount_type: coupType,
-                    discount_value: coupType === 'percentage' ? coupValue : coupValue * 100, // stored in paise if fixed
-                    min_purchase: coupMin * 100, // stored in paise
-                    active: true
-                  };
-                  setCouponsList(prev => [newC, ...prev]);
-                  showToast('success', 'Coupon Configured', `Promo code "${newC.code}" active with display value.`);
-                  setCoupCode('');
-                  setCoupValue(0);
-                  setCoupMin(0);
+                  fetch('/api/admin/coupons', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                    },
+                    body: JSON.stringify({
+                      code: coupCode.toUpperCase(),
+                      discount_type: coupType,
+                      discount_value: coupType === 'percentage' ? coupValue : coupValue * 100, // stored in paise if fixed
+                      min_purchase: coupMin * 100, // stored in paise
+                      active: true
+                    })
+                  })
+                    .then(res => res.json())
+                    .then(resData => {
+                      if (resData.success) {
+                        showToast('success', 'Coupon Configured', `Promo code "${coupCode.toUpperCase()}" active.`);
+                        fetchCoupons();
+                        setCoupCode('');
+                        setCoupValue(0);
+                        setCoupMin(0);
+                      } else {
+                        showToast('error', 'Configuration Failed', resData.message || 'Error occurred');
+                      }
+                    })
+                    .catch(err => {
+                      console.error('Create coupon error:', err);
+                      showToast('error', 'Configuration Failed', 'Network error');
+                    });
                 }}
                 className="bg-white border border-[#ead2ae] p-6 rounded-3xl bg-gradient-to-br from-[#faf8f4] to-[#fcfbf9] shadow-sm space-y-4"
               >
@@ -3109,8 +3326,25 @@ export default function App() {
                         <td className="p-4 text-right">
                           <button
                             onClick={() => {
-                              setCouponsList(prev => prev.filter(c => c.id !== cp.id));
-                              showToast('warning', 'Coupon Suspended', `Promo code "${cp.code}" deleted.`);
+                              fetch(`/api/admin/coupons/${cp.id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                  'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                                }
+                              })
+                                .then(res => res.json())
+                                .then(resData => {
+                                  if (resData.success) {
+                                    showToast('warning', 'Coupon Suspended', `Promo code "${cp.code}" deleted.`);
+                                    fetchCoupons();
+                                  } else {
+                                    showToast('error', 'Deletion Failed', resData.message || 'Error occurred');
+                                  }
+                                })
+                                .catch(err => {
+                                  console.error('Delete coupon error:', err);
+                                  showToast('error', 'Deletion Failed', 'Network error');
+                                });
                             }}
                             className="p-2 bg-rose-50 text-rose-600 rounded-lg"
                           >
@@ -3142,20 +3376,37 @@ export default function App() {
                 onSubmit={e => {
                   e.preventDefault();
                   if (!bannerTitle || !bannerImg) return;
-                  const newB: Banner = {
-                    id: bannersList.length + 1,
-                    title: bannerTitle,
-                    subtitle: bannerSubtitle,
-                    image_url: bannerImg,
-                    link: bannerLink,
-                    active: true
-                  };
-                  setBannersList(prev => [newB, ...prev]);
-                  showToast('success', 'Banner Configured', 'Slideshow entry added.');
-                  setBannerTitle('');
-                  setBannerSubtitle('');
-                  setBannerImg('');
-                  setBannerLink('');
+                  fetch('/api/admin/banners', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                    },
+                    body: JSON.stringify({
+                      title: bannerTitle,
+                      subtitle: bannerSubtitle,
+                      image_url: bannerImg,
+                      link: bannerLink,
+                      active: true
+                    })
+                  })
+                    .then(res => res.json())
+                    .then(resData => {
+                      if (resData.success) {
+                        showToast('success', 'Banner Configured', 'Slideshow entry added.');
+                        fetchBanners();
+                        setBannerTitle('');
+                        setBannerSubtitle('');
+                        setBannerImg('');
+                        setBannerLink('');
+                      } else {
+                        showToast('error', 'Configuration Failed', resData.message || 'Error occurred');
+                      }
+                    })
+                    .catch(err => {
+                      console.error('Create banner error:', err);
+                      showToast('error', 'Configuration Failed', 'Network error');
+                    });
                 }}
                 className="bg-white border border-[#ead2ae] p-6 rounded-3xl bg-gradient-to-br from-[#faf8f4] to-[#fcfbf9] shadow-sm space-y-4"
               >
@@ -3246,8 +3497,25 @@ export default function App() {
 
                     <button
                       onClick={() => {
-                        setBannersList(prev => prev.filter(b => b.id !== bn.id));
-                        showToast('warning', 'Banner Suspended', 'Homepage slideshow element deleted.');
+                        fetch(`/api/admin/banners/${bn.id}`, {
+                          method: 'DELETE',
+                          headers: {
+                            'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                          }
+                        })
+                          .then(res => res.json())
+                          .then(resData => {
+                            if (resData.success) {
+                              showToast('warning', 'Banner Suspended', 'Homepage slideshow element deleted.');
+                              fetchBanners();
+                            } else {
+                              showToast('error', 'Deletion Failed', resData.message || 'Error occurred');
+                            }
+                          })
+                          .catch(err => {
+                            console.error('Delete banner error:', err);
+                            showToast('error', 'Deletion Failed', 'Network error');
+                          });
                       }}
                       className="absolute top-4 right-4 p-2 bg-rose-600 text-white rounded-lg opacity-90 hover:opacity-100"
                     >
@@ -3290,8 +3558,28 @@ export default function App() {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => {
-                          setReviewsList(prev => prev.map(r => r.id === rev.id ? { ...r, approved: !r.approved } : r));
-                          showToast('success', 'Moderation Toggled', `Review approved status altered.`);
+                          const nextApproved = !rev.approved;
+                          fetch(`/api/admin/reviews/${rev.id}/approve`, {
+                            method: 'PATCH',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                            },
+                            body: JSON.stringify({ status: nextApproved ? 'approved' : 'pending' })
+                          })
+                            .then(res => res.json())
+                            .then(resData => {
+                              if (resData.success) {
+                                showToast('success', 'Moderation Toggled', `Review status changed to ${nextApproved ? 'Approved' : 'Pending'}.`);
+                                fetchReviews();
+                              } else {
+                                showToast('error', 'Update Failed', resData.message || 'Error occurred');
+                              }
+                            })
+                            .catch(err => {
+                              console.error('Toggle review approval error:', err);
+                              showToast('error', 'Update Failed', 'Network error');
+                            });
                         }}
                         className={`px-4 py-2 border rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${rev.approved
                             ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
@@ -3302,8 +3590,25 @@ export default function App() {
                       </button>
                       <button
                         onClick={() => {
-                          setReviewsList(prev => prev.filter(r => r.id !== rev.id));
-                          showToast('warning', 'Review Deleted', 'User feedback deleted from boutique records.');
+                          fetch(`/api/admin/reviews/${rev.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                              'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                            }
+                          })
+                            .then(res => res.json())
+                            .then(resData => {
+                              if (resData.success) {
+                                showToast('warning', 'Review Deleted', 'User feedback deleted from boutique records.');
+                                fetchReviews();
+                              } else {
+                                showToast('error', 'Deletion Failed', resData.message || 'Error occurred');
+                              }
+                            })
+                            .catch(err => {
+                              console.error('Delete review error:', err);
+                              showToast('error', 'Deletion Failed', 'Network error');
+                            });
                         }}
                         className="p-2 bg-rose-50 text-rose-600 rounded-lg"
                       >
@@ -3333,18 +3638,35 @@ export default function App() {
                 onSubmit={e => {
                   e.preventDefault();
                   if (!pageTitle || !pageContent) return;
-                  const newP: PageConfig = {
-                    id: pagesList.length + 1,
-                    title: pageTitle,
-                    slug: pageSlug,
-                    content: pageContent,
-                    active: true
-                  };
-                  setPagesList(prev => [newP, ...prev]);
-                  showToast('success', 'Page saved', 'Custom HTML document published successfully.');
-                  setPageTitle('');
-                  setPageSlug('');
-                  setPageContent('');
+                  fetch('/api/admin/pages', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                    },
+                    body: JSON.stringify({
+                      title: pageTitle,
+                      slug: pageSlug,
+                      content: pageContent,
+                      active: true
+                    })
+                  })
+                    .then(res => res.json())
+                    .then(resData => {
+                      if (resData.success) {
+                        showToast('success', 'Page saved', 'Custom HTML document published successfully.');
+                        fetchPages();
+                        setPageTitle('');
+                        setPageSlug('');
+                        setPageContent('');
+                      } else {
+                        showToast('error', 'Publish Failed', resData.message || 'Error occurred');
+                      }
+                    })
+                    .catch(err => {
+                      console.error('Create page error:', err);
+                      showToast('error', 'Publish Failed', 'Network error');
+                    });
                 }}
                 className="bg-white border border-[#ead2ae] p-6 rounded-3xl bg-gradient-to-br from-[#faf8f4] to-[#fcfbf9] shadow-sm space-y-4"
               >
@@ -3413,8 +3735,25 @@ export default function App() {
                         <td className="p-4 text-right">
                           <button
                             onClick={() => {
-                              setPagesList(prev => prev.filter(p => p.id !== pg.id));
-                              showToast('warning', 'Document Suspended', `Policy page "${pg.title}" deleted.`);
+                              fetch(`/api/admin/pages/${pg.id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                  'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                                }
+                              })
+                                .then(res => res.json())
+                                .then(resData => {
+                                  if (resData.success) {
+                                    showToast('warning', 'Document Suspended', `Policy page "${pg.title}" deleted.`);
+                                    fetchPages();
+                                  } else {
+                                    showToast('error', 'Deletion Failed', resData.message || 'Error occurred');
+                                  }
+                                })
+                                .catch(err => {
+                                  console.error('Delete page error:', err);
+                                  showToast('error', 'Deletion Failed', 'Network error');
+                                });
                             }}
                             className="p-2 bg-rose-50 text-rose-600 rounded-lg"
                           >
@@ -3446,18 +3785,40 @@ export default function App() {
                 onSubmit={e => {
                   e.preventDefault();
                   if (!staffName || !staffEmail) return;
-                  const newS: Staff = {
-                    id: staffList.length + 1,
-                    name: staffName,
-                    email: staffEmail,
-                    role: staffRole,
-                    active: true
-                  };
-                  setStaffList(prev => [newS, ...prev]);
-                  showToast('success', 'Staff Member Added', `Verified email ${staffEmail} assigned role ${staffRole.toUpperCase()}.`);
-                  setStaffName('');
-                  setStaffEmail('');
-                  setStaffRole('staff');
+                  const nameParts = staffName.trim().split(' ');
+                  const firstName = nameParts[0];
+                  const lastName = nameParts.slice(1).join(' ');
+
+                  fetch('/api/admin/staff', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                    },
+                    body: JSON.stringify({
+                      first_name: firstName,
+                      last_name: lastName,
+                      email: staffEmail,
+                      role: staffRole,
+                      is_active: true
+                    })
+                  })
+                    .then(res => res.json())
+                    .then(resData => {
+                      if (resData.success) {
+                        showToast('success', 'Staff Member Added', `Verified email ${staffEmail} assigned role ${staffRole.toUpperCase()}.`);
+                        fetchStaff();
+                        setStaffName('');
+                        setStaffEmail('');
+                        setStaffRole('staff');
+                      } else {
+                        showToast('error', 'Registration Failed', resData.message || 'Error occurred');
+                      }
+                    })
+                    .catch(err => {
+                      console.error('Create staff error:', err);
+                      showToast('error', 'Registration Failed', 'Network error');
+                    });
                 }}
                 className="bg-white border border-[#ead2ae] p-6 rounded-3xl bg-gradient-to-br from-[#faf8f4] to-[#fcfbf9] shadow-sm space-y-4"
               >
@@ -3534,8 +3895,25 @@ export default function App() {
                                 showToast('error', 'Critical Error', 'You cannot suspend your own active administrative session.');
                                 return;
                               }
-                              setStaffList(prev => prev.filter(s => s.id !== st.id));
-                              showToast('warning', 'Staff Terminated', `Access privileges revoked for ${st.email}.`);
+                              fetch(`/api/admin/staff/${st.id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                  'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                                }
+                              })
+                                .then(res => res.json())
+                                .then(resData => {
+                                  if (resData.success) {
+                                    showToast('warning', 'Staff Terminated', `Access privileges revoked for ${st.email}.`);
+                                    fetchStaff();
+                                  } else {
+                                    showToast('error', 'Revocation Failed', resData.message || 'Error occurred');
+                                  }
+                                })
+                                .catch(err => {
+                                  console.error('Delete staff error:', err);
+                                  showToast('error', 'Revocation Failed', 'Network error');
+                                });
                             }}
                             className="p-2 bg-rose-50 text-rose-600 rounded-lg"
                           >
@@ -3645,8 +4023,29 @@ export default function App() {
                     <div className="pt-2">
                       <button
                         type="button"
-                        onClick={() => {
-                          showToast('success', 'Signature Connected', 'Live API handshake resolved with Razorpay routing server.');
+                        onClick={async () => {
+                          showToast('info', 'Testing connection...', 'Connecting to Razorpay...');
+                          try {
+                            const res = await fetch('/api/admin/settings/test/razorpay', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                              },
+                              body: JSON.stringify({
+                                razorpay_key_id: settings.razorpayKeyId,
+                                razorpay_key_secret: settings.razorpaySecret
+                              })
+                            });
+                            const resData = await res.json();
+                            if (resData.success) {
+                              showToast('success', 'Connection Verified', 'Live API handshake resolved with Razorpay routing server.');
+                            } else {
+                              showToast('error', 'Connection Failed', resData.message || 'Verification failed');
+                            }
+                          } catch (err) {
+                            showToast('error', 'Connection Failed', 'Network error');
+                          }
                         }}
                         className="w-full py-3 border border-gray-300 hover:border-gray-900 bg-white text-gray-700 hover:text-black rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
                       >
@@ -3659,7 +4058,36 @@ export default function App() {
 
               <div className="text-right border-t pt-4">
                 <button
-                  onClick={() => showToast('success', 'Boutique Configurations Saved', 'General boutique properties saved to Cloudflare KV Cache.')}
+                  onClick={async () => {
+                    showToast('info', 'Saving settings...', 'Updating boutique configuration...');
+                    try {
+                      const res = await fetch('/api/admin/settings', {
+                        method: 'PUT',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
+                        },
+                        body: JSON.stringify({
+                          store_name: settings.storeName,
+                          store_phone: settings.storePhone,
+                          store_email: settings.storeEmail,
+                          store_address: settings.storeAddress,
+                          razorpay_key_id: settings.razorpayKeyId,
+                          razorpay_key_secret: settings.razorpaySecret,
+                          sms_enabled: settings.smsEnabled
+                        })
+                      });
+                      const resData = await res.json();
+                      if (resData.success) {
+                        showToast('success', 'Boutique Configurations Saved', 'General boutique properties saved successfully.');
+                        fetchSettings();
+                      } else {
+                        showToast('error', 'Save Failed', resData.message || 'Could not save configurations');
+                      }
+                    } catch (err) {
+                      showToast('error', 'Save Failed', 'Network error');
+                    }
+                  }}
                   className="px-6 py-3 bg-gray-950 hover:bg-black text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md"
                 >
                   Save Global configuration

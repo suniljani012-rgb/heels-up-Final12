@@ -25,10 +25,11 @@ export async function staffRouter(request, env) {
         if (authError) return authError;
         try {
             const { first_name, last_name, email, phone, password, role, notes, permissions, is_active } = await request.json();
-            if (!first_name || !email || !password) return error('First name, email and password required');
+            if (!first_name || !email) return error('First name and email required');
+            const pass = password || 'HeelsUp@2026';
 
             const { hashPassword } = await import('../utils/password.js');
-            const hashed = await hashPassword(password);
+            const hashed = await hashPassword(pass);
             const newUser = await env.DB.prepare(
                 "INSERT INTO users (first_name, last_name, email, phone, password_hash, role, is_blocked, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING id"
             ).bind(

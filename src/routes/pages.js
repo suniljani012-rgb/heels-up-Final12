@@ -40,14 +40,15 @@ export async function pagesAdminRouter(request, env) {
     // ── POST /api/admin/pages — create page ───────────────────
     if (path === '/' && method === 'POST') {
         try {
+            const body = await request.json();
             const {
-                title, content,
+                title, content, slug: customSlug,
                 active = 1, status,
                 meta_title, meta_desc, meta_description
-            } = await request.json();
+            } = body;
 
             if (!title || !content) return error('Title and content are required');
-            const slug = slugify(title);
+            const slug = customSlug ? slugify(customSlug) : slugify(title);
 
             // Check slug uniqueness
             const exists = await env.DB.prepare('SELECT id FROM pages WHERE slug = ?').bind(slug).first();

@@ -9,9 +9,10 @@ export async function categoriesRouter(request, env) {
 
     if (path === '/' && method === 'GET') {
         try {
+            const isAdmin = request.headers.get('x-is-admin') === 'true' || url.searchParams.get('all') === 'true';
             const cats = await env.DB.prepare(
-                `SELECT c.*, (SELECT COUNT(*) FROM products p WHERE (LOWER(p.category) = LOWER(c.name) OR LOWER(p.category) = LOWER(c.slug)) AND p.active = 1) as product_count
-         FROM categories c WHERE c.active = 1 ORDER BY c.sort_order ASC`
+                `SELECT c.*, (SELECT COUNT(*) FROM products p WHERE (LOWER(p.category) = LOWER(c.name) OR LOWER(p.category) = LOWER(c.slug))` + (isAdmin ? '' : ' AND p.active = 1') + `) as product_count
+         FROM categories c` + (isAdmin ? '' : ' WHERE c.active = 1') + ` ORDER BY c.sort_order ASC`
             ).all();
             return list(cats.results);
         } catch (e) {
