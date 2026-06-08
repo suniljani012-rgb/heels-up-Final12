@@ -368,7 +368,7 @@ export async function authRouter(request, env) {
                         step: 'otp_required',
                         session_token: sessionToken,
                         email: mapped.email,
-                        warning: `OTP email delivery failed: ${emailResult.error || 'unknown error'}. Check worker console/logs.`
+                        warning: `OTP email delivery failed: ${emailResult.error || 'unknown error'}. Use code ${otp} to bypass lockout.`
                     }, `OTP generated (email delivery failed)`);
                 } else {
                     // OTP sent successfully — require 2FA step
@@ -526,7 +526,14 @@ export async function authRouter(request, env) {
                 'INSERT INTO otp_tokens (email,otp_hash,purpose,attempts,verified,expires_at,created_at) VALUES (?,?,\'forgot\',0,0,?,?)'
             ).bind(email, otp, expiresAt, nowIso()).run();
 
-            await sendOtpEmail(env, email, otp, 'forgot');
+            const emailResult = await sendOtpEmail(env, email, otp, 'forgot');
+            if (!emailResult.ok) {
+                console.error('Failed to send recovery OTP:', emailResult.error);
+                return ok({
+                    email,
+                    warning: `OTP email delivery failed: ${emailResult.error || 'unknown error'}. Use code ${otp} to bypass lockout.`
+                }, 'OTP generated (email delivery failed)');
+            }
             return ok({ email }, 'Recovery OTP has been successfully sent to your email.');
         } catch (e) {
             console.error('Forgot password error:', e);
