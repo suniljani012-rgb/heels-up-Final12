@@ -30,8 +30,8 @@ export default function Cart() {
 
   const subtotalPaise = getCartSubtotal()
   const subtotalRupees = subtotalPaise / 100
-  const freeShippingThreshold = 999
-  const shippingCharge = subtotalRupees >= freeShippingThreshold || subtotalRupees === 0 ? 0 : 60 // ₹60 standard shipping
+  const freeShippingThreshold = 799
+  const shippingCharge = subtotalRupees >= freeShippingThreshold || subtotalRupees === 0 ? 0 : 49 // ₹49 standard shipping
   
   const finalTotalPaise = Math.max(0, subtotalPaise - discountVal + (shippingCharge * 100))
 

@@ -26,6 +26,7 @@ import { adminRouter } from './routes/admin.js';
 import { announcementsRouter } from './routes/announcements.js';
 import { colorsRouter } from './routes/colors.js';
 import { addressesRouter } from './routes/addresses.js';
+import { returnsCustomerRouter } from './routes/returns.js';
 import { json } from './utils/response.js';
 import { authRateLimit, apiRateLimit, paymentRateLimit, adminRateLimit } from './middleware/ratelimit.js';
 
@@ -132,6 +133,7 @@ export default {
         else if (path.startsWith('/api/products')) response = await productsRouter(request, env);
         else if (path.startsWith('/api/colors')) response = await colorsRouter(request, env);
         else if (path.startsWith('/api/addresses')) response = await addressesRouter(request, env);
+        else if (path.startsWith('/api/returns')) response = await returnsCustomerRouter(request, env);
         else if (path.startsWith('/api/orders')) response = await ordersRouter(request, env);
         else if (path.startsWith('/api/customers')) response = await customersRouter(request, env);
         else if (path.startsWith('/api/cart')) response = await cartRouter(request, env);

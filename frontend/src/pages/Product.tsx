@@ -469,7 +469,7 @@ export default function Product() {
           {/* Guarantees */}
           <div className="grid grid-cols-2 gap-4 text-[10px] text-gray-500 font-medium pt-4 bg-[#fcfbf9] border border-gray-100 rounded-xl p-4">
             <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-primary" /> Free Shipping above ₹999
+              <Truck className="w-4 h-4 text-primary" /> Free Shipping above ₹799
             </div>
             <div className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4 text-primary" /> 7-Day Easy Exchange Only

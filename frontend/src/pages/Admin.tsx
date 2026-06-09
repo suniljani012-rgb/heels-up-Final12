@@ -2349,119 +2349,135 @@ export default function Admin() {
   const printInvoiceWindow = (order: Order) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
-    const itemsRows = order.items.map((item) => `
-      <tr>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.product_name} (Size: ${item.size})</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">₹${(item.price / 100).toFixed(2)}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">₹${((item.price * item.quantity) / 100).toFixed(2)}</td>
-      </tr>
+    const itemsList = order.items.map((item) => `
+      <div style="margin-bottom: 6px; border-bottom: 1px dashed #eee; padding-bottom: 4px;">
+        <div style="font-weight: bold; font-size: 11px;">${item.product_name}</div>
+        <div style="display: flex; justify-content: space-between; font-size: 10px; color: #444; margin-top: 2px;">
+          <span>Size: ${item.size} &middot; Qty: ${item.quantity} &middot; @ ₹${(item.price / 100).toFixed(0)}</span>
+          <span style="font-weight: bold; color: #000;">₹${((item.price * item.quantity) / 100).toFixed(0)}</span>
+        </div>
+      </div>
     `).join('');
 
     printWindow.document.write(`
       <html>
         <head>
-          <title>Invoice - ${order.order_number}</title>
+          <title>Receipt - ${order.order_number}</title>
           <style>
-            body { font-family: 'Inter', sans-serif; color: #333; margin: 40px; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 20px; }
-            .logo-img { height: 50px; margin-bottom: 8px; }
-            .invoice-details { text-align: right; }
-            .addresses { display: flex; justify-content: space-between; margin-top: 30px; }
-            .address-block { width: 45%; }
-            table { width: 100%; border-collapse: collapse; margin-top: 40px; }
-            th { background-color: #f5f5f5; padding: 8px; text-align: left; border-bottom: 2px solid #ddd; }
-            .totals { margin-top: 30px; text-align: right; width: 40%; margin-left: 60%; }
-            .totals table { margin-top: 0; }
-            .totals td { padding: 6px 0; }
-            .footer { margin-top: 80px; text-align: center; font-size: 10px; color: #777; border-top: 1px solid #ddd; padding-top: 20px; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+            body {
+              font-family: 'Inter', sans-serif;
+              color: #000;
+              margin: 0;
+              padding: 12px;
+              max-width: 290px;
+              font-size: 11px;
+              background-color: #fff;
+            }
+            .center { text-align: center; }
+            .logo { height: 40px; margin-bottom: 6px; filter: grayscale(100%); }
+            .shop-name { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+            .shop-addr { font-size: 9px; color: #444; line-height: 1.3; margin-top: 3px; }
+            .divider { border-top: 1px dashed #000; margin: 8px 0; }
+            .details-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 10px; }
+            .details-label { color: #555; }
+            .details-val { font-weight: 500; }
+            .section-title { font-weight: bold; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #444; margin-bottom: 6px; }
+            .bill-totals { margin-top: 8px; font-size: 11px; }
+            .bill-totals div { display: flex; justify-content: space-between; margin-bottom: 3px; }
+            .grand-total { font-size: 13px; font-weight: 700; border-top: 1px dashed #000; padding-top: 6px; margin-top: 6px; }
+            .footer-msg { text-align: center; font-size: 9px; color: #555; line-height: 1.3; margin-top: 16px; border-top: 1px dashed #000; padding-top: 10px; }
           </style>
         </head>
         <body>
-          <div class="header">
+          <div class="center">
+            <img class="logo" src="https://heelsup.in/logo.png" onerror="this.src='/logo.png'; this.onerror=null;" alt="HeelsUp" /><br/>
+            <span class="shop-name">HeelsUp Boutique</span>
+            <div class="shop-addr">
+              1st B Rd, near Mahaveer Mega Mart,<br/>
+              opposite Little Champ, Sardarpura,<br/>
+              Jodhpur, Rajasthan 342001<br/>
+              Phone: 078914 70935
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-title">Order Details</div>
+          <div class="details-row">
+            <span class="details-label">Receipt No:</span>
+            <span class="details-val">${order.order_number}</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Date:</span>
+            <span class="details-val">${new Date(order.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Payment Mode:</span>
+            <span class="details-val" style="text-transform: uppercase;">${order.payment_method}</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Customer Name:</span>
+            <span class="details-val">${order.customer_name}</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Contact:</span>
+            <span class="details-val">${order.customer_phone}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-title">Items Ordered</div>
+          <div style="margin-top: 4px;">
+            ${itemsList}
+          </div>
+
+          <div class="bill-totals">
             <div>
-              <img class="logo-img" src="https://heelsup.in/logo.png" onerror="this.src='/logo.png'; this.onerror=null;" alt="HeelsUp" />
-              <p>Jodhpur, Rajasthan, India<br>support@heelsup.in</p>
+              <span>Subtotal:</span>
+              <span>₹${(order.subtotal_amount / 100).toFixed(0)}</span>
             </div>
-            <div class="invoice-details">
-              <h2>RETAIL INVOICE</h2>
-              <p><strong>Order Ref:</strong> ${order.order_number}</p>
-              <p><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString('en-IN')}</p>
-              <p><strong>Payment Mode:</strong> ${order.payment_method.toUpperCase()}</p>
+            ${order.discount_amount > 0 ? `
+            <div style="color: #b91c1c;">
+              <span>Discount Applied:</span>
+              <span>-₹${(order.discount_amount / 100).toFixed(0)}</span>
+            </div>` : ''}
+            <div>
+              <span>Shipping Fee:</span>
+              <span>₹${(order.shipping_amount / 100).toFixed(0)}</span>
             </div>
-          </div>
-          <div class="addresses">
-            <div class="address-block">
-              <h4>Billed To:</h4>
-              <p><strong>${order.customer_name}</strong></p>
-              <p>Phone: ${order.customer_phone}</p>
-              ${order.customer_email ? `<p>Email: ${order.customer_email}</p>` : ''}
-            </div>
-            <div class="address-block">
-              <h4>Shipping Details:</h4>
-              <p>${order.address_line1 || ''}</p>
-              ${order.address_line2 ? `<p>${order.address_line2}</p>` : ''}
-              <p>${order.city || ''}, ${order.state || ''} - ${order.pincode || ''}</p>
+            <div class="grand-total">
+              <span>GRAND TOTAL:</span>
+              <span>₹${(order.total_amount / 100).toFixed(0)}</span>
             </div>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Product Description</th>
-                <th style="text-align: center; width: 80px;">Qty</th>
-                <th style="text-align: right; width: 120px;">Rate</th>
-                <th style="text-align: right; width: 120px;">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsRows}
-            </tbody>
-          </table>
-          <div class="totals">
-            <table style="width: 100%;">
-              <tr>
-                <td>Subtotal:</td>
-                <td style="text-align: right;">₹${(order.subtotal_amount / 100).toFixed(2)}</td>
-              </tr>
-              ${order.discount_amount > 0 ? `
-              <tr>
-                <td>Discount:</td>
-                <td style="text-align: right; color: red;">-₹${(order.discount_amount / 100).toFixed(2)}</td>
-              </tr>` : ''}
-              <tr>
-                <td>Shipping:</td>
-                <td style="text-align: right;">₹${(order.shipping_amount / 100).toFixed(2)}</td>
-              </tr>
-              <tr style="font-weight: bold; font-size: 16px; border-top: 1.5px solid #333;">
-                <td style="padding-top: 10px;">Total Bill:</td>
-                <td style="text-align: right; padding-top: 10px;">₹${(order.total_amount / 100).toFixed(2)}</td>
-              </tr>
-            </table>
-          </div>
-          <div class="footer">
-            <p>Thank you for shopping with HeelsUp! For return or size exchanges, visit heelsup.in/returns.</p>
-            <p>This is a computer-generated retail invoice and requires no physical signature.</p>
+
+          <div class="footer-msg">
+            Thank you for shopping with HeelsUp!<br/>
+            Visit heelsup.in/returns for easy exchanges.<br/>
+            Step out in confidence!
           </div>
         </body>
       </html>
     `);
     printWindow.document.close();
+
     printWindow.focus();
     setTimeout(() => {
       printWindow.print();
     }, 500);
   };
 
-  // Print Dispatch Slip (Amazon-style shipping label)
+  // Print Dispatch Slip (Premium Courier Sticker)
   const printDispatchWindow = (order: Order) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
     const itemsRows = order.items.map((item) => `
       <tr>
-        <td style="font-size: 10px; padding: 4px; border-bottom: 1px solid #000;">${item.product_name}</td>
-        <td style="font-size: 10px; padding: 4px; border-bottom: 1px solid #000; text-align: center;">Size: ${item.size}</td>
-        <td style="font-size: 10px; padding: 4px; border-bottom: 1px solid #000; text-align: center;">Qty: ${item.quantity}</td>
+        <td style="font-size: 10px; padding: 6px; border-bottom: 1px solid #000; font-weight: 600;">${item.product_name}</td>
+        <td style="font-size: 10px; padding: 6px; border-bottom: 1px solid #000; text-align: center; font-weight: 700;">Size: ${item.size}</td>
+        <td style="font-size: 10px; padding: 6px; border-bottom: 1px solid #000; text-align: center; font-weight: 700;">Qty: ${item.quantity}</td>
       </tr>
     `).join('');
 
@@ -2499,45 +2515,54 @@ export default function Admin() {
     `;
 
     const isCod = order.payment_method?.toLowerCase() === 'cod' || order.payment_method?.toLowerCase() === 'cash';
-    const payBadge = isCod ? 'CASH ON DELIVERY (COD)' : 'PREPAID';
+    const payBadgeHtml = isCod
+      ? `<div style="background: #000; color: #fff; font-size: 16px; font-weight: 900; padding: 6px 12px; border-radius: 4px; text-align: center; border: 2px solid #000; letter-spacing: 1px;">CASH ON DELIVERY (COD)<br/><span style="font-size: 18px;">COLLECT: ₹${(order.total_amount / 100).toFixed(0)}</span></div>`
+      : `<div style="background: #fff; color: #000; font-size: 16px; font-weight: 900; padding: 6px 12px; border-radius: 4px; text-align: center; border: 3px solid #000; letter-spacing: 1.5px;">PREPAID &middot; ₹0 COLLECT</div>`;
 
     printWindow.document.write(`
       <html>
         <head>
-          <title>Dispatch Label - ${order.order_number}</title>
+          <title>Sticker - ${order.order_number}</title>
           <style>
-            body { font-family: 'Inter', sans-serif; color: #000; margin: 0; padding: 10px; max-width: 380px; }
-            .label-border { border: 2px solid #000; padding: 8px; }
-            .label-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 6px; }
-            .pay-type { font-size: 14px; font-weight: 950; border: 3px solid #000; padding: 4px 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-            .courier-info { font-size: 10px; font-weight: bold; text-align: right; }
-            .barcode-sec { text-align: center; margin: 8px 0; border-bottom: 1px dashed #000; padding-bottom: 6px; }
-            .barcode-text { font-family: monospace; font-size: 11px; font-weight: bold; margin-top: 2px; }
-            .address-sec { font-size: 11px; line-height: 1.4; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 8px; }
-            .address-sec h4 { margin: 0 0 4px 0; font-size: 9px; font-weight: bold; text-transform: uppercase; color: #555; }
-            .pin-code { font-size: 20px; font-weight: 900; margin-top: 4px; display: inline-block; border-bottom: 2px solid #000; }
-            .phone-large { font-size: 13px; font-weight: bold; margin-top: 4px; }
-            .items-table { width: 100%; border-collapse: collapse; margin-top: 6px; border-bottom: 2px solid #000; margin-bottom: 8px; }
-            .items-table th { font-size: 9px; text-transform: uppercase; background: #000; color: #fff; padding: 4px; text-align: left; }
-            .return-sec { font-size: 8.5px; color: #444; line-height: 1.3; }
-            .logo-dispatch { height: 35px; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+            body { font-family: 'Inter', sans-serif; color: #000; margin: 0; padding: 8px; max-width: 320px; }
+            .sticker-container { border: 3px solid #000; padding: 10px; background-color: #fff; }
+            .header-sec { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 8px; }
+            .logo-dispatch { height: 32px; filter: grayscale(100%); }
+            .badge-wrapper { margin: 8px 0; }
+            .meta-sec { display: flex; justify-content: space-between; font-size: 10px; border-bottom: 2px solid #000; padding-bottom: 6px; margin-top: 6px; }
+            .barcode-sec { text-align: center; margin: 8px 0; padding-bottom: 6px; border-bottom: 1.5px dashed #000; }
+            .barcode-text { font-family: monospace; font-size: 11px; font-weight: 700; margin-top: 2px; letter-spacing: 0.5px; }
+            .deliver-to-title { font-size: 9px; font-weight: 800; text-transform: uppercase; color: #444; margin: 0 0 4px 0; }
+            .address-box { font-size: 11px; line-height: 1.45; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 8px; }
+            .customer-name { font-size: 14px; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 3px; }
+            .pincode-box { font-size: 20px; font-weight: 900; margin-top: 6px; display: inline-block; padding: 2px 8px; border: 2.5px solid #000; background-color: #fff; letter-spacing: 1px; }
+            .phone-box { font-size: 12px; font-weight: 700; margin-top: 6px; }
+            .items-label-table { width: 100%; border-collapse: collapse; margin-top: 4px; border-bottom: 2.5px solid #000; margin-bottom: 8px; }
+            .items-label-table th { font-size: 9px; font-weight: 800; text-transform: uppercase; background: #000; color: #fff; padding: 5px; text-align: left; }
+            .return-sec { font-size: 9px; line-height: 1.35; }
+            .return-title { font-weight: 800; text-transform: uppercase; font-size: 8px; color: #555; display: block; margin-bottom: 2px; }
           </style>
         </head>
         <body>
-          <div class="label-border">
-            <div class="label-header">
+          <div class="sticker-container">
+            <div class="header-sec">
               <img class="logo-dispatch" src="https://heelsup.in/logo.png" onerror="this.src='/logo.png'; this.onerror=null;" alt="HeelsUp" />
-              <div class="pay-type">${payBadge}</div>
+              <div style="font-size: 12px; font-weight: 800; letter-spacing: 0.5px;">DELHIVERY EXPRESS</div>
             </div>
-            
-            <div style="display: flex; justify-content: space-between; font-size: 10px; margin-top: 6px; border-bottom: 1px solid #000; padding-bottom: 4px;">
+
+            <div class="badge-wrapper">
+              ${payBadgeHtml}
+            </div>
+
+            <div class="meta-sec">
               <div>
-                <strong>Order:</strong> #${order.order_number}<br>
+                <strong>Order ID:</strong> #${order.order_number}<br/>
                 <strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString('en-IN')}
               </div>
-              <div class="courier-info">
-                Carrier: ${order.courier_name || 'DELHIVERY EXPRESS'}<br>
-                Mode: Surface
+              <div style="text-align: right;">
+                <strong>Routing:</strong> STD-SURFACE<br/>
+                <strong>Weight:</strong> 0.8 Kg
               </div>
             </div>
 
@@ -2546,22 +2571,22 @@ export default function Admin() {
               <div class="barcode-text">${order.order_number}</div>
             </div>
 
-            <div class="address-sec">
-              <h4>Deliver To:</h4>
-              <strong style="font-size: 13px; text-transform: uppercase;">${order.customer_name}</strong>
-              <div style="margin-top: 4px;">
-                ${order.address_line1 || ''}<br>
-                ${order.address_line2 ? `${order.address_line2}<br>` : ''}
-                ${order.city}, ${order.state}<br>
-                <div class="pin-code">PIN: ${order.pincode}</div>
+            <div class="address-box">
+              <div class="deliver-to-title">Deliver To:</div>
+              <span class="customer-name">${order.customer_name}</span>
+              <div>
+                ${order.address_line1 || ''}<br/>
+                ${order.address_line2 ? `${order.address_line2}<br/>` : ''}
+                ${order.city}, ${order.state}<br/>
+                <div class="pincode-box">PIN ${order.pincode}</div>
               </div>
-              <div class="phone-large">Contact Number: ${order.customer_phone}</div>
+              <div class="phone-box">Contact: ${order.customer_phone}</div>
             </div>
 
-            <table class="items-table">
+            <table class="items-label-table">
               <thead>
                 <tr>
-                  <th>Item Details</th>
+                  <th>Product Title</th>
                   <th style="text-align: center; width: 60px;">Size</th>
                   <th style="text-align: center; width: 40px;">Qty</th>
                 </tr>
@@ -2572,9 +2597,12 @@ export default function Admin() {
             </table>
 
             <div class="return-sec">
-              <strong>If Undelivered, Return To:</strong><br>
-              <strong>HeelsUp Store</strong>, Jodhpur, Rajasthan, India - 342001<br>
-              Email: support@heelsup.in
+              <span class="return-title">If Undelivered, Return To:</span>
+              <strong>HeelsUp Store</strong><br/>
+              1st B Rd, near Mahaveer Mega Mart,<br/>
+              opposite Little Champ, Sardarpura,<br/>
+              Jodhpur, Rajasthan 342001<br/>
+              Phone: 078914 70935 &middot; support@heelsup.in
             </div>
           </div>
         </body>
@@ -6145,6 +6173,7 @@ export default function Admin() {
                           <option value="placed">Placed (Received)</option>
                           <option value="confirmed">Confirmed (Processing)</option>
                           <option value="shipped">Shipped (In Transit)</option>
+                          <option value="out_for_delivery">Out for Delivery</option>
                           <option value="delivered">Delivered (Completed)</option>
                           <option value="cancelled">Cancelled (Refunded)</option>
                         </select>

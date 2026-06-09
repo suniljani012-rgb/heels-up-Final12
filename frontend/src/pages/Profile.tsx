@@ -106,8 +106,15 @@ export default function Profile() {
 
   const loadExchangeProductDetails = async (productId: number, priceRupees: number) => {
     try {
-      const res = await fetch(`/api/products/${productId}`)
-      const data = await res.json()
+      const [res, altRes] = await Promise.all([
+        fetch(`/api/products/${productId}`),
+        fetch(`/api/products?min_price=${priceRupees}&max_price=${priceRupees}&limit=100`)
+      ])
+      const [data, altData] = await Promise.all([
+        res.json(),
+        altRes.json()
+      ])
+
       if (data.success && data.data?.product) {
         const prod = data.data.product
         setExchangeSizes(prod.sizes || [])
@@ -117,8 +124,6 @@ export default function Profile() {
         setSelectedExchangeProduct(prod)
       }
       
-      const altRes = await fetch(`/api/products?min_price=${priceRupees}&max_price=${priceRupees}&limit=100`)
-      const altData = await altRes.json()
       if (altData.success && altData.data) {
         setSamePriceProducts(altData.data)
       } else {
@@ -287,103 +292,119 @@ export default function Profile() {
   const printInvoiceWindow = (order: any) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
-    const itemsRows = (order.items || []).map((item: any) => `
-      <tr>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.product_name} (Size: ${item.size})</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">₹${(item.price / 100).toFixed(2)}</td>
-        <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">₹${((item.price * item.quantity) / 100).toFixed(2)}</td>
-      </tr>
+    const itemsList = (order.items || []).map((item: any) => `
+      <div style="margin-bottom: 6px; border-bottom: 1px dashed #eee; padding-bottom: 4px;">
+        <div style="font-weight: bold; font-size: 11px;">${item.product_name}</div>
+        <div style="display: flex; justify-content: space-between; font-size: 10px; color: #444; margin-top: 2px;">
+          <span>Size: ${item.size} &middot; Qty: ${item.quantity} &middot; @ ₹${(item.price / 100).toFixed(0)}</span>
+          <span style="font-weight: bold; color: #000;">₹${((item.price * item.quantity) / 100).toFixed(0)}</span>
+        </div>
+      </div>
     `).join('');
 
     printWindow.document.write(`
       <html>
         <head>
-          <title>Invoice - ${order.order_number}</title>
+          <title>Receipt - ${order.order_number}</title>
           <style>
-            body { font-family: 'Inter', sans-serif; color: #333; margin: 40px; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #333; padding-bottom: 20px; }
-            .logo-img { height: 50px; margin-bottom: 8px; }
-            .invoice-details { text-align: right; }
-            .addresses { display: flex; justify-content: space-between; margin-top: 30px; }
-            .address-block { width: 45%; }
-            table { width: 100%; border-collapse: collapse; margin-top: 40px; }
-            th { background-color: #f5f5f5; padding: 8px; text-align: left; border-bottom: 2px solid #ddd; }
-            .totals { margin-top: 30px; text-align: right; width: 40%; margin-left: 60%; }
-            .totals table { margin-top: 0; }
-            .totals td { padding: 6px 0; }
-            .footer { margin-top: 80px; text-align: center; font-size: 10px; color: #777; border-top: 1px solid #ddd; padding-top: 20px; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+            body {
+              font-family: 'Inter', sans-serif;
+              color: #000;
+              margin: 0;
+              padding: 12px;
+              max-width: 290px;
+              font-size: 11px;
+              background-color: #fff;
+            }
+            .center { text-align: center; }
+            .logo { height: 40px; margin-bottom: 6px; filter: grayscale(100%); }
+            .shop-name { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+            .shop-addr { font-size: 9px; color: #444; line-height: 1.3; margin-top: 3px; }
+            .divider { border-top: 1px dashed #000; margin: 8px 0; }
+            .details-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 10px; }
+            .details-label { color: #555; }
+            .details-val { font-weight: 500; }
+            .section-title { font-weight: bold; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; color: #444; margin-bottom: 6px; }
+            .bill-totals { margin-top: 8px; font-size: 11px; }
+            .bill-totals div { display: flex; justify-content: space-between; margin-bottom: 3px; }
+            .grand-total { font-size: 13px; font-weight: 700; border-top: 1px dashed #000; padding-top: 6px; margin-top: 6px; }
+            .footer-msg { text-align: center; font-size: 9px; color: #555; line-height: 1.3; margin-top: 16px; border-top: 1px dashed #000; padding-top: 10px; }
           </style>
         </head>
         <body>
-          <div class="header">
+          <div class="center">
+            <img class="logo" src="https://heelsup.in/logo.png" onerror="this.src='/logo.png'; this.onerror=null;" alt="HeelsUp" /><br/>
+            <span class="shop-name">HeelsUp Boutique</span>
+            <div class="shop-addr">
+              1st B Rd, near Mahaveer Mega Mart,<br/>
+              opposite Little Champ, Sardarpura,<br/>
+              Jodhpur, Rajasthan 342001<br/>
+              Phone: 078914 70935
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-title">Order Details</div>
+          <div class="details-row">
+            <span class="details-label">Receipt No:</span>
+            <span class="details-val">${order.order_number}</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Date:</span>
+            <span class="details-val">${new Date(order.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Payment Mode:</span>
+            <span class="details-val" style="text-transform: uppercase;">${order.payment_method}</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Customer Name:</span>
+            <span class="details-val">${order.customer_name}</span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Contact:</span>
+            <span class="details-val">${order.customer_phone}</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section-title">Items Ordered</div>
+          <div style="margin-top: 4px;">
+            ${itemsList}
+          </div>
+
+          <div class="bill-totals">
             <div>
-              <img class="logo-img" src="https://heelsup.in/logo.png" onerror="this.src='/logo.png'; this.onerror=null;" alt="HeelsUp" />
-              <p>Jodhpur, Rajasthan, India<br>support@heelsup.in</p>
+              <span>Subtotal:</span>
+              <span>₹${(order.subtotal_amount / 100).toFixed(0)}</span>
             </div>
-            <div class="invoice-details">
-              <h2>RETAIL INVOICE</h2>
-              <p><strong>Order Ref:</strong> ${order.order_number}</p>
-              <p><strong>Date:</strong> ${new Date(order.created_at).toLocaleDateString('en-IN')}</p>
-              <p><strong>Payment Mode:</strong> ${order.payment_method.toUpperCase()}</p>
+            ${order.discount_amount > 0 ? `
+            <div style="color: #b91c1c;">
+              <span>Discount Applied:</span>
+              <span>-₹${(order.discount_amount / 100).toFixed(0)}</span>
+            </div>` : ''}
+            <div>
+              <span>Shipping Fee:</span>
+              <span>₹${(order.shipping_amount / 100).toFixed(0)}</span>
             </div>
-          </div>
-          <div class="addresses">
-            <div class="address-block">
-              <h4>Billed To:</h4>
-              <p><strong>${order.customer_name}</strong></p>
-              <p>Phone: ${order.customer_phone}</p>
-              ${order.customer_email ? `<p>Email: ${order.customer_email}</p>` : ''}
-            </div>
-            <div class="address-block">
-              <h4>Shipping Details:</h4>
-              <p>${order.address_line1 || ''}</p>
-              ${order.address_line2 ? `<p>${order.address_line2}</p>` : ''}
-              <p>${order.city || ''}, ${order.state || ''} - ${order.pincode || ''}</p>
+            <div class="grand-total">
+              <span>GRAND TOTAL:</span>
+              <span>₹${(order.total_amount / 100).toFixed(0)}</span>
             </div>
           </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Product Description</th>
-                <th style="text-align: center; width: 80px;">Qty</th>
-                <th style="text-align: right; width: 120px;">Rate</th>
-                <th style="text-align: right; width: 120px;">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsRows}
-            </tbody>
-          </table>
-          <div class="totals">
-            <table style="width: 100%;">
-              <tr>
-                <td>Subtotal:</td>
-                <td style="text-align: right;">₹${(order.subtotal_amount / 100).toFixed(2)}</td>
-              </tr>
-              ${order.discount_amount > 0 ? `
-              <tr>
-                <td>Discount:</td>
-                <td style="text-align: right; color: red;">-₹${(order.discount_amount / 100).toFixed(2)}</td>
-              </tr>` : ''}
-              <tr>
-                <td>Shipping:</td>
-                <td style="text-align: right;">₹${(order.shipping_amount / 100).toFixed(2)}</td>
-              </tr>
-              <tr style="font-weight: bold; font-size: 16px; border-top: 1.5px solid #333;">
-                <td style="padding-top: 10px;">Total Bill:</td>
-                <td style="text-align: right; padding-top: 10px;">₹${(order.total_amount / 100).toFixed(2)}</td>
-              </tr>
-            </table>
-          </div>
-          <div class="footer">
-            <p>Thank you for shopping with HeelsUp! For return or size exchanges, visit heelsup.in/returns.</p>
-            <p>This is a computer-generated retail invoice and requires no physical signature.</p>
+
+          <div class="footer-msg">
+            Thank you for shopping with HeelsUp!<br/>
+            Visit heelsup.in/returns for easy exchanges.<br/>
+            Step out in confidence!
           </div>
         </body>
       </html>
     `);
     printWindow.document.close();
+
     printWindow.focus();
     setTimeout(() => {
       printWindow.print();
@@ -416,29 +437,25 @@ export default function Profile() {
     async function loadData() {
       setLoading(true)
       try {
-        // Fetch Orders
-        const ordRes = await fetch('/api/orders/my', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        const ordData = await ordRes.json()
+        const headers = { 'Authorization': `Bearer ${token}` }
+        const [ordRes, addrRes, exRes] = await Promise.all([
+          fetch('/api/orders/my', { headers }),
+          fetch('/api/addresses', { headers }),
+          fetch('/api/returns', { headers })
+        ])
+        
+        const [ordData, addrData, exData] = await Promise.all([
+          ordRes.json(),
+          addrRes.json(),
+          exRes.json()
+        ])
+
         if (ordData.success) {
           setOrders(ordData.data)
         }
-
-        // Fetch Addresses
-        const addrRes = await fetch('/api/addresses', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        const addrData = await addrRes.json()
         if (addrData.success) {
           setAddresses(addrData.data)
         }
-
-        // Fetch Exchanges
-        const exRes = await fetch('/api/returns', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-        const exData = await exRes.json()
         if (exData.success) {
           setExchanges(exData.data)
         }

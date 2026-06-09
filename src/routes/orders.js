@@ -646,15 +646,16 @@ export async function ordersRouter(request, env) {
             const currentOrder = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
             if (!currentOrder) return error('Order not found', 404);
 
-            // Enforce unidirectional status transition validation
+            // Enforce flexible status transition validation
             const allowedTransitions = {
-                'placed': ['confirmed', 'cancelled'],
-                'confirmed': ['shipped', 'cancelled'],
-                'shipped': ['delivered', 'cancelled'],
-                'delivered': [],
-                'cancelled': [],
+                'placed': ['confirmed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
+                'confirmed': ['shipped', 'out_for_delivery', 'delivered', 'cancelled'],
+                'shipped': ['out_for_delivery', 'delivered', 'cancelled'],
+                'out_for_delivery': ['delivered', 'cancelled'],
+                'delivered': ['shipped', 'out_for_delivery', 'cancelled'],
+                'cancelled': ['placed', 'confirmed', 'shipped'],
                 'exchange_requested': ['exchange_approved', 'exchange_rejected'],
-                'exchange_approved': ['shipped', 'cancelled'],
+                'exchange_approved': ['shipped', 'out_for_delivery', 'delivered', 'cancelled'],
                 'exchange_rejected': []
             };
 
@@ -735,6 +736,46 @@ export async function ordersRouter(request, env) {
         }
     }
 
+    // ── PATCH /api/orders/admin/:id/tracking ──────────────────────────────────
+    if (path.match(/^\/admin\/\d+\/tracking$/) && (method === 'PUT' || method === 'PATCH')) {
+        const { error: authErr } = await requireAdmin(request, env);
+        if (authErr) return authErr;
+        const id = parseInt(path.match(/(\d+)/)?.[1]);
+        try {
+            const body = await request.json();
+            const { tracking_number, tracking_url, courier_name } = body;
+
+            const currentOrder = await env.DB.prepare('SELECT id FROM orders WHERE id = ?').bind(id).first();
+            if (!currentOrder) return error('Order not found', 404);
+
+            const sets = ["updated_at = datetime('now')"];
+            const binds = [];
+
+            if (tracking_number !== undefined) {
+                sets.push('tracking_number = ?');
+                binds.push(tracking_number);
+            }
+            if (tracking_url !== undefined) {
+                sets.push('tracking_url = ?');
+                binds.push(tracking_url);
+            }
+            if (courier_name !== undefined) {
+                sets.push('courier_name = ?');
+                binds.push(courier_name);
+            }
+
+            binds.push(id);
+
+            await env.DB.prepare(`UPDATE orders SET ${sets.join(', ')} WHERE id = ?`).bind(...binds).run();
+
+            const updated = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
+            return ok(formatOrder(updated), 'Tracking information updated');
+        } catch (e) {
+            console.error('Update tracking error:', e);
+            return serverError('Failed to update tracking');
+        }
+    }
+
     // ── PUT /api/orders/admin/:id/exchange ──────────────────────────────────
     if (path.match(/^\/admin\/\d+\/exchange$/) && method === 'PUT') {
         const { error: authErr } = await requireAdmin(request, env);
@@ -803,15 +844,16 @@ export async function ordersRouter(request, env) {
                     const current = await env.DB.prepare('SELECT order_status FROM orders WHERE id = ?').bind(id).first();
                     if (!current) { errors.push({ id, error: 'Not found' }); continue; }
 
-                    // Enforce unidirectional status transition validation
+                    // Enforce flexible status transition validation
                     const allowedTransitions = {
-                        'placed': ['confirmed', 'cancelled'],
-                        'confirmed': ['shipped', 'cancelled'],
-                        'shipped': ['delivered', 'cancelled'],
-                        'delivered': [],
-                        'cancelled': [],
+                        'placed': ['confirmed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'],
+                        'confirmed': ['shipped', 'out_for_delivery', 'delivered', 'cancelled'],
+                        'shipped': ['out_for_delivery', 'delivered', 'cancelled'],
+                        'out_for_delivery': ['delivered', 'cancelled'],
+                        'delivered': ['shipped', 'out_for_delivery', 'cancelled'],
+                        'cancelled': ['placed', 'confirmed', 'shipped'],
                         'exchange_requested': ['exchange_approved', 'exchange_rejected'],
-                        'exchange_approved': ['shipped', 'cancelled'],
+                        'exchange_approved': ['shipped', 'out_for_delivery', 'delivered', 'cancelled'],
                         'exchange_rejected': []
                     };
                     const currentStatus = current.order_status || 'placed';

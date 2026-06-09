@@ -34,7 +34,7 @@ export default function Header() {
   const [categories, setCategories] = useState<any[]>([])
   const [announcements, setAnnouncements] = useState<string[]>([
     "🎉 NEW ARRIVALS — Summer Collection is Live!",
-    "🚚 FREE Shipping on orders above ₹999",
+    "🚚 FREE Shipping on orders above ₹799",
     "🏷️ Use code HEELS10 for 10% off on first order"
   ])
 

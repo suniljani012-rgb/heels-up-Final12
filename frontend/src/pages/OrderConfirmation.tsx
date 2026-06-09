@@ -6,12 +6,13 @@ import HeicImage from '../components/HeicImage'
 interface OrderItem {
   product_id: number;
   product_name: string;
-  product_sku: string;
+  sku: string | null;
+  image: string | null;
+  size: string | null;
+  color?: string | null;
   quantity: number;
-  unit_price: number;
-  line_total: number;
-  size_label: string;
-  color?: string;
+  price: number;
+  total_price: number;
 }
 
 interface OrderDetail {
@@ -103,28 +104,32 @@ export default function OrderConfirmation() {
             <div>
               <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-3">Purchased Items</h3>
               <div className="divide-y divide-gray-100">
-                {order.items?.map((item, index) => (
-                  <div key={index} className="py-3 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden flex-shrink-0">
-                        <HeicImage
-                          src={`https://media.heelsup.in/products/HEELS/${item.product_sku.split('-')[0]}.webp`}
-                          alt={item.product_name}
-                          className="w-full h-full object-cover"
-                        />
+                {order.items?.map((item, index) => {
+                  const skuPrefix = item.sku ? item.sku.split('-')[0] : '';
+                  const imgUrl = item.image || (skuPrefix ? `https://media.heelsup.in/products/HEELS/${skuPrefix}.webp` : '/placeholder.jpg');
+                  return (
+                    <div key={index} className="py-3 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg border border-gray-100 bg-gray-50 overflow-hidden flex-shrink-0">
+                          <HeicImage
+                            src={imgUrl}
+                            alt={item.product_name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold text-gray-800 block leading-tight">{item.product_name}</span>
+                          <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-1 block">
+                            Size {item.size || 'Default'} &middot; Qty {item.quantity}
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-xs font-semibold text-gray-800 block leading-tight">{item.product_name}</span>
-                        <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-1 block">
-                          Size {item.size_label} &middot; Qty {item.quantity}
-                        </span>
-                      </div>
+                      <span className="text-xs font-bold text-gray-900">
+                        ₹{((item.total_price || 0) / 100).toLocaleString('en-IN')}
+                      </span>
                     </div>
-                    <span className="text-xs font-bold text-gray-900">
-                      ₹{(item.line_total / 100).toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
