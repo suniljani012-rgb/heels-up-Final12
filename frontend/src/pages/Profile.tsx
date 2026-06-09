@@ -75,6 +75,215 @@ export default function Profile() {
   const [addressDefault, setAddressDefault] = useState(false)
   const [savingAddress, setSavingAddress] = useState(false)
 
+  // Exchanges state
+  const [exchanges, setExchanges] = useState<any[]>([])
+  const [exchangeModalOpen, setExchangeModalOpen] = useState(false)
+  const [selectedOrderForExchange, setSelectedOrderForExchange] = useState<any | null>(null)
+  const [selectedItemIndex, setSelectedItemIndex] = useState<number>(0)
+  const [exchangeType, setExchangeType] = useState<'same_variant' | 'same_price'>('same_variant')
+  
+  const [samePriceProducts, setSamePriceProducts] = useState<any[]>([])
+  const [selectedExchangeProduct, setSelectedExchangeProduct] = useState<any | null>(null)
+  
+  const [exchangeSizes, setExchangeSizes] = useState<string[]>([])
+  const [exchangeColors, setExchangeColors] = useState<string[]>([])
+  const [selectedExchangeSize, setSelectedExchangeSize] = useState('')
+  const [selectedExchangeColor, setSelectedExchangeColor] = useState('')
+  
+  const [exchangeFiles, setExchangeFiles] = useState<(File | null)[]>([null, null, null])
+  const [exchangeReason, setExchangeReason] = useState('Size mismatch / fit issue')
+  const [exchangeDescription, setExchangeDescription] = useState('')
+  const [submittingExchange, setSubmittingExchange] = useState(false)
+  
+  // Order details modal state
+  const [orderDetailsModalOpen, setOrderDetailsModalOpen] = useState(false)
+  const [selectedOrderForDetails, setSelectedOrderForDetails] = useState<any | null>(null)
+
+  const getOrderExchangeStatus = (orderId: number) => {
+    const ex = exchanges.find((e: any) => e.order_id === orderId)
+    return ex ? ex.status : null
+  }
+
+  const loadExchangeProductDetails = async (productId: number, priceRupees: number) => {
+    try {
+      const res = await fetch(`/api/products/${productId}`)
+      const data = await res.json()
+      if (data.success && data.data?.product) {
+        const prod = data.data.product
+        setExchangeSizes(prod.sizes || [])
+        setExchangeColors(prod.colors || [])
+        setSelectedExchangeSize(prod.sizes?.[0] || '')
+        setSelectedExchangeColor(prod.colors?.[0] || 'Default')
+        setSelectedExchangeProduct(prod)
+      }
+      
+      const altRes = await fetch(`/api/products?min_price=${priceRupees}&max_price=${priceRupees}&limit=100`)
+      const altData = await altRes.json()
+      if (altData.success && altData.data) {
+        setSamePriceProducts(altData.data)
+      } else {
+        setSamePriceProducts([])
+      }
+    } catch (e) {
+      console.error('Failed to load exchange product details:', e)
+    }
+  }
+
+  const handleOpenExchange = async (order: any) => {
+    setSelectedOrderForExchange(order)
+    setSelectedItemIndex(0)
+    setExchangeType('same_variant')
+    setExchangeReason('Size mismatch / fit issue')
+    setExchangeDescription('')
+    setExchangeFiles([null, null, null])
+    
+    const firstItem = order.items?.[0]
+    if (firstItem) {
+      await loadExchangeProductDetails(firstItem.product_id, firstItem.price / 100)
+    }
+    setExchangeModalOpen(true)
+  }
+
+  const handleSelectExchangeItem = async (index: number) => {
+    setSelectedItemIndex(index)
+    const item = selectedOrderForExchange.items[index]
+    if (item) {
+      await loadExchangeProductDetails(item.product_id, item.price / 100)
+    }
+  }
+
+  const handleSelectExchangeProduct = async (prodId: number) => {
+    try {
+      const res = await fetch(`/api/products/${prodId}`)
+      const data = await res.json()
+      if (data.success && data.data?.product) {
+        const prod = data.data.product
+        setSelectedExchangeProduct(prod)
+        setExchangeSizes(prod.sizes || [])
+        setExchangeColors(prod.colors || [])
+        setSelectedExchangeSize(prod.sizes?.[0] || '')
+        setSelectedExchangeColor(prod.colors?.[0] || 'Default')
+      }
+    } catch (e) {
+      console.error('Failed to load alternate product details:', e)
+    }
+  }
+
+  const handleSelectExchangeColor = async (color: string) => {
+    setSelectedExchangeColor(color)
+    if (selectedExchangeProduct?.color_to_id?.[color]) {
+      const targetId = selectedExchangeProduct.color_to_id[color]
+      if (targetId !== selectedExchangeProduct.id) {
+        try {
+          const res = await fetch(`/api/products/${targetId}`)
+          const data = await res.json()
+          if (data.success && data.data?.product) {
+            const prod = data.data.product
+            setSelectedExchangeProduct(prod)
+            setExchangeSizes(prod.sizes || [])
+            setSelectedExchangeSize(prod.sizes?.[0] || '')
+          }
+        } catch (e) {
+          console.error('Failed to fetch new color variant:', e)
+        }
+      }
+    }
+  }
+
+  const handleFileChange = (index: number, file: File | null) => {
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('error', 'File Too Large', 'Each image must be under 5MB.')
+        return
+      }
+    }
+    setExchangeFiles(prev => {
+      const copy = [...prev]
+      copy[index] = file
+      return copy
+    })
+  }
+
+  const handleSubmitExchange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const filesToUpload = exchangeFiles.filter(f => f !== null) as File[]
+    if (filesToUpload.length !== 3) {
+      showToast('error', 'Photos Required', 'Please upload exactly 3 images of the product.')
+      return
+    }
+    
+    setSubmittingExchange(true)
+    try {
+      const uploadedUrls: string[] = []
+      for (const file of filesToUpload) {
+        const formData = new FormData()
+        formData.append('file', file)
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          body: formData
+        })
+        const uploadData = await uploadRes.json()
+        if (uploadData.success && uploadData.data?.url) {
+          uploadedUrls.push(uploadData.data.url)
+        } else {
+          throw new Error(uploadData.error || 'Failed to upload photo')
+        }
+      }
+      
+      const itemToExchange = selectedOrderForExchange.items[selectedItemIndex]
+      const exchangeData = {
+        order_id: selectedOrderForExchange.id,
+        reason: exchangeReason,
+        description: exchangeDescription,
+        images: uploadedUrls,
+        items: [
+          {
+            product_id: itemToExchange.product_id,
+            size: itemToExchange.size,
+            color: itemToExchange.color,
+            qty: 1,
+            reason: exchangeReason,
+            exchange_to_product_id: selectedExchangeProduct?.id || itemToExchange.product_id,
+            exchange_to_size: selectedExchangeSize,
+            exchange_to_color: selectedExchangeColor
+          }
+        ]
+      }
+      
+      const res = await fetch('/api/returns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(exchangeData)
+      })
+      const data = await res.json()
+      if (data.success) {
+        showToast('success', 'Exchange Submitted', 'Your exchange request has been submitted successfully.')
+        setExchangeModalOpen(false)
+        
+        // Refresh exchanges
+        const exRes = await fetch('/api/returns', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const exData = await exRes.json()
+        if (exData.success) {
+          setExchanges(exData.data)
+        }
+      } else {
+        showToast('error', 'Submission Failed', data.error || 'Could not register exchange.')
+      }
+    } catch (err: any) {
+      showToast('error', 'Execution Error', err.message || 'Error occurred while processing.')
+    } finally {
+      setSubmittingExchange(false)
+    }
+  }
+
   const printInvoiceWindow = (order: any) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -223,6 +432,15 @@ export default function Profile() {
         const addrData = await addrRes.json()
         if (addrData.success) {
           setAddresses(addrData.data)
+        }
+
+        // Fetch Exchanges
+        const exRes = await fetch('/api/returns', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const exData = await exRes.json()
+        if (exData.success) {
+          setExchanges(exData.data)
         }
       } catch (e) {
         console.error('Failed to load profile data:', e)
@@ -855,7 +1073,11 @@ export default function Profile() {
               ) : (
                 <div className="space-y-6">
                   {orders.map((order) => (
-                    <div key={order.id} className="border border-gray-100 rounded-xl p-4 bg-[#fcfbf9] hover:bg-[#faf9f5] transition-colors">
+                    <div 
+                      key={order.id} 
+                      onClick={() => { setSelectedOrderForDetails(order); setOrderDetailsModalOpen(true); }}
+                      className="border border-gray-100 rounded-xl p-4 bg-[#fcfbf9] hover:bg-[#faf9f5] transition-colors cursor-pointer relative"
+                    >
                       {/* Header line */}
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-gray-100 pb-3 text-xs text-gray-500">
                         <div>
@@ -901,12 +1123,46 @@ export default function Profile() {
 
                       {/* Total info */}
                       <div className="flex justify-between items-center border-t border-gray-100 pt-3 mt-3">
-                        <button
-                          onClick={() => handleDownloadInvoice(order.id)}
-                          className="px-3 py-1.5 border border-gray-200 hover:bg-gray-50 text-[9px] font-bold uppercase tracking-widest text-gray-650 rounded-xl flex items-center gap-1.5 transition-all active:scale-[0.98]"
-                        >
-                          <Printer className="w-3.5 h-3.5" /> Download Invoice
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(order.id); }}
+                            className="px-3 py-1.5 border border-gray-200 hover:bg-gray-50 text-[9px] font-bold uppercase tracking-widest text-gray-650 rounded-xl flex items-center gap-1.5 transition-all active:scale-[0.98]"
+                          >
+                            <Printer className="w-3.5 h-3.5" /> Download Invoice
+                          </button>
+
+                          {order.order_status === 'delivered' && (() => {
+                            const exStatus = getOrderExchangeStatus(order.id);
+                            if (exStatus === 'pending') {
+                              return (
+                                <span className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-bold uppercase tracking-widest rounded-xl flex items-center gap-1">
+                                  Exchange Pending
+                                </span>
+                              );
+                            } else if (exStatus === 'approved') {
+                              return (
+                                <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold uppercase tracking-widest rounded-xl flex items-center gap-1">
+                                  Exchange Approved
+                                </span>
+                              );
+                            } else if (exStatus === 'completed') {
+                              return (
+                                <span className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 text-[9px] font-bold uppercase tracking-widest rounded-xl flex items-center gap-1">
+                                  Exchange Completed
+                                </span>
+                              );
+                            } else {
+                              return (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleOpenExchange(order); }}
+                                  className="px-3 py-1.5 bg-primary hover:bg-[#b17e3f] text-white text-[9px] font-bold uppercase tracking-widest rounded-xl flex items-center gap-1.5 transition-all active:scale-[0.98]"
+                                >
+                                  Request Exchange
+                                </button>
+                              );
+                            }
+                          })()}
+                        </div>
                         <div className="text-right">
                           <span className="text-[10px] text-gray-450 font-bold uppercase tracking-wider block">Total paid</span>
                           <span className="text-sm font-bold text-gray-950 font-mono">
@@ -1078,6 +1334,383 @@ export default function Profile() {
                 >
                   {savingAddress ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                   {editingAddress ? 'Update' : 'Save'} Address
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Pop-up Order Details Modal */}
+      {orderDetailsModalOpen && selectedOrderForDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm select-none">
+          <div className="relative w-full max-w-2xl bg-white/95 border border-gray-200 rounded-2xl shadow-2xl p-6 md:p-8 animate-slide-in space-y-6 overflow-y-auto max-h-[90vh]">
+            
+            {/* Header close button */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900 font-display italic">
+                  Order Details
+                </h3>
+                <p className="text-[10px] text-gray-450 font-mono font-bold uppercase tracking-wider mt-0.5">
+                  Ref: #{selectedOrderForDetails.order_number}
+                </p>
+              </div>
+              <button
+                onClick={() => setOrderDetailsModalOpen(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-650 hover:bg-gray-100 transition-all focus:outline-none"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Stepper Timeline */}
+            <div className="py-4 border-b border-gray-100">
+              <div className="flex items-center justify-between relative">
+                {/* Horizontal connection line */}
+                <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-0.5 bg-gray-100 -z-10" />
+                <div 
+                  className="absolute left-6 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-500 transition-all duration-500 -z-10" 
+                  style={{
+                    width: selectedOrderForDetails.order_status === 'delivered' ? '100%' :
+                           selectedOrderForDetails.order_status === 'shipped' ? '66%' :
+                           selectedOrderForDetails.order_status === 'confirmed' ? '33%' : '0%'
+                  }}
+                />
+
+                {[
+                  { label: 'Placed', status: 'placed', date: selectedOrderForDetails.created_at },
+                  { label: 'Confirmed', status: 'confirmed', date: selectedOrderForDetails.confirmed_at },
+                  { label: 'Shipped', status: 'shipped', date: selectedOrderForDetails.shipped_at },
+                  { label: 'Delivered', status: 'delivered', date: selectedOrderForDetails.delivered_at }
+                ].map((step, idx) => {
+                  const statuses = ['placed', 'confirmed', 'shipped', 'delivered'];
+                  const currentIdx = statuses.indexOf(selectedOrderForDetails.order_status);
+                  const stepIdx = statuses.indexOf(step.status);
+                  const isActive = stepIdx <= currentIdx;
+                  
+                  return (
+                    <div key={idx} className="flex flex-col items-center relative bg-white px-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 ${
+                        selectedOrderForDetails.order_status === 'cancelled'
+                          ? 'border-gray-200 text-gray-400'
+                          : isActive
+                          ? 'bg-emerald-500 border-emerald-500 text-white shadow-md'
+                          : 'bg-white border-gray-200 text-gray-400'
+                      }`}>
+                        {isActive && selectedOrderForDetails.order_status !== 'cancelled' ? <Check className="w-4 h-4" /> : idx + 1}
+                      </div>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider mt-1.5 ${
+                        isActive ? 'text-gray-900' : 'text-gray-400'
+                      }`}>
+                        {step.label}
+                      </span>
+                      {step.date && (
+                        <span className="text-[8px] text-gray-400 mt-0.5">
+                          {new Date(step.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {selectedOrderForDetails.order_status === 'cancelled' && (
+                <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-750 text-center text-xs font-semibold">
+                  Order was Cancelled {selectedOrderForDetails.cancelled_at && `on ${new Date(selectedOrderForDetails.cancelled_at).toLocaleDateString('en-IN')}`}
+                </div>
+              )}
+            </div>
+
+            {/* Main Details Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+              
+              {/* Payment & Shipping info */}
+              <div className="space-y-4">
+                <div className="border border-gray-100 rounded-xl p-4 bg-[#fcfbf9]">
+                  <h4 className="font-bold text-gray-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    Payment Method
+                  </h4>
+                  <div className="space-y-1 text-gray-650">
+                    <p>Method: <strong className="text-gray-900 uppercase font-mono">{selectedOrderForDetails.payment_method}</strong></p>
+                    <p>Status: <strong className={`uppercase ${selectedOrderForDetails.payment_status === 'paid' ? 'text-emerald-600' : 'text-amber-600'}`}>{selectedOrderForDetails.payment_status}</strong></p>
+                    {selectedOrderForDetails.razorpay_payment_id && (
+                      <p className="font-mono text-[10px] text-gray-400 mt-1">TxID: {selectedOrderForDetails.razorpay_payment_id}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="border border-gray-100 rounded-xl p-4 bg-[#fcfbf9]">
+                  <h4 className="font-bold text-gray-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    Shipping Address
+                  </h4>
+                  <p className="font-semibold text-gray-900">{selectedOrderForDetails.customer_name}</p>
+                  <p className="text-gray-450 mt-0.5">{selectedOrderForDetails.customer_phone}</p>
+                  <p className="text-gray-650 mt-1.5 leading-relaxed">
+                    {selectedOrderForDetails.address_line1}
+                    {selectedOrderForDetails.address_line2 && `, ${selectedOrderForDetails.address_line2}`}
+                    <br />
+                    {selectedOrderForDetails.city}, {selectedOrderForDetails.state} - {selectedOrderForDetails.pincode}
+                  </p>
+                  {selectedOrderForDetails.courier_name && (
+                    <div className="border-t border-gray-100 pt-2.5 mt-2.5 space-y-1">
+                      <p>Courier: <strong className="text-gray-900">{selectedOrderForDetails.courier_name}</strong></p>
+                      <p>Tracking No: <strong className="text-gray-900 font-mono">{selectedOrderForDetails.tracking_number}</strong></p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Order items & totals */}
+              <div className="space-y-4">
+                <div className="border border-gray-100 rounded-xl p-4 bg-[#fcfbf9] max-h-60 overflow-y-auto">
+                  <h4 className="font-bold text-gray-800 uppercase tracking-wider mb-3">Items Ordered</h4>
+                  <div className="space-y-3">
+                    {selectedOrderForDetails.items?.map((item: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <HeicImage
+                          src={item.image}
+                          alt=""
+                          className="w-10 h-10 object-cover rounded bg-white border border-gray-100 flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-semibold text-gray-800 truncate">{item.name}</h5>
+                          <p className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mt-0.5">
+                            Qty: {item.qty} &middot; Size: {item.size} &middot; Color: {item.color || 'Default'}
+                          </p>
+                        </div>
+                        <div className="font-mono text-gray-900 font-bold">
+                          ₹{((item.price * item.qty) / 100).toLocaleString('en-IN')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border border-gray-100 rounded-xl p-4 bg-[#fcfbf9] space-y-2 text-xs">
+                  <div className="flex justify-between text-gray-500">
+                    <span>Subtotal</span>
+                    <span className="font-mono">₹{(selectedOrderForDetails.subtotal_amount / 100).toFixed(2)}</span>
+                  </div>
+                  {selectedOrderForDetails.discount_amount > 0 && (
+                    <div className="flex justify-between text-rose-600">
+                      <span>Discount Applied</span>
+                      <span className="font-mono">-₹{(selectedOrderForDetails.discount_amount / 100).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-gray-500">
+                    <span>Shipping Charges</span>
+                    <span className="font-mono">₹{(selectedOrderForDetails.shipping_amount / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-gray-100 pt-2 font-bold text-gray-900 text-sm">
+                    <span>Total Paid</span>
+                    <span className="font-mono text-primary">₹{(selectedOrderForDetails.total_amount / 100).toFixed(2)}</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-gray-100">
+              <button
+                onClick={() => setOrderDetailsModalOpen(false)}
+                className="px-5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Pop-up Exchange Dialog Modal */}
+      {exchangeModalOpen && selectedOrderForExchange && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm select-none">
+          <div className="relative w-full max-w-xl bg-white/95 border border-gray-200 rounded-2xl shadow-2xl p-6 md:p-8 animate-slide-in space-y-5 overflow-y-auto max-h-[90vh]">
+            
+            {/* Header close button */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900 font-display italic">
+                Request Item Exchange
+              </h3>
+              <button
+                onClick={() => setExchangeModalOpen(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all focus:outline-none"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitExchange} className="space-y-4 text-xs text-gray-700">
+              
+              {/* Item selection */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Select Item to Exchange</label>
+                <select
+                  value={selectedItemIndex}
+                  onChange={(e) => handleSelectExchangeItem(Number(e.target.value))}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none bg-[#fcfbf9] focus:bg-white transition-all font-semibold"
+                >
+                  {selectedOrderForExchange.items?.map((item: any, idx: number) => (
+                    <option key={idx} value={idx}>
+                      {item.name} (Size: {item.size}, Color: {item.color || 'Default'}) - ₹{(item.price / 100).toLocaleString('en-IN')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Exchange Type Selection */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Exchange Option</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setExchangeType('same_variant'); loadExchangeProductDetails(selectedOrderForExchange.items[selectedItemIndex].product_id, selectedOrderForExchange.items[selectedItemIndex].price / 100); }}
+                    className={`p-3 border rounded-xl font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
+                      exchangeType === 'same_variant'
+                        ? 'bg-primary border-primary text-white shadow-sm'
+                        : 'border-gray-200 bg-[#fcfbf9] text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="block text-xs">Size / Color Variant</span>
+                    <span className={`block text-[9px] font-semibold uppercase tracking-wider ${exchangeType === 'same_variant' ? 'text-amber-100' : 'text-gray-400'}`}>Exchange for same shoe</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExchangeType('same_price')}
+                    className={`p-3 border rounded-xl font-bold transition-all text-center flex flex-col items-center justify-center gap-1 ${
+                      exchangeType === 'same_price'
+                        ? 'bg-primary border-primary text-white shadow-sm'
+                        : 'border-gray-200 bg-[#fcfbf9] text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="block text-xs">Different Product</span>
+                    <span className={`block text-[9px] font-semibold uppercase tracking-wider ${exchangeType === 'same_price' ? 'text-amber-100' : 'text-gray-400'}`}>Same Price (₹{(selectedOrderForExchange.items[selectedItemIndex].price / 100).toLocaleString('en-IN')})</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* If different product, show product list */}
+              {exchangeType === 'same_price' && (
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Select Replacement Product</label>
+                  <select
+                    value={selectedExchangeProduct?.id || ''}
+                    onChange={(e) => handleSelectExchangeProduct(Number(e.target.value))}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none bg-[#fcfbf9] focus:bg-white transition-all font-semibold"
+                  >
+                    <option value="" disabled>-- Choose a footwear style --</option>
+                    {samePriceProducts.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name} - ₹{p.price}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Target options (Sizes and Colors) */}
+              {selectedExchangeProduct && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Select Desired Size</label>
+                    <select
+                      value={selectedExchangeSize}
+                      onChange={(e) => setSelectedExchangeSize(e.target.value)}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none bg-[#fcfbf9] focus:bg-white transition-all font-bold"
+                    >
+                      {exchangeSizes.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                      {exchangeSizes.length === 0 && (
+                        <option value="">No sizes available</option>
+                      )}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Select Desired Color</label>
+                    <select
+                      value={selectedExchangeColor}
+                      onChange={(e) => handleSelectExchangeColor(e.target.value)}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none bg-[#fcfbf9] focus:bg-white transition-all font-bold"
+                    >
+                      {exchangeColors.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                      {exchangeColors.length === 0 && (
+                        <option value="Default">Default</option>
+                      )}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Reason / Notes */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Reason for Exchange</label>
+                  <select
+                    value={exchangeReason}
+                    onChange={(e) => setExchangeReason(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none bg-[#fcfbf9] focus:bg-white transition-all font-semibold"
+                  >
+                    <option value="Size mismatch / fit issue">Size mismatch / fit issue</option>
+                    <option value="Incorrect item color received">Incorrect item color received</option>
+                    <option value="Defective / damaged product">Defective / damaged product</option>
+                    <option value="Style swap / mind changed">Style swap / mind changed</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Details / Description</label>
+                  <input
+                    type="text"
+                    value={exchangeDescription}
+                    onChange={(e) => setExchangeDescription(e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none bg-[#fcfbf9] focus:bg-white transition-all"
+                    placeholder="e.g. need size 38 instead of 37"
+                  />
+                </div>
+              </div>
+
+              {/* Exactly 3 verification pictures */}
+              <div className="space-y-2 bg-[#fcfbf9] border border-dashed border-gray-250 rounded-2xl p-4">
+                <div>
+                  <label className="block text-[10px] font-extrabold text-gray-500 uppercase tracking-wider">Upload Verification Photos (Exactly 3)</label>
+                  <p className="text-[9px] text-gray-400 font-bold uppercase mt-0.5">Please upload 3 clear photos of the product condition. Max 5MB each.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[0, 1, 2].map((idx) => (
+                    <div key={idx} className="space-y-1">
+                      <label className="block text-[9px] font-bold text-gray-405 uppercase">Photo {idx + 1}</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        required
+                        onChange={(e) => handleFileChange(idx, e.target.files?.[0] || null)}
+                        className="w-full text-[10px] text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[9px] file:font-bold file:uppercase file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-3 justify-end border-t border-gray-100 pt-4 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setExchangeModalOpen(false)}
+                  className="px-5 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-750 text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submittingExchange}
+                  className="px-6 py-2.5 bg-primary hover:bg-[#b17e3f] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {submittingExchange ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  Submit Exchange Request
                 </button>
               </div>
 

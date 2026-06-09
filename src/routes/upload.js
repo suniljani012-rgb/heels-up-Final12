@@ -1,5 +1,5 @@
 // worker/src/routes/upload.js
-import { requireAdmin } from '../middleware/auth.js';
+import { requireAdmin, requireAuth } from '../middleware/auth.js';
 import { ok, error, serverError, notFound } from '../utils/response.js';
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -38,7 +38,7 @@ export async function uploadRouter(request, env) {
 
     // POST /api/upload — upload image to R2
     if (path === '/' && method === 'POST') {
-        const { user, error: authError } = await requireAdmin(request, env);
+        const { user, error: authError } = await requireAuth(request, env);
         if (authError) return authError;
         try {
             const formData = await request.formData();

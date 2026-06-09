@@ -20,14 +20,26 @@ export async function couponsRouter(request, env) {
 
             if (!coupon) return error('Invalid or expired coupon code');
             if (coupon.max_uses && coupon.used_count >= coupon.max_uses) return error('Coupon usage limit reached');
-            if (cart_total && cart_total < coupon.min_order) {
-                return error(`Minimum order ₹${(coupon.min_order / 100).toFixed(0)} required for this coupon`);
+            
+            const minOrderPaise = (coupon.min_order || 0) * 100;
+            if (cart_total && cart_total < minOrderPaise) {
+                return error(`Minimum order ₹${coupon.min_order || 0} required for this coupon`);
             }
 
             let discount = 0;
-            if (coupon.type === 'percent') discount = Math.floor((cart_total || 0) * coupon.value / 100);
-            else if (coupon.type === 'flat') discount = coupon.value;
-            else if (coupon.type === 'free_shipping') discount = 0; // handled in order
+            const isPercent = coupon.type === 'percent' || coupon.type === 'percentage';
+            const isFlat = coupon.type === 'flat' || coupon.type === 'fixed';
+            
+            if (isPercent) {
+                discount = Math.floor((cart_total || 0) * coupon.value / 100);
+            } else if (isFlat) {
+                discount = coupon.value * 100; // convert Rupees to Paise
+            }
+
+            // Apply max discount constraint if applicable
+            if (coupon.max_discount && discount > (coupon.max_discount * 100)) {
+                discount = coupon.max_discount * 100;
+            }
 
             return ok({
                 code: coupon.code,

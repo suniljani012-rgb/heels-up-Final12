@@ -158,6 +158,9 @@ interface ReturnRequest {
   refund_amount: number;
   admin_notes?: string;
   created_at: string;
+  description?: string;
+  items?: any[];
+  images?: string;
 }
 
 interface Toast {
@@ -1360,7 +1363,7 @@ export default function Admin() {
             product_id: it.product_id || it.productId,
             product_name: it.product_name || it.name,
             quantity: it.quantity || it.qty || 1,
-            price: it.unit_price || it.price || 0,
+            price: (it.unit_price || it.price || 0) * 100,
             size: it.size || 'Default',
             color: it.color || 'Default'
           }));
@@ -1377,9 +1380,9 @@ export default function Admin() {
         customer_email: '',
         items_summary: itemsSummary,
         raw_items: rawItems,
-        subtotal: s.subtotal,
-        discount: s.discount || 0,
-        total: s.total,
+        subtotal: s.subtotal * 100,
+        discount: (s.discount || 0) * 100,
+        total: s.total * 100,
         payment_method: s.payment_method || 'Cash',
         notes: s.notes || '',
         channel: 'POS',
@@ -2092,18 +2095,30 @@ export default function Admin() {
   };
 
   // Returns moderation
-  const handleOpenReturnsModal = (ret: ReturnRequest) => {
-    setSelectedReturn(ret);
-    setReturnStatus(ret.status === 'pending' ? 'approved' : ret.status as any);
-    setReturnNotes(ret.admin_notes || '');
-    setReturnModalOpen(true);
+  const handleOpenReturnsModal = async (ret: ReturnRequest) => {
+    try {
+      const res = await fetch(`/api/admin/returns/${ret.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setSelectedReturn(data.data);
+        setReturnStatus(data.data.status === 'pending' ? 'approved' : data.data.status as any);
+        setReturnNotes(data.data.admin_notes || '');
+        setReturnModalOpen(true);
+      } else {
+        showToast('error', 'Fetch Failure', data.error || 'Failed to fetch details');
+      }
+    } catch {
+      showToast('error', 'Fetch Failure', 'Network error while fetching exchange details');
+    }
   };
 
   const handleReturnSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedReturn) return;
     try {
-      const res = await fetch(`/api/admin/returns/${selectedReturn.id}`, {
+      const res = await fetch(`/api/admin/returns/${selectedReturn.id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -2111,13 +2126,14 @@ export default function Admin() {
         },
         body: JSON.stringify({
           status: returnStatus,
+          admin_note: returnNotes,
           admin_notes: returnNotes,
           refund_amount: selectedReturn.refund_amount
         })
       });
       const data = await res.json();
       if (data.success) {
-        showToast('success', 'Return Updated', 'Return request status recorded.');
+        showToast('success', 'Exchange Updated', 'Exchange request status recorded.');
         setReturnModalOpen(false);
         loadAllData();
       } else {
@@ -2602,8 +2618,8 @@ export default function Admin() {
             size: it.size || 'Default',
             color: it.color || 'Default',
             quantity: it.quantity || it.qty || 1,
-            price: Math.round((it.unit_price || it.price || 0) * 100),
-            total_price: Math.round((it.unit_price || it.price || 0) * (it.quantity || it.qty || 1) * 100)
+            price: (it.unit_price || it.price || 0) * 100,
+            total_price: (it.unit_price || it.price || 0) * (it.quantity || it.qty || 1) * 100
           }));
         } catch (_) {
           items = [];
@@ -2633,10 +2649,10 @@ export default function Admin() {
         razorpay_order_id: null,
         razorpay_payment_id: null,
         razorpay_signature: null,
-        subtotal_amount: Math.round((s.subtotal || 0) * 100),
-        discount_amount: Math.round((s.discount || 0) * 100),
+        subtotal_amount: (s.subtotal || 0) * 100,
+        discount_amount: (s.discount || 0) * 100,
         shipping_amount: 0,
-        total_amount: Math.round((s.total || 0) * 100),
+        total_amount: (s.total || 0) * 100,
         created_at: s.created_at,
         updated_at: s.created_at,
         notes: s.notes || '',
@@ -3007,7 +3023,7 @@ export default function Admin() {
             { id: 'coupons', label: 'Promo Codes', icon: Percent },
             { id: 'banners', label: 'Homepage Banners', icon: ImageIcon },
             { id: 'pages', label: 'Static Pages', icon: FileText },
-            { id: 'returns', label: 'Returns Manager', icon: RotateCw },
+            { id: 'returns', label: 'Exchanges Manager', icon: RotateCw },
             { id: 'staff', label: 'Staff Management', icon: Users },
             { id: 'colors', label: 'Database Colors', icon: Settings },
             { id: 'sql', label: 'SQL DB Console', icon: Database },
@@ -3163,13 +3179,13 @@ export default function Admin() {
                   <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
                   <div className="p-5 pb-3 relative z-10 flex-grow flex flex-col justify-between">
                     <div>
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-pink-100/90">Pending Returns</span>
+                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-pink-100/90">Pending Exchanges</span>
                       <h3 className="text-3xl font-black font-mono mt-1 text-white drop-shadow-sm">
                         {returnsList.filter(r => r.status === 'pending').length}
                       </h3>
                     </div>
                     <p className="text-[10px] text-pink-100/80 font-mono mt-2 font-medium">
-                      Active return requests require review
+                      Active exchange requests require review
                     </p>
                   </div>
                   <RotateCw className="w-12 h-12 absolute right-4 top-4 opacity-10 text-white group-hover:opacity-20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" />
@@ -4951,8 +4967,8 @@ export default function Admin() {
           {activeTab === 'returns' && (
             <div className="space-y-6 animate-fade-in">
               <div>
-                <h1 className="text-2xl font-light text-slate-900 font-display italic">Returns Manager</h1>
-                <p className="text-[10px] text-slate-500 font-medium uppercase mt-0.5">Approve return requests, inspect customer reason notes and handle refund amounts</p>
+                <h1 className="text-2xl font-light text-slate-900 font-display italic">Exchanges Manager</h1>
+                <p className="text-[10px] text-slate-500 font-medium uppercase mt-0.5">Approve exchange requests, inspect customer reason notes and replacement products</p>
               </div>
 
               {/* Returns List */}
@@ -4963,8 +4979,8 @@ export default function Admin() {
                       <tr className="bg-slate-50 text-slate-400 border-b border-slate-100 font-mono">
                         <th className="p-3">Order Ref</th>
                         <th className="p-3">Customer</th>
-                        <th className="p-3">Return Reason</th>
-                        <th className="p-3">Refund Value</th>
+                        <th className="p-3">Exchange Reason</th>
+                        <th className="p-3">Details / Notes</th>
                         <th className="p-3">Date</th>
                         <th className="p-3">Status</th>
                         <th className="p-3 text-right">Actions</th>
@@ -4976,7 +4992,7 @@ export default function Admin() {
                           <td className="p-3 font-mono font-bold text-slate-900">{ret.order_number}</td>
                           <td className="p-3 font-semibold text-slate-800">{ret.reviewer_name}</td>
                           <td className="p-3 text-slate-500 max-w-xs truncate">{ret.reason}</td>
-                          <td className="p-3 font-mono font-bold text-slate-900">₹{(ret.refund_amount / 100).toFixed(2)}</td>
+                          <td className="p-3 text-slate-500 max-w-xs truncate">{ret.description || 'No additional details'}</td>
                           <td className="p-3 text-slate-400 text-[10px]">{new Date(ret.created_at).toLocaleDateString('en-IN')}</td>
                           <td className="p-3">
                             <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
@@ -5003,7 +5019,7 @@ export default function Admin() {
                       ))}
                       {returnsList.length === 0 && (
                         <tr>
-                          <td colSpan={7} className="py-24 text-center text-slate-400 italic">No return requests logged in registry.</td>
+                          <td colSpan={7} className="py-24 text-center text-slate-400 italic">No exchange requests logged in registry.</td>
                         </tr>
                       )}
                     </tbody>
@@ -6377,26 +6393,86 @@ export default function Admin() {
       {returnModalOpen && selectedReturn && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setReturnModalOpen(false)} />
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4 relative z-10 text-xs">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 relative z-10 text-xs text-slate-700 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h4 className="font-bold text-slate-900">Review Return Request</h4>
+              <h4 className="font-bold text-slate-900">Review Exchange Request</h4>
               <button onClick={() => setReturnModalOpen(false)} className="text-slate-400"><X className="w-5 h-5" /></button>
             </div>
             
             <form onSubmit={handleReturnSubmit} className="space-y-4">
               <div>
                 <p className="text-slate-500">Reason: <strong className="text-slate-800">"{selectedReturn.reason}"</strong></p>
-                <p className="text-slate-500 mt-1">Refund Amount: <strong className="text-slate-800">₹{(selectedReturn.refund_amount / 100).toFixed(2)}</strong></p>
+                <p className="text-slate-500 mt-1">Details: <strong className="text-slate-800">"{selectedReturn.description || 'No description provided'}"</strong></p>
               </div>
+
+              {/* Items details */}
+              {selectedReturn.items && selectedReturn.items.length > 0 && (
+                <div className="border border-slate-105 rounded-xl p-4 bg-slate-50 space-y-3">
+                  <h5 className="font-bold text-slate-800 uppercase tracking-wider">Exchange Specifications</h5>
+                  {selectedReturn.items.map((item: any, idx: number) => (
+                    <div key={idx} className="space-y-2">
+                      <div className="grid grid-cols-2 gap-4 border-b border-slate-150 pb-2">
+                        <div>
+                          <span className="block text-[10px] text-slate-400 font-bold uppercase">Original Item</span>
+                          <span className="font-semibold text-slate-800">{item.product_name || 'Product'}</span>
+                          <span className="block text-[10px] text-slate-400">Size: {item.size} | Color: {item.color || 'Default'}</span>
+                        </div>
+                        <div>
+                          <span className="block text-[10px] text-slate-400 font-bold uppercase">Replacement Item</span>
+                          <span className="font-semibold text-slate-800">{item.exchange_to_product_name || item.product_name || 'Product'}</span>
+                          <span className="block text-[10px] text-slate-400">Size: {item.exchange_to_size || 'N/A'} | Color: {item.exchange_to_color || 'Default'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Photo Proof Verification */}
+              {(() => {
+                const images = selectedReturn.images ? (() => {
+                  try {
+                    return JSON.parse(selectedReturn.images);
+                  } catch {
+                    return [];
+                  }
+                })() : [];
+                
+                if (images.length === 0) return null;
+                
+                return (
+                  <div className="space-y-2">
+                    <label className="block text-[9px] font-bold text-slate-400 uppercase">Verification Photos (Customer Proof)</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {images.map((imgUrl: string, idx: number) => (
+                        <a 
+                          key={idx} 
+                          href={imgUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="border border-slate-200 rounded-lg overflow-hidden h-24 flex items-center justify-center bg-slate-100 hover:border-blue-500 transition-all group relative"
+                        >
+                          <img 
+                            src={imgUrl} 
+                            alt={`proof-${idx}`} 
+                            className="object-cover w-full h-full"
+                          />
+                          <span className="absolute bottom-1 right-1 bg-black/60 text-white text-[8px] px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold uppercase">View</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div>
                 <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Set request status</label>
                 <select
                   value={returnStatus}
                   onChange={(e) => setReturnStatus(e.target.value as any)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-600"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-600 focus:outline-none"
                 >
-                  <option value="approved">Approve Refund & Accept Items</option>
+                  <option value="approved">Approve Exchange Request</option>
                   <option value="rejected">Reject & Deny Request</option>
                 </select>
               </div>
@@ -6406,8 +6482,8 @@ export default function Admin() {
                 <textarea
                   value={returnNotes}
                   onChange={(e) => setReturnNotes(e.target.value)}
-                  placeholder="Items returned in original condition / refund approved via razorpay API..."
-                  className="w-full h-16 bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900"
+                  placeholder="Items inspected / replacement item approved for dispatch..."
+                  className="w-full h-16 bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs text-slate-900 focus:outline-none"
                 />
               </div>
 
@@ -7030,7 +7106,7 @@ export default function Admin() {
                       { id: 'coupons', label: 'Promo Codes' },
                       { id: 'banners', label: 'Banners' },
                       { id: 'pages', label: 'Static Pages' },
-                      { id: 'returns', label: 'Returns' },
+                       { id: 'returns', label: 'Exchanges' },
                       { id: 'staff', label: 'Staff registry' },
                       { id: 'colors', label: 'Colors db' },
                       { id: 'sql', label: 'SQL console' },

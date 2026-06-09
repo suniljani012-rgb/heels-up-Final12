@@ -67,9 +67,12 @@ export async function returnsAdminRouter(request, env) {
 
         // Fetch items
         const items = await env.DB.prepare(`
-            SELECT ri.*, p.name as product_name, p.sku
+            SELECT ri.*,
+                   p.name as product_name, p.sku,
+                   rp.name as exchange_to_product_name, rp.sku as exchange_to_product_sku
             FROM exchange_items ri
             JOIN products p ON p.id = ri.product_id
+            LEFT JOIN products rp ON rp.id = ri.exchange_to_product_id
             WHERE ri.exchange_id = ?
         `).bind(id).all();
 
@@ -139,7 +142,7 @@ export async function returnsCustomerRouter(request, env) {
         if (authError) return authError;
 
         try {
-            const { order_id, reason, description = '', items = [] } = await request.json();
+            const { order_id, reason, description = '', items = [], images = [] } = await request.json();
             if (!order_id || !reason) return error('order_id and reason are required');
 
             // Verify order belongs to customer
@@ -154,17 +157,32 @@ export async function returnsCustomerRouter(request, env) {
             ).bind(order_id).first();
             if (existing) return error('An exchange request already exists for this order');
 
+            const imagesJson = JSON.stringify(images);
+
             const result = await env.DB.prepare(`
-                INSERT INTO exchanges (order_id, user_id, reason, description, status, created_at, updated_at)
-                VALUES (?, ?, ?, ?, 'pending', datetime('now'), datetime('now'))
+                INSERT INTO exchanges (order_id, user_id, reason, description, status, images, created_at, updated_at)
+                VALUES (?, ?, ?, ?, 'pending', ?, datetime('now'), datetime('now'))
                 RETURNING *
-            `).bind(order_id, user.id, reason, description).first();
+            `).bind(order_id, user.id, reason, description, imagesJson).first();
 
             // Save exchange items
             for (const item of items) {
-                await env.DB.prepare(
-                    'INSERT INTO exchange_items (exchange_id, product_id, size, color, qty, reason) VALUES (?, ?, ?, ?, ?, ?)'
-                ).bind(result.id, item.product_id, item.size || null, item.color || null, item.qty || 1, item.reason || reason).run();
+                await env.DB.prepare(`
+                    INSERT INTO exchange_items (
+                        exchange_id, product_id, size, color, qty, reason,
+                        exchange_to_product_id, exchange_to_size, exchange_to_color
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).bind(
+                    result.id,
+                    item.product_id,
+                    item.size || null,
+                    item.color || null,
+                    item.qty || 1,
+                    item.reason || reason,
+                    item.exchange_to_product_id || null,
+                    item.exchange_to_size || null,
+                    item.exchange_to_color || null
+                ).run();
             }
 
             return created(result, 'Exchange request submitted');

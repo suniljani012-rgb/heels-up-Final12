@@ -28,7 +28,7 @@ export async function categoriesRouter(request, env) {
             const { name, slug, description, image_url, sort_order, active } = await request.json();
             if (!name || !slug) return error('Name and slug are required');
             const result = await env.DB.prepare(
-                'INSERT INTO categories (name, slug, description, image_url, sort_order, active) VALUES (?, ?, ?, ?, ?, ?) RETURNING *'
+                "INSERT INTO categories (name, slug, description, image_url, sort_order, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *"
             ).bind(name, slug.toLowerCase(), description || null, image_url || null, sort_order || 0, active !== undefined ? (active ? 1 : 0) : 1).first();
             return created(result, 'Category created');
         } catch (e) {
@@ -44,7 +44,7 @@ export async function categoriesRouter(request, env) {
         const { name, slug, description, image_url, sort_order, active, is_active } = await request.json();
         const activeVal = active !== undefined ? active : is_active;
         await env.DB.prepare(
-            'UPDATE categories SET name=?, slug=?, description=?, image_url=?, sort_order=?, active=? WHERE id=?'
+            "UPDATE categories SET name=?, slug=?, description=?, image_url=?, sort_order=?, active=?, updated_at=datetime('now') WHERE id=?"
         ).bind(name, slug, description, image_url, sort_order, activeVal ? 1 : 0, id).run();
         return ok(null, 'Category updated');
     }
