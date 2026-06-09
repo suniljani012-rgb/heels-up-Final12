@@ -21,6 +21,7 @@ import { staffRouter } from './staff.js';
 import { settingsRouter } from './settings.js';
 import { announcementsRouter } from './announcements.js';
 import { inventoryRouter } from './misc.js';
+import { colorsRouter } from './colors.js';
 
 // ── New admin-only routers ───────────────────────────────────
 import { blogsAdminRouter } from './blogs.js';
@@ -132,6 +133,13 @@ export async function adminRouter(request, env) {
         const sub = path.replace('/api/admin/settings', '') || '/';
         const req = rewritePath(request, '/api/settings' + sub);
         return settingsRouter(req, env);
+    }
+
+    // ── /api/admin/colors/* → /api/colors/* ───────────────────
+    if (path.startsWith('/api/admin/colors')) {
+        const sub = path.replace('/api/admin/colors', '') || '/';
+        const req = rewritePath(request, '/api/colors' + sub);
+        return colorsRouter(req, env);
     }
 
     // ── /api/admin/announcements/* → /api/announcements/* ─────

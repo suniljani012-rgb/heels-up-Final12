@@ -24,23 +24,20 @@ interface ProductDetail {
   colors?: string[];
 }
 
+let globalColorMap: Record<string, string> = {}
+
 const getColorHex = (name: string) => {
   const clean = name.toLowerCase().trim()
-  const map: Record<string, string> = {
-    black: '#1a1a1a',
-    cream: '#f9f1e3',
-    white: '#ffffff',
-    cherry: '#7a1b32',
-    brown: '#8b5a2b',
-    nude: '#e3bc9a',
-    beige: '#f5f5dc',
-    tan: '#b08d57',
-    gold: '#d4af37',
-    silver: '#c0c0c0',
-    grey: '#808080',
-    pink: '#ffb6c1'
+  return globalColorMap[clean] || clean
+}
+
+const extractColorFromName = (name: string) => {
+  if (!name) return 'Default'
+  const parts = name.split(' - ')
+  if (parts.length > 1) {
+    return parts[parts.length - 1].trim()
   }
-  return map[clean] || clean
+  return 'Default'
 }
 
 interface Review {
@@ -68,11 +65,28 @@ export default function Product() {
   const [images, setImages] = useState<string[]>([])
   const [related, setRelated] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [colorsLoaded, setColorsLoaded] = useState(false)
 
   const [activeImage, setActiveImage] = useState('')
   const [selectedSize, setSelectedSize] = useState('')
   const [selectedColor, setSelectedColor] = useState('Default')
   const [qty, setQty] = useState(1)
+
+  useEffect(() => {
+    fetch('/api/colors')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const map: Record<string, string> = {}
+          data.data.forEach((c: any) => {
+            map[c.color_name.toLowerCase().trim()] = c.hex_code
+          })
+          globalColorMap = map
+          setColorsLoaded(true)
+        }
+      })
+      .catch(err => console.error("Error loading colors:", err))
+  }, [])
   const [showSizeGuide, setShowSizeGuide] = useState(false)
 
   // Review Form States
@@ -97,7 +111,7 @@ export default function Product() {
         setImages(parsed.images || [])
         if (parsed.images?.length > 0) setActiveImage(parsed.images[0])
         if (parsed.product.sizes?.length > 0) setSelectedSize(parsed.product.sizes[0])
-        if (parsed.product.colors?.length > 0) setSelectedColor(parsed.product.colors[0])
+        if (parsed.product.colors?.length > 0) setSelectedColor(extractColorFromName(parsed.product.name))
         setRelated(parsed.related || [])
         setLoading(false)
         hasCached = true
@@ -132,7 +146,7 @@ export default function Product() {
             setSelectedSize(detail.sizes[0])
           }
           if (detail.colors?.length > 0 && (!selectedColor || !hasCached)) {
-            setSelectedColor(detail.colors[0])
+            setSelectedColor(extractColorFromName(detail.name))
           }
 
           // Fetch related products
@@ -184,7 +198,11 @@ export default function Product() {
   }
 
   const inWishlist = hasItem(product.id)
-  const isOutOfStock = product.size_stock && selectedSize ? (product.size_stock[selectedSize] || 0) <= 0 : product.stock <= 0
+  const isOutOfStock = product.size_stock && selectedSize
+    ? (Array.isArray(product.size_stock)
+        ? (product.size_stock.find((s: any) => s.size_label === selectedSize)?.stock ?? 0) <= 0
+        : (product.size_stock[selectedSize] || 0) <= 0)
+    : product.stock <= 0
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -271,7 +289,7 @@ export default function Product() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-8 mt-12 min-h-screen relative select-none">
+    <div className="max-w-7xl mx-auto px-6 md:px-8 mt-12 min-h-screen relative select-none" data-colors-loaded={colorsLoaded}>
       {/* Product Detail Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Left: Image Gallery */}
@@ -341,7 +359,7 @@ export default function Product() {
                   <button
                     key={color}
                     onClick={() => handleColorChange(color)}
-                    className={`h-9 px-4 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                    className={`h-9 px-4 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-2 cursor-pointer ${
                       selectedColor === color
                         ? 'border-primary bg-primary text-white shadow-sm'
                         : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
@@ -372,7 +390,9 @@ export default function Product() {
               </div>
               <div className="flex flex-wrap gap-2.5">
                 {product.sizes.map((size) => {
-                  const sizeStock = product.size_stock?.[size] ?? 5
+                  const sizeStock = Array.isArray(product.size_stock)
+                    ? (product.size_stock.find((s: any) => s.size_label === size)?.stock ?? 5)
+                    : (product.size_stock?.[size] ?? 5)
                   const sizeOutOfStock = sizeStock <= 0
                   
                   return (

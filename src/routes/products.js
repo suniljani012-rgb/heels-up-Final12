@@ -19,12 +19,28 @@ function mapProduct(p, sizeStock = [], colors = []) {
   if (!p) return null;
   const sizes = safeJsonParse(p.sizes_json, []);
 
-  // Build size_stock map: { "36": 5, "37": 0, ... }
-  // If sizeStock rows provided, use them; else compute from product total stock evenly
+  // Build size_stock array & map
+  let sizeStockArray = [];
   let sizeStockMap = {};
   if (sizeStock && sizeStock.length > 0) {
     for (const row of sizeStock) {
+      sizeStockArray.push({
+        size_label: row.size_label,
+        stock: row.stock,
+        reserved: row.reserved || 0
+      });
       sizeStockMap[row.size_label] = row.stock;
+    }
+  } else {
+    // If no size-specific stocks are recorded, auto-distribute based on product total stock
+    const perSize = sizes.length ? Math.floor(Number(p.stock || 0) / sizes.length) : 0;
+    for (const s of sizes) {
+      sizeStockArray.push({
+        size_label: String(s),
+        stock: perSize,
+        reserved: 0
+      });
+      sizeStockMap[String(s)] = perSize;
     }
   }
 
@@ -58,7 +74,8 @@ function mapProduct(p, sizeStock = [], colors = []) {
     category_id: p.category_id || null,
     description: p.description || "",
     sizes: sizes,
-    size_stock: sizeStockMap,   // NEW: per-size stock map
+    size_stock: sizeStockArray,      // Array for Admin.tsx
+    size_stock_map: sizeStockMap,    // Object for Product.tsx
     images: safeJsonParse(p.images_json, p.image_url ? [p.image_url] : []),
     colors: colors,
   };
@@ -97,8 +114,7 @@ async function fetchSizeStockBatch(env, productIds) {
 
 function getBaseSku(sku) {
   if (!sku) return '';
-  const part = sku.split('-')[0].trim();
-  return part.replace(/^0+/, '');
+  return sku.split('-')[0].trim();
 }
 
 function extractColor(name) {
@@ -136,21 +152,34 @@ async function fetchColorVariants(env, product) {
 }
 
 // Helper: fetch distinct colors for multiple products as a map { productId: [colors] }
-async function fetchColorsBatch(env, productIds) {
-  if (!productIds.length) return {};
+async function fetchColorsBatch(env, products) {
+  if (!products || !products.length) return {};
   try {
-    const placeholders = productIds.map(() => '?').join(',');
     const res = await env.DB.prepare(
-      `SELECT DISTINCT product_id, color FROM inventory WHERE product_id IN (${placeholders}) ORDER BY product_id, color ASC`
-    ).bind(...productIds).all();
+      "SELECT id, name, sku, category FROM products WHERE active = 1"
+    ).bind().all();
+    const allActive = res.results || [];
+
     const map = {};
-    for (const row of (res.results || [])) {
-      if (!row.color || row.color === 'Default' || row.color === 'Nude/Default') continue;
-      if (!map[row.product_id]) map[row.product_id] = [];
-      map[row.product_id].push(row.color);
+    for (const p of products) {
+      const baseSku = getBaseSku(p.sku);
+      if (!baseSku) {
+        map[p.id] = [];
+        continue;
+      }
+      const variants = allActive.filter(v => v.category === p.category && getBaseSku(v.sku) === baseSku);
+      const colors = [];
+      for (const v of variants) {
+        const color = extractColor(v.name);
+        if (color && color !== 'Default' && color !== 'Nude/Default') {
+          colors.push(color);
+        }
+      }
+      map[p.id] = colors;
     }
     return map;
-  } catch {
+  } catch (e) {
+    console.error('fetchColorsBatch error:', e);
     return {};
   }
 }
@@ -158,10 +187,24 @@ async function fetchColorsBatch(env, productIds) {
 // Helper: fetch distinct colors for a single product
 async function fetchColorsForProduct(env, productId) {
   try {
+    const product = await env.DB.prepare("SELECT sku, category FROM products WHERE id = ?").bind(productId).first();
+    if (!product) return [];
+    const baseSku = getBaseSku(product.sku);
+    if (!baseSku) return [];
+
     const res = await env.DB.prepare(
-      "SELECT DISTINCT color FROM inventory WHERE product_id = ? ORDER BY color ASC"
-    ).bind(productId).all();
-    return (res.results || []).map(r => r.color).filter(c => c && c !== 'Default' && c !== 'Nude/Default');
+      "SELECT name, sku FROM products WHERE category = ? AND active = 1"
+    ).bind(product.category).all();
+
+    const variants = (res.results || []).filter(p => getBaseSku(p.sku) === baseSku);
+    const colors = [];
+    for (const v of variants) {
+      const color = extractColor(v.name);
+      if (color && color !== 'Default' && color !== 'Nude/Default') {
+        colors.push(color);
+      }
+    }
+    return colors;
   } catch {
     return [];
   }
@@ -281,7 +324,7 @@ export async function productsRouter(request, env) {
             const rawProducts = productsRes.results || [];
             const productIds = rawProducts.map(p => p.id);
             const sizeStockBatch = await fetchSizeStockBatch(env, productIds);
-            const colorsBatch = await fetchColorsBatch(env, productIds);
+            const colorsBatch = await fetchColorsBatch(env, rawProducts);
             const products = rawProducts.map(p => mapProduct(p, sizeStockBatch[p.id] || [], colorsBatch[p.id] || []));
 
             return list(products, {

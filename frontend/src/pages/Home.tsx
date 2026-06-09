@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Star, Heart, ArrowRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Star, Heart, ArrowRight, X } from 'lucide-react'
 import { useWishlistStore } from '../store/useWishlistStore'
 import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
@@ -20,6 +20,61 @@ interface Product {
   colors?: string[];
 }
 
+interface Review {
+  id: number;
+  rating: number;
+  title: string | null;
+  body: string | null;
+  created_at: string;
+  reviewer_name: string;
+  product_name: string | null;
+  product_id: number | null;
+}
+
+const getInitials = (name: string) => {
+  if (!name) return 'U'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+  return parts[0][0].toUpperCase()
+}
+
+const fallbackReviews: Review[] = [
+  {
+    id: -1,
+    rating: 5,
+    title: "Amazing wedding heels",
+    body: "HeelsUp has become my go-to store for weddings! The quality is amazing, and their wedges are super comfortable for dancing all night. Love it!",
+    reviewer_name: "Ananya Kapoor",
+    product_name: "Premium Heels",
+    product_id: null,
+    created_at: "Jaipur"
+  },
+  {
+    id: -2,
+    rating: 5,
+    title: "Super fast delivery",
+    body: "Ordered flat sandals and a tote bag. Delivery was fast, and the items were packed beautifully. Highly recommend!",
+    reviewer_name: "Pooja Singh",
+    product_name: "Sandals & Tote",
+    product_id: null,
+    created_at: "Jodhpur"
+  },
+  {
+    id: -3,
+    rating: 5,
+    title: "Smooth size exchange",
+    body: "Size exchange process was extremely smooth. I contacted support, and they arranged a reverse pickup quickly. The fits are spot on!",
+    reviewer_name: "Rhea Vyas",
+    product_name: "Designer Mules",
+    product_id: null,
+    created_at: "Mumbai"
+  }
+]
+
+let globalColorMap: Record<string, string> = {}
+
 const getColorHex = (name: string) => {
   const clean = name.toLowerCase().trim()
   const map: Record<string, string> = {
@@ -36,13 +91,18 @@ const getColorHex = (name: string) => {
     grey: '#808080',
     pink: '#ffb6c1'
   }
-  return map[clean] || clean
+  return globalColorMap[clean] || map[clean] || clean
 }
 
 export default function Home() {
   const { toggleItem, hasItem } = useWishlistStore()
   const { addItem } = useCartStore()
   const { showToast } = useToastStore()
+
+  // States
+  const [colorsLoaded, setColorsLoaded] = useState(false)
+  const [liveReviews, setLiveReviews] = useState<Review[]>([])
+  const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
 
   const [banners, setBanners] = useState<any[]>(() => {
     try {
@@ -127,6 +187,33 @@ export default function Home() {
         if (catData.success && catData.data) {
           setCategories(catData.data)
           localStorage.setItem('heelsup_cached_categories', JSON.stringify(catData.data))
+        }
+
+        // Fetch colors mapping
+        try {
+          const colorsRes = await fetch('/api/colors')
+          const colorsData = await colorsRes.json()
+          if (colorsData.success && colorsData.data) {
+            const map: Record<string, string> = {}
+            colorsData.data.forEach((c: any) => {
+              map[c.color_name.toLowerCase().trim()] = c.hex_code
+            })
+            globalColorMap = map
+            setColorsLoaded(true)
+          }
+        } catch (colorsErr) {
+          console.error("Error loading colors:", colorsErr)
+        }
+
+        // Fetch latest reviews
+        try {
+          const reviewsRes = await fetch('/api/reviews/latest')
+          const reviewsData = await reviewsRes.json()
+          if (reviewsData.success && reviewsData.data) {
+            setLiveReviews(reviewsData.data)
+          }
+        } catch (reviewsErr) {
+          console.error("Error loading latest reviews:", reviewsErr)
         }
 
         // Fetch public settings for dynamic Deal of the Day banner
@@ -231,7 +318,7 @@ export default function Home() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full" data-colors-loaded={colorsLoaded}>
       {/* Hero Carousel */}
       <section className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden bg-gray-100 select-none">
         <AnimatePresence mode="wait">
@@ -476,7 +563,7 @@ export default function Home() {
       </section>
 
       {/* Customer Testimonials Carousel */}
-      <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24 select-none">
+      <section className="max-w-7xl mx-auto px-6 md:px-8 mt-24 select-none mb-24">
         <div className="text-center max-w-xl mx-auto mb-16">
           <span className="text-xs uppercase tracking-widest text-[#c9a96e] font-bold">Client Diaries</span>
           <h2 className="text-3xl font-light text-gray-900 mt-2 font-display italic">What Our Customers Say</h2>
@@ -484,50 +571,162 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-            <p className="text-xs text-gray-600 leading-relaxed italic">
-              "HeelsUp has become my go-to store for weddings! The quality is amazing, and their wedges are super comfortable for dancing all night. Love it!"
-            </p>
-            <div className="flex items-center gap-3 mt-6">
-              <div className="h-8 w-8 rounded-full bg-[#ead2ae] text-gray-700 font-bold text-xs flex items-center justify-center">
-                AK
-              </div>
+          {(liveReviews.length > 0 ? liveReviews.slice(0, 3) : fallbackReviews).map((rev) => (
+            <div key={rev.id} className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
               <div>
-                <h4 className="text-xs font-semibold text-gray-900">Ananya Kapoor</h4>
-                <span className="text-[9px] text-gray-400 font-bold uppercase">Verified Buyer &middot; Jaipur</span>
+                <div className="flex items-center gap-1 text-amber-500 mb-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-amber-500 text-amber-500' : 'text-gray-200'}`}
+                    />
+                  ))}
+                </div>
+                {rev.title && <h4 className="text-xs font-bold text-gray-900 mb-1.5">{rev.title}</h4>}
+                <p className="text-xs text-gray-600 leading-relaxed italic">
+                  "{rev.body}"
+                </p>
+                {rev.product_name && (
+                  <div className="mt-2 text-[10px] text-gray-400 font-medium">
+                    Product:{" "}
+                    {rev.product_id ? (
+                      <Link to={`/product?id=${rev.product_id}`} className="text-primary hover:underline font-semibold">
+                        {rev.product_name}
+                      </Link>
+                    ) : (
+                      <span className="font-semibold text-gray-500">{rev.product_name}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-3 mt-6">
+                <div className="h-8 w-8 rounded-full bg-[#ead2ae] text-gray-700 font-bold text-xs flex items-center justify-center">
+                  {getInitials(rev.reviewer_name)}
+                </div>
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-900">{rev.reviewer_name}</h4>
+                  <span className="text-[9px] text-gray-400 font-bold uppercase">
+                    Verified Buyer &middot; {rev.created_at ? (rev.created_at.includes('-') || rev.created_at.includes('/') ? new Date(rev.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : rev.created_at) : 'India'}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-            <p className="text-xs text-gray-600 leading-relaxed italic">
-              "Ordered flat sandals and a tote bag. Delivery was fast, and the items were packed beautifully. Highly recommend!"
-            </p>
-            <div className="flex items-center gap-3 mt-6">
-              <div className="h-8 w-8 rounded-full bg-[#ead2ae] text-gray-700 font-bold text-xs flex items-center justify-center">
-                PS
-              </div>
-              <div>
-                <h4 className="text-xs font-semibold text-gray-900">Pooja Singh</h4>
-                <span className="text-[9px] text-gray-400 font-bold uppercase">Verified Buyer &middot; Jodhpur</span>
-              </div>
-            </div>
-          </div>
-          <div className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
-            <p className="text-xs text-gray-600 leading-relaxed italic">
-              "Size exchange process was extremely smooth. I contacted support, and they arranged a reverse pickup quickly. The fits are spot on!"
-            </p>
-            <div className="flex items-center gap-3 mt-6">
-              <div className="h-8 w-8 rounded-full bg-[#ead2ae] text-gray-700 font-bold text-xs flex items-center justify-center">
-                RV
-              </div>
-              <div>
-                <h4 className="text-xs font-semibold text-gray-900">Rhea Vyas</h4>
-                <span className="text-[9px] text-gray-400 font-bold uppercase">Verified Buyer &middot; Mumbai</span>
-              </div>
-            </div>
-          </div>
+          ))}
+        </div>
+
+        <div className="flex justify-center mt-12">
+          <button
+            onClick={() => setReviewsModalOpen(true)}
+            className="inline-flex items-center gap-2 px-6 py-2.5 border border-primary text-primary hover:bg-primary hover:text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm"
+          >
+            View All Reviews
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </section>
+
+      {/* View All Reviews Modal */}
+      <AnimatePresence>
+        {reviewsModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setReviewsModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              transition={{ type: 'spring', duration: 0.4 }}
+              className="relative w-full max-w-2xl bg-white rounded-2xl shadow-xl z-10 max-h-[85vh] flex flex-col overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">What Our Customers Say</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Showing {liveReviews.length > 0 ? liveReviews.length : fallbackReviews.length} reviews
+                  </p>
+                </div>
+                <button
+                  onClick={() => setReviewsModalOpen(false)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Reviews List */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {(liveReviews.length > 0 ? liveReviews : fallbackReviews).map((rev) => (
+                  <div key={rev.id} className="p-5 bg-gray-50/50 rounded-xl border border-gray-100/80 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-1 text-amber-500">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-amber-500 text-amber-500' : 'text-gray-200'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-gray-400 font-bold uppercase">
+                          {rev.created_at ? (rev.created_at.includes('-') || rev.created_at.includes('/') ? new Date(rev.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : rev.created_at) : 'India'}
+                        </span>
+                      </div>
+                      {rev.title && <h4 className="text-sm font-bold text-gray-900 mb-1.5">{rev.title}</h4>}
+                      <p className="text-xs text-gray-600 leading-relaxed italic">
+                        "{rev.body}"
+                      </p>
+                      {rev.product_name && (
+                        <div className="mt-3 text-[10px] text-gray-400 font-medium">
+                          Product:{" "}
+                          {rev.product_id ? (
+                            <Link
+                              to={`/product?id=${rev.product_id}`}
+                              onClick={() => setReviewsModalOpen(false)}
+                              className="text-primary hover:underline font-semibold"
+                            >
+                              {rev.product_name}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold text-gray-500">{rev.product_name}</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100/50">
+                      <div className="h-8 w-8 rounded-full bg-[#ead2ae] text-gray-700 font-bold text-xs flex items-center justify-center">
+                        {getInitials(rev.reviewer_name)}
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-900">{rev.reviewer_name}</h4>
+                        <span className="text-[9px] text-gray-400 font-bold uppercase">Verified Buyer</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button
+                  onClick={() => setReviewsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-900 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors shadow-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -205,12 +205,20 @@ export async function dashboardStatsRouter(request, env) {
                 WHERE o.created_at BETWEEN ? AND ? AND o.payment_status = 'paid'
                 GROUP BY p.id ORDER BY revenue DESC LIMIT 8
             `).bind(fromDt, toDt),
+            // 4: POS stats in period
+            env.DB.prepare(`
+                SELECT
+                    COUNT(*) as pos_sales_count,
+                    COALESCE(SUM(total), 0) as total_pos_sales
+                FROM offline_sales WHERE created_at BETWEEN ? AND ?
+            `).bind(fromDt, toDt)
         ]);
 
         const s = results[0].results[0] || {};
         const totalProducts = results[1].results[0]?.cnt || 0;
         const recentOrders = results[2].results || [];
         const topProducts = results[3].results || [];
+        const posStats = results[4].results[0] || { pos_sales_count: 0, total_pos_sales: 0 };
 
         return ok({
             totalProducts,
@@ -227,6 +235,11 @@ export async function dashboardStatsRouter(request, env) {
             },
             recentOrders,
             topProducts,
+            // POS stats mapping for frontend widgets
+            total_sales: s.total_revenue || 0,
+            orders_count: s.total_orders || 0,
+            total_pos_sales: posStats.total_pos_sales || 0,
+            pos_sales_count: posStats.pos_sales_count || 0
         });
     } catch (e) {
         console.error('Dashboard stats error:', e);

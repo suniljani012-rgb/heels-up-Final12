@@ -20,23 +20,11 @@ interface Product {
   colors?: string[];
 }
 
+let globalColorMap: Record<string, string> = {}
+
 const getColorHex = (name: string) => {
   const clean = name.toLowerCase().trim()
-  const map: Record<string, string> = {
-    black: '#1a1a1a',
-    cream: '#f9f1e3',
-    white: '#ffffff',
-    cherry: '#7a1b32',
-    brown: '#8b5a2b',
-    nude: '#e3bc9a',
-    beige: '#f5f5dc',
-    tan: '#b08d57',
-    gold: '#d4af37',
-    silver: '#c0c0c0',
-    grey: '#808080',
-    pink: '#ffb6c1'
-  }
-  return map[clean] || clean
+  return globalColorMap[clean] || clean
 }
 
 export default function Shop() {
@@ -46,6 +34,7 @@ export default function Shop() {
   const { showToast } = useToastStore()
 
   // States
+  const [colorsLoaded, setColorsLoaded] = useState(false)
   const [products, setProducts] = useState<Product[]>(() => {
     try {
       const cached = localStorage.getItem('heelsup_cached_shop_products')
@@ -89,6 +78,22 @@ export default function Shop() {
     }
   })
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/colors')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          const map: Record<string, string> = {}
+          data.data.forEach((c: any) => {
+            map[c.color_name.toLowerCase().trim()] = c.hex_code
+          })
+          globalColorMap = map
+          setColorsLoaded(true)
+        }
+      })
+      .catch(err => console.error("Error loading colors:", err))
+  }, [])
 
   useEffect(() => {
     fetch('/api/categories')
@@ -210,7 +215,7 @@ export default function Shop() {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-8 mt-12 min-h-screen">
+    <div className="max-w-7xl mx-auto px-6 md:px-8 mt-12 min-h-screen" data-colors-loaded={colorsLoaded}>
       {/* Title */}
       <div className="border-b border-gray-100 pb-6 mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

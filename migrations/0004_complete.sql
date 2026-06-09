@@ -140,7 +140,7 @@ CREATE INDEX IF NOT EXISTS idx_blog_status ON blog_posts(status);
 -- ============================================================
 -- CMS PAGES (About, FAQ, Policy, etc.)
 -- ============================================================
-CREATE TABLE IF NOT EXISTS cms_pages (
+CREATE TABLE IF NOT EXISTS pages (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS cms_pages (
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
-CREATE INDEX IF NOT EXISTS idx_cms_pages_slug ON cms_pages(slug);
+CREATE INDEX IF NOT EXISTS idx_pages_slug ON pages(slug);
 
 -- ============================================================
 -- TAX RULES

@@ -61,30 +61,29 @@ export async function rateLimit(request, env, {
 
 /**
  * Strict rate limit for auth endpoints (login, register, otp)
- * 5 requests per minute per IP
+ * 30 requests per minute per IP (increased to prevent lockout during testing/OTP flows)
  */
 export async function authRateLimit(request, env) {
-    return rateLimit(request, env, { limit: 5, window: 60, prefix: 'rl:auth' });
+    return rateLimit(request, env, { limit: 30, window: 60, prefix: 'rl:auth' });
 }
 
 /**
- * Standard API rate limit — 100 req/min
+ * Standard API rate limit — 300 req/min
  */
 export async function apiRateLimit(request, env) {
-    return rateLimit(request, env, { limit: 100, window: 60, prefix: 'rl:api' });
+    return rateLimit(request, env, { limit: 300, window: 60, prefix: 'rl:api' });
 }
 
 /**
- * Admin rate limit — 200 req/min (more lenient for admins)
+ * Admin rate limit — 600 req/min (more lenient for admins)
  */
 export async function adminRateLimit(request, env) {
-    return rateLimit(request, env, { limit: 200, window: 60, prefix: 'rl:admin' });
+    return rateLimit(request, env, { limit: 600, window: 60, prefix: 'rl:admin' });
 }
 
 /**
- * Payment endpoint rate limit — very strict
- * 10 requests per minute
+ * Payment endpoint rate limit — 30 req/min
  */
 export async function paymentRateLimit(request, env) {
-    return rateLimit(request, env, { limit: 10, window: 60, prefix: 'rl:pay' });
+    return rateLimit(request, env, { limit: 30, window: 60, prefix: 'rl:pay' });
 }

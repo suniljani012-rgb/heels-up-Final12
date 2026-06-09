@@ -45,35 +45,52 @@ export async function settingsRouter(request, env) {
         const { error: authError } = await requireAdmin(request, env);
         if (authError) return authError;
         try {
-            const rows = await env.DB.prepare('SELECT key, value FROM settings').all();
-            const settings = {};
-            for (const row of (rows.results || [])) {
-                try { settings[row.key] = JSON.parse(row.value); } catch { settings[row.key] = row.value; }
-            }
-            return ok(settings);
+            const rows = await env.DB.prepare('SELECT key, value, description FROM settings').all();
+            const listData = (rows.results || []).map(row => {
+                let parsedVal;
+                try { parsedVal = JSON.parse(row.value); } catch { parsedVal = row.value; }
+                return {
+                    key: row.key,
+                    value: parsedVal,
+                    description: row.description || row.key
+                };
+            });
+            return ok(listData);
         } catch (e) { return serverError('Failed to fetch settings'); }
     }
 
-    // PUT /api/settings — admin update (partial merge)
+    // PUT /api/settings — admin update (partial merge or list update)
     if (path === '/' && method === 'PUT') {
         const { user, error: authError } = await requireAdmin(request, env);
         if (authError) return authError;
         try {
             const body = await request.json();
-            // Save each key individually using upsert
-            const updates = Object.entries(body || {});
+            let updates = [];
+            
+            if (body && Array.isArray(body.settings)) {
+                updates = body.settings;
+            } else if (body && Array.isArray(body)) {
+                updates = body;
+            } else if (body) {
+                updates = Object.entries(body).map(([key, value]) => ({ key, value }));
+            }
+
             if (!updates.length) return error('No settings provided', 400);
 
-            for (const [key, value] of updates) {
+            for (const item of updates) {
+                if (!item || !item.key) continue;
+                const key = item.key;
+                const value = item.value;
                 let serializedValue;
                 if (typeof value === 'object' && value !== null) {
                     serializedValue = JSON.stringify(value);
                 } else {
                     serializedValue = String(value);
                 }
-                await env.DB.prepare(
-                    "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
-                ).bind(key, serializedValue).run();
+                await env.DB.run(
+                    "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                    key, serializedValue
+                );
             }
             return ok(null, 'Settings updated');
         } catch (e) { return serverError('Failed to update settings'); }

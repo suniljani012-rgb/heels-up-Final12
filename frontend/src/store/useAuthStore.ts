@@ -7,6 +7,8 @@ export interface User {
   email: string;
   phone?: string;
   role: 'customer' | 'staff' | 'manager' | 'admin';
+  firstName?: string;
+  lastName?: string;
 }
 
 interface AuthState {

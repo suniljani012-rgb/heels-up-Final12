@@ -64,6 +64,25 @@ export async function couponsRouter(request, env) {
         }
     }
 
+    // PUT /api/coupons/:id
+    if (path.match(/^\/\d+$/) && method === 'PUT') {
+        const { user, error: authError } = await requireAdmin(request, env);
+        if (authError) return authError;
+        const id = path.slice(1);
+        try {
+            const { code, type, value, min_order, max_uses, expires_at, description, active } = await request.json();
+            if (!code || !type || value === undefined) return error('Code, type, and value required');
+            await env.DB.prepare(
+                'UPDATE coupons SET code=?, type=?, value=?, min_order=?, max_uses=?, expires_at=?, description=?, active=? WHERE id=?'
+            ).bind(code.toUpperCase(), type, value, min_order || 0, max_uses || null, expires_at || null, description || '', active ? 1 : 0, id).run();
+            const result = await env.DB.prepare('SELECT * FROM coupons WHERE id = ?').bind(id).first();
+            return ok(result, 'Coupon updated');
+        } catch (e) {
+            console.error('Coupon update error:', e);
+            return serverError('Failed to update coupon');
+        }
+    }
+
     // DELETE /api/coupons/:id
     if (path.match(/^\/\d+$/) && method === 'DELETE') {
         const { user, error: authError } = await requireAdmin(request, env);

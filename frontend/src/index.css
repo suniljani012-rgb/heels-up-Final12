@@ -49,6 +49,7 @@
   --font-display: 'Aptos', 'Cormorant Garamond', 'Georgia', serif;
   --font-heading: 'Aptos', 'Playfair Display', 'Georgia', serif;
   --font-body: 'Aptos', 'DM Sans', 'Helvetica Neue', sans-serif;
+  --font-sans: 'Aptos', system-ui, -apple-system, sans-serif;
 }
 
 
@@ -123,4 +124,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .print-only {
   display: none;
+}
+
+/* Force Aptos Font on Admin Console */
+.admin-aptos-container,
+.admin-aptos-container :not(.font-mono) {
+  font-family: 'Aptos', system-ui, -apple-system, sans-serif !important;
 }

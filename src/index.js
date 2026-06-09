@@ -24,6 +24,8 @@ import { blogsPublicRouter } from './routes/blogs.js';
 import { pagesPublicRouter } from './routes/pages.js';
 import { adminRouter } from './routes/admin.js';
 import { announcementsRouter } from './routes/announcements.js';
+import { colorsRouter } from './routes/colors.js';
+import { addressesRouter } from './routes/addresses.js';
 import { json } from './utils/response.js';
 import { authRateLimit, apiRateLimit, paymentRateLimit, adminRateLimit } from './middleware/ratelimit.js';
 
@@ -58,10 +60,12 @@ export default {
       const isCacheable = method === "GET" && !pathNormalized.startsWith("/api/admin") && (
         pathNormalized === "/api/banners" ||
         pathNormalized === "/api/categories" ||
+        pathNormalized === "/api/colors" ||
         pathNormalized === "/api/settings" ||
         pathNormalized === "/api/settings/public" ||
         pathNormalized === "/api/products" ||
         pathNormalized === "/api/reviews" ||
+        pathNormalized === "/api/reviews/latest" ||
         pathNormalized === "/api/search" ||
         pathNormalized === "/api/upload" ||
         /^\/api\/products\/(\d+)$/.test(pathNormalized) ||
@@ -126,6 +130,8 @@ export default {
         }
         else if (path.startsWith('/api/auth')) response = await authRouter(request, env);
         else if (path.startsWith('/api/products')) response = await productsRouter(request, env);
+        else if (path.startsWith('/api/colors')) response = await colorsRouter(request, env);
+        else if (path.startsWith('/api/addresses')) response = await addressesRouter(request, env);
         else if (path.startsWith('/api/orders')) response = await ordersRouter(request, env);
         else if (path.startsWith('/api/customers')) response = await customersRouter(request, env);
         else if (path.startsWith('/api/cart')) response = await cartRouter(request, env);

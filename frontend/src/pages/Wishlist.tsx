@@ -54,7 +54,7 @@ export default function Wishlist() {
     showToast('info', 'Removed from Wishlist', `${name} has been removed.`)
   }
 
-  const handleAddToCart = (e: any, prod: Product) => {
+  const handleAddToCart = async (e: any, prod: Product) => {
     e.preventDefault()
     addItem({
       id: prod.id,
@@ -66,7 +66,9 @@ export default function Wishlist() {
       img: prod.images?.[0] || 'assets/placeholder.jpg',
       category: prod.category
     })
-    showToast('success', 'Added to Bag 🛍️', `${prod.name} (Size 38) added to your shopping bag.`)
+    // Remove from wishlist
+    await toggleItem(prod.id)
+    showToast('success', 'Added to Bag 🛍️', `${prod.name} (Size 38) added to your shopping bag & removed from wishlist.`)
   }
 
   return (

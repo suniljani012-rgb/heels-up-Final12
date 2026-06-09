@@ -5,7 +5,7 @@ import { ok, list, created, error, serverError } from '../utils/response.js';
 async function genOrderNumber(env) {
     const today = new Date();
     const prefix = `HU-OFL-${today.getUTCFullYear()}`;
-    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM offline_sales WHERE bill_number LIKE ?").bind(`${prefix}%`).first();
+    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM offline_sales WHERE sale_number LIKE ?").bind(`${prefix}%`).first();
     const seq = String((row?.c || 0) + 1).padStart(4, "0");
     return `${prefix}${seq}`;
 }
@@ -59,19 +59,20 @@ export async function posRouter(request, env) {
 
             const discountAmt = discount || 0;
             const total = subtotal - discountAmt;
-            const billNumber = await genOrderNumber(env);
+            const saleNumber = await genOrderNumber(env);
+            const itemsJson = JSON.stringify(processedItems);
 
-            // Insert offline_sales
+            // Insert offline_sales matching remote schema
             const saleRes = await env.DB.prepare(`
                 INSERT INTO offline_sales (
-                    bill_number, offline_customer_id, customer_name, customer_phone,
-                    subtotal, discount, total, payment_method, payment_reference,
-                    served_by_staff_id, notes, is_exchange, original_bill_number, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                    sale_number, customer_name, customer_phone, items_json,
+                    subtotal, discount, total, payment_method, notes,
+                    created_by, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
             `).bind(
-                billNumber, null, customer_name || 'Walk-in', customer_phone || null,
-                subtotal, discountAmt, total, payment_method || 'cash', null,
-                servedByStaffId, notes || null, 0, null
+                saleNumber, customer_name || 'Walk-in', customer_phone || null, itemsJson,
+                subtotal, discountAmt, total, payment_method || 'Cash', notes || null,
+                user.id
             ).run();
 
             const saleId = saleRes.meta?.last_row_id;
@@ -113,11 +114,11 @@ export async function posRouter(request, env) {
                 try {
                     await env.DB.prepare(
                         "INSERT INTO inventory_log (product_id, product_name, change_type, quantity_before, quantity_change, quantity_after, reason, created_at) VALUES (?, ?, 'sale', ?, ?, ?, ?, datetime('now'))"
-                    ).bind(item.product_id, prod ? prod.name : 'Unknown Product', beforeStock, -item.quantity, afterStock, `POS sale: Bill ${billNumber}`).run();
+                    ).bind(item.product_id, prod ? prod.name : 'Unknown Product', beforeStock, -item.quantity, afterStock, `POS sale: Bill ${saleNumber}`).run();
                 } catch (_) { /* log non-critical */ }
             }
 
-            return created({ bill_number: billNumber, sale_id: saleId, total }, 'POS sale recorded');
+            return created({ bill_number: saleNumber, sale_id: saleId, total }, 'POS sale recorded');
         } catch (e) {
             console.error('POS sale error:', e);
             return serverError('Failed to record sale');
@@ -129,8 +130,10 @@ export async function posRouter(request, env) {
         const { user, error: authError } = await requireAdmin(request, env);
         if (authError) return authError;
         try {
+            const all = url.searchParams.get('all') === 'true';
+            const limit = all ? 1000 : parseInt(url.searchParams.get('limit') || '100');
             const sales = await env.DB.prepare(
-                "SELECT * FROM offline_sales ORDER BY id DESC LIMIT 50"
+                `SELECT * FROM offline_sales ORDER BY id DESC LIMIT ${limit}`
             ).all();
             return list(sales.results || []);
         } catch (e) {

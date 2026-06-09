@@ -7,6 +7,27 @@ export async function reviewsRouter(request, env) {
     const path = url.pathname.replace('/api/reviews', '') || '/';
     const method = request.method;
 
+    // GET /api/reviews/latest — latest approved reviews (publicly accessible)
+    if (path === '/latest' && method === 'GET') {
+        try {
+            const reviews = await env.DB.prepare(
+                `SELECT r.id, r.rating, r.title, r.body, r.created_at, 
+                        (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name,
+                        p.name as product_name, p.id as product_id
+                 FROM product_reviews r 
+                 LEFT JOIN users u ON r.user_id = u.id
+                 LEFT JOIN products p ON r.product_id = p.id
+                 WHERE r.status = 'approved' 
+                 ORDER BY r.created_at DESC 
+                 LIMIT 20`
+            ).all();
+            return list(reviews.results || []);
+        } catch (e) {
+            console.error('Fetch latest reviews error:', e);
+            return serverError('Failed to fetch latest reviews');
+        }
+    }
+
     // GET /api/reviews?product_id=X
     if (path === '/' && method === 'GET') {
         const productId = url.searchParams.get('product_id');

@@ -1,16 +1,26 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Tag, Heart } from 'lucide-react'
 import { useCartStore } from '../store/useCartStore'
+import { useWishlistStore } from '../store/useWishlistStore'
 import { useToastStore } from '../store/useToastStore'
 import { useAuthStore } from '../store/useAuthStore'
 import HeicImage from '../components/HeicImage'
 
 export default function Cart() {
   const { items, updateQty, removeItem, getCartSubtotal, clearCart } = useCartStore()
+  const { toggleItem, hasItem } = useWishlistStore()
   const { showToast } = useToastStore()
   const navigate = useNavigate()
   const { token } = useAuthStore()
+
+  const handleMoveToWishlist = async (id: number, name: string, color: string, size: string) => {
+    if (!hasItem(id)) {
+      await toggleItem(id)
+    }
+    removeItem(id, color, size)
+    showToast('success', 'Moved to Wishlist ❤️', `${name} has been moved to your wishlist.`)
+  }
 
   // Coupon states
   const [couponCode, setCouponCode] = useState('')
@@ -63,6 +73,13 @@ export default function Cart() {
   }
 
   const handleProceedToCheckout = () => {
+    // Check if any cart items are out of stock
+    const hasOutOfStock = items.some(item => item.available_stock !== undefined && item.available_stock <= 0)
+    if (hasOutOfStock) {
+      showToast('warning', 'Out of Stock Items', 'Please remove or move out-of-stock items to your wishlist before checking out.')
+      return
+    }
+
     if (!token) {
       showToast('info', 'Sign In Required 🔐', 'Please sign in to your account to proceed to checkout.')
       navigate('/login?redirect=/checkout')
@@ -92,68 +109,90 @@ export default function Cart() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Items list */}
           <div className="lg:col-span-8 space-y-4">
-            {items.map((item) => (
-              <div
-                key={`${item.id}-${item.color}-${item.size}`}
-                className="flex flex-col sm:flex-row gap-4 p-4 border border-gray-100 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow relative"
-              >
-                <HeicImage
-                  src={item.img}
-                  alt={item.name}
-                  className="w-24 h-24 object-cover bg-gray-50 rounded-lg flex-shrink-0 mx-auto sm:mx-0"
-                />
+            {items.map((item) => {
+              const isOutOfStock = item.available_stock !== undefined && item.available_stock <= 0
 
-                <div className="flex-1 flex flex-col justify-between text-center sm:text-left">
-                  <div>
-                    <div className="flex flex-col sm:flex-row justify-between items-start gap-1">
-                      <div>
-                        <h3 className="text-sm font-bold text-gray-900 leading-tight">{item.name}</h3>
-                        <p className="text-[10px] text-gray-500 mt-1 capitalize">
-                          {item.category} &middot; Color: {item.color} &middot; Size: {item.size}
-                        </p>
-                      </div>
-                      <span className="text-sm font-bold text-gray-900 mt-2 sm:mt-0 self-center sm:self-start">
-                        ₹{((item.price * item.qty) / 100).toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center border border-gray-200 rounded-md bg-[#faf8f5] mx-auto sm:mx-0">
-                      <button
-                        onClick={() => updateQty(item.id, item.color, item.size, -1)}
-                        className="p-1 px-2.5 text-gray-500 hover:text-gray-900 transition-colors"
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <span className="text-xs font-semibold px-2.5 text-gray-800">{item.qty}</span>
-                      <button
-                        onClick={() => updateQty(item.id, item.color, item.size, 1)}
-                        className="p-1 px-2.5 text-gray-500 hover:text-gray-900 transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                    
-                    <button
-                      onClick={() => removeItem(item.id, item.color, item.size)}
-                      className="text-gray-400 hover:text-rose-600 p-1.5 rounded-full transition-colors hidden sm:block"
-                      title="Remove item"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Mobile trash button */}
-                <button
-                  onClick={() => removeItem(item.id, item.color, item.size)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-rose-600 sm:hidden"
+              return (
+                <div
+                  key={`${item.id}-${item.color}-${item.size}`}
+                  className="flex flex-col sm:flex-row gap-4 p-4 border border-gray-100 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow relative"
                 >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+                  <HeicImage
+                    src={item.img}
+                    alt={item.name}
+                    className="w-24 h-24 object-cover bg-gray-50 rounded-lg flex-shrink-0 mx-auto sm:mx-0"
+                  />
+
+                  <div className="flex-1 flex flex-col justify-between text-center sm:text-left">
+                    <div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-1">
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
+                            <h3 className="text-sm font-bold text-gray-900 leading-tight">{item.name}</h3>
+                            {isOutOfStock && (
+                              <span className="px-2 py-0.5 bg-rose-50 border border-rose-150 text-rose-600 text-[8px] font-bold uppercase tracking-wider rounded">
+                                Out of Stock
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-gray-500 mt-1 capitalize">
+                            {item.category} &middot; Color: {item.color} &middot; Size: {item.size}
+                          </p>
+                        </div>
+                        <span className="text-sm font-bold text-gray-900 mt-2 sm:mt-0 self-center sm:self-start">
+                          ₹{((item.price * item.qty) / 100).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+                      <div className="flex items-center border border-gray-200 rounded-md bg-[#faf8f5] mx-auto sm:mx-0">
+                        <button
+                          disabled={isOutOfStock}
+                          onClick={() => updateQty(item.id, item.color, item.size, -1)}
+                          className="p-1 px-2.5 text-gray-500 hover:text-gray-900 transition-colors disabled:opacity-40"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="text-xs font-semibold px-2.5 text-gray-800">{item.qty}</span>
+                        <button
+                          disabled={isOutOfStock}
+                          onClick={() => updateQty(item.id, item.color, item.size, 1)}
+                          className="p-1 px-2.5 text-gray-500 hover:text-gray-900 transition-colors disabled:opacity-40"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleMoveToWishlist(item.id, item.name, item.color, item.size)}
+                          className="text-[10px] text-primary hover:underline font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                        >
+                          <Heart className="w-3.5 h-3.5 fill-primary/10" /> Move to Wishlist
+                        </button>
+                        <button
+                          onClick={() => removeItem(item.id, item.color, item.size)}
+                          className="text-gray-400 hover:text-rose-600 p-1.5 rounded-full transition-colors cursor-pointer hidden sm:block"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile trash button */}
+                  <button
+                    onClick={() => removeItem(item.id, item.color, item.size)}
+                    className="absolute top-4 right-4 text-gray-400 hover:text-rose-600 sm:hidden cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )
+            })}
 
             <button
               onClick={() => {

@@ -10,6 +10,7 @@ export interface CartItem {
   size: string;
   img: string;
   category: string;
+  available_stock?: number;
 }
 
 interface CartState {
@@ -92,8 +93,8 @@ export const useCartStore = create<CartState>((set, get) => {
       const filtered = get().items.filter(
         (item) =>
           !(item.id === id &&
-            item.color.toLowerCase() === color.toLowerCase() &&
-            item.size === size)
+            (item.color || '').toLowerCase() === (color || '').toLowerCase() &&
+            (item.size || '') === (size || ''))
       );
       saveCart(filtered);
     },
@@ -102,8 +103,8 @@ export const useCartStore = create<CartState>((set, get) => {
         .map((item) => {
           if (
             item.id === id &&
-            item.color.toLowerCase() === color.toLowerCase() &&
-            item.size === size
+            (item.color || '').toLowerCase() === (color || '').toLowerCase() &&
+            (item.size || '') === (size || '')
           ) {
             return { ...item, qty: Math.max(1, item.qty + delta) };
           }
@@ -153,7 +154,8 @@ export const useCartStore = create<CartState>((set, get) => {
               color: item.color || 'Default',
               size: item.size || '38',
               img: img,
-              category: item.category || ''
+              category: item.category || '',
+              available_stock: item.available_stock
             };
           });
           localStorage.setItem('heelsup_cart', JSON.stringify(items));

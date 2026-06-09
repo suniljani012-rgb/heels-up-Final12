@@ -565,7 +565,22 @@ export async function ordersRouter(request, env) {
             ).bind(...binds, limit, offset).all();
 
             const total = countRow?.cnt || 0;
-            const orders = (ordersRes.results || []).map(o => formatOrder(o, null));
+            const ordersRaw = ordersRes.results || [];
+            const orderIds = ordersRaw.map(o => o.id);
+            const itemsMap = {};
+            if (orderIds.length > 0) {
+                const placeholders = orderIds.map(() => '?').join(',');
+                const allItems = await env.DB.prepare(
+                    `SELECT * FROM order_items WHERE order_id IN (${placeholders})`
+                ).bind(...orderIds).all();
+                for (const it of (allItems.results || [])) {
+                    if (!itemsMap[it.order_id]) {
+                        itemsMap[it.order_id] = [];
+                    }
+                    itemsMap[it.order_id].push(formatItem(it));
+                }
+            }
+            const orders = ordersRaw.map(o => formatOrder(o, itemsMap[o.id] || []));
 
             return list(orders, { page, limit, total, pages: Math.ceil(total / limit) });
         } catch (e) {

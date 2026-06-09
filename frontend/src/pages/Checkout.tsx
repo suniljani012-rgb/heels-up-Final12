@@ -54,6 +54,48 @@ export default function Checkout() {
   const [notes, setNotes] = useState('')
   const [processing, setProcessing] = useState(false)
 
+  interface SavedAddress {
+    id: number;
+    label: string;
+    name: string;
+    phone: string;
+    line1: string;
+    line2?: string | null;
+    city: string;
+    state: string;
+    pincode: string;
+    country: string;
+    is_default: number;
+  }
+
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
+
+  useEffect(() => {
+    if (token) {
+      fetch('/api/addresses', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setSavedAddresses(data.data)
+            // Pre-fill with default address if found
+            const def = data.data.find((a: SavedAddress) => a.is_default === 1) || data.data[0]
+            if (def) {
+              setName(def.name)
+              setPhone(def.phone)
+              setAddressLine1(def.line1)
+              setAddressLine2(def.line2 || '')
+              setCity(def.city)
+              setState(def.state)
+              setPincode(def.pincode)
+            }
+          }
+        })
+        .catch(err => console.error("Error fetching saved addresses:", err))
+    }
+  }, [token])
+
   // Calculations
   const subtotalPaise = getCartSubtotal()
   const subtotalRupees = subtotalPaise / 100
@@ -259,6 +301,44 @@ export default function Checkout() {
             <h2 className="text-lg font-semibold text-gray-900 font-display italic border-b border-gray-100 pb-3">
               Shipping Information
             </h2>
+
+            {savedAddresses.length > 0 && (
+              <div className="space-y-2 pb-4 border-b border-gray-100">
+                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Select Saved Address</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {savedAddresses.map((addr) => (
+                    <button
+                      key={addr.id}
+                      type="button"
+                      onClick={() => {
+                        setName(addr.name)
+                        setPhone(addr.phone)
+                        setAddressLine1(addr.line1)
+                        setAddressLine2(addr.line2 || '')
+                        setCity(addr.city)
+                        setState(addr.state)
+                        setPincode(addr.pincode)
+                        showToast('info', 'Address Selected', `Delivering to ${addr.label} address.`)
+                      }}
+                      className="text-left p-3 border border-gray-200 rounded-xl hover:border-primary hover:bg-[#faf9f6] transition-all text-xs space-y-1 bg-white focus:outline-none cursor-pointer"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-gray-900 uppercase text-[9px] tracking-wide bg-gray-100 px-2 py-0.5 rounded">
+                          {addr.label}
+                        </span>
+                        {addr.is_default === 1 && (
+                          <span className="text-[8px] text-emerald-600 font-bold uppercase">Default</span>
+                        )}
+                      </div>
+                      <p className="font-bold text-gray-800 line-clamp-1">{addr.name}</p>
+                      <p className="text-gray-500 line-clamp-2 leading-relaxed">
+                        {addr.line1}, {addr.city}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

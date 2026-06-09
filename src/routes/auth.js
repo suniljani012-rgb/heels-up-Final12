@@ -33,6 +33,29 @@ function masked(email) {
     return `${name[0]}${'*'.repeat(name.length - 2)}${name[name.length - 1]}@${domain}`;
 }
 
+async function getUserPermissions(env, dbUser) {
+    if (!dbUser) return [];
+    if (dbUser.email === 'support@heelsup.in') {
+        return [
+            'dashboard', 'products', 'stock', 'orders', 'categories',
+            'customers', 'reviews', 'coupons', 'banners', 'pages',
+            'settings', 'pos', 'sql', 'audits', 'returns', 'staff', 'colors'
+        ];
+    }
+    if (['admin', 'staff', 'manager'].includes(dbUser.role)) {
+        const staffRow = await env.DB.prepare("SELECT permissions FROM staff WHERE user_id = ?").bind(dbUser.id).first();
+        if (staffRow && staffRow.permissions) {
+            try {
+                return JSON.parse(staffRow.permissions);
+            } catch (_) {
+                return [];
+            }
+        }
+        return ['dashboard', 'orders', 'pos'];
+    }
+    return [];
+}
+
 function mapUser(u) {
     if (!u) return null;
     const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim();
@@ -64,7 +87,8 @@ async function sendOtpEmail(env, email, otp, purpose) {
     const subjects = {
         register: `Verify your ${siteName} account`,
         forgot: `Reset your ${siteName} password`,
-        login: `Your ${siteName} login OTP`
+        login: `Your ${siteName} login OTP`,
+        change_email: `Verify your email change request`
     };
 
     if (resendApiKey) {
@@ -128,14 +152,20 @@ function buildOtpHtml(siteName, otp, purpose, userName = 'Customer') {
         bodyText = `We received a request to reset your password.<br><br>
 Use the following OTP to reset your password:<br><br>
  <strong>${otp}</strong><br><br>
-⏱️ Valid for <strong>10 minutes</strong> only.<br><br>
+ ⏱️ Valid for <strong>10 minutes</strong> only.<br><br>
 Do not share this OTP with anyone.<br>
 If you didn't request this, please secure your account immediately.`;
+    } else if (purpose === 'change_email') {
+        bodyText = `We received a request to change your HeelsUp account email to this address.<br><br>
+Use the following OTP to verify and complete your email change request:<br><br>
+ <strong style="font-size: 20px; letter-spacing: 2px;">${otp}</strong><br><br>
+ ⏱️ Valid for <strong>10 minutes</strong> only.<br><br>
+If you did not request this, please ignore this email.`;
     } else {
         bodyText = `Your One-Time Password (OTP) is:<br><br>
  <strong>${otp}</strong><br><br>
-⏱️ This OTP is valid for <strong>10 minutes</strong>.<br><br>
-⚠️ Do not share this code with anyone for security reasons.<br>
+ ⏱️ This OTP is valid for <strong>10 minutes</strong>.<br><br>
+ ⚠️ Do not share this code with anyone for security reasons.<br>
 If you did not request this, please ignore this email.`;
     }
 
@@ -363,8 +393,9 @@ export async function authRouter(request, env) {
                 tokenExpiry = (isNaN(timeoutHours) || timeoutHours < 1 ? 8 : timeoutHours) * 3600;
             }
 
+            mapped.permissions = await getUserPermissions(env, user);
             const token = await signJWT(
-                { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name },
+                { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name, permissions: mapped.permissions },
                 env.JWT_SECRET,
                 tokenExpiry
             );
@@ -412,13 +443,14 @@ export async function authRouter(request, env) {
             await env.DB.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').bind(now, user.id).run();
 
             const mapped = mapUser(user);
+            mapped.permissions = await getUserPermissions(env, user);
 
             // Use configurable session timeout for admin/staff (default 8 hours)
             const timeoutHours = parseInt(await getSetting(env, 'session_timeout_hours', '8'));
             const tokenExpiry = (isNaN(timeoutHours) || timeoutHours < 1 ? 8 : timeoutHours) * 3600;
 
             const token = await signJWT(
-                { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name },
+                { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name, permissions: mapped.permissions },
                 env.JWT_SECRET,
                 tokenExpiry
             );
@@ -446,7 +478,9 @@ export async function authRouter(request, env) {
         const dbUser = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(user.id).first();
 
         if (!dbUser) return unauthorized('User not found');
-        return ok({ user: mapUser(dbUser) });
+        const mapped = mapUser(dbUser);
+        mapped.permissions = await getUserPermissions(env, dbUser);
+        return ok({ user: mapped });
     }
 
     // POST /api/auth/logout
@@ -673,6 +707,88 @@ export async function authRouter(request, env) {
         } catch (e) {
             console.error('Change password error:', e);
             return serverError('Failed to change password');
+        }
+    }
+
+    // POST /api/auth/change-email-request
+    if (path === '/change-email-request' && method === 'POST') {
+        const { user, error: authError } = await requireAuth(request, env);
+        if (authError) return authError;
+        try {
+            const body = await request.json();
+            const newEmail = normalizeEmail(body?.newEmail || body?.email);
+
+            if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                return error('Valid new email is required', 400);
+            }
+
+            // Verify email not already in use
+            const existing = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(newEmail).first();
+            if (existing) {
+                return error('This email address is already in use by another account', 400);
+            }
+
+            // Generate OTP
+            const otp = String(Math.floor(100000 + Math.random() * 900000));
+            const expiresAt = nowIso(10); // 10 minutes expiry
+
+            await env.DB.prepare(
+                'INSERT INTO otp_tokens (email, otp_hash, purpose, attempts, verified, expires_at, created_at) VALUES (?, ?, \'change_email\', 0, 0, ?, ?)'
+            ).bind(newEmail, otp, expiresAt, nowIso()).run();
+
+            const emailResult = await sendOtpEmail(env, newEmail, otp, 'change_email');
+            if (!emailResult.ok) {
+                return error(emailResult.error || 'Failed to send verification email. Try again.', 502);
+            }
+
+            return ok({ email: newEmail }, `OTP sent to ${newEmail}`);
+        } catch (e) {
+            console.error('Email change request error:', e);
+            return serverError('Failed to request email change');
+        }
+    }
+
+    // POST /api/auth/change-email-verify
+    if (path === '/change-email-verify' && method === 'POST') {
+        const { user, error: authError } = await requireAuth(request, env);
+        if (authError) return authError;
+        try {
+            const body = await request.json();
+            const newEmail = normalizeEmail(body?.newEmail || body?.email);
+            const otp = String(body?.otp || '').trim();
+
+            if (!newEmail || !otp) {
+                return error('New email and OTP are required', 400);
+            }
+
+            const otpResult = await verifyOtp(env, newEmail, otp, 'change_email');
+            if (!otpResult.ok) return error(otpResult.error, 400);
+
+            // Double check email is still available
+            const existing = await env.DB.prepare('SELECT id FROM users WHERE email = ? AND id != ?').bind(newEmail, user.id).first();
+            if (existing) {
+                return error('This email address is already in use by another account', 400);
+            }
+
+            // Update user email
+            await env.DB.prepare(
+                'UPDATE users SET email = ?, updated_at = ? WHERE id = ?'
+            ).bind(newEmail, nowIso(), user.id).run();
+
+            // Revoke active sessions (or just return new token)
+            const updatedUser = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(user.id).first();
+            const mapped = mapUser(updatedUser);
+            const tokenExpiry = 86400 * 30; // 30 days
+            const token = await signJWT(
+                { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name },
+                env.JWT_SECRET,
+                tokenExpiry
+            );
+
+            return ok({ token, user: mapped }, 'Email address updated successfully');
+        } catch (e) {
+            console.error('Email change verify error:', e);
+            return serverError('Failed to verify email update');
         }
     }
 
