@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, LogOut, Plus, Edit3, Settings, Tag, Star, Users,
   FileText, Image as ImageIcon, UploadCloud, AlertTriangle, CheckCircle2, X, ChevronRight, ChevronLeft,
   Search, RotateCw, Trash2, Percent, Activity, Sliders, RefreshCw,
-  Printer, Database, Shield, Play, HelpCircle, Eye, Check, Download, Truck
+  Printer, Database, Shield, Play, HelpCircle, Eye, Check, Download, Truck, Minus
 } from 'lucide-react';
 
 // --- TypeScript Interfaces ---
@@ -317,6 +317,23 @@ export default function Admin() {
   const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
   const [hoveredCategoryAnalysis, setHoveredCategoryAnalysis] = useState<number | null>(null);
   const [hoveredPointAnalysis, setHoveredPointAnalysis] = useState<number | null>(null);
+
+  // NEW: AdminLTE Chart States (Interactivity: Collapse and Visibility)
+  const [collapsedSalesTrend, setCollapsedSalesTrend] = useState(false);
+  const [visibleSalesTrend, setVisibleSalesTrend] = useState(true);
+  const [collapsedCategoryShare, setCollapsedCategoryShare] = useState(false);
+  const [visibleCategoryShare, setVisibleCategoryShare] = useState(true);
+  const [collapsedStockWarning, setCollapsedStockWarning] = useState(false);
+  const [visibleStockWarning, setVisibleStockWarning] = useState(true);
+
+  const [collapsedCategoryRevenueShare, setCollapsedCategoryRevenueShare] = useState(false);
+  const [visibleCategoryRevenueShare, setVisibleCategoryRevenueShare] = useState(true);
+  const [collapsedCategorySalesVolume, setCollapsedCategorySalesVolume] = useState(false);
+  const [visibleCategorySalesVolume, setVisibleCategorySalesVolume] = useState(true);
+  const [collapsedFilteredRevenueTrend, setCollapsedFilteredRevenueTrend] = useState(false);
+  const [visibleFilteredRevenueTrend, setVisibleFilteredRevenueTrend] = useState(true);
+  const [collapsedAverageItemValue, setCollapsedAverageItemValue] = useState(false);
+  const [visibleAverageItemValue, setVisibleAverageItemValue] = useState(true);
 
   // Loading States
   const [dataLoading, setDataLoading] = useState(false);
@@ -3222,345 +3239,402 @@ export default function Admin() {
                   </button>
                 </div>
               </div>
-
+ 
               {/* Analytics Charts Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Chart 1: Sales Trend */}
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">Sales & Revenue Trend</h3>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">7-Day Transaction Performance</span>
+                <div className={visibleSalesTrend ? "card card-outline card-primary bg-white border border-slate-150 border-t-[3px] border-t-blue-600 rounded-lg shadow-sm" : "hidden"}>
+                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                      <Activity className="w-4 h-4 text-blue-600" />
+                      Sales & Revenue Trend
+                    </h3>
+                    <div className="card-tools flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold uppercase font-mono">Live</span>
+                      <button 
+                        onClick={() => setCollapsedSalesTrend(!collapsedSalesTrend)}
+                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Collapse"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => setVisibleSalesTrend(false)}
+                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Close"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold uppercase font-mono">Live</span>
                   </div>
                   
-                  {/* SVG Line Chart */}
-                  <div className="relative">
-                    <svg className="w-full h-64 overflow-visible" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
-                      <defs>
-                        <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
-                          <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
-                        </linearGradient>
-                        <filter id="trendShadow" x="-10%" y="-10%" width="120%" height="120%">
-                          <feDropShadow dx="1.5" dy="2.5" stdDeviation="1.5" floodOpacity="0.25" />
-                        </filter>
-                      </defs>
- 
-                      {/* Grid Lines */}
-                      <line x1="40" y1="30" x2="660" y2="30" stroke="#f1f5f9" strokeWidth="1" />
-                      <line x1="40" y1="77.5" x2="660" y2="77.5" stroke="#f1f5f9" strokeWidth="1" />
-                      <line x1="40" y1="125" x2="660" y2="125" stroke="#f1f5f9" strokeWidth="1" />
-                      <line x1="40" y1="172.5" x2="660" y2="172.5" stroke="#f1f5f9" strokeWidth="1" />
-                      <line x1="40" y1="220" x2="660" y2="220" stroke="#e2e8f0" strokeWidth="1.5" />
- 
-                      {(() => {
-                        const data = getDashboardDailyRevenue();
-                        
-                        const maxRev = Math.max(...data.map((d: any) => d.revenue || 0), 100000);
-                        const minRev = 0;
-                        
-                        const points = data.map((d: any, idx: number) => {
-                          const x = 50 + (idx * (590 / (data.length - 1 || 1)));
-                          const y = 220 - (((d.revenue || 0) - minRev) / (maxRev - minRev)) * 170;
-                          return { x, y, label: d.date || '', val: d.revenue || 0 };
-                        });
- 
-                        const pathData = points.map((p: any, i: number) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-                        const areaData = points.length ? `${pathData} L ${points[points.length - 1].x} 220 L ${points[0].x} 220 Z` : '';
- 
-                        return (
-                          <>
-                            {/* Area Fill */}
-                            {areaData && <path d={areaData} fill="url(#areaGradient)" className="transition-all duration-500" />}
-                            
-                            {/* Trend Line */}
-                            {pathData && <path d={pathData} fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-500" filter="url(#trendShadow)" />}
- 
-                            {/* Data points */}
-                            {points.map((p: any, idx: number) => {
-                              const isHovered = hoveredPoint === idx;
-                              return (
-                                <g key={idx}>
-                                  {/* Interaction Circle */}
-                                  <circle
-                                    cx={p.x}
-                                    cy={p.y}
-                                    r={isHovered ? 7 : 4.5}
-                                    fill={isHovered ? '#2563eb' : '#ffffff'}
-                                    stroke="#2563eb"
-                                    strokeWidth="2.5"
-                                    onMouseEnter={() => setHoveredPoint(idx)}
-                                    onMouseLeave={() => setHoveredPoint(null)}
-                                    className="cursor-pointer transition-all duration-150"
-                                  />
-                                  
-                                  {/* X-Axis Label */}
-                                  <text x={p.x} y="238" textAnchor="middle" className="text-[10px] fill-slate-400 font-bold font-mono">{p.label}</text>
-                                  
-                                  {/* Hover Tooltip */}
-                                  {isHovered && (
-                                    <g>
-                                      <rect
-                                        x={p.x - 50}
-                                        y={p.y - 36}
-                                        width="100"
-                                        height="24"
-                                        rx="6"
-                                        fill="#0f172a"
-                                        className="shadow-lg"
-                                      />
-                                      <text
-                                        x={p.x}
-                                        y={p.y - 20}
-                                        textAnchor="middle"
-                                        fill="#ffffff"
-                                        className="text-[10px] font-extrabold font-mono"
-                                      >
-                                        ₹{(p.val / 100).toFixed(0)}
-                                      </text>
-                                    </g>
-                                  )}
-                                </g>
-                              );
-                            })}
-                          </>
-                        );
-                      })()}
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Chart 2: Category Share */}
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">Category Share</h3>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Sales distribution by division</span>
-                    </div>
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase font-mono">Share</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2">
-                    {/* SVG Donut */}
-                    <div className="relative w-52 h-52 shrink-0">
-                      <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                  <div className={`card-body p-6 space-y-4 ${collapsedSalesTrend ? 'hidden' : ''}`}>
+                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">7-Day Transaction Performance</div>
+                    {/* SVG Line Chart */}
+                    <div className="relative">
+                      <svg className="w-full h-64 overflow-visible" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
+                            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
+                          </linearGradient>
+                          <filter id="trendShadow" x="-10%" y="-10%" width="120%" height="120%">
+                            <feDropShadow dx="1.5" dy="2.5" stdDeviation="1.5" floodOpacity="0.25" />
+                          </filter>
+                        </defs>
+   
+                        {/* Grid Lines */}
+                        <line x1="40" y1="30" x2="660" y2="30" stroke="#f1f5f9" strokeWidth="1" />
+                        <line x1="40" y1="77.5" x2="660" y2="77.5" stroke="#f1f5f9" strokeWidth="1" />
+                        <line x1="40" y1="125" x2="660" y2="125" stroke="#f1f5f9" strokeWidth="1" />
+                        <line x1="40" y1="172.5" x2="660" y2="172.5" stroke="#f1f5f9" strokeWidth="1" />
+                        <line x1="40" y1="220" x2="660" y2="220" stroke="#e2e8f0" strokeWidth="1.5" />
+   
                         {(() => {
-                          const data = getDashboardCategorySales();
-                            
-                          const total = data.reduce((sum: number, d: any) => sum + (d.revenue || 0), 0);
-                          let accumulatedPercent = 0;
+                          const data = getDashboardDailyRevenue();
                           
-                          const segments = data.map((d: any, idx: number) => {
-                            const percent = total > 0 ? (d.revenue || 0) / total : 0;
-                            const strokeLength = percent * (2 * Math.PI * 50); // Circumference: ~314.16
-                            const strokeOffset = 314.16 - strokeLength + (accumulatedPercent * 314.16);
-                            accumulatedPercent -= percent;
-                            
-                            const colors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
-                            const color = colors[idx % colors.length];
-                            
-                            return {
-                              category: d.category,
-                              revenue: d.revenue,
-                              percent: percent * 100,
-                              strokeLength,
-                              strokeOffset,
-                              color
-                            };
+                          const maxRev = Math.max(...data.map((d: any) => d.revenue || 0), 100000);
+                          const minRev = 0;
+                          
+                          const points = data.map((d: any, idx: number) => {
+                            const x = 50 + (idx * (590 / (data.length - 1 || 1)));
+                            const y = 220 - (((d.revenue || 0) - minRev) / (maxRev - minRev)) * 170;
+                            return { x, y, label: d.date || '', val: d.revenue || 0 };
                           });
-
-                          const activeSeg = hoveredCategory !== null ? segments[hoveredCategory] : null;
-
+   
+                          const pathData = points.map((p: any, i: number) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                          const areaData = points.length ? `${pathData} L ${points[points.length - 1].x} 220 L ${points[0].x} 220 Z` : '';
+   
                           return (
                             <>
-                              <defs>
-                                <filter id="donutShadow" x="-10%" y="-10%" width="120%" height="120%">
-                                  <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.2" />
-                                </filter>
-                              </defs>
-
-                              {/* Background Circle */}
-                              <circle cx="100" cy="100" r="50" fill="none" stroke="#f1f5f9" strokeWidth="16" />
-
-                              {/* 3D Extrusion Shadow Layer */}
-                              {segments.map((seg: any, idx: number) => (
-                                <circle
-                                  key={`shadow-${idx}`}
-                                  cx="100"
-                                  cy="103"
-                                  r="50"
-                                  fill="none"
-                                  stroke="#0f172a"
-                                  strokeOpacity="0.12"
-                                  strokeWidth="16"
-                                  strokeDasharray={`${seg.strokeLength} 314.16`}
-                                  strokeDashoffset={seg.strokeOffset}
-                                  transform="rotate(-90 100 103)"
-                                />
-                              ))}
-
-                              {/* Segments */}
-                              {segments.map((seg: any, idx: number) => (
-                                <circle
-                                  key={idx}
-                                  cx="100"
-                                  cy="100"
-                                  r="50"
-                                  fill="none"
-                                  stroke={seg.color}
-                                  strokeWidth="16"
-                                  strokeDasharray={`${seg.strokeLength} 314.16`}
-                                  strokeDashoffset={seg.strokeOffset}
-                                  transform="rotate(-90 100 100)"
-                                  className="transition-all duration-300 cursor-pointer hover:stroke-[20]"
-                                  onMouseEnter={() => setHoveredCategory(idx)}
-                                  onMouseLeave={() => setHoveredCategory(null)}
-                                  filter="url(#donutShadow)"
-                                />
-                              ))}
-
-                              {/* Center text */}
-                              <text x="100" y="92" textAnchor="middle" className="text-[12px] fill-slate-400 font-black uppercase tracking-widest font-sans">
-                                {activeSeg ? activeSeg.category : 'Total'}
-                              </text>
-                              <text x="100" y="118" textAnchor="middle" className="text-xl font-extrabold font-mono fill-slate-800">
-                                {activeSeg ? `${activeSeg.percent.toFixed(0)}%` : `₹${(total / 100 / 1000).toFixed(0)}k`}
-                              </text>
+                              {/* Area Fill */}
+                              {areaData && <path d={areaData} fill="url(#areaGradient)" className="transition-all duration-500" />}
+                              
+                              {/* Trend Line */}
+                              {pathData && <path d={pathData} fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-500" filter="url(#trendShadow)" />}
+   
+                              {/* Data points */}
+                              {points.map((p: any, idx: number) => {
+                                const isHovered = hoveredPoint === idx;
+                                return (
+                                  <g key={idx}>
+                                    {/* Interaction Circle */}
+                                    <circle
+                                      cx={p.x}
+                                      cy={p.y}
+                                      r={isHovered ? 7 : 4.5}
+                                      fill={isHovered ? '#2563eb' : '#ffffff'}
+                                      stroke="#2563eb"
+                                      strokeWidth="2.5"
+                                      onMouseEnter={() => setHoveredPoint(idx)}
+                                      onMouseLeave={() => setHoveredPoint(null)}
+                                      className="cursor-pointer transition-all duration-150"
+                                    />
+                                    
+                                    {/* X-Axis Label */}
+                                    <text x={p.x} y="238" textAnchor="middle" className="text-[10px] fill-slate-400 font-bold font-mono">{p.label}</text>
+                                    
+                                    {/* Hover Tooltip */}
+                                    {isHovered && (
+                                      <g>
+                                        <rect
+                                          x={p.x - 50}
+                                          y={p.y - 36}
+                                          width="100"
+                                          height="24"
+                                          rx="6"
+                                          fill="#0f172a"
+                                          className="shadow-lg"
+                                        />
+                                        <text
+                                          x={p.x}
+                                          y={p.y - 20}
+                                          textAnchor="middle"
+                                          fill="#ffffff"
+                                          className="text-[10px] font-extrabold font-mono"
+                                        >
+                                          ₹{(p.val / 100).toFixed(0)}
+                                        </text>
+                                      </g>
+                                    )}
+                                  </g>
+                                );
+                              })}
                             </>
                           );
                         })()}
                       </svg>
                     </div>
-
-                    {/* Interactive legends */}
-                    <div className="flex-1 space-y-2 w-full font-sans">
-                      {(() => {
-                        const data = getDashboardCategorySales();
-                        const total = data.reduce((sum: number, d: any) => sum + (d.revenue || 0), 0);
-                        const colors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
-
-                        return data.slice(0, 5).map((d: any, idx: number) => {
-                          const pct = total > 0 ? (d.revenue / total) * 100 : 0;
-                          const color = colors[idx % colors.length];
-                          const active = hoveredCategory === idx;
-                          return (
-                            <div
-                              key={idx}
-                              className={`flex items-center justify-between p-2 rounded-xl transition-colors ${active ? 'bg-slate-50' : ''}`}
-                              onMouseEnter={() => setHoveredCategory(idx)}
-                              onMouseLeave={() => setHoveredCategory(null)}
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                                <span className="font-extrabold text-[11px] text-slate-600 truncate uppercase">{d.category}</span>
+                  </div>
+                </div>
+ 
+                {/* Chart 2: Category Share */}
+                <div className={visibleCategoryShare ? "card card-outline card-success bg-white border border-slate-150 border-t-[3px] border-t-emerald-500 rounded-lg shadow-sm" : "hidden"}>
+                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                      <Tag className="w-4 h-4 text-emerald-500" />
+                      Category Share
+                    </h3>
+                    <div className="card-tools flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase font-mono">Share</span>
+                      <button 
+                        onClick={() => setCollapsedCategoryShare(!collapsedCategoryShare)}
+                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Collapse"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => setVisibleCategoryShare(false)}
+                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Close"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+ 
+                  <div className={`card-body p-6 ${collapsedCategoryShare ? 'hidden' : ''}`}>
+                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Sales distribution by division</div>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2">
+                      {/* SVG Donut */}
+                      <div className="relative w-52 h-52 shrink-0">
+                        <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                          {(() => {
+                            const data = getDashboardCategorySales();
+                              
+                            const total = data.reduce((sum: number, d: any) => sum + (d.revenue || 0), 0);
+                            let accumulatedPercent = 0;
+                            
+                            const segments = data.map((d: any, idx: number) => {
+                              const percent = total > 0 ? (d.revenue || 0) / total : 0;
+                              const strokeLength = percent * (2 * Math.PI * 50); // Circumference: ~314.16
+                              const strokeOffset = 314.16 - strokeLength + (accumulatedPercent * 314.16);
+                              accumulatedPercent -= percent;
+                              
+                              const colors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
+                              const color = colors[idx % colors.length];
+                              
+                              return {
+                                category: d.category,
+                                revenue: d.revenue,
+                                percent: percent * 100,
+                                strokeLength,
+                                strokeOffset,
+                                color
+                              };
+                            });
+   
+                            const activeSeg = hoveredCategory !== null ? segments[hoveredCategory] : null;
+   
+                            return (
+                              <>
+                                <defs>
+                                  <filter id="donutShadow" x="-10%" y="-10%" width="120%" height="120%">
+                                    <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.2" />
+                                  </filter>
+                                </defs>
+   
+                                {/* Background Circle */}
+                                <circle cx="100" cy="100" r="50" fill="none" stroke="#f1f5f9" strokeWidth="16" />
+   
+                                {/* 3D Extrusion Shadow Layer */}
+                                {segments.map((seg: any, idx: number) => (
+                                  <circle
+                                    key={`shadow-${idx}`}
+                                    cx="100"
+                                    cy="103"
+                                    r="50"
+                                    fill="none"
+                                    stroke="#0f172a"
+                                    strokeOpacity="0.12"
+                                    strokeWidth="16"
+                                    strokeDasharray={`${seg.strokeLength} 314.16`}
+                                    strokeDashoffset={seg.strokeOffset}
+                                    transform="rotate(-90 100 103)"
+                                  />
+                                ))}
+   
+                                {/* Segments */}
+                                {segments.map((seg: any, idx: number) => (
+                                  <circle
+                                    key={idx}
+                                    cx="100"
+                                    cy="100"
+                                    r="50"
+                                    fill="none"
+                                    stroke={seg.color}
+                                    strokeWidth="16"
+                                    strokeDasharray={`${seg.strokeLength} 314.16`}
+                                    strokeDashoffset={seg.strokeOffset}
+                                    transform="rotate(-90 100 100)"
+                                    className="transition-all duration-300 cursor-pointer hover:stroke-[20]"
+                                    onMouseEnter={() => setHoveredCategory(idx)}
+                                    onMouseLeave={() => setHoveredCategory(null)}
+                                    filter="url(#donutShadow)"
+                                  />
+                                ))}
+   
+                                {/* Center text */}
+                                <text x="100" y="92" textAnchor="middle" className="text-[12px] fill-slate-400 font-black uppercase tracking-widest font-sans">
+                                  {activeSeg ? activeSeg.category : 'Total'}
+                                </text>
+                                <text x="100" y="118" textAnchor="middle" className="text-xl font-extrabold font-mono fill-slate-800">
+                                  {activeSeg ? `${activeSeg.percent.toFixed(0)}%` : `₹${(total / 100 / 1000).toFixed(0)}k`}
+                                </text>
+                              </>
+                            );
+                          })()}
+                        </svg>
+                      </div>
+   
+                      {/* Interactive legends */}
+                      <div className="flex-1 space-y-2 w-full font-sans">
+                        {(() => {
+                          const data = getDashboardCategorySales();
+                          const total = data.reduce((sum: number, d: any) => sum + (d.revenue || 0), 0);
+                          const colors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
+   
+                          return data.slice(0, 5).map((d: any, idx: number) => {
+                            const pct = total > 0 ? (d.revenue / total) * 100 : 0;
+                            const color = colors[idx % colors.length];
+                            const active = hoveredCategory === idx;
+                            return (
+                              <div
+                                key={idx}
+                                className={`flex items-center justify-between p-2 rounded-xl transition-colors ${active ? 'bg-slate-50' : ''}`}
+                                onMouseEnter={() => setHoveredCategory(idx)}
+                                onMouseLeave={() => setHoveredCategory(null)}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                                  <span className="font-extrabold text-[11px] text-slate-655 truncate uppercase">{d.category}</span>
+                                </div>
+                                <span className="font-mono font-black text-xs text-slate-900">{pct.toFixed(0)}%</span>
                               </div>
-                              <span className="font-mono font-black text-xs text-slate-900">{pct.toFixed(0)}%</span>
-                            </div>
-                          );
-                        });
-                      })()}
+                            );
+                          });
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-
+ 
               {/* Stock Warning Chart Row (Full width for clear overview) */}
               <div className="grid grid-cols-1 gap-6">
                 {/* Cylinders Stock Bar Chart */}
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">⚠️ Product Stock Alert (Units Remaining)</h3>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Real-time stock levels of active items requiring attention</span>
+                <div className={visibleStockWarning ? "card card-outline card-warning bg-white border border-slate-150 border-t-[3px] border-t-amber-500 rounded-lg shadow-sm" : "hidden"}>
+                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      Product Stock Alert (Units Remaining)
+                    </h3>
+                    <div className="card-tools flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-amber-50 text-amber-650 rounded text-[9px] font-bold uppercase font-mono">Stock Warning</span>
+                      <button 
+                        onClick={() => setCollapsedStockWarning(!collapsedStockWarning)}
+                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Collapse"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => setVisibleStockWarning(false)}
+                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Close"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <span className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded text-[9px] font-bold uppercase font-mono">Stock Warning</span>
                   </div>
-
-                  <div className="relative">
-                    <svg className="w-full h-64 overflow-visible" viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg">
-                      <defs>
-                        <filter id="cylShadow" x="-10%" y="-10%" width="120%" height="120%">
-                          <feDropShadow dx="2" dy="4" stdDeviation="2.5" floodOpacity="0.2" />
-                        </filter>
-                      </defs>
-                      {/* Grid limits */}
-                      <line x1="30" y1="30" x2="480" y2="30" stroke="#f1f5f9" strokeWidth="1" />
-                      <line x1="30" y1="125" x2="480" y2="125" stroke="#f1f5f9" strokeWidth="1" />
-                      <line x1="30" y1="220" x2="480" y2="220" stroke="#e2e8f0" strokeWidth="1.5" />
-
-                      {(() => {
-                        const defaultTopProducts = [
-                          { name: 'Bridal Wedge - Cream', stock: 12, sold: 148 },
-                          { name: 'Casual Flat - Tan', stock: 8, sold: 120 },
-                          { name: 'Office Block - Black', stock: 2, sold: 98 },
-                          { name: 'Evening Heel - Silver', stock: 15, sold: 85 },
-                          { name: 'Stiletto Wedge - Pink', stock: 1, sold: 72 },
-                        ];
-                        const data = productsList.length > 0
-                          ? [...productsList].sort((a, b) => (a.stock || 0) - (b.stock || 0)).slice(0, 6)
-                          : defaultTopProducts;
-                        
-                        const maxVal = Math.max(...data.map((d: any) => d.stock || 0), 20);
-
-                        return data.map((d: any, idx: number) => {
-                          const height = Math.max(8, ((d.stock || 0) / maxVal) * 175);
-                          const x = 30 + idx * 75;
-                          const y = 220 - height;
-                          const color = d.stock === 0 ? '#f43f5e' : d.stock <= 5 ? '#f59e0b' : '#10b981'; // red for out of stock, amber for low stock, green for healthy
-
-                          return (
-                            <g key={idx} className="group cursor-pointer">
-                              {/* Background track (shows full height capacity) */}
-                              <rect
-                                x={x + 4}
-                                y={30}
-                                width="32"
-                                height={190}
-                                rx="6"
-                                fill="#f8fafc"
-                                stroke="#f1f5f9"
-                                strokeWidth="1"
-                              />
-
-                              {/* Filled stock level column */}
-                              <rect
-                                x={x + 4}
-                                y={y}
-                                width="32"
-                                height={height}
-                                rx="6"
-                                fill={color}
-                                className="transition-all duration-300 group-hover:brightness-105"
-                              />
-
-                              {/* Stock label text above the bar */}
-                              <text
-                                x={x + 20}
-                                y={y - 8}
-                                textAnchor="middle"
-                                className="text-[10px] font-black font-mono fill-slate-700"
-                              >
-                                {d.stock}
-                              </text>
-
-                              {/* Product short name as X-axis label */}
-                              <text
-                                x={x + 20}
-                                y="238"
-                                textAnchor="middle"
-                                className="text-[9px] fill-slate-500 font-bold font-sans uppercase"
-                              >
-                                {d.name ? (d.name.length > 10 ? d.name.slice(0, 8) + '..' : d.name) : `P-${idx+1}`}
-                              </text>
-
-                              <title>{d.name} ({d.stock} units in stock)</title>
-                            </g>
-                          );
-                        });
-                      })()}
-                    </svg>
+ 
+                  <div className={`card-body p-6 space-y-4 ${collapsedStockWarning ? 'hidden' : ''}`}>
+                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Real-time stock levels of active items requiring attention</div>
+                    <div className="relative">
+                      <svg className="w-full h-64 overflow-visible" viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <filter id="cylShadow" x="-10%" y="-10%" width="120%" height="120%">
+                            <feDropShadow dx="2" dy="4" stdDeviation="2.5" floodOpacity="0.2" />
+                          </filter>
+                        </defs>
+                        {/* Grid limits */}
+                        <line x1="30" y1="30" x2="480" y2="30" stroke="#f1f5f9" strokeWidth="1" />
+                        <line x1="30" y1="125" x2="480" y2="125" stroke="#f1f5f9" strokeWidth="1" />
+                        <line x1="30" y1="220" x2="480" y2="220" stroke="#e2e8f0" strokeWidth="1.5" />
+   
+                        {(() => {
+                          const defaultTopProducts = [
+                            { name: 'Bridal Wedge - Cream', stock: 12, sold: 148 },
+                            { name: 'Casual Flat - Tan', stock: 8, sold: 120 },
+                            { name: 'Office Block - Black', stock: 2, sold: 98 },
+                            { name: 'Evening Heel - Silver', stock: 15, sold: 85 },
+                            { name: 'Stiletto Wedge - Pink', stock: 1, sold: 72 },
+                          ];
+                          const data = productsList.length > 0
+                            ? [...productsList].sort((a, b) => (a.stock || 0) - (b.stock || 0)).slice(0, 6)
+                            : defaultTopProducts;
+                          
+                          const maxVal = Math.max(...data.map((d: any) => d.stock || 0), 20);
+   
+                          return data.map((d: any, idx: number) => {
+                            const height = Math.max(8, ((d.stock || 0) / maxVal) * 175);
+                            const x = 30 + idx * 75;
+                            const y = 220 - height;
+                            const color = d.stock === 0 ? '#f43f5e' : d.stock <= 5 ? '#f59e0b' : '#10b981'; // red for out of stock, amber for low stock, green for healthy
+   
+                            return (
+                              <g key={idx} className="group cursor-pointer">
+                                {/* Background track (shows full height capacity) */}
+                                <rect
+                                  x={x + 4}
+                                  y={30}
+                                  width="32"
+                                  height={190}
+                                  rx="6"
+                                  fill="#f8fafc"
+                                  stroke="#f1f5f9"
+                                  strokeWidth="1"
+                                />
+   
+                                {/* Filled stock level column */}
+                                <rect
+                                  x={x + 4}
+                                  y={y}
+                                  width="32"
+                                  height={height}
+                                  rx="6"
+                                  fill={color}
+                                  className="transition-all duration-300 group-hover:brightness-105"
+                                />
+   
+                                {/* Stock label text above the bar */}
+                                <text
+                                  x={x + 20}
+                                  y={y - 8}
+                                  textAnchor="middle"
+                                  className="text-[10px] font-black font-mono fill-slate-700"
+                                >
+                                  {d.stock}
+                                </text>
+   
+                                {/* Product short name as X-axis label */}
+                                <text
+                                  x={x + 20}
+                                  y="238"
+                                  textAnchor="middle"
+                                  className="text-[9px] fill-slate-500 font-bold font-sans uppercase"
+                                >
+                                  {d.name ? (d.name.length > 10 ? d.name.slice(0, 8) + '..' : d.name) : `P-${idx+1}`}
+                                </text>
+   
+                                <title>{d.name} ({d.stock} units in stock)</title>
+                              </g>
+                            );
+                          });
+                        })()}
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -5192,188 +5266,226 @@ export default function Admin() {
 
               {/* Category Performance Analytics Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
+
                 {/* Chart 1: 3D Category Revenue Share (Pie) */}
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-5 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">Category Revenue Share</h3>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Revenue percentage per footwear division</span>
+                <div className={visibleCategoryRevenueShare ? "card card-outline card-info bg-white border border-slate-150 border-t-[3px] border-t-sky-500 rounded-lg shadow-sm" : "hidden"}>
+                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                      <Sliders className="w-4 h-4 text-sky-500" />
+                      Category Revenue Share
+                    </h3>
+                    <div className="card-tools flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold uppercase font-mono">Revenue %</span>
+                      <button 
+                        onClick={() => setCollapsedCategoryRevenueShare(!collapsedCategoryRevenueShare)}
+                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Collapse"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => setVisibleCategoryRevenueShare(false)}
+                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Close"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold uppercase font-mono">Revenue %</span>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="relative w-36 h-36 shrink-0">
-                      <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <filter id="pieShadowAnalysis" x="-10%" y="-10%" width="120%" height="120%">
-                            <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.15" />
-                          </filter>
-                        </defs>
+                  <div className={`card-body p-5 space-y-4 ${collapsedCategoryRevenueShare ? 'hidden' : ''}`}>
+                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Revenue percentage per footwear division</div>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="relative w-36 h-36 shrink-0">
+                        <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                          <defs>
+                            <filter id="pieShadowAnalysis" x="-10%" y="-10%" width="120%" height="120%">
+                              <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.15" />
+                            </filter>
+                          </defs>
+                          {(() => {
+                            const catData = getAnalysisCategoryData();
+                            const totalRev = catData.reduce((sum, d) => sum + d.revenue, 0);
+                            let accumulatedPercent = 0;
+
+                            const segments = catData.map((d, idx) => {
+                              const percent = totalRev > 0 ? d.revenue / totalRev : 0;
+                              const strokeLength = percent * 314.16;
+                              const strokeOffset = 314.16 - strokeLength + (accumulatedPercent * 314.16);
+                              accumulatedPercent -= percent;
+
+                              const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
+                              const color = colors[idx % colors.length];
+
+                              return {
+                                category: d.category,
+                                revenue: d.revenue,
+                                percent: percent * 100,
+                                strokeLength,
+                                strokeOffset,
+                                color
+                              };
+                            });
+
+                            const activeSeg = hoveredCategoryAnalysis !== null ? segments[hoveredCategoryAnalysis] : null;
+
+                            return (
+                              <>
+                                <circle cx="100" cy="100" r="50" fill="none" stroke="#f8fafc" strokeWidth="18" />
+                                
+                                {/* 3D shadow layer */}
+                                {segments.map((seg, idx) => (
+                                  <circle
+                                    key={`sh-${idx}`}
+                                    cx="100"
+                                    cy="104"
+                                    r="50"
+                                    fill="none"
+                                    stroke="#0f172a"
+                                    strokeOpacity="0.1"
+                                    strokeWidth="18"
+                                    strokeDasharray={`${seg.strokeLength} 314.16`}
+                                    strokeDashoffset={seg.strokeOffset}
+                                    transform="rotate(-90 100 104)"
+                                  />
+                                ))}
+
+                                {/* Segments */}
+                                {segments.map((seg, idx) => (
+                                  <circle
+                                    key={idx}
+                                    cx="100"
+                                    cy="100"
+                                    r="50"
+                                    fill="none"
+                                    stroke={seg.color}
+                                    strokeWidth="18"
+                                    strokeDasharray={`${seg.strokeLength} 314.16`}
+                                    strokeDashoffset={seg.strokeOffset}
+                                    transform="rotate(-90 100 100)"
+                                    className="transition-all duration-300 cursor-pointer hover:stroke-[22]"
+                                    onMouseEnter={() => setHoveredCategoryAnalysis(idx)}
+                                    onMouseLeave={() => setHoveredCategoryAnalysis(null)}
+                                    filter="url(#pieShadowAnalysis)"
+                                  />
+                                ))}
+
+                                {/* Center text */}
+                                <text x="100" y="95" textAnchor="middle" className="text-[9px] fill-slate-400 font-bold uppercase tracking-widest">
+                                  {activeSeg ? activeSeg.category : 'Total Rev'}
+                                </text>
+                                <text x="100" y="115" textAnchor="middle" className="text-xs font-extrabold font-mono fill-slate-800">
+                                  {activeSeg ? `${activeSeg.percent.toFixed(0)}%` : `₹${(totalRev / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`}
+                                </text>
+                              </>
+                            );
+                          })()}
+                        </svg>
+                      </div>
+
+                      <div className="flex-1 space-y-1.5 w-full">
                         {(() => {
                           const catData = getAnalysisCategoryData();
                           const totalRev = catData.reduce((sum, d) => sum + d.revenue, 0);
-                          let accumulatedPercent = 0;
+                          const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
 
-                          const segments = catData.map((d, idx) => {
-                            const percent = totalRev > 0 ? d.revenue / totalRev : 0;
-                            const strokeLength = percent * 314.16;
-                            const strokeOffset = 314.16 - strokeLength + (accumulatedPercent * 314.16);
-                            accumulatedPercent -= percent;
-
-                            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
+                          return catData.slice(0, 5).map((d, idx) => {
+                            const pct = totalRev > 0 ? (d.revenue / totalRev) * 100 : 0;
                             const color = colors[idx % colors.length];
-
-                            return {
-                              category: d.category,
-                              revenue: d.revenue,
-                              percent: percent * 100,
-                              strokeLength,
-                              strokeOffset,
-                              color
-                            };
-                          });
-
-                          const activeSeg = hoveredCategoryAnalysis !== null ? segments[hoveredCategoryAnalysis] : null;
-
-                          return (
-                            <>
-                              <circle cx="100" cy="100" r="50" fill="none" stroke="#f8fafc" strokeWidth="18" />
-                              
-                              {/* 3D shadow layer */}
-                              {segments.map((seg, idx) => (
-                                <circle
-                                  key={`sh-${idx}`}
-                                  cx="100"
-                                  cy="104"
-                                  r="50"
-                                  fill="none"
-                                  stroke="#0f172a"
-                                  strokeOpacity="0.1"
-                                  strokeWidth="18"
-                                  strokeDasharray={`${seg.strokeLength} 314.16`}
-                                  strokeDashoffset={seg.strokeOffset}
-                                  transform="rotate(-90 100 104)"
-                                />
-                              ))}
-
-                              {/* Segments */}
-                              {segments.map((seg, idx) => (
-                                <circle
-                                  key={idx}
-                                  cx="100"
-                                  cy="100"
-                                  r="50"
-                                  fill="none"
-                                  stroke={seg.color}
-                                  strokeWidth="18"
-                                  strokeDasharray={`${seg.strokeLength} 314.16`}
-                                  strokeDashoffset={seg.strokeOffset}
-                                  transform="rotate(-90 100 100)"
-                                  className="transition-all duration-300 cursor-pointer hover:stroke-[22]"
-                                  onMouseEnter={() => setHoveredCategoryAnalysis(idx)}
-                                  onMouseLeave={() => setHoveredCategoryAnalysis(null)}
-                                  filter="url(#pieShadowAnalysis)"
-                                />
-                              ))}
-
-                              {/* Center text */}
-                              <text x="100" y="95" textAnchor="middle" className="text-[9px] fill-slate-400 font-bold uppercase tracking-widest">
-                                {activeSeg ? activeSeg.category : 'Total Rev'}
-                              </text>
-                              <text x="100" y="115" textAnchor="middle" className="text-xs font-extrabold font-mono fill-slate-800">
-                                {activeSeg ? `${activeSeg.percent.toFixed(0)}%` : `₹${(totalRev / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`}
-                              </text>
-                            </>
-                          );
-                        })()}
-                      </svg>
-                    </div>
-
-                    <div className="flex-1 space-y-1.5 w-full">
-                      {(() => {
-                        const catData = getAnalysisCategoryData();
-                        const totalRev = catData.reduce((sum, d) => sum + d.revenue, 0);
-                        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
-
-                        return catData.slice(0, 5).map((d, idx) => {
-                          const pct = totalRev > 0 ? (d.revenue / totalRev) * 100 : 0;
-                          const color = colors[idx % colors.length];
-                          const active = hoveredCategoryAnalysis === idx;
-                          return (
-                            <div
-                              key={idx}
-                              className={`flex items-center justify-between p-1.5 rounded-xl transition-all ${active ? 'bg-slate-50 border-l-2' : ''}`}
-                              style={active ? { borderLeftColor: color } : {}}
-                              onMouseEnter={() => setHoveredCategoryAnalysis(idx)}
-                              onMouseLeave={() => setHoveredCategoryAnalysis(null)}
-                            >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                                <span className="font-bold text-[10px] text-slate-650 truncate uppercase">{d.category}</span>
+                            const active = hoveredCategoryAnalysis === idx;
+                            return (
+                              <div
+                                key={idx}
+                                className={`flex items-center justify-between p-1.5 rounded-xl transition-all ${active ? 'bg-slate-50 border-l-2' : ''}`}
+                                style={active ? { borderLeftColor: color } : {}}
+                                onMouseEnter={() => setHoveredCategoryAnalysis(idx)}
+                                onMouseLeave={() => setHoveredCategoryAnalysis(null)}
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                                  <span className="font-bold text-[10px] text-slate-650 truncate uppercase">{d.category}</span>
+                                </div>
+                                <span className="font-mono font-bold text-[10px] text-slate-900">₹{(d.revenue / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({pct.toFixed(0)}%)</span>
                               </div>
-                              <span className="font-mono font-bold text-[10px] text-slate-900">₹{(d.revenue / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })} ({pct.toFixed(0)}%)</span>
-                            </div>
-                          );
-                        });
-                      })()}
+                            );
+                          });
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Chart 2: 3D Cylinder Category Sales Volume */}
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-5 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">Category Sales Volume</h3>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Total units sold per footwear division</span>
+                <div className={visibleCategorySalesVolume ? "card card-outline card-success bg-white border border-slate-150 border-t-[3px] border-t-emerald-500 rounded-lg shadow-sm" : "hidden"}>
+                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                      <ShoppingCart className="w-4 h-4 text-emerald-500" />
+                      Category Sales Volume
+                    </h3>
+                    <div className="card-tools flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-650 rounded text-[9px] font-bold uppercase font-mono">Volume</span>
+                      <button 
+                        onClick={() => setCollapsedCategorySalesVolume(!collapsedCategorySalesVolume)}
+                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Collapse"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => setVisibleCategorySalesVolume(false)}
+                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Close"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase font-mono">Volume</span>
                   </div>
 
-                  <div className="relative">
-                    <svg className="w-full h-44 overflow-visible" viewBox="0 0 420 180" xmlns="http://www.w3.org/2000/svg">
-                      <defs>
-                        <filter id="cylShadowAnalysis" x="-10%" y="-10%" width="120%" height="120%">
-                          <feDropShadow dx="2" dy="4" stdDeviation="2.5" floodOpacity="0.15" />
-                        </filter>
-                      </defs>
-                      <line x1="30" y1="20" x2="400" y2="20" stroke="#f8fafc" strokeWidth="1" />
-                      <line x1="30" y1="80" x2="400" y2="80" stroke="#f8fafc" strokeWidth="1" />
-                      <line x1="30" y1="140" x2="400" y2="140" stroke="#f1f5f9" strokeWidth="1.5" />
+                  <div className={`card-body p-5 space-y-4 ${collapsedCategorySalesVolume ? 'hidden' : ''}`}>
+                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Total units sold per footwear division</div>
+                    <div className="relative">
+                      <svg className="w-full h-44 overflow-visible" viewBox="0 0 420 180" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <filter id="cylShadowAnalysis" x="-10%" y="-10%" width="120%" height="120%">
+                            <feDropShadow dx="2" dy="4" stdDeviation="2.5" floodOpacity="0.15" />
+                          </filter>
+                        </defs>
+                        <line x1="30" y1="20" x2="400" y2="20" stroke="#f8fafc" strokeWidth="1" />
+                        <line x1="30" y1="80" x2="400" y2="80" stroke="#f8fafc" strokeWidth="1" />
+                        <line x1="30" y1="140" x2="400" y2="140" stroke="#f1f5f9" strokeWidth="1.5" />
 
-                      {(() => {
-                        const catData = getAnalysisCategoryData();
-                        const maxQty = Math.max(...catData.map(d => d.quantity), 10);
-                        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
+                        {(() => {
+                          const catData = getAnalysisCategoryData();
+                          const maxQty = Math.max(...catData.map(d => d.quantity), 10);
+                          const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
 
-                        return catData.slice(0, 5).map((d, idx) => {
-                          const height = Math.max(12, (d.quantity / maxQty) * 110);
-                          const x = 50 + idx * 72;
-                          const y = 140 - height;
-                          const color = colors[idx % colors.length];
+                          return catData.slice(0, 5).map((d, idx) => {
+                            const height = Math.max(12, (d.quantity / maxQty) * 110);
+                            const x = 50 + idx * 72;
+                            const y = 140 - height;
+                            const color = colors[idx % colors.length];
 
-                          return (
-                            <g key={idx} className="group cursor-pointer">
-                              <ellipse cx={x + 16} cy={140} rx="16" ry="6" fill="#cbd5e1" opacity="0.3" />
-                              <ellipse cx={x + 16} cy={140} rx="14" ry="5.5" fill={color} opacity="0.75" />
-                              <rect x={x + 2} y={y} width="28" height={height} fill={color} opacity="0.85" filter="url(#cylShadowAnalysis)" />
-                              <rect x={x + 2} y={y} width="7" height={height} fill="#ffffff" opacity="0.12" />
-                              <ellipse cx={x + 16} cy={y} rx="14" ry="5.5" fill={color} style={{ filter: 'brightness(1.15)' }} />
+                            return (
+                              <g key={idx} className="group cursor-pointer">
+                                <ellipse cx={x + 16} cy={140} rx="16" ry="6" fill="#cbd5e1" opacity="0.3" />
+                                <ellipse cx={x + 16} cy={140} rx="14" ry="5.5" fill={color} opacity="0.75" />
+                                <rect x={x + 2} y={y} width="28" height={height} fill={color} opacity="0.85" filter="url(#cylShadowAnalysis)" />
+                                <rect x={x + 2} y={y} width="7" height={height} fill="#ffffff" opacity="0.12" />
+                                <ellipse cx={x + 16} cy={y} rx="14" ry="5.5" fill={color} style={{ filter: 'brightness(1.15)' }} />
 
-                              <text x={x + 16} y={y - 10} textAnchor="middle" className="text-[10px] font-extrabold font-mono fill-slate-800 opacity-0 group-hover:opacity-100 transition-opacity">
-                                {d.quantity} units
-                              </text>
-                              <text x={x + 16} y="156" textAnchor="middle" className="text-[9px] fill-slate-450 font-bold uppercase tracking-wider font-mono">
-                                {d.category.slice(0, 8)}
-                              </text>
-                              <title>{d.category}: {d.quantity} units sold</title>
-                            </g>
-                          );
-                        });
-                      })()}
-                    </svg>
+                                <text x={x + 16} y={y - 10} textAnchor="middle" className="text-[10px] font-extrabold font-mono fill-slate-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {d.quantity} units
+                                </text>
+                                <text x={x + 16} y="156" textAnchor="middle" className="text-[9px] fill-slate-455 font-bold uppercase tracking-wider font-mono">
+                                  {d.category.slice(0, 8)}
+                                </text>
+                                <title>{d.category}: {d.quantity} units sold</title>
+                              </g>
+                            );
+                          });
+                        })()}
+                      </svg>
+                    </div>
                   </div>
                 </div>
 
@@ -5382,190 +5494,227 @@ export default function Admin() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* Chart 3: Category Revenue Trend (Line/Area) */}
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-5 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">Filtered Revenue Trend</h3>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Daily performance over selected dates</span>
+                <div className={visibleFilteredRevenueTrend ? "card card-outline card-primary bg-white border border-slate-150 border-t-[3px] border-t-blue-600 rounded-lg shadow-sm" : "hidden"}>
+                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                      <Activity className="w-4 h-4 text-blue-600" />
+                      Filtered Revenue Trend
+                    </h3>
+                    <div className="card-tools flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold uppercase font-mono">Trend</span>
+                      <button 
+                        onClick={() => setCollapsedFilteredRevenueTrend(!collapsedFilteredRevenueTrend)}
+                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Collapse"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => setVisibleFilteredRevenueTrend(false)}
+                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Close"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold uppercase font-mono">Trend</span>
                   </div>
 
-                  <div className="relative">
-                    <svg className="w-full h-44 overflow-visible" viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg">
-                      <defs>
-                        <linearGradient id="areaGradAnalysis" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
-                      <line x1="40" y1="20" x2="480" y2="20" stroke="#f8fafc" strokeWidth="1" />
-                      <line x1="40" y1="52.5" x2="480" y2="52.5" stroke="#f8fafc" strokeWidth="1" />
-                      <line x1="40" y1="85" x2="480" y2="85" stroke="#f8fafc" strokeWidth="1" />
-                      <line x1="40" y1="117.5" x2="480" y2="117.5" stroke="#f8fafc" strokeWidth="1" />
-                      <line x1="40" y1="150" x2="480" y2="150" stroke="#f1f5f9" strokeWidth="1.5" />
+                  <div className={`card-body p-5 space-y-4 ${collapsedFilteredRevenueTrend ? 'hidden' : ''}`}>
+                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Daily performance over selected dates</div>
+                    <div className="relative">
+                      <svg className="w-full h-44 overflow-visible" viewBox="0 0 500 180" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                          <linearGradient id="areaGradAnalysis" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+                            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
+                          </linearGradient>
+                        </defs>
+                        <line x1="40" y1="20" x2="480" y2="20" stroke="#f8fafc" strokeWidth="1" />
+                        <line x1="40" y1="52.5" x2="480" y2="52.5" stroke="#f8fafc" strokeWidth="1" />
+                        <line x1="40" y1="85" x2="480" y2="85" stroke="#f8fafc" strokeWidth="1" />
+                        <line x1="40" y1="117.5" x2="480" y2="117.5" stroke="#f8fafc" strokeWidth="1" />
+                        <line x1="40" y1="150" x2="480" y2="150" stroke="#f1f5f9" strokeWidth="1.5" />
 
-                      {(() => {
-                        const filtered = getFilteredTransactions();
-                        const daysMap: Record<string, number> = {};
-                        filtered.forEach(t => {
-                          const d = t.created_at?.slice(5, 10) || '';
-                          if (d) daysMap[d] = (daysMap[d] || 0) + t.total;
-                        });
-                        const sortedDays = Object.keys(daysMap).sort().slice(-7);
-
-                        if (sortedDays.length === 0) {
-                          return <text x="250" y="90" textAnchor="middle" className="text-xs fill-slate-400 italic">Insufficient date parameters</text>;
-                        }
-
-                        const maxVal = Math.max(...sortedDays.map(d => daysMap[d]), 10000);
-                        const points = sortedDays.map((d, idx) => {
-                          const x = 50 + (idx * (410 / (sortedDays.length - 1 || 1)));
-                          const y = 150 - (daysMap[d] / maxVal) * 120;
-                          return { x, y, label: d, val: daysMap[d] };
-                        });
-
-                        const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-                        const areaData = points.length ? `${pathData} L ${points[points.length - 1].x} 150 L ${points[0].x} 150 Z` : '';
-
-                        return (
-                          <>
-                            {areaData && <path d={areaData} fill="url(#areaGradAnalysis)" className="transition-all duration-350" />}
-                            {pathData && <path d={pathData} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" className="transition-all duration-350" />}
-                            
-                            {points.map((p, idx) => {
-                              const active = hoveredPointAnalysis === idx;
-                              return (
-                                <g key={idx}>
-                                  <circle
-                                    cx={p.x}
-                                    cy={p.y}
-                                    r={active ? 6 : 4}
-                                    fill={active ? '#3b82f6' : '#ffffff'}
-                                    stroke="#3b82f6"
-                                    strokeWidth="2"
-                                    onMouseEnter={() => setHoveredPointAnalysis(idx)}
-                                    onMouseLeave={() => setHoveredPointAnalysis(null)}
-                                    className="cursor-pointer transition-all duration-150"
-                                  />
-                                  <text x={p.x} y="165" textAnchor="middle" className="text-[9px] fill-slate-450 font-bold font-mono">{p.label}</text>
-                                  {active && (
-                                    <g>
-                                      <rect x={p.x - 45} y={p.y - 32} width="90" height="22" rx="6" fill="#0f172a" />
-                                      <text x={p.x} y={p.y - 17} textAnchor="middle" fill="#ffffff" className="text-[9px] font-bold font-mono">
-                                        ₹{(p.val / 100).toFixed(0)}
-                                      </text>
-                                    </g>
-                                  )}
-                                </g>
-                              );
-                            })}
-                          </>
-                        );
-                      })()}
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Chart 4: Average Order Value (AOV) per Category (Donut) */}
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-5 space-y-4">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 font-sans">Average Item Value</h3>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Average ticket price per division item</span>
-                    </div>
-                    <span className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded text-[9px] font-bold uppercase font-mono">AOV</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="relative w-36 h-36 shrink-0">
-                      <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                         {(() => {
-                          const catData = getAnalysisCategoryData();
-                          const data = catData.map((d) => ({
-                            category: d.category,
-                            aov: d.quantity > 0 ? d.revenue / d.quantity : 0
-                          }));
+                          const filtered = getFilteredTransactions();
+                          const daysMap: Record<string, number> = {};
+                          filtered.forEach(t => {
+                            const d = t.created_at?.slice(5, 10) || '';
+                            if (d) daysMap[d] = (daysMap[d] || 0) + t.total;
+                          });
+                          const sortedDays = Object.keys(daysMap).sort().slice(-7);
 
-                          const totalAov = data.reduce((sum, d) => sum + d.aov, 0);
-                          let accumulatedPercent = 0;
+                          if (sortedDays.length === 0) {
+                            return <text x="250" y="90" textAnchor="middle" className="text-xs fill-slate-400 italic">Insufficient date parameters</text>;
+                          }
 
-                          const segments = data.map((d, idx) => {
-                            const percent = totalAov > 0 ? d.aov / totalAov : 0;
-                            const strokeLength = percent * 314.16;
-                            const strokeOffset = 314.16 - strokeLength + (accumulatedPercent * 314.16);
-                            accumulatedPercent -= percent;
-
-                            const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6', '#64748b'];
-                            const color = colors[idx % colors.length];
-
-                            return {
-                              category: d.category,
-                              aov: d.aov,
-                              percent: percent * 100,
-                              strokeLength,
-                              strokeOffset,
-                              color
-                            };
+                          const maxVal = Math.max(...sortedDays.map(d => daysMap[d]), 10000);
+                          const points = sortedDays.map((d, idx) => {
+                            const x = 50 + (idx * (410 / (sortedDays.length - 1 || 1)));
+                            const y = 150 - (daysMap[d] / maxVal) * 120;
+                            return { x, y, label: d, val: daysMap[d] };
                           });
 
-                          const activeSeg = hoveredCategoryAnalysis !== null ? segments[hoveredCategoryAnalysis] : null;
+                          const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                          const areaData = points.length ? `${pathData} L ${points[points.length - 1].x} 150 L ${points[0].x} 150 Z` : '';
 
                           return (
                             <>
-                              <circle cx="100" cy="100" r="50" fill="none" stroke="#f8fafc" strokeWidth="12" />
-                              {segments.map((seg, idx) => (
-                                <circle
-                                  key={idx}
-                                  cx="100"
-                                  cy="100"
-                                  r="50"
-                                  fill="none"
-                                  stroke={seg.color}
-                                  strokeWidth="12"
-                                  strokeDasharray={`${seg.strokeLength} 314.16`}
-                                  strokeDashoffset={seg.strokeOffset}
-                                  transform="rotate(-90 100 100)"
-                                  className="transition-all duration-300 cursor-pointer hover:stroke-[15]"
-                                  onMouseEnter={() => setHoveredCategoryAnalysis(idx)}
-                                  onMouseLeave={() => setHoveredCategoryAnalysis(null)}
-                                />
-                              ))}
-                              <text x="100" y="95" textAnchor="middle" className="text-[9px] fill-slate-400 font-bold uppercase tracking-widest">
-                                {activeSeg ? activeSeg.category : 'Average'}
-                              </text>
-                              <text x="100" y="115" textAnchor="middle" className="text-xs font-extrabold font-mono fill-slate-800">
-                                {activeSeg ? `₹${(activeSeg.aov / 100).toFixed(0)}` : `₹${(totalAov / (data.length || 1) / 100).toFixed(0)}`}
-                              </text>
+                              {areaData && <path d={areaData} fill="url(#areaGradAnalysis)" className="transition-all duration-350" />}
+                              {pathData && <path d={pathData} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" className="transition-all duration-350" />}
+                              
+                              {points.map((p, idx) => {
+                                const active = hoveredPointAnalysis === idx;
+                                return (
+                                  <g key={idx}>
+                                    <circle
+                                      cx={p.x}
+                                      cy={p.y}
+                                      r={active ? 6 : 4}
+                                      fill={active ? '#3b82f6' : '#ffffff'}
+                                      stroke="#3b82f6"
+                                      strokeWidth="2"
+                                      onMouseEnter={() => setHoveredPointAnalysis(idx)}
+                                      onMouseLeave={() => setHoveredPointAnalysis(null)}
+                                      className="cursor-pointer transition-all duration-150"
+                                    />
+                                    <text x={p.x} y="165" textAnchor="middle" className="text-[9px] fill-slate-450 font-bold font-mono">{p.label}</text>
+                                    {active && (
+                                      <g>
+                                        <rect x={p.x - 45} y={p.y - 32} width="90" height="22" rx="6" fill="#0f172a" />
+                                        <text x={p.x} y={p.y - 17} textAnchor="middle" fill="#ffffff" className="text-[9px] font-bold font-mono">
+                                          ₹{(p.val / 100).toFixed(0)}
+                                        </text>
+                                      </g>
+                                    )}
+                                  </g>
+                                );
+                              })}
                             </>
                           );
                         })()}
                       </svg>
                     </div>
-
-                    <div className="flex-1 space-y-1.5 w-full">
-                      {(() => {
-                        const catData = getAnalysisCategoryData();
-                        const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6', '#64748b'];
-
-                        return catData.slice(0, 5).map((d, idx) => {
-                          const aov = d.quantity > 0 ? d.revenue / d.quantity : 0;
-                          const color = colors[idx % colors.length];
-                          return (
-                            <div key={idx} className="flex items-center justify-between p-1">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                                <span className="font-bold text-[10px] text-slate-655 truncate uppercase">{d.category}</span>
-                              </div>
-                              <span className="font-mono font-bold text-[10px] text-slate-900">₹{(aov / 100).toFixed(2)}</span>
-                            </div>
-                          );
-                        });
-                      })()}
-                    </div>
                   </div>
                 </div>
 
+                {/* Chart 4: Average Order Value (AOV) per Category (Donut) */}
+                <div className={visibleAverageItemValue ? "card card-outline card-danger bg-white border border-slate-150 border-t-[3px] border-t-purple-500 rounded-lg shadow-sm" : "hidden"}>
+                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                      <Percent className="w-4 h-4 text-purple-500" />
+                      Average Item Value
+                    </h3>
+                    <div className="card-tools flex items-center gap-2">
+                      <span className="px-1.5 py-0.5 bg-amber-50 text-amber-650 rounded text-[9px] font-bold uppercase font-mono">AOV</span>
+                      <button 
+                        onClick={() => setCollapsedAverageItemValue(!collapsedAverageItemValue)}
+                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Collapse"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => setVisibleAverageItemValue(false)}
+                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                        title="Close"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={`card-body p-5 ${collapsedAverageItemValue ? 'hidden' : ''}`}>
+                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Average ticket price per division item</div>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                      <div className="relative w-36 h-36 shrink-0">
+                        <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                          {(() => {
+                            const catData = getAnalysisCategoryData();
+                            const data = catData.map((d) => ({
+                              category: d.category,
+                              aov: d.quantity > 0 ? d.revenue / d.quantity : 0
+                            }));
+
+                            const totalAov = data.reduce((sum, d) => sum + d.aov, 0);
+                            let accumulatedPercent = 0;
+
+                            const segments = data.map((d, idx) => {
+                              const percent = totalAov > 0 ? d.aov / totalAov : 0;
+                              const strokeLength = percent * 314.16;
+                              const strokeOffset = 314.16 - strokeLength + (accumulatedPercent * 314.16);
+                              accumulatedPercent -= percent;
+
+                              const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6', '#64748b'];
+                              const color = colors[idx % colors.length];
+
+                              return {
+                                category: d.category,
+                                aov: d.aov,
+                                percent: percent * 100,
+                                strokeLength,
+                                strokeOffset,
+                                color
+                              };
+                            });
+
+                            const activeSeg = hoveredCategoryAnalysis !== null ? segments[hoveredCategoryAnalysis] : null;
+
+                            return (
+                              <>
+                                <circle cx="100" cy="100" r="50" fill="none" stroke="#f8fafc" strokeWidth="12" />
+                                {segments.map((seg, idx) => (
+                                  <circle
+                                    key={idx}
+                                    cx="100"
+                                    cy="100"
+                                    r="50"
+                                    fill="none"
+                                    stroke={seg.color}
+                                    strokeWidth="12"
+                                    strokeDasharray={`${seg.strokeLength} 314.16`}
+                                    strokeDashoffset={seg.strokeOffset}
+                                    transform="rotate(-90 100 100)"
+                                    className="transition-all duration-300 cursor-pointer hover:stroke-[15]"
+                                    onMouseEnter={() => setHoveredCategoryAnalysis(idx)}
+                                    onMouseLeave={() => setHoveredCategoryAnalysis(null)}
+                                  />
+                                ))}
+                                <text x="100" y="95" textAnchor="middle" className="text-[9px] fill-slate-400 font-bold uppercase tracking-widest">
+                                  {activeSeg ? activeSeg.category : 'Average'}
+                                </text>
+                                <text x="100" y="115" textAnchor="middle" className="text-xs font-extrabold font-mono fill-slate-800">
+                                  {activeSeg ? `₹${(activeSeg.aov / 100).toFixed(0)}` : `₹${(totalAov / (data.length || 1) / 100).toFixed(0)}`}
+                                </text>
+                              </>
+                            );
+                          })()}
+                        </svg>
+                      </div>
+
+                      <div className="flex-1 space-y-1.5 w-full">
+                        {(() => {
+                          const catData = getAnalysisCategoryData();
+                          const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6', '#64748b'];
+
+                          return catData.slice(0, 5).map((d, idx) => {
+                            const aov = d.quantity > 0 ? d.revenue / d.quantity : 0;
+                            const color = colors[idx % colors.length];
+                            return (
+                              <div key={idx} className="flex items-center justify-between p-1">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                                  <span className="font-bold text-[10px] text-slate-655 truncate uppercase">{d.category}</span>
+                                </div>
+                                <span className="font-mono font-bold text-[10px] text-slate-900">₹{(aov / 100).toFixed(2)}</span>
+                              </div>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Transactions List */}

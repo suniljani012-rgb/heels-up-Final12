@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Download, RefreshCw, Activity, Info } from 'lucide-react';
+import { Download, RefreshCw, Activity, Info, Minus, X, Tag } from 'lucide-react';
 
 interface EnterpriseReportsProps {
   orders: any[];
@@ -17,6 +17,12 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
   const [compiledData, setCompiledData] = useState<any[]>([]);
+
+  // NEW: AdminLTE Chart States (Interactivity: Collapse and Visibility)
+  const [collapsedRevenueGrowthTrend, setCollapsedRevenueGrowthTrend] = useState(false);
+  const [visibleRevenueGrowthTrend, setVisibleRevenueGrowthTrend] = useState(true);
+  const [collapsedTopCategoryShare, setCollapsedTopCategoryShare] = useState(false);
+  const [visibleTopCategoryShare, setVisibleTopCategoryShare] = useState(true);
 
   // 1. Calculate General Aggregates
   const stats = useMemo(() => {
@@ -265,67 +271,113 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
       {/* Charts Visualization Column */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sales trend SVG area chart */}
-        <div className="lg:col-span-8 bg-[#0f0f0e] border border-neutral-900 rounded-2xl p-5 space-y-4">
-          <span className="block text-[9px] font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-            <Activity className="w-4 h-4 text-amber-500" /> Revenue Growth Trend (Inclusive GST)
-          </span>
-          <div className="h-44 relative bg-[#070707] border border-neutral-950 rounded-xl p-3">
-            {lineChartData.points.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-xs text-neutral-500">No sales transactions in target timeframe.</div>
-            ) : (
-              <svg viewBox="0 0 500 140" className="w-full h-full overflow-visible">
-                <defs>
-                  <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ead2ae" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#ead2ae" stopOpacity="0.00" />
-                  </linearGradient>
-                </defs>
-                {/* Horizontal Grid lines */}
-                <line x1="10" y1="20" x2="490" y2="20" stroke="#1c1c1a" strokeDasharray="3" />
-                <line x1="10" y1="60" x2="490" y2="60" stroke="#1c1c1a" strokeDasharray="3" />
-                <line x1="10" y1="100" x2="490" y2="100" stroke="#1c1c1a" strokeDasharray="3" />
-                <line x1="10" y1="120" x2="490" y2="120" stroke="#1c1c1a" />
-                
-                {/* Area Gradient fill */}
-                <path d={lineChartData.area} fill="url(#glow)" />
-                {/* Stroke line path */}
-                <path d={lineChartData.path} fill="none" stroke="#ead2ae" strokeWidth="2" strokeLinecap="round" />
-                
-                {/* Dots */}
-                {lineChartData.points.map((pt, i) => (
-                  <circle
-                    key={i}
-                    cx={pt.x}
-                    cy={pt.y}
-                    r="3"
-                    fill="#0f0f0e"
-                    stroke="#ead2ae"
-                    strokeWidth="1.5"
-                    className="cursor-pointer hover:r-4 transition-all"
-                  />
-                ))}
-              </svg>
-            )}
+        <div className={visibleRevenueGrowthTrend ? "lg:col-span-8 card card-outline card-warning bg-[#0f0f0e] border border-neutral-900 border-t-[3px] border-t-amber-500 rounded-lg shadow-md overflow-hidden flex flex-col" : "hidden"}>
+          <div className="card-header border-b border-neutral-900 px-4 py-2.5 flex justify-between items-center bg-[#141413]">
+            <h3 className="card-title text-[9px] font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-sans">
+              <Activity className="w-4 h-4 text-amber-500" />
+              Revenue Growth Trend (Inclusive GST)
+            </h3>
+            <div className="card-tools flex items-center gap-2">
+              <button 
+                onClick={() => setCollapsedRevenueGrowthTrend(!collapsedRevenueGrowthTrend)}
+                className="text-neutral-450 hover:text-neutral-200 p-1 hover:bg-neutral-800 rounded transition-colors"
+                title="Collapse"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <button 
+                onClick={() => setVisibleRevenueGrowthTrend(false)}
+                className="text-neutral-450 hover:text-neutral-200 p-1 hover:bg-neutral-800 rounded transition-colors"
+                title="Close"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+          
+          <div className={`card-body p-5 space-y-4 ${collapsedRevenueGrowthTrend ? 'hidden' : ''}`}>
+            <div className="h-44 relative bg-[#070707] border border-neutral-950 rounded-xl p-3">
+              {lineChartData.points.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-xs text-neutral-500">No sales transactions in target timeframe.</div>
+              ) : (
+                <svg viewBox="0 0 500 140" className="w-full h-full overflow-visible">
+                  <defs>
+                    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ead2ae" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#ead2ae" stopOpacity="0.00" />
+                    </linearGradient>
+                  </defs>
+                  {/* Horizontal Grid lines */}
+                  <line x1="10" y1="20" x2="490" y2="20" stroke="#1c1c1a" strokeDasharray="3" />
+                  <line x1="10" y1="60" x2="490" y2="60" stroke="#1c1c1a" strokeDasharray="3" />
+                  <line x1="10" y1="100" x2="490" y2="100" stroke="#1c1c1a" strokeDasharray="3" />
+                  <line x1="10" y1="120" x2="490" y2="120" stroke="#1c1c1a" />
+                  
+                  {/* Area Gradient fill */}
+                  <path d={lineChartData.area} fill="url(#glow)" />
+                  {/* Stroke line path */}
+                  <path d={lineChartData.path} fill="none" stroke="#ead2ae" strokeWidth="2" strokeLinecap="round" />
+                  
+                  {/* Dots */}
+                  {lineChartData.points.map((pt, i) => (
+                    <circle
+                      key={i}
+                      cx={pt.x}
+                      cy={pt.y}
+                      r="3"
+                      fill="#0f0f0e"
+                      stroke="#ead2ae"
+                      strokeWidth="1.5"
+                      className="cursor-pointer hover:r-4 transition-all"
+                    />
+                  ))}
+                </svg>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Category distribution bar chart */}
-        <div className="lg:col-span-4 bg-[#0f0f0e] border border-neutral-900 rounded-2xl p-5 space-y-4">
-          <span className="block text-[9px] font-bold text-white uppercase tracking-wider">Top Category Share</span>
-          <div className="h-44 bg-[#070707] border border-neutral-950 rounded-xl p-3 relative">
-            {categoryBarData.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-xs text-neutral-500">No product inventory cataloged.</div>
-            ) : (
-              <svg viewBox="0 0 320 140" className="w-full h-full overflow-visible">
-                {categoryBarData.map((bar, i) => (
-                  <g key={i}>
-                    <rect x={bar.x} y={bar.y} width="22" height={bar.height} fill="#ead2ae" opacity="0.8" rx="2" className="hover:opacity-100 transition-opacity" />
-                    <text x={bar.x + 11} y={bar.y - 4} textAnchor="middle" className="fill-neutral-400 text-[7px] font-mono">{bar.value}</text>
-                    <text x={bar.x + 11} y="138" textAnchor="middle" className="fill-neutral-500 text-[7px] uppercase font-bold tracking-wider">{bar.label.slice(0, 4)}</text>
-                  </g>
-                ))}
-              </svg>
-            )}
+        <div className={visibleTopCategoryShare ? "lg:col-span-4 card card-outline card-success bg-[#0f0f0e] border border-neutral-900 border-t-[3px] border-t-emerald-500 rounded-lg shadow-md overflow-hidden flex flex-col" : "hidden"}>
+          <div className="card-header border-b border-neutral-900 px-4 py-2.5 flex justify-between items-center bg-[#141413]">
+            <h3 className="card-title text-[9px] font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-sans">
+              <Tag className="w-4 h-4 text-emerald-500" />
+              Top Category Share
+            </h3>
+            <div className="card-tools flex items-center gap-2">
+              <button 
+                onClick={() => setCollapsedTopCategoryShare(!collapsedTopCategoryShare)}
+                className="text-neutral-455 hover:text-neutral-200 p-1 hover:bg-neutral-800 rounded transition-colors"
+                title="Collapse"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <button 
+                onClick={() => setVisibleTopCategoryShare(false)}
+                className="text-neutral-455 hover:text-neutral-200 p-1 hover:bg-neutral-800 rounded transition-colors"
+                title="Close"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+          
+          <div className={`card-body p-5 space-y-4 ${collapsedTopCategoryShare ? 'hidden' : ''}`}>
+            <div className="h-44 bg-[#070707] border border-neutral-950 rounded-xl p-3 relative">
+              {categoryBarData.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-xs text-neutral-500">No product inventory cataloged.</div>
+              ) : (
+                <svg viewBox="0 0 320 140" className="w-full h-full overflow-visible">
+                  {categoryBarData.map((bar, i) => (
+                    <g key={i}>
+                      <rect x={bar.x} y={bar.y} width="22" height={bar.height} fill="#ead2ae" opacity="0.8" rx="2" className="hover:opacity-100 transition-opacity" />
+                      <text x={bar.x + 11} y={bar.y - 4} textAnchor="middle" className="fill-neutral-400 text-[7px] font-mono">{bar.value}</text>
+                      <text x={bar.x + 11} y="138" textAnchor="middle" className="fill-neutral-500 text-[7px] uppercase font-bold tracking-wider">{bar.label.slice(0, 4)}</text>
+                    </g>
+                  ))}
+                </svg>
+              )}
+            </div>
           </div>
         </div>
       </div>
