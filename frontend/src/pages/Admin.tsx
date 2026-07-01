@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import HeicImage from '../components/HeicImage';
+// @ts-ignore
+import bootstrapCss from 'bootstrap/dist/css/bootstrap.min.css?inline';
+// @ts-ignore
+import adminLteCss from 'admin-lte/dist/css/adminlte.min.css?inline';
 import {
   ShoppingCart, Plus, Edit3, Star,
   UploadCloud, AlertTriangle, CheckCircle2, X, ChevronRight, ChevronLeft,
@@ -745,17 +749,15 @@ export default function Admin() {
 
   // Load Bootstrap and AdminLTE CSS dynamically on mount, clean up on unmount
   useEffect(() => {
-    const bootstrapLink = document.createElement('link');
-    bootstrapLink.rel = 'stylesheet';
-    bootstrapLink.href = 'https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css';
-    bootstrapLink.id = 'admin-bootstrap-css';
-    document.head.appendChild(bootstrapLink);
+    const bootstrapStyle = document.createElement('style');
+    bootstrapStyle.id = 'admin-bootstrap-css';
+    bootstrapStyle.innerHTML = bootstrapCss;
+    document.head.appendChild(bootstrapStyle);
 
-    const adminLteLink = document.createElement('link');
-    adminLteLink.rel = 'stylesheet';
-    adminLteLink.href = 'https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css';
-    adminLteLink.id = 'admin-lte-css';
-    document.head.appendChild(adminLteLink);
+    const adminLteStyle = document.createElement('style');
+    adminLteStyle.id = 'admin-lte-css';
+    adminLteStyle.innerHTML = adminLteCss;
+    document.head.appendChild(adminLteStyle);
 
     const fontLink = document.createElement('link');
     fontLink.rel = 'stylesheet';
