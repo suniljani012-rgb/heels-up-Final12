@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import HeicImage from '../components/HeicImage';
 import {
-  LayoutDashboard, ShoppingCart, Package, LogOut, Plus, Edit3, Settings, Tag, Star, Users,
-  FileText, Image as ImageIcon, UploadCloud, AlertTriangle, CheckCircle2, X, ChevronRight, ChevronLeft,
-  Search, RotateCw, Trash2, Percent, Activity, Sliders, RefreshCw,
-  Printer, Database, Shield, Play, HelpCircle, Eye, Check, Download, Truck, Minus
+  ShoppingCart, Plus, Edit3, Star,
+  UploadCloud, AlertTriangle, CheckCircle2, X, ChevronRight, ChevronLeft,
+  Search, Trash2, Percent, Activity, Sliders, RefreshCw,
+  Printer, Database, Play, HelpCircle, Eye, Check, Download, Truck, Minus
 } from 'lucide-react';
 
 // --- TypeScript Interfaces ---
@@ -743,40 +743,123 @@ export default function Admin() {
     return () => clearInterval(interval);
   }, [token, lastOrderCount]);
 
-  // Inject Aptos Font CSS & Font Scale-up Overrides
+  // Load Bootstrap and AdminLTE CSS dynamically on mount, clean up on unmount
   useEffect(() => {
-    const styleId = 'admin-aptos-font';
-    let tag = document.getElementById(styleId);
-    if (!tag) {
-      tag = document.createElement('style');
-      tag.id = styleId;
-      tag.innerHTML = `
-        @import url('https://fonts.cdnfonts.com/css/aptos');
-        .admin-aptos-container {
-          font-family: 'Aptos', 'Inter', -apple-system, sans-serif !important;
-          font-size: 15px !important;
+    const bootstrapLink = document.createElement('link');
+    bootstrapLink.rel = 'stylesheet';
+    bootstrapLink.href = 'https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css';
+    bootstrapLink.id = 'admin-bootstrap-css';
+    document.head.appendChild(bootstrapLink);
+
+    const adminLteLink = document.createElement('link');
+    adminLteLink.rel = 'stylesheet';
+    adminLteLink.href = 'https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css';
+    adminLteLink.id = 'admin-lte-css';
+    document.head.appendChild(adminLteLink);
+
+    const fontLink = document.createElement('link');
+    fontLink.rel = 'stylesheet';
+    fontLink.href = 'https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,450,600,700,300italic,400italic,600italic';
+    fontLink.id = 'admin-font-css';
+    document.head.appendChild(fontLink);
+
+    // Dynamic style adjustments to ensure Tailwind doesn't conflict with Bootstrap/AdminLTE layout
+    const customStyle = document.createElement('style');
+    customStyle.id = 'admin-lte-custom-overrides';
+    customStyle.innerHTML = `
+      body.sidebar-mini {
+        font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        background-color: #f4f6f9 !important;
+      }
+      .main-sidebar, .main-sidebar *, .content-wrapper, .content-wrapper *, .main-header, .main-header * {
+        box-sizing: border-box !important;
+      }
+      /* Prevent sidebar flex items collapsing weirdly */
+      .main-sidebar .nav-sidebar .nav-item .nav-link {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        color: #c2c7d0 !important;
+      }
+      .main-sidebar .nav-sidebar .nav-item .nav-link.active {
+        background-color: #007bff !important;
+        color: #fff !important;
+      }
+      .main-sidebar .nav-sidebar .nav-item .nav-link i {
+        width: 1.6rem;
+        font-size: 1.1rem;
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 0.5rem;
+      }
+      /* Adjust content wrapper padding/margin to match AdminLTE */
+      @media (min-width: 768px) {
+        body:not(.sidebar-collapse) .content-wrapper {
+          margin-left: 250px !important;
         }
-        .admin-aptos-container input,
-        .admin-aptos-container select,
-        .admin-aptos-container textarea,
-        .admin-aptos-container button {
-          font-family: 'Aptos', 'Inter', -apple-system, sans-serif !important;
+        body.sidebar-collapse .content-wrapper {
+          margin-left: 4.6rem !important;
         }
-        /* Override specific text sizing classes to be larger and clearer */
-        .admin-aptos-container .text-\[9px\] { font-size: 11px !important; }
-        .admin-aptos-container .text-\[10px\] { font-size: 12px !important; }
-        .admin-aptos-container .text-xs { font-size: 14px !important; }
-        .admin-aptos-container .text-sm { font-size: 16px !important; }
-        .admin-aptos-container .text-base { font-size: 17px !important; }
-        .admin-aptos-container .text-lg { font-size: 19px !important; }
-        .admin-aptos-container .text-xl { font-size: 21px !important; }
-        .admin-aptos-container .text-2xl { font-size: 26px !important; }
-        .admin-aptos-container .text-3xl { font-size: 32px !important; }
-        .admin-aptos-container .text-4xl { font-size: 38px !important; }
-      `;
-      document.head.appendChild(tag);
-    }
+        body:not(.sidebar-collapse) .main-header {
+          margin-left: 250px !important;
+        }
+        body.sidebar-collapse .main-header {
+          margin-left: 4.6rem !important;
+        }
+      }
+      /* Fix layout overlaps */
+      .content-wrapper {
+        min-height: 100vh !important;
+        background-color: #f4f6f9 !important;
+        padding-bottom: 3rem;
+      }
+      /* Fix navbar items spacing */
+      .navbar-nav {
+        flex-direction: row !important;
+      }
+      /* Fix small boxes icons alignment */
+      .small-box .icon {
+        top: 15px !important;
+        right: 15px !important;
+        font-size: 50px !important;
+        opacity: 0.15 !important;
+      }
+      /* Fix custom select input styling */
+      .admin-lte-custom-overrides input, 
+      .admin-lte-custom-overrides select, 
+      .admin-lte-custom-overrides textarea {
+        background-color: #fff !important;
+        color: #495057 !important;
+      }
+    `;
+    document.head.appendChild(customStyle);
+
+    // Apply native AdminLTE body class config
+    document.body.classList.add('sidebar-mini', 'layout-fixed');
+
+    return () => {
+      // Remove styles and classes on exit
+      document.getElementById('admin-bootstrap-css')?.remove();
+      document.getElementById('admin-lte-css')?.remove();
+      document.getElementById('admin-font-css')?.remove();
+      document.getElementById('admin-lte-custom-overrides')?.remove();
+      document.body.classList.remove('sidebar-mini', 'layout-fixed', 'sidebar-collapse', 'sidebar-open');
+    };
   }, []);
+
+  // Sync sidebar toggle state with body classes
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.classList.remove('sidebar-collapse');
+      if (window.innerWidth < 768) {
+        document.body.classList.add('sidebar-open');
+      }
+    } else {
+      document.body.classList.add('sidebar-collapse');
+      document.body.classList.remove('sidebar-open');
+    }
+  }, [sidebarOpen]);
 
   // Handle Fetch Unauthorized Broadcasts
   useEffect(() => {
@@ -2985,7 +3068,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="admin-aptos-container min-h-screen bg-slate-50 font-sans flex text-slate-800 relative">
+    <div className="wrapper admin-lte-custom-overrides">
       {/* Floating Toasts container */}
       <div className="fixed top-5 right-5 z-50 space-y-3 w-80 pointer-events-none">
         {toasts.map((toast) => (
@@ -3026,153 +3109,179 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Mobile Drawer Overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-35 md:hidden transition-opacity" onClick={() => setSidebarOpen(false)} />
-      )}
+      {/* Top Navbar Header */}
+      <nav className="main-header navbar navbar-expand navbar-white navbar-light border-bottom elevation-1">
+        {/* Left navbar links */}
+        <ul className="navbar-nav">
+          <li className="nav-item">
+            <button className="nav-link btn btn-link border-0 text-dark" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <i className="fas fa-bars"></i>
+            </button>
+          </li>
+          <li className="nav-item d-none d-sm-inline-block">
+            <span className="nav-link text-capitalize font-weight-bold text-dark">
+              Admin &middot; {activeTab}
+            </span>
+          </li>
+        </ul>
+
+        {/* Right navbar links */}
+        <ul className="navbar-nav ml-auto align-items-center">
+          <li className="nav-item">
+            <button
+              onClick={loadAllData}
+              disabled={dataLoading}
+              className="btn btn-outline-secondary btn-sm text-uppercase font-weight-bold"
+            >
+              <i className={`fas fa-sync-alt mr-1 ${dataLoading ? 'fa-spin' : ''}`}></i>
+              {dataLoading ? 'Syncing...' : 'Sync Database'}
+            </button>
+          </li>
+          <li className="nav-item d-none d-sm-inline-block ml-3">
+            <span className="nav-link text-muted font-weight-bold" style={{ fontSize: '11px' }}>
+              Cloudflare D1: heelsup-live
+            </span>
+          </li>
+        </ul>
+      </nav>
 
       {/* --- AdminLTE Sidebar Navigation --- */}
-      <aside className={`bg-[#343a40] text-[#c2c7d0] transition-all duration-300 flex flex-col shrink-0 z-40 font-sans shadow-lg
-        ${sidebarOpen ? 'w-64 fixed md:relative h-screen' : 'w-0 overflow-hidden md:w-16 h-screen'}
-      `}>
-        {/* Brand Header */}
-        <div className="h-16 flex items-center px-4 border-b border-[#4b545c] gap-3 bg-[#343a40] shrink-0">
-          <div className="w-8 h-8 rounded-full bg-[#007bff] flex items-center justify-center text-white font-extrabold shrink-0 shadow">
+      <aside className="main-sidebar sidebar-dark-primary elevation-4">
+        {/* Brand Logo */}
+        <a href="#" className="brand-link bg-[#343a40] border-bottom border-secondary d-flex align-items-center" onClick={(e) => e.preventDefault()}>
+          <div className="brand-image img-circle elevation-3 bg-primary d-flex align-items-center justify-content-center text-white font-weight-bold" style={{ width: '33px', height: '33px', opacity: 0.8 }}>
             HU
           </div>
-          {sidebarOpen && (
-            <span className="text-sm font-bold tracking-wide text-white font-mono uppercase">
-              HeelsUp Admin
-            </span>
-          )}
-        </div>
+          <span className="brand-text font-weight-light ml-2 font-weight-bold text-white">HeelsUp Admin</span>
+        </a>
 
-        {/* User Info Section */}
-        {sidebarOpen && (
-          <div className="p-4 border-b border-[#4b545c] flex items-center gap-3 shrink-0 bg-[#343a40]">
-            <div className="w-8 h-8 rounded-full bg-slate-600 text-white font-black text-xs flex items-center justify-center uppercase border border-slate-500 shadow-sm">
-              {user.name ? user.name[0].toUpperCase() : 'A'}
-            </div>
-            <div className="min-w-0">
-              <h4 className="text-xs font-bold text-white truncate leading-tight">{user.name || 'Staff User'}</h4>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                <span className="text-[9px] text-[#c2c7d0] uppercase tracking-wider font-extrabold font-mono">{user.role}</span>
+        {/* Sidebar */}
+        <div className="sidebar flex flex-col justify-between pb-4" style={{ height: 'calc(100vh - 57px)', overflowY: 'auto' }}>
+          <div>
+            {/* Sidebar User Panel */}
+            <div className="user-panel mt-3 pb-3 mb-3 d-flex align-items-center border-bottom border-secondary">
+              <div className="image">
+                <div className="img-circle elevation-2 bg-secondary d-flex align-items-center justify-content-center text-white font-weight-bold" style={{ width: '33px', height: '33px' }}>
+                  {user.name ? user.name[0].toUpperCase() : 'A'}
+                </div>
+              </div>
+              <div className="info ml-2">
+                <span className="d-block text-white font-weight-bold leading-none">{user.name || 'Staff User'}</span>
+                <span className="badge badge-success text-uppercase font-weight-bold p-1 mt-1" style={{ fontSize: '8px', letterSpacing: '0.5px' }}>
+                  {user.role}
+                </span>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Sidebar Menu Items */}
-        <nav className="flex-1 p-2 space-y-3 overflow-y-auto font-sans">
-          {(() => {
-            const menuSections = [
-              {
-                title: 'Dashboard & Reports',
-                items: [
-                  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                  { id: 'analysis', label: 'Advanced Analysis', icon: Activity },
-                ]
-              },
-              {
-                title: 'E-commerce & POS',
-                items: [
-                  { id: 'pos', label: 'POS Terminal', icon: Printer },
-                  { id: 'orders', label: 'Orders', icon: ShoppingCart },
-                  { id: 'returns', label: 'Exchanges Manager', icon: RotateCw },
-                ]
-              },
-              {
-                title: 'Catalog & Stock',
-                items: [
-                  { id: 'products', label: 'Products Catalog', icon: Package },
-                  { id: 'stock', label: 'Stock Inventory', icon: Sliders },
-                  { id: 'categories', label: 'Categories', icon: Tag },
-                  { id: 'colors', label: 'Database Colors', icon: Settings },
-                ]
-              },
-              {
-                title: 'Customers & Reviews',
-                items: [
-                  { id: 'customers', label: 'Customers', icon: Users },
-                  { id: 'reviews', label: 'Reviews Moderation', icon: Star },
-                  { id: 'coupons', label: 'Promo Codes', icon: Percent },
-                ]
-              },
-              {
-                title: 'Content & System',
-                items: [
-                  { id: 'banners', label: 'Homepage Banners', icon: ImageIcon },
-                  { id: 'pages', label: 'Static Pages', icon: FileText },
-                  { id: 'staff', label: 'Staff Management', icon: Users },
-                  { id: 'sql', label: 'SQL DB Console', icon: Database },
-                  { id: 'audits', label: 'Audit Logs', icon: Shield },
-                  { id: 'settings', label: 'Settings', icon: Settings },
-                ]
-              }
-            ];
+            {/* Sidebar Menu */}
+            <nav className="mt-2">
+              <ul className="nav nav-pills nav-sidebar flex-column" role="menu">
+                {(() => {
+                  const menuSections = [
+                    {
+                      title: 'Dashboard & Reports',
+                      items: [
+                        { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-tachometer-alt' },
+                        { id: 'analysis', label: 'Advanced Analysis', icon: 'fas fa-chart-line' },
+                      ]
+                    },
+                    {
+                      title: 'E-commerce & POS',
+                      items: [
+                        { id: 'pos', label: 'POS Terminal', icon: 'fas fa-cash-register' },
+                        { id: 'orders', label: 'Orders', icon: 'fas fa-shopping-cart' },
+                        { id: 'returns', label: 'Exchanges Manager', icon: 'fas fa-exchange-alt' },
+                      ]
+                    },
+                    {
+                      title: 'Catalog & Stock',
+                      items: [
+                        { id: 'products', label: 'Products Catalog', icon: 'fas fa-shoe-prints' },
+                        { id: 'stock', label: 'Stock Inventory', icon: 'fas fa-boxes' },
+                        { id: 'categories', label: 'Categories', icon: 'fas fa-tags' },
+                        { id: 'colors', label: 'Database Colors', icon: 'fas fa-palette' },
+                      ]
+                    },
+                    {
+                      title: 'Customers & Reviews',
+                      items: [
+                        { id: 'customers', label: 'Customers', icon: 'fas fa-users' },
+                        { id: 'reviews', label: 'Reviews Moderation', icon: 'fas fa-star' },
+                        { id: 'coupons', label: 'Promo Codes', icon: 'fas fa-percentage' },
+                      ]
+                    },
+                    {
+                      title: 'Content & System',
+                      items: [
+                        { id: 'banners', label: 'Homepage Banners', icon: 'fas fa-images' },
+                        { id: 'pages', label: 'Static Pages', icon: 'fas fa-file-alt' },
+                        { id: 'staff', label: 'Staff Management', icon: 'fas fa-user-shield' },
+                        { id: 'sql', label: 'SQL DB Console', icon: 'fas fa-database' },
+                        { id: 'audits', label: 'Audit Logs', icon: 'fas fa-history' },
+                        { id: 'settings', label: 'Settings', icon: 'fas fa-cogs' },
+                      ]
+                    }
+                  ];
 
-            return menuSections.map((sect, sIdx) => {
-              const allowedItems = sect.items.filter(item => hasPermission(item.id));
-              if (allowedItems.length === 0) return null;
+                  return menuSections.map((sect, sIdx) => {
+                    const allowedItems = sect.items.filter(item => hasPermission(item.id));
+                    if (allowedItems.length === 0) return null;
 
-              return (
-                <div key={sIdx} className="space-y-1">
-                  {sidebarOpen && (
-                    <div className="text-[9px] uppercase font-black tracking-widest text-[#6c757d] px-2.5 pt-2 pb-1 font-mono">
-                      {sect.title}
-                    </div>
-                  )}
-                  {allowedItems.map((item) => {
-                    const Icon = item.icon;
-                    const active = activeTab === item.id;
                     return (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setActiveTab(item.id as any);
-                          if (item.id === 'orders') setUnseenOrders(0);
-                          if (window.innerWidth < 768) setSidebarOpen(false);
-                        }}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded text-xs font-semibold transition-all duration-150 group ${
-                          active
-                            ? 'bg-[#007bff] text-white shadow'
-                            : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
-                        }`}
-                        title={item.label}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-white' : 'text-[#c2c7d0] group-hover:text-white'}`} />
-                          {sidebarOpen && <span className="truncate">{item.label}</span>}
-                        </div>
-                        {item.id === 'orders' && unseenOrders > 0 && sidebarOpen && (
-                          <span className="bg-[#dc3545] text-white text-[8px] font-black font-mono px-1.5 py-0.5 rounded-full animate-pulse shrink-0">
-                            {unseenOrders}
-                          </span>
-                        )}
-                      </button>
+                      <React.Fragment key={sIdx}>
+                        <li className="nav-header text-uppercase text-muted font-weight-bold" style={{ fontSize: '9px', letterSpacing: '0.5px', padding: '10px 1rem 5px' }}>
+                          {sect.title}
+                        </li>
+                        {allowedItems.map((item) => {
+                          const active = activeTab === item.id;
+                          return (
+                            <li className="nav-item" key={item.id}>
+                              <button
+                                onClick={() => {
+                                  setActiveTab(item.id as any);
+                                  if (item.id === 'orders') setUnseenOrders(0);
+                                  if (window.innerWidth < 768) setSidebarOpen(false);
+                                }}
+                                className={`nav-link text-left border-0 bg-transparent py-2 px-3 ${active ? 'active' : ''}`}
+                                style={{ borderRadius: '4px' }}
+                              >
+                                <i className={`nav-icon ${item.icon}`}></i>
+                                <p className="m-0 d-inline ml-2" style={{ fontSize: '13px' }}>
+                                  {item.label}
+                                  {item.id === 'orders' && unseenOrders > 0 && (
+                                    <span className="badge badge-danger right ml-2">
+                                      {unseenOrders}
+                                    </span>
+                                  )}
+                                </p>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </React.Fragment>
                     );
-                  })}
-                </div>
-              );
-            });
-          })()}
-        </nav>
+                  });
+                })()}
+              </ul>
+            </nav>
+          </div>
 
-        {/* Sidebar Footer / Sign Out */}
-        <div className="p-3 border-t border-[#4b545c] shrink-0 bg-[#343a40]">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 text-xs text-rose-400 hover:bg-[#dc3545]/15 hover:text-rose-300 rounded transition-colors font-bold"
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            {sidebarOpen && <span className="uppercase tracking-wider">Sign Out</span>}
-          </button>
+          {/* Sidebar Footer / Sign Out */}
+          <div className="px-2 mt-auto">
+            <button
+              onClick={handleLogout}
+              className="btn btn-danger btn-block btn-sm text-uppercase font-weight-bold d-flex align-items-center justify-content-center"
+              style={{ height: '36px' }}
+            >
+              <i className="fas fa-sign-out-alt mr-2"></i>
+              Sign Out
+            </button>
+          </div>
         </div>
       </aside>
 
       {/* --- Main Workspace Content --- */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#f4f6f9]">
+      <div className="content-wrapper">
         {/* Top Navbar Header */}
         <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 shrink-0 shadow-sm sticky top-0 z-20">
           <div className="flex items-center gap-4">
@@ -3211,121 +3320,120 @@ export default function Admin() {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-2xl font-light text-slate-900 font-display italic">Overview Dashboard</h1>
-                  <p className="text-[10px] text-slate-500 font-medium uppercase mt-0.5">Real-time HeelsUp Sales & Operational Analytics</p>
                 </div>
               </div>
 
               {/* AdminLTE Info/Small Boxes */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 font-sans">
-                {/* 1. Total Revenue - bg-[#17a2b8] (Info) */}
-                <div className="bg-[#17a2b8] text-white rounded shadow-sm overflow-hidden flex flex-col justify-between h-36 relative group">
-                  <div className="p-4 relative z-10">
-                    <h3 className="text-3xl font-black font-mono tracking-tight">
-                      ₹{(((dashboardData?.total_sales || 0) + (dashboardData?.total_pos_sales || 0)) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </h3>
-                    <p className="text-xs uppercase font-extrabold text-white/90 mt-1">Total Revenue</p>
-                    <p className="text-[10px] text-white/70 font-mono mt-1">
-                      Web: ₹{((dashboardData?.total_sales || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })} | POS: ₹{((dashboardData?.total_pos_sales || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                    </p>
+              <div className="row mb-4">
+                {/* 1. Total Revenue - bg-info */}
+                <div className="col-lg-3 col-6">
+                  <div className="small-box bg-info">
+                    <div className="inner">
+                      <h3>₹{(((dashboardData?.total_sales || 0) + (dashboardData?.total_pos_sales || 0)) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</h3>
+                      <p className="font-weight-bold text-uppercase mb-1" style={{ fontSize: '11px' }}>Total Revenue</p>
+                      <span style={{ fontSize: '10px', opacity: 0.85 }}>
+                        Web: ₹{((dashboardData?.total_sales || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })} | POS: ₹{((dashboardData?.total_pos_sales || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                      </span>
+                    </div>
+                    <div className="icon">
+                      <i className="fas fa-wallet"></i>
+                    </div>
+                    <button onClick={() => { setActiveTab('orders'); setOrderSourceFilter('all'); }} className="small-box-footer btn btn-link w-100 text-center border-0 text-white py-1">
+                      More info <i className="fas fa-arrow-circle-right ml-1"></i>
+                    </button>
                   </div>
-                  <div className="absolute right-3 top-3 text-black/15 group-hover:scale-110 transition-transform duration-300 pointer-events-none">
-                    <ShoppingCart className="w-16 h-16" />
-                  </div>
-                  <button onClick={() => { setActiveTab('orders'); setOrderSourceFilter('all'); }} className="bg-black/10 hover:bg-black/20 transition-colors text-center text-[10px] py-1.5 font-bold uppercase tracking-wider text-white border-t border-white/10 relative z-10 flex items-center justify-center gap-1">
-                    More info <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
 
-                {/* 2. Total Orders - bg-[#28a745] (Success) */}
-                <div className="bg-[#28a745] text-white rounded shadow-sm overflow-hidden flex flex-col justify-between h-36 relative group">
-                  <div className="p-4 relative z-10">
-                    <h3 className="text-3xl font-black font-mono tracking-tight">
-                      {(dashboardData?.orders_count || 0) + (dashboardData?.pos_sales_count || 0)}
-                    </h3>
-                    <p className="text-xs uppercase font-extrabold text-white/90 mt-1">Total Orders</p>
-                    <p className="text-[10px] text-white/70 font-mono mt-1">
-                      Web: {dashboardData?.orders_count || 0} | POS: {dashboardData?.pos_sales_count || 0}
-                    </p>
+                {/* 2. Total Orders - bg-success */}
+                <div className="col-lg-3 col-6">
+                  <div className="small-box bg-success">
+                    <div className="inner">
+                      <h3>{(dashboardData?.orders_count || 0) + (dashboardData?.pos_sales_count || 0)}</h3>
+                      <p className="font-weight-bold text-uppercase mb-1" style={{ fontSize: '11px' }}>Total Orders</p>
+                      <span style={{ fontSize: '10px', opacity: 0.85 }}>
+                        Web: {dashboardData?.orders_count || 0} | POS: {dashboardData?.pos_sales_count || 0}
+                      </span>
+                    </div>
+                    <div className="icon">
+                      <i className="fas fa-shopping-cart"></i>
+                    </div>
+                    <button onClick={() => { setActiveTab('orders'); setOrderSourceFilter('all'); }} className="small-box-footer btn btn-link w-100 text-center border-0 text-white py-1">
+                      More info <i className="fas fa-arrow-circle-right ml-1"></i>
+                    </button>
                   </div>
-                  <div className="absolute right-3 top-3 text-black/15 group-hover:scale-110 transition-transform duration-300 pointer-events-none">
-                    <ShoppingCart className="w-16 h-16" />
-                  </div>
-                  <button onClick={() => { setActiveTab('orders'); setOrderSourceFilter('all'); }} className="bg-black/10 hover:bg-black/20 transition-colors text-center text-[10px] py-1.5 font-bold uppercase tracking-wider text-white border-t border-white/10 relative z-10 flex items-center justify-center gap-1">
-                    More info <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
 
-                {/* 3. Catalog Products - bg-[#ffc107] (Warning - dark text) */}
-                <div className="bg-[#ffc107] text-[#212529] rounded shadow-sm overflow-hidden flex flex-col justify-between h-36 relative group">
-                  <div className="p-4 relative z-10">
-                    <h3 className="text-3xl font-black font-mono tracking-tight">
-                      {productsList.length}
-                    </h3>
-                    <p className="text-xs uppercase font-extrabold text-[#212529]/95 mt-1">Catalog Products</p>
-                    <p className="text-[10px] text-[#212529]/70 font-mono mt-1 font-bold">
-                      In Stock: {productsList.filter(p => p.stock > 0).length} | Out: {productsList.filter(p => p.stock === 0).length}
-                    </p>
+                {/* 3. Catalog Products - bg-warning */}
+                <div className="col-lg-3 col-6">
+                  <div className="small-box bg-warning">
+                    <div className="inner">
+                      <h3>{productsList.length}</h3>
+                      <p className="font-weight-bold text-uppercase mb-1" style={{ fontSize: '11px' }}>Catalog Products</p>
+                      <span style={{ fontSize: '10px', opacity: 0.85 }}>
+                        In Stock: {productsList.filter(p => p.stock > 0).length} | Out: {productsList.filter(p => p.stock === 0).length}
+                      </span>
+                    </div>
+                    <div className="icon">
+                      <i className="fas fa-shoe-prints"></i>
+                    </div>
+                    <button onClick={() => setActiveTab('products')} className="small-box-footer btn btn-link w-100 text-center border-0 text-dark py-1">
+                      More info <i className="fas fa-arrow-circle-right ml-1"></i>
+                    </button>
                   </div>
-                  <div className="absolute right-3 top-3 text-black/10 group-hover:scale-110 transition-transform duration-300 pointer-events-none">
-                    <Package className="w-16 h-16" />
-                  </div>
-                  <button onClick={() => setActiveTab('products')} className="bg-black/5 hover:bg-black/10 transition-colors text-center text-[10px] py-1.5 font-bold uppercase tracking-wider text-[#212529] border-t border-black/5 relative z-10 flex items-center justify-center gap-1">
-                    More info <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
 
-                {/* 4. Pending Exchanges - bg-[#dc3545] (Danger) */}
-                <div className="bg-[#dc3545] text-white rounded shadow-sm overflow-hidden flex flex-col justify-between h-36 relative group">
-                  <div className="p-4 relative z-10">
-                    <h3 className="text-3xl font-black font-mono tracking-tight">
-                      {returnsList.filter(r => r.status === 'pending').length}
-                    </h3>
-                    <p className="text-xs uppercase font-extrabold text-white/90 mt-1">Pending Exchanges</p>
-                    <p className="text-[10px] text-white/70 font-mono mt-1">
-                      Needs prompt processing
-                    </p>
+                {/* 4. Pending Exchanges - bg-danger */}
+                <div className="col-lg-3 col-6">
+                  <div className="small-box bg-danger">
+                    <div className="inner">
+                      <h3>{returnsList.filter(r => r.status === 'pending').length}</h3>
+                      <p className="font-weight-bold text-uppercase mb-1" style={{ fontSize: '11px' }}>Pending Exchanges</p>
+                      <span style={{ fontSize: '10px', opacity: 0.85 }}>
+                        Needs prompt processing
+                      </span>
+                    </div>
+                    <div className="icon">
+                      <i className="fas fa-exchange-alt"></i>
+                    </div>
+                    <button onClick={() => setActiveTab('returns')} className="small-box-footer btn btn-link w-100 text-center border-0 text-white py-1">
+                      More info <i className="fas fa-arrow-circle-right ml-1"></i>
+                    </button>
                   </div>
-                  <div className="absolute right-3 top-3 text-white/15 group-hover:scale-110 transition-transform duration-300 pointer-events-none">
-                    <RotateCw className="w-16 h-16" />
-                  </div>
-                  <button onClick={() => setActiveTab('returns')} className="bg-black/10 hover:bg-black/20 transition-colors text-center text-[10px] py-1.5 font-bold uppercase tracking-wider text-white border-t border-white/10 relative z-10 flex items-center justify-center gap-1">
-                    More info <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               </div>
 
               {/* E-commerce Dashboard Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column (8/12 - 2 cols on lg) */}
-                <div className="lg:col-span-2 space-y-6 flex flex-col">
+              <div className="row">
+                {/* Left Column (8/12) */}
+                <div className="col-lg-8">
                   {/* Chart 1: Sales Trend */}
-                  <div className={visibleSalesTrend ? "card card-outline card-primary bg-white border border-slate-150 border-t-[3px] border-t-blue-600 rounded-lg shadow-sm" : "hidden"}>
-                    <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
-                      <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
-                        <Activity className="w-4 h-4 text-blue-600" />
+                  <div className={`card card-primary card-outline mb-4 ${visibleSalesTrend ? '' : 'd-none'}`}>
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <h3 className="card-title text-sm font-weight-bold uppercase tracking-wider text-dark m-0">
+                        <i className="fas fa-chart-line mr-2 text-primary"></i>
                         Sales & Revenue Trend
                       </h3>
-                      <div className="card-tools flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold uppercase font-mono">Live</span>
+                      <div className="card-tools ml-auto">
+                        <span className="badge badge-primary mr-2">Live</span>
                         <button 
                           onClick={() => setCollapsedSalesTrend(!collapsedSalesTrend)}
-                          className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                          className="btn btn-tool"
                           title="Collapse"
                         >
-                          <Minus className="w-3.5 h-3.5" />
+                          <i className="fas fa-minus"></i>
                         </button>
                         <button 
                           onClick={() => setVisibleSalesTrend(false)}
-                          className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                          className="btn btn-tool"
                           title="Close"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <i className="fas fa-times"></i>
                         </button>
                       </div>
                     </div>
                     
-                    <div className={`card-body p-6 space-y-4 ${collapsedSalesTrend ? 'hidden' : ''}`}>
-                      <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">7-Day Transaction Performance</div>
+                    <div className={`card-body p-4 ${collapsedSalesTrend ? 'd-none' : ''}`}>
+                      <div className="text-uppercase font-weight-bold text-muted mb-3" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>7-Day Transaction Performance</div>
                       {/* SVG Line Chart */}
                       <div className="relative">
                         <svg className="w-full h-64 overflow-visible" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
@@ -3339,80 +3447,103 @@ export default function Admin() {
                             </filter>
                           </defs>
       
-                          {/* Grid Lines */}
-                          <line x1="40" y1="30" x2="660" y2="30" stroke="#f1f5f9" strokeWidth="1" />
-                          <line x1="40" y1="77.5" x2="660" y2="77.5" stroke="#f1f5f9" strokeWidth="1" />
-                          <line x1="40" y1="125" x2="660" y2="125" stroke="#f1f5f9" strokeWidth="1" />
-                          <line x1="40" y1="172.5" x2="660" y2="172.5" stroke="#f1f5f9" strokeWidth="1" />
-                          <line x1="40" y1="220" x2="660" y2="220" stroke="#e2e8f0" strokeWidth="1.5" />
+                          {/* Grid Y Lines */}
+                          <line x1="45" y1="20" x2="675" y2="20" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="45" y1="70" x2="675" y2="70" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="45" y1="120" x2="675" y2="120" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="45" y1="170" x2="675" y2="170" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="45" y1="220" x2="675" y2="220" stroke="#e2e8f0" strokeWidth="1.5" />
       
                           {(() => {
                             const data = getDashboardDailyRevenue();
+                            const maxVal = Math.max(...data.map((d: any) => Math.max((d.revenue || 0) / 100, 2000)), 5000);
                             
-                            const maxRev = Math.max(...data.map((d: any) => d.revenue || 0), 100000);
-                            const minRev = 0;
+                            // Y-axis labels
+                            const yLabels = [0, 0.25, 0.5, 0.75, 1].map(pct => Math.round(pct * maxVal));
                             
+                            // Map coords
                             const points = data.map((d: any, idx: number) => {
-                              const x = 50 + (idx * (590 / (data.length - 1 || 1)));
-                              const y = 220 - (((d.revenue || 0) - minRev) / (maxRev - minRev)) * 170;
-                              return { x, y, label: d.date || '', val: d.revenue || 0 };
+                              const x = 50 + idx * 100;
+                              const val = (d.revenue || 0) / 100;
+                              const y = 220 - (val / maxVal) * 200;
+                              return { x, y, ...d };
                             });
       
-                            const pathData = points.map((p: any, i: number) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-                            const areaData = points.length ? `${pathData} L ${points[points.length - 1].x} 220 L ${points[0].x} 220 Z` : '';
+                            const linePath = points.map((p: any, idx: number) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                            const areaPath = points.length > 0
+                              ? `${linePath} L ${points[points.length - 1].x} 220 L ${points[0].x} 220 Z`
+                              : '';
       
                             return (
                               <>
-                                {/* Area Fill */}
-                                {areaData && <path d={areaData} fill="url(#areaGradient)" className="transition-all duration-500" />}
-                                
-                                {/* Trend Line */}
-                                {pathData && <path d={pathData} fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-500" filter="url(#trendShadow)" />}
-      
-                                {/* Data points */}
-                                {points.map((p: any, idx: number) => {
-                                  const isHovered = hoveredPoint === idx;
+                                {/* Y-axis values */}
+                                {yLabels.map((val, idx) => {
+                                  const y = 220 - idx * 50;
                                   return (
-                                    <g key={idx}>
-                                      {/* Interaction Circle */}
+                                    <text key={idx} x="35" y={y + 4} textAnchor="end" className="text-[9px] fill-slate-400 font-mono font-bold">
+                                      ₹{val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}
+                                    </text>
+                                  );
+                                })}
+      
+                                {/* Area path under line */}
+                                {areaPath && <path d={areaPath} fill="url(#areaGradient)" />}
+      
+                                {/* Line path */}
+                                {linePath && (
+                                  <path
+                                    d={linePath}
+                                    fill="none"
+                                    stroke="#2563eb"
+                                    strokeWidth="3.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    filter="url(#trendShadow)"
+                                  />
+                                )}
+      
+                                {/* Interactive node dots */}
+                                {points.map((p: any, idx: number) => {
+                                  const hovered = hoveredPoint === idx;
+                                  return (
+                                    <g key={idx} className="group cursor-pointer">
                                       <circle
                                         cx={p.x}
                                         cy={p.y}
-                                        r={isHovered ? 7 : 4.5}
-                                        fill={isHovered ? '#2563eb' : '#ffffff'}
-                                        stroke="#2563eb"
+                                        r={hovered ? "7" : "5.5"}
+                                        fill={hovered ? "#3b82f6" : "#2563eb"}
+                                        stroke="#ffffff"
                                         strokeWidth="2.5"
+                                        className="transition-all duration-150"
                                         onMouseEnter={() => setHoveredPoint(idx)}
                                         onMouseLeave={() => setHoveredPoint(null)}
-                                        className="cursor-pointer transition-all duration-150"
                                       />
                                       
-                                      {/* X-Axis Label */}
-                                      <text x={p.x} y="238" textAnchor="middle" className="text-[10px] fill-slate-400 font-bold font-mono">{p.label}</text>
-                                      
-                                      {/* Hover Tooltip */}
-                                      {isHovered && (
+                                      {/* Tooltip on hover */}
+                                      {hovered && (
                                         <g>
                                           <rect
-                                            x={p.x - 50}
-                                            y={p.y - 36}
-                                            width="100"
-                                            height="24"
+                                            x={p.x - 55}
+                                            y={p.y - 42}
+                                            width="110"
+                                            height="32"
                                             rx="6"
                                             fill="#0f172a"
-                                            className="shadow-lg"
+                                            className="shadow-md"
                                           />
-                                          <text
-                                            x={p.x}
-                                            y={p.y - 20}
-                                            textAnchor="middle"
-                                            fill="#ffffff"
-                                            className="text-[10px] font-extrabold font-mono"
-                                          >
-                                            ₹{(p.val / 100).toFixed(0)}
+                                          <text x={p.x} y={p.y - 28} textAnchor="middle" className="text-[8px] fill-slate-400 font-bold uppercase tracking-wider">
+                                            {p.date}
+                                          </text>
+                                          <text x={p.x} y={p.y - 18} textAnchor="middle" className="text-[10px] fill-white font-mono font-extrabold">
+                                            ₹{(p.revenue / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                                           </text>
                                         </g>
                                       )}
+                                      
+                                      {/* X Axis Labels */}
+                                      <text x={p.x} y="236" textAnchor="middle" className="text-[9px] fill-slate-500 font-bold font-sans uppercase">
+                                        {p.date.split(' ')[0]}
+                                      </text>
                                     </g>
                                   );
                                 })}
@@ -3423,82 +3554,41 @@ export default function Admin() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Recent Web & POS Orders */}
-                  <div className="card card-outline card-info bg-white border border-slate-150 border-t-[3px] border-t-sky-500 rounded-lg shadow-sm overflow-hidden flex flex-col">
-                    <div className="px-5 py-4 border-b border-slate-150 flex items-center justify-between bg-slate-50/50">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">Recent Web & POS Orders</h3>
-                      <button onClick={() => setActiveTab('orders')} className="text-[10px] font-bold text-blue-600 hover:underline">View All</button>
-                    </div>
-                    <div className="overflow-x-auto flex-1">
-                      <table className="w-full text-left border-collapse text-xs">
-                        <thead>
-                          <tr className="bg-slate-50 text-slate-400 border-b border-slate-100 font-mono">
-                            <th className="p-3">Ref</th>
-                            <th className="p-3">Customer</th>
-                            <th className="p-3">Total</th>
-                            <th className="p-3">Status</th>
-                            <th className="p-3">Date</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {unifiedOrders.slice(0, 7).map((o) => (
-                            <tr key={o.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="p-3 font-mono font-bold text-slate-800">{o.order_number}</td>
-                              <td className="p-3">{o.customer_name}</td>
-                              <td className="p-3 font-mono font-bold">₹{(o.total_amount / 100).toFixed(2)}</td>
-                              <td className="p-3">
-                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
-                                  o.order_status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
-                                  o.order_status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
-                                  o.order_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                  'bg-amber-100 text-amber-800'
-                                }`}>
-                                  {o.order_status}
-                                </span>
-                              </td>
-                              <td className="p-3 text-slate-400 text-[10px]">{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
                 </div>
 
-                {/* Right Column (4/12 - 1 col on lg) */}
-                <div className="lg:col-span-1 space-y-6 flex flex-col">
+                {/* Right Column (4/12) */}
+                <div className="col-lg-4">
                   {/* Chart 2: Category Share */}
-                  <div className={visibleCategoryShare ? "card card-outline card-success bg-white border border-slate-150 border-t-[3px] border-t-emerald-500 rounded-lg shadow-sm" : "hidden"}>
-                    <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
-                      <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
-                        <Tag className="w-4 h-4 text-emerald-500" />
+                  <div className={`card card-success card-outline mb-4 ${visibleCategoryShare ? '' : 'd-none'}`}>
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <h3 className="card-title text-sm font-weight-bold uppercase tracking-wider text-dark m-0">
+                        <i className="fas fa-tags mr-2 text-success"></i>
                         Category Share
                       </h3>
-                      <div className="card-tools flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase font-mono">Share</span>
+                      <div className="card-tools ml-auto">
+                        <span className="badge badge-success mr-2">Share</span>
                         <button 
                           onClick={() => setCollapsedCategoryShare(!collapsedCategoryShare)}
-                          className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                          className="btn btn-tool"
                           title="Collapse"
                         >
-                          <Minus className="w-3.5 h-3.5" />
+                          <i className="fas fa-minus"></i>
                         </button>
                         <button 
                           onClick={() => setVisibleCategoryShare(false)}
-                          className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                          className="btn btn-tool"
                           title="Close"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <i className="fas fa-times"></i>
                         </button>
                       </div>
                     </div>
     
-                    <div className={`card-body p-6 ${collapsedCategoryShare ? 'hidden' : ''}`}>
-                      <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Sales distribution by division</div>
-                      <div className="flex flex-col items-center justify-between gap-6 pt-2">
+                    <div className={`card-body p-4 ${collapsedCategoryShare ? 'd-none' : ''}`}>
+                      <div className="text-uppercase font-weight-bold text-muted mb-3" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>Sales distribution by division</div>
+                      <div className="d-flex flex-column align-items-center justify-content-center pt-2">
                         {/* SVG Donut */}
-                        <div className="relative w-44 h-44 shrink-0">
+                        <div className="relative w-44 h-44 shrink-0 mb-3">
                           <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                             {(() => {
                               const data = getDashboardCategorySales();
@@ -3589,28 +3679,32 @@ export default function Admin() {
                         </div>
       
                         {/* Interactive legends */}
-                        <div className="flex-1 space-y-1 w-full font-sans">
+                        <div className="w-full space-y-1.5 mt-2">
                           {(() => {
                             const data = getDashboardCategorySales();
                             const total = data.reduce((sum: number, d: any) => sum + (d.revenue || 0), 0);
                             const colors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
       
-                            return data.slice(0, 5).map((d: any, idx: number) => {
-                              const pct = total > 0 ? (d.revenue / total) * 100 : 0;
+                            return data.map((d: any, idx: number) => {
+                              const percent = total > 0 ? (d.revenue / total) * 100 : 0;
                               const color = colors[idx % colors.length];
                               const active = hoveredCategory === idx;
+      
                               return (
                                 <div
                                   key={idx}
-                                  className={`flex items-center justify-between p-1.5 rounded-xl transition-colors ${active ? 'bg-slate-50' : ''}`}
+                                  className={`flex items-center justify-between p-1.5 rounded transition-colors ${active ? 'bg-slate-100 font-bold' : ''}`}
                                   onMouseEnter={() => setHoveredCategory(idx)}
                                   onMouseLeave={() => setHoveredCategory(null)}
                                 >
                                   <div className="flex items-center gap-2 min-w-0">
                                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                                    <span className="font-extrabold text-[10px] text-slate-655 truncate uppercase">{d.category}</span>
+                                    <span className="font-bold text-[10px] text-slate-600 truncate uppercase">{d.category}</span>
                                   </div>
-                                  <span className="font-mono font-black text-xs text-slate-900">{pct.toFixed(0)}%</span>
+                                  <div className="flex items-center gap-1.5 font-mono text-[10px] text-slate-800 font-bold">
+                                    <span>₹{(d.revenue / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                                    <span className="text-slate-400">({percent.toFixed(0)}%)</span>
+                                  </div>
                                 </div>
                               );
                             });
@@ -3620,34 +3714,34 @@ export default function Admin() {
                     </div>
                   </div>
 
-                  {/* Chart 3: Stock Warning */}
-                  <div className={visibleStockWarning ? "card card-outline card-warning bg-white border border-slate-150 border-t-[3px] border-t-amber-500 rounded-lg shadow-sm" : "hidden"}>
-                    <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
-                      <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
-                        <AlertTriangle className="w-4 h-4 text-amber-500" />
-                        Product Stock Alert
+                  {/* Chart 3: Stock warning */}
+                  <div className={`card card-warning card-outline mb-4 ${visibleStockWarning ? '' : 'd-none'}`}>
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                      <h3 className="card-title text-sm font-weight-bold uppercase tracking-wider text-dark m-0">
+                        <i className="fas fa-boxes mr-2 text-warning"></i>
+                        Stock Warning levels
                       </h3>
-                      <div className="card-tools flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 bg-amber-50 text-amber-650 rounded text-[9px] font-bold uppercase font-mono">Stock Warning</span>
+                      <div className="card-tools ml-auto">
+                        <span className="badge badge-warning mr-2">Stock</span>
                         <button 
                           onClick={() => setCollapsedStockWarning(!collapsedStockWarning)}
-                          className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                          className="btn btn-tool"
                           title="Collapse"
                         >
-                          <Minus className="w-3.5 h-3.5" />
+                          <i className="fas fa-minus"></i>
                         </button>
                         <button 
                           onClick={() => setVisibleStockWarning(false)}
-                          className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                          className="btn btn-tool"
                           title="Close"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          <i className="fas fa-times"></i>
                         </button>
                       </div>
                     </div>
     
-                    <div className={`card-body p-6 space-y-4 ${collapsedStockWarning ? 'hidden' : ''}`}>
-                      <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Real-time stock levels of active items requiring attention</div>
+                    <div className={`card-body p-4 ${collapsedStockWarning ? 'd-none' : ''}`}>
+                      <div className="text-uppercase font-weight-bold text-muted mb-3" style={{ fontSize: '10px', letterSpacing: '0.5px' }}>Real-time stock levels of active items requiring attention</div>
                       <div className="relative">
                         <svg className="w-full h-44 overflow-visible" viewBox="0 0 350 140" xmlns="http://www.w3.org/2000/svg">
                           <defs>
@@ -3728,25 +3822,32 @@ export default function Admin() {
                   </div>
 
                   {/* Low Stock Watchlist */}
-                  <div className="card card-outline card-danger bg-white border border-slate-150 border-t-[3px] border-t-rose-500 rounded-lg shadow-sm p-5 space-y-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-3 font-sans">Low Stock Watchlist</h3>
-                    <div className="space-y-3 overflow-y-auto max-h-[320px] pr-1">
-                      {productsList.filter(p => p.stock <= 5).slice(0, 10).map((p) => (
-                        <div key={p.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100 font-sans">
-                          <div className="min-w-0">
-                            <h4 className="text-xs font-bold text-slate-800 truncate">{p.name}</h4>
-                            <span className="text-[9px] font-mono text-slate-400">{p.sku}</span>
+                  <div className="card card-danger card-outline mb-4">
+                    <div className="card-header">
+                      <h3 className="card-title text-sm font-weight-bold uppercase tracking-wider text-dark m-0">
+                        <i className="fas fa-exclamation-triangle mr-2 text-danger"></i>
+                        Low Stock Watchlist
+                      </h3>
+                    </div>
+                    <div className="card-body p-4">
+                      <div className="space-y-3 overflow-y-auto max-h-[320px] pr-1">
+                        {productsList.filter(p => p.stock <= 5).slice(0, 10).map((p) => (
+                          <div key={p.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100 font-sans">
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-slate-800 truncate">{p.name}</h4>
+                              <span className="text-[9px] font-mono text-slate-400">{p.sku}</span>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                              p.stock === 0 ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                            }`}>
+                              {p.stock} units
+                            </span>
                           </div>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                            p.stock === 0 ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
-                          }`}>
-                            {p.stock} units
-                          </span>
-                        </div>
-                      ))}
-                      {productsList.filter(p => p.stock <= 5).length === 0 && (
-                        <div className="py-12 text-center text-xs text-slate-400">Inventory levels are healthy!</div>
-                      )}
+                        ))}
+                        {productsList.filter(p => p.stock <= 5).length === 0 && (
+                          <div className="py-12 text-center text-xs text-slate-400">Inventory levels are healthy!</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -5997,10 +6098,10 @@ export default function Admin() {
         </main>
 
         {/* Global Footer */}
-        <footer className="py-4 px-6 border-t border-slate-100 text-center text-[10px] text-slate-400 shrink-0 bg-white">
-          <span>Copyright &copy; 2026 HeelsUp Footwear. All rights reserved. &middot; AdminLTE Light Interface System</span>
+        <footer className="main-footer text-center py-3 text-xs text-muted bg-white border-top shrink-0">
+          <strong>Copyright &copy; 2026 <a href="https://heelsup.in" target="_blank" rel="noopener noreferrer">HeelsUp Footwear</a>.</strong> All rights reserved.
         </footer>
-      </div>
+      </div> {/* closes content-wrapper */}
 
       {/* --- Global Modals & Dialog Drawers --- */}
 
