@@ -3032,92 +3032,147 @@ export default function Admin() {
       )}
 
       {/* --- AdminLTE Sidebar Navigation --- */}
-      <aside className={`bg-white border-r border-slate-100 transition-all duration-300 flex flex-col shrink-0 z-40 
+      <aside className={`bg-[#343a40] text-[#c2c7d0] transition-all duration-300 flex flex-col shrink-0 z-40 font-sans shadow-lg
         ${sidebarOpen ? 'w-64 fixed md:relative h-screen' : 'w-0 overflow-hidden md:w-16 h-screen'}
       `}>
-        <div className="h-16 flex items-center px-6 border-b border-slate-100 gap-3">
-          <Sliders className="w-6 h-6 text-blue-600 shrink-0" />
-          {sidebarOpen && <span className="text-lg font-bold font-display tracking-tight text-blue-600">HeelsUp Admin</span>}
+        {/* Brand Header */}
+        <div className="h-16 flex items-center px-4 border-b border-[#4b545c] gap-3 bg-[#343a40] shrink-0">
+          <div className="w-8 h-8 rounded-full bg-[#007bff] flex items-center justify-center text-white font-extrabold shrink-0 shadow">
+            HU
+          </div>
+          {sidebarOpen && (
+            <span className="text-sm font-bold tracking-wide text-white font-mono uppercase">
+              HeelsUp Admin
+            </span>
+          )}
         </div>
 
-        {/* User Info */}
+        {/* User Info Section */}
         {sidebarOpen && (
-          <div className="p-4 border-b border-slate-100 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-800 font-bold text-xs flex items-center justify-center">
+          <div className="p-4 border-b border-[#4b545c] flex items-center gap-3 shrink-0 bg-[#343a40]">
+            <div className="w-8 h-8 rounded-full bg-slate-600 text-white font-black text-xs flex items-center justify-center uppercase border border-slate-500 shadow-sm">
               {user.name ? user.name[0].toUpperCase() : 'A'}
             </div>
             <div className="min-w-0">
-              <h4 className="text-xs font-bold text-slate-800 truncate">{user.name || 'Staff User'}</h4>
-              <span className="text-[9px] bg-slate-100 text-slate-500 font-bold uppercase px-1 rounded truncate inline-block mt-0.5">{user.role}</span>
+              <h4 className="text-xs font-bold text-white truncate leading-tight">{user.name || 'Staff User'}</h4>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                <span className="text-[9px] text-[#c2c7d0] uppercase tracking-wider font-extrabold font-mono">{user.role}</span>
+              </div>
             </div>
           </div>
         )}
 
         {/* Sidebar Menu Items */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {[
-            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-            { id: 'analysis', label: 'Advanced Analysis', icon: Activity },
-            { id: 'products', label: 'Products', icon: Package },
-            { id: 'stock', label: 'Stock Inventory', icon: Sliders },
-            { id: 'orders', label: 'Orders', icon: ShoppingCart },
-            { id: 'pos', label: 'POS Terminal', icon: Printer },
-            { id: 'categories', label: 'Categories', icon: Tag },
-            { id: 'customers', label: 'Customers', icon: Users },
-            { id: 'reviews', label: 'Reviews Moderation', icon: Star },
-            { id: 'coupons', label: 'Promo Codes', icon: Percent },
-            { id: 'banners', label: 'Homepage Banners', icon: ImageIcon },
-            { id: 'pages', label: 'Static Pages', icon: FileText },
-            { id: 'returns', label: 'Exchanges Manager', icon: RotateCw },
-            { id: 'staff', label: 'Staff Management', icon: Users },
-            { id: 'colors', label: 'Database Colors', icon: Settings },
-            { id: 'sql', label: 'SQL DB Console', icon: Database },
-            { id: 'audits', label: 'Audit Logs', icon: Shield },
-            { id: 'settings', label: 'Settings', icon: Settings },
-          ].filter((item) => hasPermission(item.id))
-          .map((item) => {
-            const Icon = item.icon;
-            const active = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id as any);
-                  if (item.id === 'orders') setUnseenOrders(0);
-                  // On mobile, auto close sidebar
-                  if (window.innerWidth < 768) setSidebarOpen(false);
-                }}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-all ${
-                  active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100/50 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-white' : 'text-slate-400'}`} />
-                  {sidebarOpen && <span>{item.label}</span>}
+        <nav className="flex-1 p-2 space-y-3 overflow-y-auto font-sans">
+          {(() => {
+            const menuSections = [
+              {
+                title: 'Dashboard & Reports',
+                items: [
+                  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                  { id: 'analysis', label: 'Advanced Analysis', icon: Activity },
+                ]
+              },
+              {
+                title: 'E-commerce & POS',
+                items: [
+                  { id: 'pos', label: 'POS Terminal', icon: Printer },
+                  { id: 'orders', label: 'Orders', icon: ShoppingCart },
+                  { id: 'returns', label: 'Exchanges Manager', icon: RotateCw },
+                ]
+              },
+              {
+                title: 'Catalog & Stock',
+                items: [
+                  { id: 'products', label: 'Products Catalog', icon: Package },
+                  { id: 'stock', label: 'Stock Inventory', icon: Sliders },
+                  { id: 'categories', label: 'Categories', icon: Tag },
+                  { id: 'colors', label: 'Database Colors', icon: Settings },
+                ]
+              },
+              {
+                title: 'Customers & Reviews',
+                items: [
+                  { id: 'customers', label: 'Customers', icon: Users },
+                  { id: 'reviews', label: 'Reviews Moderation', icon: Star },
+                  { id: 'coupons', label: 'Promo Codes', icon: Percent },
+                ]
+              },
+              {
+                title: 'Content & System',
+                items: [
+                  { id: 'banners', label: 'Homepage Banners', icon: ImageIcon },
+                  { id: 'pages', label: 'Static Pages', icon: FileText },
+                  { id: 'staff', label: 'Staff Management', icon: Users },
+                  { id: 'sql', label: 'SQL DB Console', icon: Database },
+                  { id: 'audits', label: 'Audit Logs', icon: Shield },
+                  { id: 'settings', label: 'Settings', icon: Settings },
+                ]
+              }
+            ];
+
+            return menuSections.map((sect, sIdx) => {
+              const allowedItems = sect.items.filter(item => hasPermission(item.id));
+              if (allowedItems.length === 0) return null;
+
+              return (
+                <div key={sIdx} className="space-y-1">
+                  {sidebarOpen && (
+                    <div className="text-[9px] uppercase font-black tracking-widest text-[#6c757d] px-2.5 pt-2 pb-1 font-mono">
+                      {sect.title}
+                    </div>
+                  )}
+                  {allowedItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = activeTab === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          setActiveTab(item.id as any);
+                          if (item.id === 'orders') setUnseenOrders(0);
+                          if (window.innerWidth < 768) setSidebarOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded text-xs font-semibold transition-all duration-150 group ${
+                          active
+                            ? 'bg-[#007bff] text-white shadow'
+                            : 'text-[#c2c7d0] hover:bg-[#494e53] hover:text-white'
+                        }`}
+                        title={item.label}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <Icon className={`w-4 h-4 shrink-0 transition-colors ${active ? 'text-white' : 'text-[#c2c7d0] group-hover:text-white'}`} />
+                          {sidebarOpen && <span className="truncate">{item.label}</span>}
+                        </div>
+                        {item.id === 'orders' && unseenOrders > 0 && sidebarOpen && (
+                          <span className="bg-[#dc3545] text-white text-[8px] font-black font-mono px-1.5 py-0.5 rounded-full animate-pulse shrink-0">
+                            {unseenOrders}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
-                {item.id === 'orders' && unseenOrders > 0 && sidebarOpen && (
-                  <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-bounce shrink-0">
-                    {unseenOrders}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+              );
+            });
+          })()}
         </nav>
 
-        <div className="p-3 border-t border-slate-100">
+        {/* Sidebar Footer / Sign Out */}
+        <div className="p-3 border-t border-[#4b545c] shrink-0 bg-[#343a40]">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-lg transition-colors font-medium"
+            className="w-full flex items-center gap-3 px-3 py-2 text-xs text-rose-400 hover:bg-[#dc3545]/15 hover:text-rose-300 rounded transition-colors font-bold"
           >
             <LogOut className="w-4 h-4 shrink-0" />
-            {sidebarOpen && <span>Sign Out</span>}
+            {sidebarOpen && <span className="uppercase tracking-wider">Sign Out</span>}
           </button>
         </div>
       </aside>
 
       {/* --- Main Workspace Content --- */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[#f4f6f9]">
         {/* Top Navbar Header */}
         <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-6 shrink-0 shadow-sm sticky top-0 z-20">
           <div className="flex items-center gap-4">
@@ -3160,548 +3215,539 @@ export default function Admin() {
                 </div>
               </div>
 
-              {/* Enterprise Stats Widgets */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* sales box */}
-                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 border-0 text-white rounded-2xl shadow-lg overflow-hidden relative flex flex-col justify-between h-40 group">
-                  <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
-                  <div className="p-5 pb-3 relative z-10 flex-grow flex flex-col justify-between">
-                    <div>
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-blue-100/90">Total Revenue</span>
-                      <h3 className="text-3xl font-black font-mono mt-1 text-white drop-shadow-sm">
-                        ₹{(((dashboardData?.total_sales || 0) + (dashboardData?.total_pos_sales || 0)) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-                      </h3>
-                    </div>
-                    <p className="text-[10px] text-blue-100/80 font-mono mt-2 font-medium">
+              {/* AdminLTE Info/Small Boxes */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 font-sans">
+                {/* 1. Total Revenue - bg-[#17a2b8] (Info) */}
+                <div className="bg-[#17a2b8] text-white rounded shadow-sm overflow-hidden flex flex-col justify-between h-36 relative group">
+                  <div className="p-4 relative z-10">
+                    <h3 className="text-3xl font-black font-mono tracking-tight">
+                      ₹{(((dashboardData?.total_sales || 0) + (dashboardData?.total_pos_sales || 0)) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                    </h3>
+                    <p className="text-xs uppercase font-extrabold text-white/90 mt-1">Total Revenue</p>
+                    <p className="text-[10px] text-white/70 font-mono mt-1">
                       Web: ₹{((dashboardData?.total_sales || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })} | POS: ₹{((dashboardData?.total_pos_sales || 0) / 100).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                     </p>
                   </div>
-                  <ShoppingCart className="w-12 h-12 absolute right-4 top-4 opacity-10 text-white group-hover:opacity-20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" />
-                  <button onClick={() => { setActiveTab('orders'); setOrderSourceFilter('all'); }} className="bg-white/10 hover:bg-white/20 transition-colors text-center text-[9px] py-2.5 font-bold uppercase tracking-widest text-white border-t border-white/10 relative z-10">
-                    Track sales ledger &rarr;
+                  <div className="absolute right-3 top-3 text-black/15 group-hover:scale-110 transition-transform duration-300 pointer-events-none">
+                    <ShoppingCart className="w-16 h-16" />
+                  </div>
+                  <button onClick={() => { setActiveTab('orders'); setOrderSourceFilter('all'); }} className="bg-black/10 hover:bg-black/20 transition-colors text-center text-[10px] py-1.5 font-bold uppercase tracking-wider text-white border-t border-white/10 relative z-10 flex items-center justify-center gap-1">
+                    More info <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                {/* orders box */}
-                <div className="bg-gradient-to-br from-emerald-600 to-teal-700 border-0 text-white rounded-2xl shadow-lg overflow-hidden relative flex flex-col justify-between h-40 group">
-                  <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
-                  <div className="p-5 pb-3 relative z-10 flex-grow flex flex-col justify-between">
-                    <div>
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-100/90">Total Orders</span>
-                      <h3 className="text-3xl font-black font-mono mt-1 text-white drop-shadow-sm">
-                        {(dashboardData?.orders_count || 0) + (dashboardData?.pos_sales_count || 0)}
-                      </h3>
-                    </div>
-                    <p className="text-[10px] text-emerald-100/80 font-mono mt-2 font-medium">
-                      Web: {dashboardData?.orders_count || 0} items | POS: {dashboardData?.pos_sales_count || 0} items
+
+                {/* 2. Total Orders - bg-[#28a745] (Success) */}
+                <div className="bg-[#28a745] text-white rounded shadow-sm overflow-hidden flex flex-col justify-between h-36 relative group">
+                  <div className="p-4 relative z-10">
+                    <h3 className="text-3xl font-black font-mono tracking-tight">
+                      {(dashboardData?.orders_count || 0) + (dashboardData?.pos_sales_count || 0)}
+                    </h3>
+                    <p className="text-xs uppercase font-extrabold text-white/90 mt-1">Total Orders</p>
+                    <p className="text-[10px] text-white/70 font-mono mt-1">
+                      Web: {dashboardData?.orders_count || 0} | POS: {dashboardData?.pos_sales_count || 0}
                     </p>
                   </div>
-                  <ShoppingCart className="w-12 h-12 absolute right-4 top-4 opacity-10 text-white group-hover:opacity-20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" />
-                  <button onClick={() => { setActiveTab('orders'); setOrderSourceFilter('all'); }} className="bg-white/10 hover:bg-white/20 transition-colors text-center text-[9px] py-2.5 font-bold uppercase tracking-widest text-white border-t border-white/10 relative z-10">
-                    Manage orders &rarr;
+                  <div className="absolute right-3 top-3 text-black/15 group-hover:scale-110 transition-transform duration-300 pointer-events-none">
+                    <ShoppingCart className="w-16 h-16" />
+                  </div>
+                  <button onClick={() => { setActiveTab('orders'); setOrderSourceFilter('all'); }} className="bg-black/10 hover:bg-black/20 transition-colors text-center text-[10px] py-1.5 font-bold uppercase tracking-wider text-white border-t border-white/10 relative z-10 flex items-center justify-center gap-1">
+                    More info <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                {/* products box */}
-                <div className="bg-gradient-to-br from-orange-500 to-amber-600 border-0 text-white rounded-2xl shadow-lg overflow-hidden relative flex flex-col justify-between h-40 group">
-                  <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
-                  <div className="p-5 pb-3 relative z-10 flex-grow flex flex-col justify-between">
-                    <div>
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-orange-100/90">Catalog Products</span>
-                      <h3 className="text-3xl font-black font-mono mt-1 text-white drop-shadow-sm">
-                        {productsList.length}
-                      </h3>
-                    </div>
-                    <p className="text-[10px] text-orange-100/80 font-mono mt-2 font-medium">
-                      In Stock: {productsList.filter(p => p.stock > 0).length} styles | Out: {productsList.filter(p => p.stock === 0).length} styles
+
+                {/* 3. Catalog Products - bg-[#ffc107] (Warning - dark text) */}
+                <div className="bg-[#ffc107] text-[#212529] rounded shadow-sm overflow-hidden flex flex-col justify-between h-36 relative group">
+                  <div className="p-4 relative z-10">
+                    <h3 className="text-3xl font-black font-mono tracking-tight">
+                      {productsList.length}
+                    </h3>
+                    <p className="text-xs uppercase font-extrabold text-[#212529]/95 mt-1">Catalog Products</p>
+                    <p className="text-[10px] text-[#212529]/70 font-mono mt-1 font-bold">
+                      In Stock: {productsList.filter(p => p.stock > 0).length} | Out: {productsList.filter(p => p.stock === 0).length}
                     </p>
                   </div>
-                  <Package className="w-12 h-12 absolute right-4 top-4 opacity-10 text-white group-hover:opacity-20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" />
-                  <button onClick={() => setActiveTab('products')} className="bg-white/10 hover:bg-white/20 transition-colors text-center text-[9px] py-2.5 font-bold uppercase tracking-widest text-white border-t border-white/10 relative z-10">
-                    Manage catalog &rarr;
+                  <div className="absolute right-3 top-3 text-black/10 group-hover:scale-110 transition-transform duration-300 pointer-events-none">
+                    <Package className="w-16 h-16" />
+                  </div>
+                  <button onClick={() => setActiveTab('products')} className="bg-black/5 hover:bg-black/10 transition-colors text-center text-[10px] py-1.5 font-bold uppercase tracking-wider text-[#212529] border-t border-black/5 relative z-10 flex items-center justify-center gap-1">
+                    More info <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                {/* reviews box */}
-                <div className="bg-gradient-to-br from-pink-500 to-rose-600 border-0 text-white rounded-2xl shadow-lg overflow-hidden relative flex flex-col justify-between h-40 group">
-                  <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
-                  <div className="p-5 pb-3 relative z-10 flex-grow flex flex-col justify-between">
-                    <div>
-                      <span className="text-[9px] font-extrabold uppercase tracking-widest text-pink-100/90">Pending Exchanges</span>
-                      <h3 className="text-3xl font-black font-mono mt-1 text-white drop-shadow-sm">
-                        {returnsList.filter(r => r.status === 'pending').length}
-                      </h3>
-                    </div>
-                    <p className="text-[10px] text-pink-100/80 font-mono mt-2 font-medium">
-                      Active exchange requests require review
+
+                {/* 4. Pending Exchanges - bg-[#dc3545] (Danger) */}
+                <div className="bg-[#dc3545] text-white rounded shadow-sm overflow-hidden flex flex-col justify-between h-36 relative group">
+                  <div className="p-4 relative z-10">
+                    <h3 className="text-3xl font-black font-mono tracking-tight">
+                      {returnsList.filter(r => r.status === 'pending').length}
+                    </h3>
+                    <p className="text-xs uppercase font-extrabold text-white/90 mt-1">Pending Exchanges</p>
+                    <p className="text-[10px] text-white/70 font-mono mt-1">
+                      Needs prompt processing
                     </p>
                   </div>
-                  <RotateCw className="w-12 h-12 absolute right-4 top-4 opacity-10 text-white group-hover:opacity-20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300" />
-                  <button onClick={() => setActiveTab('returns')} className="bg-white/10 hover:bg-white/20 transition-colors text-center text-[9px] py-2.5 font-bold uppercase tracking-widest text-white border-t border-white/10 relative z-10">
-                    Process requests &rarr;
+                  <div className="absolute right-3 top-3 text-white/15 group-hover:scale-110 transition-transform duration-300 pointer-events-none">
+                    <RotateCw className="w-16 h-16" />
+                  </div>
+                  <button onClick={() => setActiveTab('returns')} className="bg-black/10 hover:bg-black/20 transition-colors text-center text-[10px] py-1.5 font-bold uppercase tracking-wider text-white border-t border-white/10 relative z-10 flex items-center justify-center gap-1">
+                    More info <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
- 
-              {/* Analytics Charts Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Chart 1: Sales Trend */}
-                <div className={visibleSalesTrend ? "card card-outline card-primary bg-white border border-slate-150 border-t-[3px] border-t-blue-600 rounded-lg shadow-sm" : "hidden"}>
-                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
-                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
-                      <Activity className="w-4 h-4 text-blue-600" />
-                      Sales & Revenue Trend
-                    </h3>
-                    <div className="card-tools flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold uppercase font-mono">Live</span>
-                      <button 
-                        onClick={() => setCollapsedSalesTrend(!collapsedSalesTrend)}
-                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
-                        title="Collapse"
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => setVisibleSalesTrend(false)}
-                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
-                        title="Close"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
+
+              {/* E-commerce Dashboard Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column (8/12 - 2 cols on lg) */}
+                <div className="lg:col-span-2 space-y-6 flex flex-col">
+                  {/* Chart 1: Sales Trend */}
+                  <div className={visibleSalesTrend ? "card card-outline card-primary bg-white border border-slate-150 border-t-[3px] border-t-blue-600 rounded-lg shadow-sm" : "hidden"}>
+                    <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                      <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                        <Activity className="w-4 h-4 text-blue-600" />
+                        Sales & Revenue Trend
+                      </h3>
+                      <div className="card-tools flex items-center gap-2">
+                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold uppercase font-mono">Live</span>
+                        <button 
+                          onClick={() => setCollapsedSalesTrend(!collapsedSalesTrend)}
+                          className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                          title="Collapse"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => setVisibleSalesTrend(false)}
+                          className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                          title="Close"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className={`card-body p-6 space-y-4 ${collapsedSalesTrend ? 'hidden' : ''}`}>
-                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">7-Day Transaction Performance</div>
-                    {/* SVG Line Chart */}
-                    <div className="relative">
-                      <svg className="w-full h-64 overflow-visible" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
-                            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
-                          </linearGradient>
-                          <filter id="trendShadow" x="-10%" y="-10%" width="120%" height="120%">
-                            <feDropShadow dx="1.5" dy="2.5" stdDeviation="1.5" floodOpacity="0.25" />
-                          </filter>
-                        </defs>
-   
-                        {/* Grid Lines */}
-                        <line x1="40" y1="30" x2="660" y2="30" stroke="#f1f5f9" strokeWidth="1" />
-                        <line x1="40" y1="77.5" x2="660" y2="77.5" stroke="#f1f5f9" strokeWidth="1" />
-                        <line x1="40" y1="125" x2="660" y2="125" stroke="#f1f5f9" strokeWidth="1" />
-                        <line x1="40" y1="172.5" x2="660" y2="172.5" stroke="#f1f5f9" strokeWidth="1" />
-                        <line x1="40" y1="220" x2="660" y2="220" stroke="#e2e8f0" strokeWidth="1.5" />
-   
-                        {(() => {
-                          const data = getDashboardDailyRevenue();
-                          
-                          const maxRev = Math.max(...data.map((d: any) => d.revenue || 0), 100000);
-                          const minRev = 0;
-                          
-                          const points = data.map((d: any, idx: number) => {
-                            const x = 50 + (idx * (590 / (data.length - 1 || 1)));
-                            const y = 220 - (((d.revenue || 0) - minRev) / (maxRev - minRev)) * 170;
-                            return { x, y, label: d.date || '', val: d.revenue || 0 };
-                          });
-   
-                          const pathData = points.map((p: any, i: number) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-                          const areaData = points.length ? `${pathData} L ${points[points.length - 1].x} 220 L ${points[0].x} 220 Z` : '';
-   
-                          return (
-                            <>
-                              {/* Area Fill */}
-                              {areaData && <path d={areaData} fill="url(#areaGradient)" className="transition-all duration-500" />}
-                              
-                              {/* Trend Line */}
-                              {pathData && <path d={pathData} fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-500" filter="url(#trendShadow)" />}
-   
-                              {/* Data points */}
-                              {points.map((p: any, idx: number) => {
-                                const isHovered = hoveredPoint === idx;
-                                return (
-                                  <g key={idx}>
-                                    {/* Interaction Circle */}
-                                    <circle
-                                      cx={p.x}
-                                      cy={p.y}
-                                      r={isHovered ? 7 : 4.5}
-                                      fill={isHovered ? '#2563eb' : '#ffffff'}
-                                      stroke="#2563eb"
-                                      strokeWidth="2.5"
-                                      onMouseEnter={() => setHoveredPoint(idx)}
-                                      onMouseLeave={() => setHoveredPoint(null)}
-                                      className="cursor-pointer transition-all duration-150"
-                                    />
-                                    
-                                    {/* X-Axis Label */}
-                                    <text x={p.x} y="238" textAnchor="middle" className="text-[10px] fill-slate-400 font-bold font-mono">{p.label}</text>
-                                    
-                                    {/* Hover Tooltip */}
-                                    {isHovered && (
-                                      <g>
-                                        <rect
-                                          x={p.x - 50}
-                                          y={p.y - 36}
-                                          width="100"
-                                          height="24"
-                                          rx="6"
-                                          fill="#0f172a"
-                                          className="shadow-lg"
-                                        />
-                                        <text
-                                          x={p.x}
-                                          y={p.y - 20}
-                                          textAnchor="middle"
-                                          fill="#ffffff"
-                                          className="text-[10px] font-extrabold font-mono"
-                                        >
-                                          ₹{(p.val / 100).toFixed(0)}
-                                        </text>
-                                      </g>
-                                    )}
-                                  </g>
-                                );
-                              })}
-                            </>
-                          );
-                        })()}
-                      </svg>
-                    </div>
-                  </div>
-                </div>
- 
-                {/* Chart 2: Category Share */}
-                <div className={visibleCategoryShare ? "card card-outline card-success bg-white border border-slate-150 border-t-[3px] border-t-emerald-500 rounded-lg shadow-sm" : "hidden"}>
-                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
-                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
-                      <Tag className="w-4 h-4 text-emerald-500" />
-                      Category Share
-                    </h3>
-                    <div className="card-tools flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase font-mono">Share</span>
-                      <button 
-                        onClick={() => setCollapsedCategoryShare(!collapsedCategoryShare)}
-                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
-                        title="Collapse"
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => setVisibleCategoryShare(false)}
-                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
-                        title="Close"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
- 
-                  <div className={`card-body p-6 ${collapsedCategoryShare ? 'hidden' : ''}`}>
-                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Sales distribution by division</div>
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2">
-                      {/* SVG Donut */}
-                      <div className="relative w-52 h-52 shrink-0">
-                        <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    
+                    <div className={`card-body p-6 space-y-4 ${collapsedSalesTrend ? 'hidden' : ''}`}>
+                      <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">7-Day Transaction Performance</div>
+                      {/* SVG Line Chart */}
+                      <div className="relative">
+                        <svg className="w-full h-64 overflow-visible" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
+                          <defs>
+                            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
+                              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
+                            </linearGradient>
+                            <filter id="trendShadow" x="-10%" y="-10%" width="120%" height="120%">
+                              <feDropShadow dx="1.5" dy="2.5" stdDeviation="1.5" floodOpacity="0.25" />
+                            </filter>
+                          </defs>
+      
+                          {/* Grid Lines */}
+                          <line x1="40" y1="30" x2="660" y2="30" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="40" y1="77.5" x2="660" y2="77.5" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="40" y1="125" x2="660" y2="125" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="40" y1="172.5" x2="660" y2="172.5" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="40" y1="220" x2="660" y2="220" stroke="#e2e8f0" strokeWidth="1.5" />
+      
                           {(() => {
-                            const data = getDashboardCategorySales();
-                              
-                            const total = data.reduce((sum: number, d: any) => sum + (d.revenue || 0), 0);
-                            let accumulatedPercent = 0;
+                            const data = getDashboardDailyRevenue();
                             
-                            const segments = data.map((d: any, idx: number) => {
-                              const percent = total > 0 ? (d.revenue || 0) / total : 0;
-                              const strokeLength = percent * (2 * Math.PI * 50); // Circumference: ~314.16
-                              const strokeOffset = 314.16 - strokeLength + (accumulatedPercent * 314.16);
-                              accumulatedPercent -= percent;
-                              
-                              const colors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
-                              const color = colors[idx % colors.length];
-                              
-                              return {
-                                category: d.category,
-                                revenue: d.revenue,
-                                percent: percent * 100,
-                                strokeLength,
-                                strokeOffset,
-                                color
-                              };
+                            const maxRev = Math.max(...data.map((d: any) => d.revenue || 0), 100000);
+                            const minRev = 0;
+                            
+                            const points = data.map((d: any, idx: number) => {
+                              const x = 50 + (idx * (590 / (data.length - 1 || 1)));
+                              const y = 220 - (((d.revenue || 0) - minRev) / (maxRev - minRev)) * 170;
+                              return { x, y, label: d.date || '', val: d.revenue || 0 };
                             });
-   
-                            const activeSeg = hoveredCategory !== null ? segments[hoveredCategory] : null;
-   
+      
+                            const pathData = points.map((p: any, i: number) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+                            const areaData = points.length ? `${pathData} L ${points[points.length - 1].x} 220 L ${points[0].x} 220 Z` : '';
+      
                             return (
                               <>
-                                <defs>
-                                  <filter id="donutShadow" x="-10%" y="-10%" width="120%" height="120%">
-                                    <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.2" />
-                                  </filter>
-                                </defs>
-   
-                                {/* Background Circle */}
-                                <circle cx="100" cy="100" r="50" fill="none" stroke="#f1f5f9" strokeWidth="16" />
-   
-                                {/* 3D Extrusion Shadow Layer */}
-                                {segments.map((seg: any, idx: number) => (
-                                  <circle
-                                    key={`shadow-${idx}`}
-                                    cx="100"
-                                    cy="103"
-                                    r="50"
-                                    fill="none"
-                                    stroke="#0f172a"
-                                    strokeOpacity="0.12"
-                                    strokeWidth="16"
-                                    strokeDasharray={`${seg.strokeLength} 314.16`}
-                                    strokeDashoffset={seg.strokeOffset}
-                                    transform="rotate(-90 100 103)"
-                                  />
-                                ))}
-   
-                                {/* Segments */}
-                                {segments.map((seg: any, idx: number) => (
-                                  <circle
-                                    key={idx}
-                                    cx="100"
-                                    cy="100"
-                                    r="50"
-                                    fill="none"
-                                    stroke={seg.color}
-                                    strokeWidth="16"
-                                    strokeDasharray={`${seg.strokeLength} 314.16`}
-                                    strokeDashoffset={seg.strokeOffset}
-                                    transform="rotate(-90 100 100)"
-                                    className="transition-all duration-300 cursor-pointer hover:stroke-[20]"
-                                    onMouseEnter={() => setHoveredCategory(idx)}
-                                    onMouseLeave={() => setHoveredCategory(null)}
-                                    filter="url(#donutShadow)"
-                                  />
-                                ))}
-   
-                                {/* Center text */}
-                                <text x="100" y="92" textAnchor="middle" className="text-[12px] fill-slate-400 font-black uppercase tracking-widest font-sans">
-                                  {activeSeg ? activeSeg.category : 'Total'}
-                                </text>
-                                <text x="100" y="118" textAnchor="middle" className="text-xl font-extrabold font-mono fill-slate-800">
-                                  {activeSeg ? `${activeSeg.percent.toFixed(0)}%` : `₹${(total / 100 / 1000).toFixed(0)}k`}
-                                </text>
+                                {/* Area Fill */}
+                                {areaData && <path d={areaData} fill="url(#areaGradient)" className="transition-all duration-500" />}
+                                
+                                {/* Trend Line */}
+                                {pathData && <path d={pathData} fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-500" filter="url(#trendShadow)" />}
+      
+                                {/* Data points */}
+                                {points.map((p: any, idx: number) => {
+                                  const isHovered = hoveredPoint === idx;
+                                  return (
+                                    <g key={idx}>
+                                      {/* Interaction Circle */}
+                                      <circle
+                                        cx={p.x}
+                                        cy={p.y}
+                                        r={isHovered ? 7 : 4.5}
+                                        fill={isHovered ? '#2563eb' : '#ffffff'}
+                                        stroke="#2563eb"
+                                        strokeWidth="2.5"
+                                        onMouseEnter={() => setHoveredPoint(idx)}
+                                        onMouseLeave={() => setHoveredPoint(null)}
+                                        className="cursor-pointer transition-all duration-150"
+                                      />
+                                      
+                                      {/* X-Axis Label */}
+                                      <text x={p.x} y="238" textAnchor="middle" className="text-[10px] fill-slate-400 font-bold font-mono">{p.label}</text>
+                                      
+                                      {/* Hover Tooltip */}
+                                      {isHovered && (
+                                        <g>
+                                          <rect
+                                            x={p.x - 50}
+                                            y={p.y - 36}
+                                            width="100"
+                                            height="24"
+                                            rx="6"
+                                            fill="#0f172a"
+                                            className="shadow-lg"
+                                          />
+                                          <text
+                                            x={p.x}
+                                            y={p.y - 20}
+                                            textAnchor="middle"
+                                            fill="#ffffff"
+                                            className="text-[10px] font-extrabold font-mono"
+                                          >
+                                            ₹{(p.val / 100).toFixed(0)}
+                                          </text>
+                                        </g>
+                                      )}
+                                    </g>
+                                  );
+                                })}
                               </>
                             );
                           })()}
                         </svg>
                       </div>
-   
-                      {/* Interactive legends */}
-                      <div className="flex-1 space-y-2 w-full font-sans">
-                        {(() => {
-                          const data = getDashboardCategorySales();
-                          const total = data.reduce((sum: number, d: any) => sum + (d.revenue || 0), 0);
-                          const colors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
-   
-                          return data.slice(0, 5).map((d: any, idx: number) => {
-                            const pct = total > 0 ? (d.revenue / total) * 100 : 0;
-                            const color = colors[idx % colors.length];
-                            const active = hoveredCategory === idx;
-                            return (
-                              <div
-                                key={idx}
-                                className={`flex items-center justify-between p-2 rounded-xl transition-colors ${active ? 'bg-slate-50' : ''}`}
-                                onMouseEnter={() => setHoveredCategory(idx)}
-                                onMouseLeave={() => setHoveredCategory(null)}
-                              >
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                                  <span className="font-extrabold text-[11px] text-slate-655 truncate uppercase">{d.category}</span>
-                                </div>
-                                <span className="font-mono font-black text-xs text-slate-900">{pct.toFixed(0)}%</span>
-                              </div>
-                            );
-                          });
-                        })()}
-                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
- 
-              {/* Stock Warning Chart Row (Full width for clear overview) */}
-              <div className="grid grid-cols-1 gap-6">
-                {/* Cylinders Stock Bar Chart */}
-                <div className={visibleStockWarning ? "card card-outline card-warning bg-white border border-slate-150 border-t-[3px] border-t-amber-500 rounded-lg shadow-sm" : "hidden"}>
-                  <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
-                    <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
-                      <AlertTriangle className="w-4 h-4 text-amber-500" />
-                      Product Stock Alert (Units Remaining)
-                    </h3>
-                    <div className="card-tools flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 bg-amber-50 text-amber-650 rounded text-[9px] font-bold uppercase font-mono">Stock Warning</span>
-                      <button 
-                        onClick={() => setCollapsedStockWarning(!collapsedStockWarning)}
-                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
-                        title="Collapse"
-                      >
-                        <Minus className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => setVisibleStockWarning(false)}
-                        className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
-                        title="Close"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
- 
-                  <div className={`card-body p-6 space-y-4 ${collapsedStockWarning ? 'hidden' : ''}`}>
-                    <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Real-time stock levels of active items requiring attention</div>
-                    <div className="relative">
-                      <svg className="w-full h-64 overflow-visible" viewBox="0 0 500 240" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <filter id="cylShadow" x="-10%" y="-10%" width="120%" height="120%">
-                            <feDropShadow dx="2" dy="4" stdDeviation="2.5" floodOpacity="0.2" />
-                          </filter>
-                        </defs>
-                        {/* Grid limits */}
-                        <line x1="30" y1="30" x2="480" y2="30" stroke="#f1f5f9" strokeWidth="1" />
-                        <line x1="30" y1="125" x2="480" y2="125" stroke="#f1f5f9" strokeWidth="1" />
-                        <line x1="30" y1="220" x2="480" y2="220" stroke="#e2e8f0" strokeWidth="1.5" />
-   
-                        {(() => {
-                          const defaultTopProducts = [
-                            { name: 'Bridal Wedge - Cream', stock: 12, sold: 148 },
-                            { name: 'Casual Flat - Tan', stock: 8, sold: 120 },
-                            { name: 'Office Block - Black', stock: 2, sold: 98 },
-                            { name: 'Evening Heel - Silver', stock: 15, sold: 85 },
-                            { name: 'Stiletto Wedge - Pink', stock: 1, sold: 72 },
-                          ];
-                          const data = productsList.length > 0
-                            ? [...productsList].sort((a, b) => (a.stock || 0) - (b.stock || 0)).slice(0, 6)
-                            : defaultTopProducts;
-                          
-                          const maxVal = Math.max(...data.map((d: any) => d.stock || 0), 20);
-   
-                          return data.map((d: any, idx: number) => {
-                            const height = Math.max(8, ((d.stock || 0) / maxVal) * 175);
-                            const x = 30 + idx * 75;
-                            const y = 220 - height;
-                            const color = d.stock === 0 ? '#f43f5e' : d.stock <= 5 ? '#f59e0b' : '#10b981'; // red for out of stock, amber for low stock, green for healthy
-   
-                            return (
-                              <g key={idx} className="group cursor-pointer">
-                                {/* Background track (shows full height capacity) */}
-                                <rect
-                                  x={x + 4}
-                                  y={30}
-                                  width="32"
-                                  height={190}
-                                  rx="6"
-                                  fill="#f8fafc"
-                                  stroke="#f1f5f9"
-                                  strokeWidth="1"
-                                />
-   
-                                {/* Filled stock level column */}
-                                <rect
-                                  x={x + 4}
-                                  y={y}
-                                  width="32"
-                                  height={height}
-                                  rx="6"
-                                  fill={color}
-                                  className="transition-all duration-300 group-hover:brightness-105"
-                                />
-   
-                                {/* Stock label text above the bar */}
-                                <text
-                                  x={x + 20}
-                                  y={y - 8}
-                                  textAnchor="middle"
-                                  className="text-[10px] font-black font-mono fill-slate-700"
-                                >
-                                  {d.stock}
-                                </text>
-   
-                                {/* Product short name as X-axis label */}
-                                <text
-                                  x={x + 20}
-                                  y="238"
-                                  textAnchor="middle"
-                                  className="text-[9px] fill-slate-500 font-bold font-sans uppercase"
-                                >
-                                  {d.name ? (d.name.length > 10 ? d.name.slice(0, 8) + '..' : d.name) : `P-${idx+1}`}
-                                </text>
-   
-                                <title>{d.name} ({d.stock} units in stock)</title>
-                              </g>
-                            );
-                          });
-                        })()}
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Secondary Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Orders (2 cols) */}
-                <div className="lg:col-span-2 bg-white border border-slate-100 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                  <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">Recent Web & POS Orders</h3>
-                    <button onClick={() => setActiveTab('orders')} className="text-[10px] font-bold text-blue-600 hover:underline">View All</button>
-                  </div>
-                  <div className="overflow-x-auto flex-1">
-                    <table className="w-full text-left border-collapse text-xs">
-                      <thead>
-                        <tr className="bg-slate-50 text-slate-400 border-b border-slate-100 font-mono">
-                          <th className="p-3">Ref</th>
-                          <th className="p-3">Customer</th>
-                          <th className="p-3">Total</th>
-                          <th className="p-3">Status</th>
-                          <th className="p-3">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {unifiedOrders.slice(0, 7).map((o) => (
-                          <tr key={o.id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="p-3 font-mono font-bold text-slate-800">{o.order_number}</td>
-                            <td className="p-3">{o.customer_name}</td>
-                            <td className="p-3 font-mono font-bold">₹{(o.total_amount / 100).toFixed(2)}</td>
-                            <td className="p-3">
-                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
-                                o.order_status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
-                                o.order_status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
-                                o.order_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
-                                'bg-amber-100 text-amber-800'
-                              }`}>
-                                {o.order_status}
-                              </span>
-                            </td>
-                            <td className="p-3 text-slate-400 text-[10px]">{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                  {/* Recent Web & POS Orders */}
+                  <div className="card card-outline card-info bg-white border border-slate-150 border-t-[3px] border-t-sky-500 rounded-lg shadow-sm overflow-hidden flex flex-col">
+                    <div className="px-5 py-4 border-b border-slate-150 flex items-center justify-between bg-slate-50/50">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">Recent Web & POS Orders</h3>
+                      <button onClick={() => setActiveTab('orders')} className="text-[10px] font-bold text-blue-600 hover:underline">View All</button>
+                    </div>
+                    <div className="overflow-x-auto flex-1">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 text-slate-400 border-b border-slate-100 font-mono">
+                            <th className="p-3">Ref</th>
+                            <th className="p-3">Customer</th>
+                            <th className="p-3">Total</th>
+                            <th className="p-3">Status</th>
+                            <th className="p-3">Date</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {unifiedOrders.slice(0, 7).map((o) => (
+                            <tr key={o.id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="p-3 font-mono font-bold text-slate-800">{o.order_number}</td>
+                              <td className="p-3">{o.customer_name}</td>
+                              <td className="p-3 font-mono font-bold">₹{(o.total_amount / 100).toFixed(2)}</td>
+                              <td className="p-3">
+                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
+                                  o.order_status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
+                                  o.order_status === 'cancelled' ? 'bg-rose-100 text-rose-800' :
+                                  o.order_status === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-amber-100 text-amber-800'
+                                }`}>
+                                  {o.order_status}
+                                </span>
+                              </td>
+                              <td className="p-3 text-slate-400 text-[10px]">{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
 
-                {/* Low Stock Watchlist */}
-                <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-5 space-y-4">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-3">Low Stock Watchlist</h3>
-                  <div className="space-y-3 overflow-y-auto max-h-[320px] pr-1">
-                    {productsList.filter(p => p.stock <= 5).slice(0, 10).map((p) => (
-                      <div key={p.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                        <div className="min-w-0">
-                          <h4 className="text-xs font-bold text-slate-800 truncate">{p.name}</h4>
-                          <span className="text-[9px] font-mono text-slate-400">{p.sku}</span>
-                        </div>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                          p.stock === 0 ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {p.stock} units
-                        </span>
+                {/* Right Column (4/12 - 1 col on lg) */}
+                <div className="lg:col-span-1 space-y-6 flex flex-col">
+                  {/* Chart 2: Category Share */}
+                  <div className={visibleCategoryShare ? "card card-outline card-success bg-white border border-slate-150 border-t-[3px] border-t-emerald-500 rounded-lg shadow-sm" : "hidden"}>
+                    <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                      <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                        <Tag className="w-4 h-4 text-emerald-500" />
+                        Category Share
+                      </h3>
+                      <div className="card-tools flex items-center gap-2">
+                        <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 rounded text-[9px] font-bold uppercase font-mono">Share</span>
+                        <button 
+                          onClick={() => setCollapsedCategoryShare(!collapsedCategoryShare)}
+                          className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                          title="Collapse"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => setVisibleCategoryShare(false)}
+                          className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                          title="Close"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                    ))}
-                    {productsList.filter(p => p.stock <= 5).length === 0 && (
-                      <div className="py-12 text-center text-xs text-slate-400">Inventory levels are healthy!</div>
-                    )}
+                    </div>
+    
+                    <div className={`card-body p-6 ${collapsedCategoryShare ? 'hidden' : ''}`}>
+                      <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Sales distribution by division</div>
+                      <div className="flex flex-col items-center justify-between gap-6 pt-2">
+                        {/* SVG Donut */}
+                        <div className="relative w-44 h-44 shrink-0">
+                          <svg className="w-full h-full" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            {(() => {
+                              const data = getDashboardCategorySales();
+                                
+                              const total = data.reduce((sum: number, d: any) => sum + (d.revenue || 0), 0);
+                              let accumulatedPercent = 0;
+                              
+                              const segments = data.map((d: any, idx: number) => {
+                                const percent = total > 0 ? (d.revenue || 0) / total : 0;
+                                const strokeLength = percent * (2 * Math.PI * 50); // Circumference: ~314.16
+                                const strokeOffset = 314.16 - strokeLength + (accumulatedPercent * 314.16);
+                                accumulatedPercent -= percent;
+                                
+                                const colors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
+                                const color = colors[idx % colors.length];
+                                
+                                return {
+                                  category: d.category,
+                                  revenue: d.revenue,
+                                  percent: percent * 100,
+                                  strokeLength,
+                                  strokeOffset,
+                                  color
+                                };
+                              });
+      
+                              const activeSeg = hoveredCategory !== null ? segments[hoveredCategory] : null;
+      
+                              return (
+                                <>
+                                  <defs>
+                                    <filter id="donutShadow" x="-10%" y="-10%" width="120%" height="120%">
+                                      <feDropShadow dx="0" dy="4" stdDeviation="3" floodOpacity="0.2" />
+                                    </filter>
+                                  </defs>
+      
+                                  {/* Background Circle */}
+                                  <circle cx="100" cy="100" r="50" fill="none" stroke="#f1f5f9" strokeWidth="16" />
+      
+                                  {/* 3D Extrusion Shadow Layer */}
+                                  {segments.map((seg: any, idx: number) => (
+                                    <circle
+                                      key={`shadow-${idx}`}
+                                      cx="100"
+                                      cy="103"
+                                      r="50"
+                                      fill="none"
+                                      stroke="#0f172a"
+                                      strokeOpacity="0.12"
+                                      strokeWidth="16"
+                                      strokeDasharray={`${seg.strokeLength} 314.16`}
+                                      strokeDashoffset={seg.strokeOffset}
+                                      transform="rotate(-90 100 103)"
+                                    />
+                                  ))}
+      
+                                  {/* Segments */}
+                                  {segments.map((seg: any, idx: number) => (
+                                    <circle
+                                      key={idx}
+                                      cx="100"
+                                      cy="100"
+                                      r="50"
+                                      fill="none"
+                                      stroke={seg.color}
+                                      strokeWidth="16"
+                                      strokeDasharray={`${seg.strokeLength} 314.16`}
+                                      strokeDashoffset={seg.strokeOffset}
+                                      transform="rotate(-90 100 100)"
+                                      className="transition-all duration-300 cursor-pointer hover:stroke-[20]"
+                                      onMouseEnter={() => setHoveredCategory(idx)}
+                                      onMouseLeave={() => setHoveredCategory(null)}
+                                      filter="url(#donutShadow)"
+                                    />
+                                  ))}
+      
+                                  {/* Center text */}
+                                  <text x="100" y="92" textAnchor="middle" className="text-[12px] fill-slate-400 font-black uppercase tracking-widest font-sans">
+                                    {activeSeg ? activeSeg.category : 'Total'}
+                                  </text>
+                                  <text x="100" y="118" textAnchor="middle" className="text-xl font-extrabold font-mono fill-slate-800">
+                                    {activeSeg ? `${activeSeg.percent.toFixed(0)}%` : `₹${(total / 100 / 1000).toFixed(0)}k`}
+                                  </text>
+                                </>
+                              );
+                            })()}
+                          </svg>
+                        </div>
+      
+                        {/* Interactive legends */}
+                        <div className="flex-1 space-y-1 w-full font-sans">
+                          {(() => {
+                            const data = getDashboardCategorySales();
+                            const total = data.reduce((sum: number, d: any) => sum + (d.revenue || 0), 0);
+                            const colors = ['#2563eb', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#64748b'];
+      
+                            return data.slice(0, 5).map((d: any, idx: number) => {
+                              const pct = total > 0 ? (d.revenue / total) * 100 : 0;
+                              const color = colors[idx % colors.length];
+                              const active = hoveredCategory === idx;
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`flex items-center justify-between p-1.5 rounded-xl transition-colors ${active ? 'bg-slate-50' : ''}`}
+                                  onMouseEnter={() => setHoveredCategory(idx)}
+                                  onMouseLeave={() => setHoveredCategory(null)}
+                                >
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                                    <span className="font-extrabold text-[10px] text-slate-655 truncate uppercase">{d.category}</span>
+                                  </div>
+                                  <span className="font-mono font-black text-xs text-slate-900">{pct.toFixed(0)}%</span>
+                                </div>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chart 3: Stock Warning */}
+                  <div className={visibleStockWarning ? "card card-outline card-warning bg-white border border-slate-150 border-t-[3px] border-t-amber-500 rounded-lg shadow-sm" : "hidden"}>
+                    <div className="card-header border-b border-slate-150 px-4 py-2.5 flex justify-between items-center bg-slate-50/50">
+                      <h3 className="card-title text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2 font-sans">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        Product Stock Alert
+                      </h3>
+                      <div className="card-tools flex items-center gap-2">
+                        <span className="px-1.5 py-0.5 bg-amber-50 text-amber-650 rounded text-[9px] font-bold uppercase font-mono">Stock Warning</span>
+                        <button 
+                          onClick={() => setCollapsedStockWarning(!collapsedStockWarning)}
+                          className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded transition-colors"
+                          title="Collapse"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => setVisibleStockWarning(false)}
+                          className="text-slate-400 hover:text-slate-655 p-1 hover:bg-slate-100 rounded transition-colors"
+                          title="Close"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+    
+                    <div className={`card-body p-6 space-y-4 ${collapsedStockWarning ? 'hidden' : ''}`}>
+                      <div className="text-[10px] text-slate-450 font-bold uppercase tracking-wider -mt-2">Real-time stock levels of active items requiring attention</div>
+                      <div className="relative">
+                        <svg className="w-full h-44 overflow-visible" viewBox="0 0 350 140" xmlns="http://www.w3.org/2000/svg">
+                          <defs>
+                            <filter id="cylShadow" x="-10%" y="-10%" width="120%" height="120%">
+                              <feDropShadow dx="1" dy="2" stdDeviation="1.5" floodOpacity="0.15" />
+                            </filter>
+                          </defs>
+                          {/* Grid limits */}
+                          <line x1="20" y1="20" x2="330" y2="20" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="20" y1="70" x2="330" y2="70" stroke="#f1f5f9" strokeWidth="1" />
+                          <line x1="20" y1="120" x2="330" y2="120" stroke="#e2e8f0" strokeWidth="1.5" />
+      
+                          {(() => {
+                            const defaultTopProducts = [
+                              { name: 'Bridal Wedge - Cream', stock: 12 },
+                              { name: 'Casual Flat - Tan', stock: 8 },
+                              { name: 'Office Block - Black', stock: 2 },
+                              { name: 'Evening Heel - Silver', stock: 15 },
+                              { name: 'Stiletto Wedge - Pink', stock: 1 },
+                            ];
+                            const data = productsList.length > 0
+                              ? [...productsList].sort((a, b) => (a.stock || 0) - (b.stock || 0)).slice(0, 5)
+                              : defaultTopProducts;
+                            
+                            const maxVal = Math.max(...data.map((d: any) => d.stock || 0), 20);
+      
+                            return data.map((d: any, idx: number) => {
+                              const height = Math.max(6, ((d.stock || 0) / maxVal) * 100);
+                              const x = 30 + idx * 60;
+                              const y = 120 - height;
+                              const color = d.stock === 0 ? '#f43f5e' : d.stock <= 5 ? '#f59e0b' : '#10b981';
+      
+                              return (
+                                <g key={idx} className="group cursor-pointer">
+                                  <rect
+                                    x={x + 4}
+                                    y={20}
+                                    width="22"
+                                    height={100}
+                                    rx="4"
+                                    fill="#f8fafc"
+                                    stroke="#f1f5f9"
+                                    strokeWidth="1"
+                                  />
+                                  <rect
+                                    x={x + 4}
+                                    y={y}
+                                    width="22"
+                                    height={height}
+                                    rx="4"
+                                    fill={color}
+                                    className="transition-all duration-300 group-hover:brightness-105"
+                                  />
+                                  <text
+                                    x={x + 15}
+                                    y={y - 4}
+                                    textAnchor="middle"
+                                    className="text-[8px] font-black font-mono fill-slate-700"
+                                  >
+                                    {d.stock}
+                                  </text>
+                                  <text
+                                    x={x + 15}
+                                    y="132"
+                                    textAnchor="middle"
+                                    className="text-[7px] fill-slate-500 font-bold font-sans uppercase"
+                                  >
+                                    {d.name ? (d.name.length > 8 ? d.name.slice(0, 6) + '..' : d.name) : `P-${idx+1}`}
+                                  </text>
+                                  <title>{d.name} ({d.stock} units)</title>
+                                </g>
+                              );
+                            });
+                          })()}
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Low Stock Watchlist */}
+                  <div className="card card-outline card-danger bg-white border border-slate-150 border-t-[3px] border-t-rose-500 rounded-lg shadow-sm p-5 space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-3 font-sans">Low Stock Watchlist</h3>
+                    <div className="space-y-3 overflow-y-auto max-h-[320px] pr-1">
+                      {productsList.filter(p => p.stock <= 5).slice(0, 10).map((p) => (
+                        <div key={p.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100 font-sans">
+                          <div className="min-w-0">
+                            <h4 className="text-xs font-bold text-slate-800 truncate">{p.name}</h4>
+                            <span className="text-[9px] font-mono text-slate-400">{p.sku}</span>
+                          </div>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
+                            p.stock === 0 ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {p.stock} units
+                          </span>
+                        </div>
+                      ))}
+                      {productsList.filter(p => p.stock <= 5).length === 0 && (
+                        <div className="py-12 text-center text-xs text-slate-400">Inventory levels are healthy!</div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
