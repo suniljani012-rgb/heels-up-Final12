@@ -139,14 +139,14 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
   };
 
   return (
-    <div className="space-y-6 text-white animate-fade-in relative">
+    <div className="space-y-6 text-neutral-900 animate-fade-in relative">
       <div>
-        <h1 className="text-2xl font-light text-white font-display italic">Stock Inventory</h1>
-        <p className="text-xs text-neutral-400">Quick-adjust sizing quantities and warehouse allocations</p>
+        <h1 className="text-2xl font-light text-neutral-900 font-display italic">Stock Inventory</h1>
+        <p className="text-xs text-neutral-500">Quick-adjust sizing quantities and warehouse allocations</p>
       </div>
 
       {/* Filter Row */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
+      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
           <input
@@ -154,17 +154,17 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search catalog styles by SKU, name, or category..."
-            className="w-full bg-[#121211] border border-neutral-850 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-primary/50"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
           />
         </div>
       </div>
 
       {/* Stock Table */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 rounded-3xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-neutral-200/80 rounded-3xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#121211] text-neutral-400 border-b border-neutral-850 font-mono">
+              <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-200 font-mono">
                 <th className="p-4">SKU / Code</th>
                 <th className="p-4">Product Style</th>
                 {standardSizes.map(size => (
@@ -184,21 +184,21 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
                 }, 0);
 
                 return (
-                  <tr key={p.id} className="hover:bg-[#121211]/20 transition-colors">
-                    <td className="p-4 font-mono font-bold text-neutral-300">{p.sku}</td>
+                  <tr key={p.id} className="hover:bg-neutral-50/20 transition-colors">
+                    <td className="p-4 font-mono font-bold text-neutral-800">{p.sku}</td>
                     <td className="p-4">
-                      <h4 className="font-bold text-white text-xs">{p.name}</h4>
+                      <h4 className="font-bold text-neutral-900 text-xs">{p.name}</h4>
                       <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-mono mt-0.5 block">{p.category}</span>
                     </td>
                     {standardSizes.map(size => {
                       const stockVal = getSizeStock(p, size);
                       return (
                         <td key={size} className="p-4 text-center">
-                          <div className="inline-flex items-center justify-center gap-1.5 bg-neutral-900 border border-neutral-800 rounded-lg p-1 w-20">
+                          <div className="inline-flex items-center justify-center gap-1.5 bg-neutral-900 border border-neutral-200 rounded-lg p-1 w-20">
                             <button
                               type="button"
                               onClick={() => handleStockChange(p.id, size, stockVal - 1)}
-                              className="text-neutral-500 hover:text-white font-bold px-1"
+                              className="text-neutral-500 hover:text-neutral-900 font-bold px-1"
                             >
                               -
                             </button>
@@ -206,12 +206,12 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
                               type="text"
                               value={stockVal}
                               onChange={(e) => handleStockChange(p.id, size, parseInt(e.target.value) || 0)}
-                              className="bg-transparent border-0 w-8 text-center text-white font-mono font-bold text-xs focus:ring-0 p-0"
+                              className="bg-transparent border-0 w-8 text-center text-neutral-900 font-mono font-bold text-xs focus:ring-0 p-0"
                             />
                             <button
                               type="button"
                               onClick={() => handleStockChange(p.id, size, stockVal + 1)}
-                              className="text-neutral-500 hover:text-white font-bold px-1"
+                              className="text-neutral-500 hover:text-neutral-900 font-bold px-1"
                             >
                               +
                             </button>
@@ -220,7 +220,7 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
                       );
                     })}
                     <td className="p-4 text-center font-mono">
-                      <span className={`px-2.5 py-0.5 rounded font-extrabold text-[10px] ${totalCalculatedStock <= 5 ? 'bg-[#ef4444]/15 border border-[#ef4444]/25 text-rose-400 animate-pulse' : 'bg-neutral-800 text-neutral-300'}`}>
+                      <span className={`px-2.5 py-0.5 rounded font-extrabold text-[10px] ${totalCalculatedStock <= 5 ? 'bg-[#ef4444]/15 border border-[#ef4444]/25 text-rose-600 animate-pulse' : 'bg-neutral-800 text-neutral-800'}`}>
                         {totalCalculatedStock} units
                       </span>
                     </td>
@@ -229,7 +229,7 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
                         <button
                           onClick={() => handleSaveStock(p)}
                           disabled={savingId === p.id}
-                          className="px-3 py-1.5 bg-primary/80 hover:bg-primary text-white border border-primary/20 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all active:scale-95 ml-auto shadow-md"
+                          className="px-3 py-1.5 bg-neutral-900/80 hover:bg-neutral-900 text-neutral-900 border border-primary/20 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all active:scale-95 ml-auto shadow-md"
                         >
                           <Save className="w-3.5 h-3.5" />
                           {savingId === p.id ? 'Saving' : 'Save'}
@@ -241,7 +241,7 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
               })}
               {filteredProducts.length === 0 && (
                 <tr>
-                  <td colSpan={standardSizes.length + 3} className="py-24 text-center text-neutral-500 italic font-mono bg-[#0f0f0e]">No catalog styles found matching criteria.</td>
+                  <td colSpan={standardSizes.length + 3} className="py-24 text-center text-neutral-500 italic font-mono bg-white">No catalog styles found matching criteria.</td>
                 </tr>
               )}
             </tbody>

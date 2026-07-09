@@ -262,22 +262,22 @@ export default function ProductsManager({ products, categories, token, showToast
   };
 
   return (
-    <div className="space-y-6 text-white animate-fade-in relative">
+    <div className="space-y-6 text-neutral-900 animate-fade-in relative">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-light text-white font-display italic">Products Catalog</h1>
-          <p className="text-xs text-neutral-400">Manage Jodhpur Footwear collections & stock allocations</p>
+          <h1 className="text-2xl font-light text-neutral-900 font-display italic">Products Catalog</h1>
+          <p className="text-xs text-neutral-500">Manage Jodhpur Footwear collections & stock allocations</p>
         </div>
         <button
           onClick={handleOpenAdd}
-          className="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg shadow-primary/20 active:scale-95 transition-all"
+          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg shadow-primary/20 active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" /> Add Style Entry
         </button>
       </div>
 
       {/* Filter Row */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
+      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
         <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
           <div className="relative flex-1 min-w-[200px]">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
@@ -286,13 +286,13 @@ export default function ProductsManager({ products, categories, token, showToast
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
               placeholder="Search name, SKU..."
-              className="w-full bg-[#121211] border border-neutral-850 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-primary/50"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
             />
           </div>
           <select
             value={selectedCategory}
             onChange={(e) => { setSelectedCategory(e.target.value); setPage(0); }}
-            className="bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary/50"
+            className="bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-900 focus:outline-none focus:border-primary/50"
           >
             <option value="">All Categories</option>
             {categories.map(c => (
@@ -305,7 +305,7 @@ export default function ProductsManager({ products, categories, token, showToast
           <button
             disabled={page === 0}
             onClick={() => setPage(p => p - 1)}
-            className="p-1 hover:bg-[#171715] rounded border border-neutral-800 disabled:opacity-30"
+            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -313,7 +313,7 @@ export default function ProductsManager({ products, categories, token, showToast
           <button
             disabled={(page + 1) * itemsPerPage >= filteredProducts.length}
             onClick={() => setPage(p => p + 1)}
-            className="p-1 hover:bg-[#171715] rounded border border-neutral-800 disabled:opacity-30"
+            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -321,11 +321,11 @@ export default function ProductsManager({ products, categories, token, showToast
       </div>
 
       {/* Grid List */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 rounded-3xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-neutral-200/80 rounded-3xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#121211] text-neutral-400 border-b border-neutral-850 font-mono">
+              <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-200 font-mono">
                 <th className="p-4 w-16">Image</th>
                 <th className="p-4">Description</th>
                 <th className="p-4">SKU</th>
@@ -338,10 +338,10 @@ export default function ProductsManager({ products, categories, token, showToast
             </thead>
             <tbody className="divide-y divide-neutral-900/60">
               {paginatedProducts.map((p) => (
-                <tr key={p.id} className="hover:bg-[#121211]/20 transition-colors">
+                <tr key={p.id} className="hover:bg-neutral-50/20 transition-colors">
                   <td className="p-4">
                     {p.images && p.images.length > 0 ? (
-                      <div className="w-10 h-10 bg-[#121211] rounded-lg overflow-hidden border border-neutral-850 flex items-center justify-center p-1">
+                      <div className="w-10 h-10 bg-neutral-50 rounded-lg overflow-hidden border border-neutral-200 flex items-center justify-center p-1">
                         <HeicImage src={p.images[0]} alt={p.name} className="w-full h-full object-contain" />
                       </div>
                     ) : (
@@ -349,11 +349,11 @@ export default function ProductsManager({ products, categories, token, showToast
                     )}
                   </td>
                   <td className="p-4">
-                    <h4 className="font-bold text-white text-xs">{p.name}</h4>
+                    <h4 className="font-bold text-neutral-900 text-xs">{p.name}</h4>
                     <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-mono mt-0.5 block">{p.brand || 'HeelsUp'}</span>
                   </td>
-                  <td className="p-4 font-mono text-neutral-300 font-bold">{p.sku}</td>
-                  <td className="p-4 text-neutral-400">{p.category}</td>
+                  <td className="p-4 font-mono text-neutral-800 font-bold">{p.sku}</td>
+                  <td className="p-4 text-neutral-500">{p.category}</td>
                   <td className="p-4 font-mono font-bold text-neutral-200">
                     ₹{(p.price / 100).toFixed(2)}
                     {p.original_price && (
@@ -361,12 +361,12 @@ export default function ProductsManager({ products, categories, token, showToast
                     )}
                   </td>
                   <td className="p-4 font-mono">
-                    <span className={`px-2 py-0.5 rounded font-extrabold text-[10px] ${p.stock <= 5 ? 'bg-[#ef4444]/15 border border-[#ef4444]/25 text-rose-400' : 'bg-neutral-800 text-neutral-350'}`}>
+                    <span className={`px-2 py-0.5 rounded font-extrabold text-[10px] ${p.stock <= 5 ? 'bg-[#ef4444]/15 border border-[#ef4444]/25 text-rose-600' : 'bg-neutral-800 text-neutral-800'}`}>
                       {p.stock} units
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${p.active ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-neutral-800 text-neutral-500'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${p.active ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700' : 'bg-neutral-800 text-neutral-500'}`}>
                       {p.active ? 'Active' : 'Draft'}
                     </span>
                   </td>
@@ -374,14 +374,14 @@ export default function ProductsManager({ products, categories, token, showToast
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleOpenEdit(p)}
-                        className="p-1.5 bg-neutral-800 hover:bg-neutral-700 hover:text-primary rounded-lg transition-all"
+                        className="p-1.5 bg-neutral-100 hover:bg-neutral-200 hover:text-neutral-900 rounded-lg transition-all"
                         title="Edit Style Entry"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDelete(p.id)}
-                        className="p-1.5 bg-neutral-800 hover:bg-[#ef4444]/15 hover:text-rose-500 rounded-lg transition-all"
+                        className="p-1.5 bg-neutral-800 hover:bg-rose-50 hover:bg-rose-100 hover:text-rose-600 rounded-lg transition-all"
                         title="Delete Entry"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -392,7 +392,7 @@ export default function ProductsManager({ products, categories, token, showToast
               ))}
               {paginatedProducts.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-24 text-center text-neutral-500 italic font-mono bg-[#0f0f0e]">No products match the filter search criteria.</td>
+                  <td colSpan={8} className="py-24 text-center text-neutral-500 italic font-mono bg-white">No products match the filter search criteria.</td>
                 </tr>
               )}
             </tbody>
@@ -407,13 +407,13 @@ export default function ProductsManager({ products, categories, token, showToast
           <div onClick={() => setDrawerOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-xs"></div>
           
           {/* Content container */}
-          <div className="w-full max-w-2xl bg-[#0e0e0d] border-l border-neutral-900 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
+          <div className="w-full max-w-2xl bg-white border-l border-neutral-200/80 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
             <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-primary font-mono">
+              <div className="flex items-center justify-between border-b border-neutral-200/80 pb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-900 font-mono">
                   {editingProduct ? `Modify Entry: ${prodName}` : 'Add Style Entry to Catalog'}
                 </h3>
-                <button onClick={() => setDrawerOpen(false)} className="p-1 hover:bg-neutral-850 rounded-lg text-neutral-400 hover:text-white transition-colors">
+                <button onClick={() => setDrawerOpen(false)} className="p-1 hover:bg-neutral-200 rounded-lg text-neutral-500 hover:text-neutral-900 transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -421,36 +421,36 @@ export default function ProductsManager({ products, categories, token, showToast
               <form onSubmit={handleSubmit} className="space-y-5 text-xs">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Style Name</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Style Name</label>
                     <input
                       type="text"
                       required
                       value={prodName}
                       onChange={(e) => setProdName(e.target.value)}
                       placeholder="e.g. Oxford Double Strap Jodhpur"
-                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white placeholder-neutral-600 focus:outline-none"
+                      className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 placeholder-neutral-600 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Style SKU (Unique)</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Style SKU (Unique)</label>
                     <input
                       type="text"
                       required
                       value={prodSku}
                       onChange={(e) => setProdSku(e.target.value)}
                       placeholder="e.g. HU-JODHPUR-01"
-                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white placeholder-neutral-600 focus:outline-none font-mono"
+                      className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 placeholder-neutral-600 focus:outline-none font-mono"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Category</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Category</label>
                     <select
                       value={prodCategory}
                       onChange={(e) => setProdCategory(e.target.value)}
-                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none"
+                      className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none"
                     >
                       {categories.map(c => (
                         <option key={c.id} value={c.name}>{c.name}</option>
@@ -458,7 +458,7 @@ export default function ProductsManager({ products, categories, token, showToast
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Price (Rupees)</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Price (Rupees)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -466,35 +466,35 @@ export default function ProductsManager({ products, categories, token, showToast
                       value={prodPrice}
                       onChange={(e) => setProdPrice(e.target.value)}
                       placeholder="4999.00"
-                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white placeholder-neutral-600 focus:outline-none font-mono"
+                      className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 placeholder-neutral-600 focus:outline-none font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">MRP/Original (Optional)</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">MRP/Original (Optional)</label>
                     <input
                       type="number"
                       step="0.01"
                       value={prodOriginalPrice}
                       onChange={(e) => setProdOriginalPrice(e.target.value)}
                       placeholder="8999.00"
-                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white placeholder-neutral-600 focus:outline-none font-mono"
+                      className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 placeholder-neutral-600 focus:outline-none font-mono"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Brand Name</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Brand Name</label>
                     <input
                       type="text"
                       value={prodBrand}
                       onChange={(e) => setProdBrand(e.target.value)}
                       placeholder="HeelsUp"
-                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white placeholder-neutral-600 focus:outline-none"
+                      className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 placeholder-neutral-600 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Show MRP / Discount Badge</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Show MRP / Discount Badge</label>
                     <div className="flex items-center gap-3 pt-2">
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -503,16 +503,16 @@ export default function ProductsManager({ products, categories, token, showToast
                           onChange={(e) => setProdShowMrp(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-8 h-4 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-500 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary/80"></div>
-                        <span className="ml-2 text-neutral-400 text-[10px] font-bold">Visibility Active</span>
+                        <div className="w-8 h-4 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-500 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-neutral-900/80"></div>
+                        <span className="ml-2 text-neutral-500 text-[10px] font-bold">Visibility Active</span>
                       </label>
                     </div>
                   </div>
                 </div>
 
                 {/* Size Stock grid */}
-                <div className="bg-[#121211] border border-neutral-850 rounded-2xl p-4 space-y-3">
-                  <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-400 border-b border-neutral-850 pb-2">Size Stock Quantities</h4>
+                <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 space-y-3">
+                  <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-500 border-b border-neutral-200 pb-2">Size Stock Quantities</h4>
                   <div className="grid grid-cols-6 gap-3">
                     {prodSizeStock.map((s, idx) => (
                       <div key={idx} className="text-center space-y-1">
@@ -526,7 +526,7 @@ export default function ProductsManager({ products, categories, token, showToast
                             copy[idx].stock = Math.max(0, parseInt(e.target.value) || 0);
                             setProdSizeStock(copy);
                           }}
-                          className="w-full bg-neutral-900 border border-neutral-800 rounded-lg py-1 px-1.5 text-center text-white font-mono"
+                          className="w-full bg-neutral-900 border border-neutral-200 rounded-lg py-1 px-1.5 text-center text-neutral-900 font-mono"
                         />
                       </div>
                     ))}
@@ -535,22 +535,22 @@ export default function ProductsManager({ products, categories, token, showToast
 
                 {/* Description */}
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Product Description</label>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Product Description</label>
                   <textarea
                     rows={3}
                     value={prodDescription}
                     onChange={(e) => setProdDescription(e.target.value)}
                     placeholder="Describe design features, sole quality, stitch density..."
-                    className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white placeholder-neutral-600 focus:outline-none leading-relaxed"
+                    className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 placeholder-neutral-600 focus:outline-none leading-relaxed"
                   />
                 </div>
 
                 {/* Product Tags */}
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Metadata tags</label>
-                  <div className="flex flex-wrap items-center gap-2 p-2 bg-[#121211] border border-neutral-850 rounded-xl min-h-[40px]">
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Metadata tags</label>
+                  <div className="flex flex-wrap items-center gap-2 p-2 bg-neutral-50 border border-neutral-200 rounded-xl min-h-[40px]">
                     {prodTags.map((tag, idx) => (
-                      <span key={idx} className="bg-neutral-800 border border-neutral-750 text-neutral-300 font-mono text-[9px] py-0.5 px-2 rounded-lg flex items-center gap-1">
+                      <span key={idx} className="bg-neutral-800 border border-neutral-750 text-neutral-800 font-mono text-[9px] py-0.5 px-2 rounded-lg flex items-center gap-1">
                         {tag}
                         <button type="button" onClick={() => setProdTags(prev => prev.filter((_, i) => i !== idx))} className="text-rose-500 font-black">×</button>
                       </span>
@@ -569,19 +569,19 @@ export default function ProductsManager({ products, categories, token, showToast
                         }
                       }}
                       placeholder="Add tag and hit Enter..."
-                      className="bg-transparent border-0 text-white placeholder-neutral-600 focus:outline-none py-0.5 flex-1 min-w-[120px]"
+                      className="bg-transparent border-0 text-neutral-900 placeholder-neutral-600 focus:outline-none py-0.5 flex-1 min-w-[120px]"
                     />
                   </div>
                 </div>
 
                 {/* Images Upload */}
                 <div className="space-y-3">
-                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Product Gallery Images</label>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Product Gallery Images</label>
                   
                   {/* Grid of uploaded images */}
                   <div className="grid grid-cols-5 gap-3">
                     {prodImages.map((img, idx) => (
-                      <div key={idx} className="aspect-square bg-neutral-900 border border-neutral-800 rounded-xl relative p-1 flex items-center justify-center group overflow-hidden">
+                      <div key={idx} className="aspect-square bg-neutral-900 border border-neutral-200 rounded-xl relative p-1 flex items-center justify-center group overflow-hidden">
                         <HeicImage src={img} alt="" className="w-full h-full object-contain" />
                         <button
                           type="button"
@@ -594,7 +594,7 @@ export default function ProductsManager({ products, categories, token, showToast
                     ))}
                     
                     {/* Add Image File box */}
-                    <label className="aspect-square bg-[#121211]/80 hover:bg-[#121211] border border-dashed border-neutral-800 rounded-xl flex flex-col items-center justify-center cursor-pointer text-neutral-500 hover:text-neutral-350 transition-colors">
+                    <label className="aspect-square bg-neutral-50/80 hover:bg-neutral-50 border border-dashed border-neutral-200 rounded-xl flex flex-col items-center justify-center cursor-pointer text-neutral-500 hover:text-neutral-800 transition-colors">
                       <input
                         type="file"
                         multiple
@@ -603,7 +603,7 @@ export default function ProductsManager({ products, categories, token, showToast
                         className="hidden"
                       />
                       {uploadingImages ? (
-                        <div className="animate-spin text-primary">
+                        <div className="animate-spin text-neutral-900">
                           <RefreshCw className="w-5 h-5" />
                         </div>
                       ) : (
@@ -617,8 +617,8 @@ export default function ProductsManager({ products, categories, token, showToast
                 </div>
 
                 {/* Meta details */}
-                <div className="bg-[#121211] border border-neutral-850 rounded-2xl p-4 space-y-3">
-                  <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-400 border-b border-neutral-850 pb-2">SEO Search Parameters</h4>
+                <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 space-y-3">
+                  <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-500 border-b border-neutral-200 pb-2">SEO Search Parameters</h4>
                   <div className="space-y-3">
                     <div>
                       <label className="block text-[9px] uppercase font-mono text-neutral-500 mb-1">Search Page Title</label>
@@ -627,7 +627,7 @@ export default function ProductsManager({ products, categories, token, showToast
                         value={prodMetaTitle}
                         onChange={(e) => setProdMetaTitle(e.target.value)}
                         placeholder="Meta title override..."
-                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-1.5 text-white"
+                        className="w-full bg-neutral-900 border border-neutral-200 rounded-lg px-3 py-1.5 text-neutral-900"
                       />
                     </div>
                     <div>
@@ -637,28 +637,28 @@ export default function ProductsManager({ products, categories, token, showToast
                         value={prodMetaDesc}
                         onChange={(e) => setProdMetaDesc(e.target.value)}
                         placeholder="Meta description override..."
-                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-1.5 text-white"
+                        className="w-full bg-neutral-900 border border-neutral-200 rounded-lg px-3 py-1.5 text-neutral-900"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Status Toggles */}
-                <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-neutral-900/60 font-mono font-bold text-[9px] uppercase tracking-wider text-neutral-400">
+                <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-neutral-200/80/60 font-mono font-bold text-[9px] uppercase tracking-wider text-neutral-500">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={prodActive} onChange={(e) => setProdActive(e.target.checked)} className="rounded bg-neutral-900 border-neutral-800 text-primary focus:ring-0 w-3.5 h-3.5" />
+                    <input type="checkbox" checked={prodActive} onChange={(e) => setProdActive(e.target.checked)} className="rounded bg-neutral-900 border-neutral-200 text-neutral-900 focus:ring-0 w-3.5 h-3.5" />
                     Publish Style Entry
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={prodFeatured} onChange={(e) => setProdFeatured(e.target.checked)} className="rounded bg-neutral-900 border-neutral-800 text-primary focus:ring-0 w-3.5 h-3.5" />
+                    <input type="checkbox" checked={prodFeatured} onChange={(e) => setProdFeatured(e.target.checked)} className="rounded bg-neutral-900 border-neutral-200 text-neutral-900 focus:ring-0 w-3.5 h-3.5" />
                     Feature on Homepage
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={prodIsNew} onChange={(e) => setProdIsNew(e.target.checked)} className="rounded bg-neutral-900 border-neutral-800 text-primary focus:ring-0 w-3.5 h-3.5" />
+                    <input type="checkbox" checked={prodIsNew} onChange={(e) => setProdIsNew(e.target.checked)} className="rounded bg-neutral-900 border-neutral-200 text-neutral-900 focus:ring-0 w-3.5 h-3.5" />
                     Mark as New Release
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={prodIsTrending} onChange={(e) => setProdIsTrending(e.target.checked)} className="rounded bg-neutral-900 border-neutral-800 text-primary focus:ring-0 w-3.5 h-3.5" />
+                    <input type="checkbox" checked={prodIsTrending} onChange={(e) => setProdIsTrending(e.target.checked)} className="rounded bg-neutral-900 border-neutral-200 text-neutral-900 focus:ring-0 w-3.5 h-3.5" />
                     Mark as Trending Style
                   </label>
                 </div>
@@ -666,7 +666,7 @@ export default function ProductsManager({ products, categories, token, showToast
                 <div className="pt-4">
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
+                    className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
                   >
                     Save Catalog Record
                   </button>

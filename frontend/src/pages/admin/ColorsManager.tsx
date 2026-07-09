@@ -103,22 +103,22 @@ export default function ColorsManager({ colors, token, showToast, onRefresh }: C
   };
 
   return (
-    <div className="space-y-6 text-white animate-fade-in relative">
+    <div className="space-y-6 text-neutral-900 animate-fade-in relative">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-light text-white font-display italic">Database Colors</h1>
-          <p className="text-xs text-neutral-400">Map leather colorway names to Hexadecimal swatch swatches</p>
+          <h1 className="text-2xl font-light text-neutral-900 font-display italic">Database Colors</h1>
+          <p className="text-xs text-neutral-500">Map leather colorway names to Hexadecimal swatch swatches</p>
         </div>
         <button
           onClick={handleOpenAdd}
-          className="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
+          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" /> Add Swatch
         </button>
       </div>
 
       {/* Filter Row */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
+      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
           <input
@@ -126,7 +126,7 @@ export default function ColorsManager({ colors, token, showToast, onRefresh }: C
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search colors..."
-            className="w-full bg-[#121211] border border-neutral-850 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-primary/50"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
           />
         </div>
       </div>
@@ -134,22 +134,22 @@ export default function ColorsManager({ colors, token, showToast, onRefresh }: C
       {/* Color Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
         {filtered.map((c) => (
-          <div key={c.id} className="bg-[#0f0f0e] border border-neutral-900 rounded-3xl p-4 shadow-lg flex flex-col items-center text-center space-y-4 hover:border-primary/30 transition-all group">
+          <div key={c.id} className="bg-white border border-neutral-200/80 rounded-3xl p-4 shadow-lg flex flex-col items-center text-center space-y-4 hover:border-primary/30 transition-all group">
             {/* Color Swatch Circle */}
             <div
-              className="w-16 h-16 rounded-full border border-neutral-800 shadow-inner group-hover:scale-105 transition-transform duration-300"
+              className="w-16 h-16 rounded-full border border-neutral-200 shadow-inner group-hover:scale-105 transition-transform duration-300"
               style={{ backgroundColor: c.hex_code }}
             ></div>
 
             <div className="space-y-1 w-full">
-              <h4 className="font-bold text-white text-xs truncate px-1">{c.name}</h4>
-              <span className="text-[10px] text-neutral-550 font-mono font-bold uppercase tracking-wider block">{c.hex_code}</span>
+              <h4 className="font-bold text-neutral-900 text-xs truncate px-1">{c.name}</h4>
+              <span className="text-[10px] text-neutral-500 font-mono font-bold uppercase tracking-wider block">{c.hex_code}</span>
             </div>
 
-            <div className="flex items-center gap-2 pt-2 border-t border-neutral-900/60 w-full justify-center">
+            <div className="flex items-center gap-2 pt-2 border-t border-neutral-200/80/60 w-full justify-center">
               <button
                 onClick={() => handleOpenEdit(c)}
-                className="p-1 bg-neutral-800 hover:bg-neutral-700 hover:text-primary rounded-lg transition-all"
+                className="p-1 bg-neutral-100 hover:bg-neutral-200 hover:text-neutral-900 rounded-lg transition-all"
                 title="Edit Color"
               >
                 <Edit3 className="w-3 h-3" />
@@ -165,7 +165,7 @@ export default function ColorsManager({ colors, token, showToast, onRefresh }: C
           </div>
         ))}
         {filtered.length === 0 && (
-          <div className="col-span-full py-24 text-center text-neutral-500 italic bg-[#0f0f0e] rounded-3xl border border-neutral-900">
+          <div className="col-span-full py-24 text-center text-neutral-500 italic bg-white rounded-3xl border border-neutral-200/80">
             No colorway swatches defined.
           </div>
         )}
@@ -175,38 +175,38 @@ export default function ColorsManager({ colors, token, showToast, onRefresh }: C
       {drawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div onClick={() => setDrawerOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-xs"></div>
-          <div className="w-full max-w-sm bg-[#0e0e0d] border-l border-neutral-900 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
+          <div className="w-full max-w-sm bg-white border-l border-neutral-200/80 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
             <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-primary font-mono">
+              <div className="flex items-center justify-between border-b border-neutral-200/80 pb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-900 font-mono">
                   {editingColor ? 'Modify Swatch' : 'Create Swatch'}
                 </h3>
-                <button onClick={() => setDrawerOpen(false)} className="p-1 hover:bg-neutral-850 rounded-lg text-neutral-400 hover:text-white transition-colors">
+                <button onClick={() => setDrawerOpen(false)} className="p-1 hover:bg-neutral-200 rounded-lg text-neutral-500 hover:text-neutral-900 transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5 text-xs">
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Color Name</label>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Color Name</label>
                   <input
                     type="text"
                     required
                     value={colorName}
                     onChange={(e) => setColorName(e.target.value)}
                     placeholder="e.g. Nero Black"
-                    className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none"
+                    className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">HEX Code</label>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">HEX Code</label>
                   <div className="flex gap-2">
                     <input
                       type="color"
                       value={colorHexCode}
                       onChange={(e) => setColorHexCode(e.target.value)}
-                      className="w-10 h-8 bg-transparent border border-neutral-800 rounded-lg cursor-pointer"
+                      className="w-10 h-8 bg-transparent border border-neutral-200 rounded-lg cursor-pointer"
                     />
                     <input
                       type="text"
@@ -214,14 +214,14 @@ export default function ColorsManager({ colors, token, showToast, onRefresh }: C
                       value={colorHexCode}
                       onChange={(e) => setColorHexCode(e.target.value)}
                       placeholder="#000000"
-                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none font-mono"
+                      className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none font-mono"
                     />
                   </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
+                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
                 >
                   Save Swatch Definition
                 </button>

@@ -2768,17 +2768,17 @@ export default function Admin() {
   // Check if admin setup is missing or user has logged in
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#0a0a09] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative text-white">
+      <div className="min-h-screen bg-[#f5f5f4] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative text-neutral-900">
         {/* Floating Toasts container */}
         <div className="fixed top-5 right-5 z-50 space-y-3 w-80 pointer-events-none">
           {toasts.map((toast) => (
             <div
               key={toast.id}
-              className={`p-4 rounded-2xl shadow-lg border pointer-events-auto flex items-start gap-3 bg-[#0f0f0e] transition-all transform animate-slide-in ${
-                toast.type === 'success' ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' :
-                toast.type === 'error' ? 'border-rose-500/20 bg-rose-500/10 text-rose-400' :
-                toast.type === 'warning' ? 'border-amber-500/20 bg-amber-500/10 text-amber-400' :
-                'border-sky-500/20 bg-sky-500/10 text-sky-400'
+              className={`p-4 rounded-2xl shadow-lg border pointer-events-auto flex items-start gap-3 bg-white transition-all transform animate-slide-in ${
+                toast.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' :
+                toast.type === 'error' ? 'border-rose-200 bg-rose-50 text-rose-700' :
+                toast.type === 'warning' ? 'border-amber-200 bg-amber-50 text-amber-700' :
+                'border-sky-200 bg-sky-50 text-sky-700'
               }`}
             >
               {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
@@ -2793,36 +2793,36 @@ export default function Admin() {
           ))}
         </div>
 
-        <div className="max-w-md w-full space-y-8 bg-[#0f0f0e] border border-neutral-900 shadow-2xl p-8 rounded-3xl animate-fade-in">
+        <div className="max-w-md w-full space-y-8 bg-white border border-neutral-200/80 shadow-2xl p-8 rounded-3xl animate-fade-in">
           <div className="text-center">
-            <span className="text-2xl font-bold tracking-tight text-primary font-display">HeelsUp</span>
-            <h2 className="mt-4 text-xl font-light text-white italic">Administration Portal Setup</h2>
-            <p className="mt-1.5 text-xs text-neutral-450">Authentication portal gateway verification</p>
+            <span className="text-2xl font-bold tracking-tight text-neutral-900 font-display">HeelsUp</span>
+            <h2 className="mt-4 text-xl font-light text-neutral-900 italic">Administration Portal Setup</h2>
+            <p className="mt-1.5 text-xs text-neutral-500">Authentication portal gateway verification</p>
           </div>
 
           {resetStep === 'login' && !otpRequired && (
             <form className="mt-8 space-y-6" onSubmit={handleLogin}>
               <div className="rounded-md space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Staff Email Address</label>
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Staff Email Address</label>
                   <input
                     type="email"
                     required
                     value={emailInput}
                     onChange={(e) => setEmailInput(e.target.value)}
                     placeholder="support@heelsup.in"
-                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-[#121211] border border-neutral-850 placeholder-neutral-600 text-white rounded-xl focus:outline-none focus:border-primary/50 text-xs transition-all"
+                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 placeholder-neutral-600 text-neutral-900 rounded-xl focus:outline-none focus:border-primary/50 text-xs transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Access Password</label>
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Access Password</label>
                   <input
                     type="password"
                     required
                     value={passwordInput}
                     onChange={(e) => setPasswordInput(e.target.value)}
                     placeholder="••••••••••••"
-                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-[#121211] border border-neutral-850 placeholder-neutral-600 text-white rounded-xl focus:outline-none focus:border-primary/50 text-xs transition-all"
+                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 placeholder-neutral-600 text-neutral-900 rounded-xl focus:outline-none focus:border-primary/50 text-xs transition-all"
                   />
                 </div>
               </div>
@@ -2832,7 +2832,7 @@ export default function Admin() {
                   <button
                     type="button"
                     onClick={() => setResetStep('forgot_email')}
-                    className="font-medium text-primary hover:underline transition-colors"
+                    className="font-medium text-neutral-900 hover:underline transition-colors"
                   >
                     Forgot access credentials?
                   </button>
@@ -2843,7 +2843,7 @@ export default function Admin() {
                 <button
                   type="submit"
                   disabled={loggingIn}
-                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-white bg-primary hover:bg-primary/95 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-850"
+                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-neutral-900 bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
                 >
                   {loggingIn ? 'Validating...' : 'Secure Sign In'}
                 </button>
@@ -2855,7 +2855,7 @@ export default function Admin() {
             <form className="mt-8 space-y-6" onSubmit={handleOtpVerify}>
               <div className="rounded-md space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Two-Factor Passcode (OTP)</label>
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Two-Factor Passcode (OTP)</label>
                   <input
                     type="text"
                     required
@@ -2863,7 +2863,7 @@ export default function Admin() {
                     value={otpInput}
                     onChange={(e) => setOtpInput(e.target.value)}
                     placeholder="123456"
-                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-[#121211] border border-neutral-850 placeholder-neutral-605 text-white rounded-xl focus:outline-none focus:border-primary/50 text-xs font-mono text-center tracking-widest transition-all"
+                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 placeholder-neutral-605 text-neutral-900 rounded-xl focus:outline-none focus:border-primary/50 text-xs font-mono text-center tracking-widest transition-all"
                   />
                 </div>
               </div>
@@ -2872,7 +2872,7 @@ export default function Admin() {
                 <button
                   type="submit"
                   disabled={loggingIn}
-                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-white bg-primary hover:bg-primary/95 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-850"
+                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-neutral-900 bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
                 >
                   {loggingIn ? 'Verifying...' : 'Verify Passcode'}
                 </button>
@@ -2884,14 +2884,14 @@ export default function Admin() {
             <form className="mt-8 space-y-6" onSubmit={handleForgotSubmit}>
               <div className="rounded-md space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Registered Staff Email</label>
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Registered Staff Email</label>
                   <input
                     type="email"
                     required
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     placeholder="support@heelsup.in"
-                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-[#121211] border border-neutral-850 placeholder-neutral-600 text-white rounded-xl focus:outline-none focus:border-primary/50 text-xs transition-all"
+                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 placeholder-neutral-600 text-neutral-900 rounded-xl focus:outline-none focus:border-primary/50 text-xs transition-all"
                   />
                 </div>
               </div>
@@ -2900,7 +2900,7 @@ export default function Admin() {
                 <button
                   type="button"
                   onClick={() => setResetStep('login')}
-                  className="text-xs font-medium text-neutral-400 hover:text-white"
+                  className="text-xs font-medium text-neutral-500 hover:text-neutral-900"
                 >
                   Back to Sign In
                 </button>
@@ -2910,7 +2910,7 @@ export default function Admin() {
                 <button
                   type="submit"
                   disabled={resettingPassword}
-                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-white bg-primary hover:bg-primary/95 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-850"
+                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-neutral-900 bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
                 >
                   {resettingPassword ? 'Generating OTP...' : 'Send Recovery OTP'}
                 </button>
@@ -2922,36 +2922,36 @@ export default function Admin() {
             <form className="mt-8 space-y-6" onSubmit={handleResetSubmit}>
               <div className="rounded-md space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">OTP Recovery Code</label>
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">OTP Recovery Code</label>
                   <input
                     type="text"
                     required
                     value={resetOtpCode}
                     onChange={(e) => setResetOtpCode(e.target.value)}
                     placeholder="123456"
-                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-[#121211] border border-neutral-850 placeholder-neutral-600 text-white rounded-xl focus:outline-none focus:border-primary/50 text-xs text-center font-mono tracking-widest"
+                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 placeholder-neutral-600 text-neutral-900 rounded-xl focus:outline-none focus:border-primary/50 text-xs text-center font-mono tracking-widest"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">New Password</label>
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">New Password</label>
                   <input
                     type="password"
                     required
                     value={resetNewPassword}
                     onChange={(e) => setResetNewPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-[#121211] border border-neutral-850 placeholder-neutral-600 text-white rounded-xl focus:outline-none focus:border-primary/50 text-xs"
+                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 placeholder-neutral-600 text-neutral-900 rounded-xl focus:outline-none focus:border-primary/50 text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1.5">Confirm New Password</label>
+                  <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Confirm New Password</label>
                   <input
                     type="password"
                     required
                     value={resetConfirmPassword}
                     onChange={(e) => setResetConfirmPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-[#121211] border border-neutral-850 placeholder-neutral-600 text-white rounded-xl focus:outline-none focus:border-primary/50 text-xs"
+                    className="appearance-none relative block w-full px-3.5 py-2.5 bg-neutral-50 border border-neutral-200 placeholder-neutral-600 text-neutral-900 rounded-xl focus:outline-none focus:border-primary/50 text-xs"
                   />
                 </div>
               </div>
@@ -2960,7 +2960,7 @@ export default function Admin() {
                 <button
                   type="submit"
                   disabled={resettingPassword}
-                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-white bg-primary hover:bg-primary/95 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-850"
+                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-neutral-900 bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
                 >
                   {resettingPassword ? 'Updating...' : 'Update Password'}
                 </button>
@@ -3034,17 +3034,17 @@ export default function Admin() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0a0a09] text-white font-sans flex flex-col md:flex-row relative">
+    <div className="min-h-screen bg-[#f5f5f4] text-neutral-900 font-sans flex flex-col md:flex-row relative">
       {/* Floating Toasts container */}
       <div className="fixed top-5 right-5 z-50 space-y-3 w-80 pointer-events-none">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`p-4 rounded-xl shadow-lg border pointer-events-auto flex items-start gap-3 bg-[#0f0f0e] border-[#1f1f1e] transition-all transform animate-slide-in ${
-              toast.type === 'success' ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' :
-              toast.type === 'error' ? 'border-rose-500/20 bg-rose-500/10 text-rose-400' :
-              toast.type === 'warning' ? 'border-amber-500/20 bg-amber-500/10 text-amber-400' :
-              'border-sky-500/20 bg-sky-500/10 text-sky-400'
+            className={`p-4 rounded-xl shadow-lg border pointer-events-auto flex items-start gap-3 bg-white border-neutral-200/80 transition-all transform animate-slide-in ${
+              toast.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' :
+              toast.type === 'error' ? 'border-rose-200 bg-rose-50 text-rose-700' :
+              toast.type === 'warning' ? 'border-amber-200 bg-amber-50 text-amber-700' :
+              'border-sky-200 bg-sky-50 text-sky-700'
             }`}
           >
             {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
@@ -3061,28 +3061,28 @@ export default function Admin() {
 
       {/* Floating Order Alert Banner */}
       {showOrderBanner && (
-        <div className="fixed top-18 right-6 z-50 animate-slide-left pointer-events-auto bg-[#0f0f0e] text-white p-4 rounded-xl shadow-2xl border border-neutral-850 flex items-center gap-3 w-80 max-w-sm">
-          <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center animate-pulse text-primary">
+        <div className="fixed top-18 right-6 z-50 animate-slide-left pointer-events-auto bg-white text-neutral-900 p-4 rounded-xl shadow-2xl border border-neutral-200 flex items-center gap-3 w-80 max-w-sm">
+          <div className="w-8 h-8 rounded-full bg-neutral-900/20 border border-primary/30 flex items-center justify-center animate-pulse text-neutral-900">
             <ShoppingCart className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
-            <h5 className="text-[9px] uppercase font-extrabold text-primary tracking-wider">New Order Alert</h5>
+            <h5 className="text-[9px] uppercase font-extrabold text-neutral-900 tracking-wider">New Order Alert</h5>
             <p className="text-[11px] font-semibold leading-snug mt-0.5">{showOrderBanner}</p>
           </div>
-          <button onClick={() => setShowOrderBanner(null)} className="text-neutral-400 hover:text-white transition-colors shrink-0">
+          <button onClick={() => setShowOrderBanner(null)} className="text-neutral-500 hover:text-neutral-900 transition-colors shrink-0">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Sidebar Panel */}
-      <aside className={`w-64 bg-[#0e0e0d] border-r border-neutral-900 flex flex-col justify-between shrink-0 h-screen sticky top-0 transition-transform md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} z-30 fixed md:sticky`}>
+      <aside className={`w-64 bg-white border-r border-neutral-200/80 flex flex-col justify-between shrink-0 h-screen sticky top-0 transition-transform md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} z-30 fixed md:sticky`}>
         {/* Brand */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-neutral-900">
-          <span className="text-lg font-bold tracking-tight text-primary font-display flex items-center gap-1.5">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-neutral-200/80">
+          <span className="text-lg font-bold tracking-tight text-neutral-900 font-display flex items-center gap-1.5">
             <Sliders className="w-5 h-5" /> HeelsUp Admin
           </span>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-neutral-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-neutral-500 hover:text-neutral-900">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -3109,13 +3109,13 @@ export default function Admin() {
                           if (window.innerWidth < 768) setSidebarOpen(false);
                         }}
                         className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                          active ? 'text-primary bg-primary/10 border border-primary/20 shadow-sm shadow-primary/5' : 'text-neutral-400 hover:text-neutral-200 hover:bg-[#121211]/50 border border-transparent'
+                          active ? 'text-neutral-900 bg-neutral-100 border border-neutral-200/80 font-bold' : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-50/50 border border-transparent'
                         }`}
                       >
                         <i className={`${item.icon} text-sm`}></i>
                         <span>{item.label}</span>
                         {item.id === 'orders' && unseenOrders > 0 && (
-                          <span className="ml-auto bg-rose-500 text-white font-mono text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">
+                          <span className="ml-auto bg-rose-500 text-neutral-900 font-mono text-[9px] font-extrabold px-1.5 py-0.5 rounded-full">
                             {unseenOrders}
                           </span>
                         )}
@@ -3129,21 +3129,21 @@ export default function Admin() {
         </div>
         
         {/* Sign Out */}
-        <div className="p-4 border-t border-neutral-900">
-          <button onClick={handleLogout} className="w-full py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5">
+        <div className="p-4 border-t border-neutral-200/80">
+          <button onClick={handleLogout} className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5">
             Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main Workspace Content */}
-      <div className="flex-1 flex flex-col min-h-screen bg-[#0a0a09]">
+      <div className="flex-1 flex flex-col min-h-screen bg-[#f5f5f4]">
         {/* Header */}
-        <header className="h-16 bg-[#0e0e0d] border-b border-neutral-900 flex items-center justify-between px-6 sticky top-0 z-20">
+        <header className="h-16 bg-white border-b border-neutral-200/80 flex items-center justify-between px-6 sticky top-0 z-20">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1.5 text-neutral-400 hover:bg-[#121211] rounded-lg transition-colors md:hidden"
+              className="p-1.5 text-neutral-500 hover:bg-neutral-50 rounded-lg transition-colors md:hidden"
             >
               <Sliders className="w-5 h-5 rotate-90" />
             </button>
@@ -3156,12 +3156,12 @@ export default function Admin() {
             <button
               onClick={loadAllData}
               disabled={dataLoading}
-              className="px-3 py-1.5 bg-[#121211] border border-neutral-850 hover:bg-[#171715] text-[10px] font-bold text-neutral-350 rounded-xl uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-50"
+              className="px-3 py-1.5 bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 text-[10px] font-bold text-neutral-800 rounded-xl uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-3 h-3 ${dataLoading ? 'animate-spin' : ''}`} />
               {dataLoading ? 'Syncing...' : 'Sync Database'}
             </button>
-            <div className="text-[10px] text-neutral-550 font-mono hidden sm:block">
+            <div className="text-[10px] text-neutral-500 font-mono hidden sm:block">
               <span>Cloudflare D1: heelsup-live</span>
             </div>
           </div>

@@ -247,14 +247,14 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
   };
 
   return (
-    <div className="space-y-6 text-white animate-fade-in relative">
+    <div className="space-y-6 text-neutral-900 animate-fade-in relative">
       <div>
-        <h1 className="text-2xl font-light text-white font-display italic">Billing Orders Registry</h1>
-        <p className="text-xs text-neutral-400">Process and fulfill customer retail logs and transaction manifests</p>
+        <h1 className="text-2xl font-light text-neutral-900 font-display italic">Billing Orders Registry</h1>
+        <p className="text-xs text-neutral-500">Process and fulfill customer retail logs and transaction manifests</p>
       </div>
 
       {/* Filter Row */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
+      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
         <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
           <div className="relative flex-1 min-w-[180px]">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
@@ -263,13 +263,13 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
               placeholder="Search order #, customer..."
-              className="w-full bg-[#121211] border border-neutral-850 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-primary/50"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-            className="bg-[#121211] border border-neutral-850 rounded-xl px-2 py-1.5 text-xs text-white focus:outline-none"
+            className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
           >
             <option value="all">All Statuses</option>
             <option value="placed">Placed</option>
@@ -281,7 +281,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
           <select
             value={sourceFilter}
             onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
-            className="bg-[#121211] border border-neutral-850 rounded-xl px-2 py-1.5 text-xs text-white focus:outline-none"
+            className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
           >
             <option value="all">All Channels</option>
             <option value="web">Web Storefront</option>
@@ -294,7 +294,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
           <button
             disabled={page === 0}
             onClick={() => setPage(p => p - 1)}
-            className="p-1 hover:bg-[#171715] rounded border border-neutral-800 disabled:opacity-30"
+            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -302,7 +302,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
           <button
             disabled={(page + 1) * itemsPerPage >= filteredOrders.length}
             onClick={() => setPage(p => p + 1)}
-            className="p-1 hover:bg-[#171715] rounded border border-neutral-800 disabled:opacity-30"
+            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -310,11 +310,11 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
       </div>
 
       {/* Orders Grid Table */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 rounded-3xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-neutral-200/80 rounded-3xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#121211] text-neutral-400 border-b border-neutral-850 font-mono">
+              <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-200 font-mono">
                 <th className="p-4">Order #</th>
                 <th className="p-4">Date</th>
                 <th className="p-4">Customer</th>
@@ -327,31 +327,31 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
             </thead>
             <tbody className="divide-y divide-neutral-900/60">
               {paginatedOrders.map((o) => (
-                <tr key={o.id} className="hover:bg-[#121211]/20 transition-colors">
+                <tr key={o.id} className="hover:bg-neutral-50/20 transition-colors">
                   <td className="p-4 font-mono font-bold text-neutral-200">#{o.order_number}</td>
-                  <td className="p-4 text-neutral-400 font-mono">{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                  <td className="p-4 text-neutral-500 font-mono">{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
                   <td className="p-4">
-                    <h4 className="font-bold text-white text-xs">{o.customer_name}</h4>
+                    <h4 className="font-bold text-neutral-900 text-xs">{o.customer_name}</h4>
                     <span className="text-[9px] text-neutral-500 font-mono">{o.customer_phone}</span>
                   </td>
                   <td className="p-4 font-mono font-bold text-neutral-200">₹{(o.total_amount / 100).toFixed(2)}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${o.source === 'pos' ? 'bg-sky-500/10 border border-sky-500/20 text-sky-400' : 'bg-neutral-800 text-neutral-400'}`}>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${o.source === 'pos' ? 'bg-sky-500/10 border border-sky-500/20 text-sky-600' : 'bg-neutral-800 text-neutral-500'}`}>
                       {o.source}
                     </span>
                   </td>
                   <td className="p-4">
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                      o.order_status === 'delivered' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' :
-                      o.order_status === 'cancelled' ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400' :
+                      o.order_status === 'delivered' ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700' :
+                      o.order_status === 'cancelled' ? 'bg-rose-500/10 border border-rose-500/20 text-rose-600' :
                       o.order_status === 'shipped' ? 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-400' :
-                      'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+                      'bg-amber-500/10 border border-amber-500/20 text-amber-600'
                     }`}>
                       {o.order_status}
                     </span>
                   </td>
                   <td className="p-4 uppercase text-[9px] font-mono font-bold">
-                    <span className={o.payment_status === 'paid' ? 'text-emerald-400' : 'text-amber-500'}>
+                    <span className={o.payment_status === 'paid' ? 'text-emerald-700' : 'text-amber-500'}>
                       {o.payment_status} &middot; {o.payment_method}
                     </span>
                   </td>
@@ -359,14 +359,14 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleOpenDetails(o)}
-                        className="p-1.5 bg-neutral-800 hover:bg-neutral-700 hover:text-primary rounded-lg transition-all"
+                        className="p-1.5 bg-neutral-100 hover:bg-neutral-200 hover:text-neutral-900 rounded-lg transition-all"
                         title="View & Edit"
                       >
                         <Eye className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handlePrintInvoice(o)}
-                        className="p-1.5 bg-neutral-800 hover:bg-neutral-700 hover:text-primary rounded-lg transition-all"
+                        className="p-1.5 bg-neutral-100 hover:bg-neutral-200 hover:text-neutral-900 rounded-lg transition-all"
                         title="Print Invoice"
                       >
                         <Printer className="w-3.5 h-3.5" />
@@ -377,7 +377,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
               ))}
               {paginatedOrders.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-24 text-center text-neutral-500 italic font-mono bg-[#0f0f0e]">No billing manifests match criteria.</td>
+                  <td colSpan={8} className="py-24 text-center text-neutral-500 italic font-mono bg-white">No billing manifests match criteria.</td>
                 </tr>
               )}
             </tbody>
@@ -389,36 +389,36 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div onClick={() => setSelectedOrder(null)} className="absolute inset-0 bg-black/60 backdrop-blur-xs"></div>
-          <div className="w-full max-w-xl bg-[#0e0e0d] border-l border-neutral-900 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
+          <div className="w-full max-w-xl bg-white border-l border-neutral-200/80 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
             <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-primary font-mono">
+              <div className="flex items-center justify-between border-b border-neutral-200/80 pb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-900 font-mono">
                   Modify Manifest: #{selectedOrder.order_number}
                 </h3>
-                <button onClick={() => setSelectedOrder(null)} className="p-1 hover:bg-neutral-850 rounded-lg text-neutral-400 hover:text-white transition-colors">
+                <button onClick={() => setSelectedOrder(null)} className="p-1 hover:bg-neutral-200 rounded-lg text-neutral-500 hover:text-neutral-900 transition-colors">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Order items lists */}
               <div className="space-y-3.5">
-                <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-400">Order Items</h4>
+                <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-500">Order Items</h4>
                 <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                   {selectedOrder.items?.map((item, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-3 bg-[#121211] border border-neutral-850 rounded-xl text-xs">
+                    <div key={idx} className="flex justify-between items-center p-3 bg-neutral-50 border border-neutral-200 rounded-xl text-xs">
                       <div>
-                        <h5 className="font-bold text-white">{item.product_name}</h5>
+                        <h5 className="font-bold text-neutral-900">{item.product_name}</h5>
                         <span className="text-[9px] text-neutral-500 font-mono">Size UK-{item.size} {item.color ? `&middot; ${item.color}` : ''} &middot; {item.quantity} units</span>
                       </div>
-                      <span className="font-mono font-bold text-neutral-300">₹{((item.price * item.quantity) / 100).toFixed(2)}</span>
+                      <span className="font-mono font-bold text-neutral-800">₹{((item.price * item.quantity) / 100).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Address details */}
-              <div className="bg-[#121211] border border-neutral-850 rounded-2xl p-4 space-y-3 text-xs leading-relaxed text-neutral-300">
-                <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-400 border-b border-neutral-850 pb-2">Customer Address Details</h4>
+              <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 space-y-3 text-xs leading-relaxed text-neutral-800">
+                <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-500 border-b border-neutral-200 pb-2">Customer Address Details</h4>
                 <p>
                   <strong>Ship To:</strong> {selectedOrder.customer_name}<br/>
                   <strong>Phone:</strong> {selectedOrder.customer_phone}<br/>
@@ -428,7 +428,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                   {selectedOrder.city && <>{selectedOrder.city}, {selectedOrder.state || ''} - {selectedOrder.pincode || ''}</>}
                 </p>
                 {selectedOrder.notes && (
-                  <div className="mt-2 p-2.5 bg-neutral-900 border border-neutral-800 rounded-xl text-[11px] text-neutral-400 italic">
+                  <div className="mt-2 p-2.5 bg-neutral-900 border border-neutral-200 rounded-xl text-[11px] text-neutral-500 italic">
                     Note: "{selectedOrder.notes}"
                   </div>
                 )}
@@ -438,11 +438,11 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
               <form onSubmit={handleSaveOrder} className="space-y-5 text-xs">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Order Status</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Order Status</label>
                     <select
                       value={orderStatusVal}
                       onChange={(e) => setOrderStatusVal(e.target.value)}
-                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none"
+                      className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none"
                     >
                       <option value="placed">Placed / In Queue</option>
                       <option value="confirmed">Confirmed / Processing</option>
@@ -452,11 +452,11 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Payment Status</label>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Payment Status</label>
                     <select
                       value={paymentStatusVal}
                       onChange={(e) => setPaymentStatusVal(e.target.value)}
-                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none"
+                      className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none"
                     >
                       <option value="pending">Pending Payment</option>
                       <option value="paid">Paid / Settled</option>
@@ -466,9 +466,9 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                 </div>
 
                 {/* Delivery details */}
-                <div className="bg-[#121211] border border-neutral-850 rounded-2xl p-4 space-y-4">
-                  <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-400 border-b border-neutral-850 pb-2 flex items-center gap-1.5">
-                    <Truck className="w-4 h-4 text-primary" /> Courier Dispatch Registry
+                <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 space-y-4">
+                  <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-500 border-b border-neutral-200 pb-2 flex items-center gap-1.5">
+                    <Truck className="w-4 h-4 text-neutral-900" /> Courier Dispatch Registry
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -478,7 +478,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                         value={courierName}
                         onChange={(e) => setCourierName(e.target.value)}
                         placeholder="e.g. Delhivery, Bluedart"
-                        className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-white focus:outline-none"
+                        className="w-full bg-neutral-900 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none"
                       />
                     </div>
                     <div>
@@ -488,7 +488,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                         value={trackingNumber}
                         onChange={(e) => setTrackingNumber(e.target.value)}
                         placeholder="e.g. 123456789"
-                        className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-white focus:outline-none font-mono"
+                        className="w-full bg-neutral-900 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none font-mono"
                       />
                     </div>
                   </div>
@@ -499,7 +499,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                       value={trackingUrl}
                       onChange={(e) => setTrackingUrl(e.target.value)}
                       placeholder="https://delhivery.com/track/..."
-                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-3 py-2 text-white focus:outline-none font-mono"
+                      className="w-full bg-neutral-900 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none font-mono"
                     />
                   </div>
                 </div>
@@ -507,7 +507,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                 <button
                   type="submit"
                   disabled={updatingStatus}
-                  className="w-full py-2.5 bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 disabled:bg-neutral-800"
+                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 disabled:bg-neutral-800"
                 >
                   {updatingStatus ? 'Syncing...' : 'Save Order Manifest'}
                 </button>

@@ -100,7 +100,7 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Search and Action Bar */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
           <div className="relative flex-1 min-w-[180px]">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
@@ -114,7 +114,7 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
                 setPage(0);
               }}
               placeholder="Search by admin email, action or details..."
-              className="w-full bg-[#121211] border border-neutral-850 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-amber-500/60"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 focus:outline-none focus:border-amber-500/60"
             />
           </div>
           
@@ -128,7 +128,7 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
                 setSelectedAction(e.target.value);
                 setPage(0);
               }}
-              className="bg-[#121211] border border-neutral-850 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none"
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-2.5 py-1.5 text-xs text-neutral-900 focus:outline-none"
             >
               <option value="">All Actions</option>
               {actionOptions.map(act => (
@@ -141,7 +141,7 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
         <div className="flex items-center gap-3">
           <button
             onClick={onRefresh}
-            className="p-2 border border-neutral-850 hover:bg-neutral-850 rounded-xl text-neutral-400 hover:text-white transition-colors"
+            className="p-2 border border-neutral-200 hover:bg-neutral-200 rounded-xl text-neutral-500 hover:text-neutral-900 transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -149,7 +149,7 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
           {filteredLogs.length > 0 && (
             <button
               onClick={handleExportCsv}
-              className="px-3 py-2 border border-neutral-800 hover:bg-neutral-850 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3 py-2 border border-neutral-200 hover:bg-neutral-200 text-neutral-900 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
             >
               <Download className="w-3.5 h-3.5" /> Dump Registry
             </button>
@@ -165,19 +165,19 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
       </div>
 
       {/* Logs Table */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 rounded-2xl overflow-hidden shadow-md">
-        <div className="p-4 bg-[#121211]/80 border-b border-neutral-900 flex justify-between items-center">
-          <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+      <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-md">
+        <div className="p-4 bg-neutral-50/80 border-b border-neutral-200/80 flex justify-between items-center">
+          <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
             <Activity className="w-4 h-4 text-amber-500" />
             Audit registry database ({filteredLogs.length} matching events)
           </span>
           
           {/* Simple Pagination */}
-          <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
             <button
               disabled={page === 0}
               onClick={() => setPage(p => p - 1)}
-              className="px-1.5 py-0.5 border border-neutral-800 rounded hover:bg-neutral-850 disabled:opacity-45"
+              className="px-1.5 py-0.5 border border-neutral-200 rounded hover:bg-neutral-200 disabled:opacity-45"
             >
               Prev
             </button>
@@ -185,7 +185,7 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
             <button
               disabled={(page + 1) * pageSize >= filteredLogs.length}
               onClick={() => setPage(p => p + 1)}
-              className="px-1.5 py-0.5 border border-neutral-800 rounded hover:bg-neutral-850 disabled:opacity-45"
+              className="px-1.5 py-0.5 border border-neutral-200 rounded hover:bg-neutral-200 disabled:opacity-45"
             >
               Next
             </button>
@@ -195,35 +195,35 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
         {loading ? (
           <div className="py-24 text-center text-xs text-neutral-500">Retrieving audit log entries...</div>
         ) : paginatedLogs.length === 0 ? (
-          <div className="py-24 text-center text-xs text-neutral-500 border border-dashed border-neutral-850 m-4 rounded-xl">
+          <div className="py-24 text-center text-xs text-neutral-500 border border-dashed border-neutral-200 m-4 rounded-xl">
             No audit records match the selected search criteria.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="bg-[#070707] text-neutral-400 border-b border-neutral-900 font-mono">
+                <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-200/80 font-mono">
                   <th className="p-3 font-bold uppercase tracking-wider w-36">Timestamp</th>
                   <th className="p-3 font-bold uppercase tracking-wider w-48">Administrator</th>
                   <th className="p-3 font-bold uppercase tracking-wider w-40">Action Category</th>
                   <th className="p-3 font-bold uppercase tracking-wider">Details Description</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-900/60 font-sans text-white">
+              <tbody className="divide-y divide-neutral-900/60 font-sans text-neutral-900">
                 {paginatedLogs.map(l => (
-                  <tr key={l.id} className="hover:bg-[#121211]/25 transition-colors">
-                    <td className="p-3 font-mono text-[10px] text-neutral-400 whitespace-nowrap">
+                  <tr key={l.id} className="hover:bg-neutral-50/25 transition-colors">
+                    <td className="p-3 font-mono text-[10px] text-neutral-500 whitespace-nowrap">
                       {new Date(l.created_at || Date.now()).toLocaleString()}
                     </td>
-                    <td className="p-3 font-semibold text-neutral-300">
+                    <td className="p-3 font-semibold text-neutral-800">
                       {l.admin_email || 'System / Auto'}
                     </td>
                     <td className="p-3">
-                      <span className="px-2 py-0.5 bg-neutral-900 border border-neutral-800 rounded text-[9px] font-mono text-[#ead2ae] uppercase">
+                      <span className="px-2 py-0.5 bg-neutral-900 border border-neutral-200 rounded text-[9px] font-mono text-neutral-850 uppercase">
                         {l.action}
                       </span>
                     </td>
-                    <td className="p-3 text-neutral-400 text-[11px] leading-relaxed">
+                    <td className="p-3 text-neutral-500 text-[11px] leading-relaxed">
                       {l.details}
                     </td>
                   </tr>

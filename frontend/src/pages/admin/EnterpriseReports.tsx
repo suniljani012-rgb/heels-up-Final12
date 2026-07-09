@@ -203,9 +203,9 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Parameters Panel */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#0f0f0e] border border-neutral-900 p-5 rounded-2xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-neutral-200/80 p-5 rounded-2xl">
         <div className="space-y-1">
-          <h2 className="text-lg font-bold text-white font-display italic">Enterprise Reports</h2>
+          <h2 className="text-lg font-bold text-neutral-900 font-display italic">Enterprise Reports</h2>
           <p className="text-[10px] text-neutral-500 font-medium">Export sales, stock value and cancelled logs.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -215,29 +215,29 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
               setReportType(e.target.value as any);
               setCompiledData([]);
             }}
-            className="bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-xs text-white focus:outline-none"
+            className="bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-900 focus:outline-none"
           >
             <option value="sales">Sales Volume Report</option>
             <option value="inventory">Inventory Asset Summary</option>
           </select>
-          <div className="flex items-center gap-2 text-xs text-neutral-400">
+          <div className="flex items-center gap-2 text-xs text-neutral-500">
             <input
               type="date"
               value={dateFrom}
               onChange={e => setDateFrom(e.target.value)}
-              className="bg-[#121211] border border-neutral-850 rounded-xl px-3 py-1.5 text-white"
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-1.5 text-neutral-900"
             />
             <span>to</span>
             <input
               type="date"
               value={dateTo}
               onChange={e => setDateTo(e.target.value)}
-              className="bg-[#121211] border border-neutral-850 rounded-xl px-3 py-1.5 text-white"
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-1.5 text-neutral-900"
             />
           </div>
           <button
             onClick={handleCompileReport}
-            className="px-4 py-2 bg-[#ead2ae] hover:bg-[#b17e3f] text-neutral-950 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+            className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors"
           >
             Generate Report
           </button>
@@ -246,22 +246,22 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
 
       {/* Aggregate Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-xl">
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-xl">
           <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Gross Revenues</span>
-          <span className="block text-base font-bold font-mono text-white mt-1">₹{stats.totalSales.toLocaleString('en-IN')}</span>
+          <span className="block text-base font-bold font-mono text-neutral-900 mt-1">₹{stats.totalSales.toLocaleString('en-IN')}</span>
           <span className="text-[7px] text-emerald-500 font-bold uppercase mt-1 block">Active sales</span>
         </div>
-        <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-xl">
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-xl">
           <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Orders count</span>
-          <span className="block text-base font-bold font-mono text-white mt-1">{stats.totalOrders} orders</span>
-          <span className="text-[7px] text-neutral-400 font-semibold mt-1 block">YTD transactions</span>
+          <span className="block text-base font-bold font-mono text-neutral-900 mt-1">{stats.totalOrders} orders</span>
+          <span className="text-[7px] text-neutral-500 font-semibold mt-1 block">YTD transactions</span>
         </div>
-        <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-xl">
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-xl">
           <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Average Order</span>
-          <span className="block text-base font-bold font-mono text-[#ead2ae] mt-1">₹{stats.avgOrder.toFixed(2)}</span>
-          <span className="text-[7px] text-[#ead2ae] font-semibold mt-1 block">Ticket size</span>
+          <span className="block text-base font-bold font-mono text-neutral-850 mt-1">₹{stats.avgOrder.toFixed(2)}</span>
+          <span className="text-[7px] text-neutral-850 font-semibold mt-1 block">Ticket size</span>
         </div>
-        <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-xl">
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-xl">
           <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Cancellation Rate</span>
           <span className="block text-base font-bold font-mono text-rose-500 mt-1">{stats.cancelRate.toFixed(1)}%</span>
           <span className="text-[7px] text-rose-500/80 font-semibold mt-1 block">Bounced orders</span>
@@ -271,23 +271,23 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
       {/* Charts Visualization Column */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sales trend SVG area chart */}
-        <div className={visibleRevenueGrowthTrend ? "lg:col-span-8 card card-outline card-warning bg-[#0f0f0e] border border-neutral-900 border-t-[3px] border-t-amber-500 rounded-lg shadow-md overflow-hidden flex flex-col" : "hidden"}>
-          <div className="card-header border-b border-neutral-900 px-4 py-2.5 flex justify-between items-center bg-[#141413]">
-            <h3 className="card-title text-[9px] font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-sans">
+        <div className={visibleRevenueGrowthTrend ? "lg:col-span-8 card card-outline card-warning bg-white border border-neutral-200/80 border-t-[3px] border-t-amber-500 rounded-lg shadow-md overflow-hidden flex flex-col" : "hidden"}>
+          <div className="card-header border-b border-neutral-200/80 px-4 py-2.5 flex justify-between items-center bg-neutral-50">
+            <h3 className="card-title text-[9px] font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-1.5 font-sans">
               <Activity className="w-4 h-4 text-amber-500" />
               Revenue Growth Trend (Inclusive GST)
             </h3>
             <div className="card-tools flex items-center gap-2">
               <button 
                 onClick={() => setCollapsedRevenueGrowthTrend(!collapsedRevenueGrowthTrend)}
-                className="text-neutral-450 hover:text-neutral-200 p-1 hover:bg-neutral-800 rounded transition-colors"
+                className="text-neutral-500 hover:text-neutral-900 p-1 hover:bg-neutral-100 rounded transition-colors"
                 title="Collapse"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
               <button 
                 onClick={() => setVisibleRevenueGrowthTrend(false)}
-                className="text-neutral-450 hover:text-neutral-200 p-1 hover:bg-neutral-800 rounded transition-colors"
+                className="text-neutral-500 hover:text-neutral-900 p-1 hover:bg-neutral-100 rounded transition-colors"
                 title="Close"
               >
                 <X className="w-3.5 h-3.5" />
@@ -296,27 +296,27 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
           </div>
           
           <div className={`card-body p-5 space-y-4 ${collapsedRevenueGrowthTrend ? 'hidden' : ''}`}>
-            <div className="h-44 relative bg-[#070707] border border-neutral-950 rounded-xl p-3">
+            <div className="h-44 relative bg-neutral-50 border border-neutral-200 rounded-xl p-3">
               {lineChartData.points.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-xs text-neutral-500">No sales transactions in target timeframe.</div>
               ) : (
                 <svg viewBox="0 0 500 140" className="w-full h-full overflow-visible">
                   <defs>
                     <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ead2ae" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#ead2ae" stopOpacity="0.00" />
+                      <stop offset="0%" stopColor="#171717" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#171717" stopOpacity="0.00" />
                     </linearGradient>
                   </defs>
                   {/* Horizontal Grid lines */}
-                  <line x1="10" y1="20" x2="490" y2="20" stroke="#1c1c1a" strokeDasharray="3" />
-                  <line x1="10" y1="60" x2="490" y2="60" stroke="#1c1c1a" strokeDasharray="3" />
-                  <line x1="10" y1="100" x2="490" y2="100" stroke="#1c1c1a" strokeDasharray="3" />
-                  <line x1="10" y1="120" x2="490" y2="120" stroke="#1c1c1a" />
+                  <line x1="10" y1="20" x2="490" y2="20" stroke="#e5e5e5" strokeDasharray="3" />
+                  <line x1="10" y1="60" x2="490" y2="60" stroke="#e5e5e5" strokeDasharray="3" />
+                  <line x1="10" y1="100" x2="490" y2="100" stroke="#e5e5e5" strokeDasharray="3" />
+                  <line x1="10" y1="120" x2="490" y2="120" stroke="#e5e5e5" />
                   
                   {/* Area Gradient fill */}
                   <path d={lineChartData.area} fill="url(#glow)" />
                   {/* Stroke line path */}
-                  <path d={lineChartData.path} fill="none" stroke="#ead2ae" strokeWidth="2" strokeLinecap="round" />
+                  <path d={lineChartData.path} fill="none" stroke="#171717" strokeWidth="2" strokeLinecap="round" />
                   
                   {/* Dots */}
                   {lineChartData.points.map((pt, i) => (
@@ -325,8 +325,8 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
                       cx={pt.x}
                       cy={pt.y}
                       r="3"
-                      fill="#0f0f0e"
-                      stroke="#ead2ae"
+                      fill="white"
+                      stroke="#171717"
                       strokeWidth="1.5"
                       className="cursor-pointer hover:r-4 transition-all"
                     />
@@ -338,23 +338,23 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
         </div>
 
         {/* Category distribution bar chart */}
-        <div className={visibleTopCategoryShare ? "lg:col-span-4 card card-outline card-success bg-[#0f0f0e] border border-neutral-900 border-t-[3px] border-t-emerald-500 rounded-lg shadow-md overflow-hidden flex flex-col" : "hidden"}>
-          <div className="card-header border-b border-neutral-900 px-4 py-2.5 flex justify-between items-center bg-[#141413]">
-            <h3 className="card-title text-[9px] font-bold text-white uppercase tracking-wider flex items-center gap-1.5 font-sans">
+        <div className={visibleTopCategoryShare ? "lg:col-span-4 card card-outline card-success bg-white border border-neutral-200/80 border-t-[3px] border-t-emerald-500 rounded-lg shadow-md overflow-hidden flex flex-col" : "hidden"}>
+          <div className="card-header border-b border-neutral-200/80 px-4 py-2.5 flex justify-between items-center bg-neutral-50">
+            <h3 className="card-title text-[9px] font-bold text-neutral-900 uppercase tracking-wider flex items-center gap-1.5 font-sans">
               <Tag className="w-4 h-4 text-emerald-500" />
               Top Category Share
             </h3>
             <div className="card-tools flex items-center gap-2">
               <button 
                 onClick={() => setCollapsedTopCategoryShare(!collapsedTopCategoryShare)}
-                className="text-neutral-455 hover:text-neutral-200 p-1 hover:bg-neutral-800 rounded transition-colors"
+                className="text-neutral-500 hover:text-neutral-900 p-1 hover:bg-neutral-100 rounded transition-colors"
                 title="Collapse"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
               <button 
                 onClick={() => setVisibleTopCategoryShare(false)}
-                className="text-neutral-455 hover:text-neutral-200 p-1 hover:bg-neutral-800 rounded transition-colors"
+                className="text-neutral-500 hover:text-neutral-900 p-1 hover:bg-neutral-100 rounded transition-colors"
                 title="Close"
               >
                 <X className="w-3.5 h-3.5" />
@@ -363,14 +363,14 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
           </div>
           
           <div className={`card-body p-5 space-y-4 ${collapsedTopCategoryShare ? 'hidden' : ''}`}>
-            <div className="h-44 bg-[#070707] border border-neutral-950 rounded-xl p-3 relative">
+            <div className="h-44 bg-neutral-50 border border-neutral-200 rounded-xl p-3 relative">
               {categoryBarData.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-xs text-neutral-500">No product inventory cataloged.</div>
               ) : (
                 <svg viewBox="0 0 320 140" className="w-full h-full overflow-visible">
                   {categoryBarData.map((bar, i) => (
                     <g key={i}>
-                      <rect x={bar.x} y={bar.y} width="22" height={bar.height} fill="#ead2ae" opacity="0.8" rx="2" className="hover:opacity-100 transition-opacity" />
+                      <rect x={bar.x} y={bar.y} width="22" height={bar.height} fill="#171717" opacity="0.8" rx="2" className="hover:opacity-100 transition-opacity" />
                       <text x={bar.x + 11} y={bar.y - 4} textAnchor="middle" className="fill-neutral-400 text-[7px] font-mono">{bar.value}</text>
                       <text x={bar.x + 11} y="138" textAnchor="middle" className="fill-neutral-500 text-[7px] uppercase font-bold tracking-wider">{bar.label.slice(0, 4)}</text>
                     </g>
@@ -383,15 +383,15 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
       </div>
 
       {/* TABULAR REPORT DATA */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 rounded-2xl overflow-hidden shadow-md">
-        <div className="flex justify-between items-center p-4 bg-[#121211]/80 border-b border-neutral-900">
-          <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider">
+      <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-md">
+        <div className="flex justify-between items-center p-4 bg-neutral-50/80 border-b border-neutral-200/80">
+          <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
             Compiled Dataset ({compiledData.length} records)
           </span>
           {compiledData.length > 0 && (
             <button
               onClick={exportCsv}
-              className="px-3 py-1.5 border border-neutral-800 hover:bg-neutral-850 text-[10px] text-white rounded-lg flex items-center gap-1.5 transition-all"
+              className="px-3 py-1.5 border border-neutral-200 hover:bg-neutral-200 text-[10px] text-neutral-900 rounded-lg flex items-center gap-1.5 transition-all"
             >
               <Download className="w-3.5 h-3.5" /> Export Dataset to CSV
             </button>
@@ -403,7 +403,7 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
             <RefreshCw className="w-4 h-4 animate-spin text-amber-500" /> Aggregating records...
           </div>
         ) : compiledData.length === 0 ? (
-          <div className="py-24 text-center text-xs text-neutral-500 flex flex-col items-center gap-2 border border-dashed border-neutral-850 m-4 rounded-xl">
+          <div className="py-24 text-center text-xs text-neutral-500 flex flex-col items-center gap-2 border border-dashed border-neutral-200 m-4 rounded-xl">
             <Info className="w-5 h-5 text-neutral-600" />
             No report dataset compiled yet. Click "Generate Report" above.
           </div>
@@ -411,7 +411,7 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
           <div className="overflow-x-auto max-h-[40vh]">
             <table className="w-full text-xs text-left border-collapse font-mono">
               <thead>
-                <tr className="bg-[#070707] text-neutral-400 border-b border-neutral-900">
+                <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-200/80">
                   {Object.keys(compiledData[0] || {}).map(k => (
                     <th key={k} className="p-3 font-bold uppercase tracking-wider">{k}</th>
                   ))}
@@ -419,7 +419,7 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
               </thead>
               <tbody className="divide-y divide-neutral-900/60">
                 {compiledData.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-[#121211]/25 transition-colors text-white">
+                  <tr key={idx} className="hover:bg-neutral-50/25 transition-colors text-neutral-900">
                     {Object.keys(row).map(k => (
                       <td key={k} className="p-3 max-w-xs truncate">{String(row[k] ?? '0')}</td>
                     ))}

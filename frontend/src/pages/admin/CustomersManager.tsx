@@ -41,14 +41,14 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
   }, [filtered, page]);
 
   return (
-    <div className="space-y-6 text-white animate-fade-in relative">
+    <div className="space-y-6 text-neutral-900 animate-fade-in relative">
       <div>
-        <h1 className="text-2xl font-light text-white font-display italic">Registered Customers</h1>
-        <p className="text-xs text-neutral-400">Moderate customer accounts, view order profiles and purchase logs</p>
+        <h1 className="text-2xl font-light text-neutral-900 font-display italic">Registered Customers</h1>
+        <p className="text-xs text-neutral-500">Moderate customer accounts, view order profiles and purchase logs</p>
       </div>
 
       {/* Filter Row */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
+      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
           <input
@@ -56,7 +56,7 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
             placeholder="Search customers by name, email, phone..."
-            className="w-full bg-[#121211] border border-neutral-850 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-primary/50"
+            className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
           />
         </div>
 
@@ -64,7 +64,7 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
           <button
             disabled={page === 0}
             onClick={() => setPage(p => p - 1)}
-            className="p-1 hover:bg-[#171715] rounded border border-neutral-800 disabled:opacity-30"
+            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -72,7 +72,7 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
           <button
             disabled={(page + 1) * itemsPerPage >= filtered.length}
             onClick={() => setPage(p => p + 1)}
-            className="p-1 hover:bg-[#171715] rounded border border-neutral-800 disabled:opacity-30"
+            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -80,11 +80,11 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
       </div>
 
       {/* Grid List */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 rounded-3xl overflow-hidden shadow-xl">
+      <div className="bg-white border border-neutral-200/80 rounded-3xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-[#121211] text-neutral-400 border-b border-neutral-850 font-mono">
+              <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-200 font-mono">
                 <th className="p-4">Customer Name</th>
                 <th className="p-4">Email</th>
                 <th className="p-4">Phone</th>
@@ -96,21 +96,21 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
             </thead>
             <tbody className="divide-y divide-neutral-900/60">
               {paginated.map((c) => (
-                <tr key={c.id} className="hover:bg-[#121211]/20 transition-colors">
-                  <td className="p-4 font-bold text-white text-xs">{c.first_name} {c.last_name || ''}</td>
-                  <td className="p-4 font-mono text-neutral-350">{c.email}</td>
-                  <td className="p-4 font-mono text-neutral-400">{c.phone || '—'}</td>
+                <tr key={c.id} className="hover:bg-neutral-50/20 transition-colors">
+                  <td className="p-4 font-bold text-neutral-900 text-xs">{c.first_name} {c.last_name || ''}</td>
+                  <td className="p-4 font-mono text-neutral-800">{c.email}</td>
+                  <td className="p-4 font-mono text-neutral-500">{c.phone || '—'}</td>
                   <td className="p-4 text-center font-mono">{c.orders_count || 0} orders</td>
                   <td className="p-4 text-center font-mono font-bold text-neutral-200">₹{((c.total_spent || 0) / 100).toFixed(2)}</td>
-                  <td className="p-4 text-neutral-400 font-mono">{new Date(c.created_at || Date.now()).toLocaleDateString('en-IN')}</td>
+                  <td className="p-4 text-neutral-500 font-mono">{new Date(c.created_at || Date.now()).toLocaleDateString('en-IN')}</td>
                   <td className="p-4 text-right">
                     <button
                       type="button"
                       onClick={() => onToggleBlock(c)}
                       className={`px-3 py-1.5 font-bold uppercase rounded-xl text-[9px] flex items-center gap-1.5 ml-auto tracking-wider transition-all border ${
                         c.is_blocked 
-                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20' 
-                          : 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20'
+                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 hover:bg-emerald-500/20' 
+                          : 'bg-rose-500/10 border-rose-500/20 text-rose-600 hover:bg-rose-500/20'
                       }`}
                     >
                       {c.is_blocked ? (
@@ -128,7 +128,7 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
               ))}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="py-24 text-center text-neutral-500 italic font-mono bg-[#0f0f0e]">No customer profiles found matching search query.</td>
+                  <td colSpan={7} className="py-24 text-center text-neutral-500 italic font-mono bg-white">No customer profiles found matching search query.</td>
                 </tr>
               )}
             </tbody>

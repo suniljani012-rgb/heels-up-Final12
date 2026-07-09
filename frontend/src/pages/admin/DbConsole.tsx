@@ -182,9 +182,9 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header Info */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-neutral-200/80 p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-white font-display italic">Database Administration Console</h2>
+          <h2 className="text-lg font-bold text-neutral-900 font-display italic">Database Administration Console</h2>
           <p className="text-[10px] text-neutral-500 font-medium">Execute raw SQL queries directly in the SQLite Cloudflare D1 environment.</p>
         </div>
         <div className="flex items-center gap-2 text-rose-500 bg-rose-500/5 border border-rose-500/10 px-3 py-1.5 rounded-xl text-[9px] font-bold uppercase tracking-wider">
@@ -196,15 +196,15 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
         {/* Terminal and Results (8 columns) */}
         <div className="lg:col-span-8 space-y-6">
           {/* Query Console Form */}
-          <form onSubmit={executeQuery} className="bg-[#0f0f0e] border border-neutral-900 rounded-2xl p-5 space-y-4 shadow-md">
+          <form onSubmit={executeQuery} className="bg-white border border-neutral-200/80 rounded-2xl p-5 space-y-4 shadow-md">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
                 <Database className="w-4 h-4 text-amber-500" /> SQL Editor Terminal
               </span>
               <button
                 type="button"
                 onClick={() => setSqlQuery('')}
-                className="text-[9px] text-neutral-500 hover:text-white uppercase tracking-wider"
+                className="text-[9px] text-neutral-500 hover:text-neutral-900 uppercase tracking-wider"
               >
                 Clear Terminal
               </button>
@@ -214,7 +214,7 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
               value={sqlQuery}
               onChange={e => setSqlQuery(e.target.value)}
               placeholder="SELECT * FROM products ORDER BY id DESC LIMIT 10;"
-              className="w-full h-44 bg-[#070707] border border-neutral-900 rounded-xl p-4 text-xs font-mono text-[#ead2ae] focus:outline-none focus:border-amber-500/60"
+              className="w-full h-44 bg-neutral-50 border border-neutral-200/80 rounded-xl p-4 text-xs font-mono text-neutral-900 focus:outline-none focus:border-amber-500/60"
             />
             
             <div className="flex justify-between items-center">
@@ -222,7 +222,7 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
               <button
                 type="submit"
                 disabled={queryLoading}
-                className="px-5 py-2.5 bg-[#ead2ae] hover:bg-[#b17e3f] disabled:bg-neutral-800 disabled:text-neutral-500 text-neutral-950 font-bold rounded-xl text-xs uppercase tracking-widest flex items-center gap-1.5 transition-colors shadow-lg active:scale-95"
+                className="px-5 py-2.5 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-100 disabled:text-neutral-450 text-white font-bold rounded-xl text-xs uppercase tracking-widest flex items-center gap-1.5 transition-colors shadow-lg active:scale-95"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 {queryLoading ? 'Compiling...' : 'Execute Statement'}
@@ -243,16 +243,16 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
 
           {/* Execution Results View */}
           {queryResults && (
-            <div className="bg-[#0f0f0e] border border-neutral-900 rounded-2xl overflow-hidden shadow-md">
-              <div className="flex justify-between items-center p-4 bg-[#121211]/80 border-b border-neutral-900">
-                <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1">
+            <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-md">
+              <div className="flex justify-between items-center p-4 bg-neutral-50/80 border-b border-neutral-200/80">
+                <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                   Query execution results ({queryResults.results?.length || 0} rows | {queryResults.duration || 0}ms)
                 </span>
                 {queryResults.results?.length > 0 && (
                   <button
                     onClick={() => exportToCsv(queryResults.results, 'custom_sql_export')}
-                    className="px-2 py-1 border border-neutral-800 hover:bg-neutral-850 text-[9px] text-white rounded-lg flex items-center gap-1"
+                    className="px-2 py-1 border border-neutral-200 hover:bg-neutral-200 text-[9px] text-neutral-900 rounded-lg flex items-center gap-1"
                   >
                     <Download className="w-3 h-3" /> Export CSV
                   </button>
@@ -267,7 +267,7 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
                 <div className="overflow-x-auto max-h-[30vh]">
                   <table className="w-full text-[10px] text-left border-collapse font-mono">
                     <thead>
-                      <tr className="bg-[#070707] text-neutral-400 border-b border-neutral-900">
+                      <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-200/80">
                         {Object.keys(queryResults.results[0] || {}).map(k => (
                           <th key={k} className="p-3 font-bold uppercase tracking-wider">{k}</th>
                         ))}
@@ -275,7 +275,7 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
                     </thead>
                     <tbody className="divide-y divide-neutral-900/60">
                       {queryResults.results.map((row: any, i: number) => (
-                        <tr key={i} className="hover:bg-[#121211]/25 transition-colors text-white">
+                        <tr key={i} className="hover:bg-neutral-50/25 transition-colors text-neutral-900">
                           {Object.keys(row).map(k => (
                             <td key={k} className="p-3 max-w-xs truncate">{String(row[k] ?? 'NULL')}</td>
                           ))}
@@ -292,9 +292,9 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
         {/* Templates and Database Schemas (4 columns) */}
         <div className="lg:col-span-4 space-y-6">
           {/* Templates lists */}
-          <div className="bg-[#0f0f0e] border border-neutral-900 p-5 rounded-2xl space-y-4 shadow-md">
-            <div className="flex justify-between items-center border-b border-neutral-900 pb-3">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-white">Console Query History</h3>
+          <div className="bg-white border border-neutral-200/80 p-5 rounded-2xl space-y-4 shadow-md">
+            <div className="flex justify-between items-center border-b border-neutral-200/80 pb-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900">Console Query History</h3>
               {queryHistory.length > 0 && (
                 <button
                   onClick={clearHistory}
@@ -310,7 +310,7 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
                 <button
                   key={idx}
                   onClick={() => handleTemplateClick(hist)}
-                  className="w-full text-left p-2.5 bg-[#121211] border border-neutral-850 hover:border-amber-500/30 rounded-xl text-[10px] font-mono text-neutral-400 hover:text-amber-500 truncate block transition-all"
+                  className="w-full text-left p-2.5 bg-neutral-50 border border-neutral-200 hover:border-amber-500/30 rounded-xl text-[10px] font-mono text-neutral-500 hover:text-amber-500 truncate block transition-all"
                 >
                   {hist}
                 </button>
@@ -319,34 +319,34 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
           </div>
 
           {/* Quick statement library */}
-          <div className="bg-[#0f0f0e] border border-neutral-900 p-5 rounded-2xl space-y-3 shadow-md">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-white border-b border-neutral-900 pb-3">Template Command Library</h3>
+          <div className="bg-white border border-neutral-200/80 p-5 rounded-2xl space-y-3 shadow-md">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900 border-b border-neutral-200/80 pb-3">Template Command Library</h3>
             <div className="space-y-2">
               <button
                 type="button"
                 onClick={() => handleTemplateClick('SELECT sku, name, stock FROM products WHERE stock < 5 ORDER BY stock ASC;')}
-                className="w-full text-left p-2 hover:bg-neutral-850 rounded text-[10px] text-neutral-400 hover:text-white"
+                className="w-full text-left p-2 hover:bg-neutral-200 rounded text-[10px] text-neutral-500 hover:text-neutral-900"
               >
                 ⚠️ Check Low Stock Products
               </button>
               <button
                 type="button"
                 onClick={() => handleTemplateClick('SELECT order_number, total_amount, order_status, created_at FROM orders WHERE order_status = \'placed\' ORDER BY id DESC;')}
-                className="w-full text-left p-2 hover:bg-neutral-850 rounded text-[10px] text-neutral-400 hover:text-white"
+                className="w-full text-left p-2 hover:bg-neutral-200 rounded text-[10px] text-neutral-500 hover:text-neutral-900"
               >
                 📦 Check Placed Unprocessed Orders
               </button>
               <button
                 type="button"
                 onClick={() => handleTemplateClick('SELECT code, discount_type, discount_value, min_purchase, active FROM coupons WHERE active = 1;')}
-                className="w-full text-left p-2 hover:bg-neutral-850 rounded text-[10px] text-neutral-400 hover:text-white"
+                className="w-full text-left p-2 hover:bg-neutral-200 rounded text-[10px] text-neutral-500 hover:text-neutral-900"
               >
                 🏷️ List Active Coupons
               </button>
               <button
                 type="button"
                 onClick={() => handleTemplateClick('SELECT role, COUNT(*) as count FROM users GROUP BY role;')}
-                className="w-full text-left p-2 hover:bg-neutral-850 rounded text-[10px] text-neutral-400 hover:text-white"
+                className="w-full text-left p-2 hover:bg-neutral-200 rounded text-[10px] text-neutral-500 hover:text-neutral-900"
               >
                 👥 Count Users Roles distribution
               </button>
@@ -356,17 +356,17 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
       </div>
 
       {/* SECTION: Data Viewer grid */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 rounded-2xl overflow-hidden shadow-md">
-        <div className="p-4 bg-[#121211]/80 border-b border-neutral-900 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-md">
+        <div className="p-4 bg-neutral-50/80 border-b border-neutral-200/80 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Data Viewer Table:</span>
+            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider">Data Viewer Table:</span>
             <select
               value={selectedTable}
               onChange={e => {
                 setSelectedTable(e.target.value);
                 setTablePage(0);
               }}
-              className="bg-[#070707] border border-neutral-850 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none"
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-1.5 text-xs text-neutral-900 focus:outline-none"
             >
               {tables.map(t => (
                 <option key={t.id} value={t.id}>{t.label}</option>
@@ -378,18 +378,18 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
             {tableRows.length > 0 && (
               <button
                 onClick={() => exportToCsv(tableRows, `table_export_${selectedTable}`)}
-                className="px-3 py-1.5 border border-neutral-800 hover:bg-neutral-850 text-[10px] text-white rounded-lg flex items-center gap-1.5 transition-colors"
+                className="px-3 py-1.5 border border-neutral-200 hover:bg-neutral-200 text-[10px] text-neutral-900 rounded-lg flex items-center gap-1.5 transition-colors"
               >
                 <Download className="w-3.5 h-3.5" /> Dump Table to CSV
               </button>
             )}
 
             {/* Pagination Controls */}
-            <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
+            <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
               <button
                 disabled={tablePage === 0}
                 onClick={() => setTablePage(p => p - 1)}
-                className="p-1 hover:bg-neutral-850 border border-neutral-800 rounded disabled:opacity-40"
+                className="p-1 hover:bg-neutral-200 border border-neutral-200 rounded disabled:opacity-40"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
@@ -397,7 +397,7 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
               <button
                 disabled={tableRows.length < pageSize}
                 onClick={() => setTablePage(p => p + 1)}
-                className="p-1 hover:bg-neutral-850 border border-neutral-800 rounded disabled:opacity-40"
+                className="p-1 hover:bg-neutral-200 border border-neutral-200 rounded disabled:opacity-40"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -413,7 +413,7 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
           <div className="overflow-x-auto max-h-[50vh]">
             <table className="w-full text-[10px] text-left border-collapse font-mono">
               <thead>
-                <tr className="bg-[#070707]/80 text-neutral-400 border-b border-neutral-900">
+                <tr className="bg-neutral-50/80 text-neutral-500 border-b border-neutral-200/80">
                   {tableCols.map(col => (
                     <th key={col} className="p-3 font-bold uppercase tracking-wider">{col}</th>
                   ))}
@@ -422,14 +422,14 @@ export default function DbConsole({ tables, showToast }: DbConsoleProps) {
               </thead>
               <tbody className="divide-y divide-neutral-900/60">
                 {tableRows.map((row, i) => (
-                  <tr key={i} className="hover:bg-[#121211]/25 transition-colors text-white">
+                  <tr key={i} className="hover:bg-neutral-50/25 transition-colors text-neutral-900">
                     {tableCols.map(col => (
                       <td key={col} className="p-3 max-w-xs truncate">{String(row[col] ?? 'NULL')}</td>
                     ))}
                     <td className="p-3 text-right">
                       <button
                         onClick={() => handleRowDelete(row.id)}
-                        className="p-1 text-rose-500 hover:bg-neutral-900 rounded hover:text-rose-400"
+                        className="p-1 text-rose-500 hover:bg-neutral-900 rounded hover:text-rose-600"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

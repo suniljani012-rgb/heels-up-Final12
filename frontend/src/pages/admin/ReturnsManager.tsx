@@ -93,7 +93,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
   return (
     <div className="space-y-6 animate-fade-in relative">
       {/* Search and Filters */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
           <div className="relative flex-1 min-w-[180px]">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
@@ -104,7 +104,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search by order number, customer phone, reason..."
-              className="w-full bg-[#121211] border border-neutral-850 rounded-xl pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-amber-500/60"
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 focus:outline-none focus:border-amber-500/60"
             />
           </div>
           
@@ -113,7 +113,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
             <select
               value={filterStatus}
               onChange={e => setFilterStatus(e.target.value)}
-              className="bg-[#121211] border border-neutral-850 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none"
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-2.5 py-1.5 text-xs text-neutral-900 focus:outline-none"
             >
               <option value="">All Claims</option>
               <option value="pending">Pending Claim</option>
@@ -127,30 +127,30 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
 
         <button
           onClick={onRefresh}
-          className="p-2 border border-neutral-850 hover:bg-neutral-850 rounded-xl text-neutral-400 hover:text-white transition-colors"
+          className="p-2 border border-neutral-200 hover:bg-neutral-200 rounded-xl text-neutral-500 hover:text-neutral-900 transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
       </div>
 
       {/* Claims List Table */}
-      <div className="bg-[#0f0f0e] border border-neutral-900 rounded-2xl overflow-hidden shadow-md">
-        <div className="p-4 bg-[#121211]/80 border-b border-neutral-900">
-          <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+      <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-md">
+        <div className="p-4 bg-neutral-50/80 border-b border-neutral-200/80">
+          <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1.5">
             <RotateCw className="w-4 h-4 text-amber-500" />
             Product Returns & Exchanges registry ({filteredReturns.length} active claims)
           </span>
         </div>
 
         {filteredReturns.length === 0 ? (
-          <div className="py-24 text-center text-xs text-neutral-500 border border-dashed border-neutral-850 m-4 rounded-xl">
+          <div className="py-24 text-center text-xs text-neutral-500 border border-dashed border-neutral-200 m-4 rounded-xl">
             No return request claims match your selection.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left border-collapse">
               <thead>
-                <tr className="bg-[#070707] text-neutral-400 border-b border-neutral-900 font-mono">
+                <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-200/80 font-mono">
                   <th className="p-3 font-bold uppercase tracking-wider">Order No</th>
                   <th className="p-3 font-bold uppercase tracking-wider">Customer</th>
                   <th className="p-3 font-bold uppercase tracking-wider">Claim Type</th>
@@ -160,33 +160,33 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
                   <th className="p-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-900/60 font-sans text-white">
+              <tbody className="divide-y divide-neutral-900/60 font-sans text-neutral-900">
                 {filteredReturns.map(r => (
-                  <tr key={r.id} className="hover:bg-[#121211]/25 transition-colors">
+                  <tr key={r.id} className="hover:bg-neutral-50/25 transition-colors">
                     <td className="p-3 font-mono text-[10px] text-amber-500 font-bold">
                       {r.order_number}
                     </td>
                     <td className="p-3">
-                      <div className="font-semibold text-neutral-300">{r.customer_name}</div>
+                      <div className="font-semibold text-neutral-800">{r.customer_name}</div>
                       <span className="text-[9px] text-neutral-500 block font-mono">{r.customer_phone}</span>
                     </td>
                     <td className="p-3 uppercase font-mono text-[10px]">
                       {r.return_type === 'exchange' ? (
                         <span className="text-amber-500">🔄 Exchange</span>
                       ) : (
-                        <span className="text-rose-400">💵 Refund</span>
+                        <span className="text-rose-600">💵 Refund</span>
                       )}
                     </td>
-                    <td className="p-3 text-neutral-400 max-w-xs truncate text-[11px]">
+                    <td className="p-3 text-neutral-500 max-w-xs truncate text-[11px]">
                       {r.reason}
                     </td>
                     <td className="p-3">
                       <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider ${
-                        r.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                        r.status === 'pending' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
                         r.status === 'approved' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
                         r.status === 'received' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
-                        r.status === 'completed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                        'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                        r.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        'bg-rose-50 text-rose-700 border border-rose-200'
                       }`}>
                         {r.status}
                       </span>
@@ -197,7 +197,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
                     <td className="p-3 text-right">
                       <button
                         onClick={() => openReturnDrawer(r)}
-                        className="p-1 text-[#ead2ae] hover:bg-neutral-900 rounded inline-flex items-center gap-1.5 text-[10px] uppercase font-bold"
+                        className="p-1 text-neutral-850 hover:bg-neutral-900 rounded inline-flex items-center gap-1.5 text-[10px] uppercase font-bold"
                       >
                         <Eye className="w-3.5 h-3.5" /> View Claim
                       </button>
@@ -214,26 +214,26 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
       {selectedReturn && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div onClick={() => setSelectedReturn(null)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="w-full max-w-lg bg-[#0e0e0d] border-l border-neutral-900 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
+          <div className="w-full max-w-lg bg-white border-l border-neutral-200/80 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
             <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-white">Return Request Review Panel</h3>
+              <div className="flex items-center justify-between border-b border-neutral-200/80 pb-4">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900">Return Request Review Panel</h3>
                 <button
                   onClick={() => setSelectedReturn(null)}
-                  className="p-1.5 rounded-lg border border-neutral-850 text-neutral-500 hover:text-white"
+                  className="p-1.5 rounded-lg border border-neutral-200 text-neutral-500 hover:text-neutral-900"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Order and Customer Contact Card */}
-              <div className="p-4 bg-[#121211] border border-neutral-850 rounded-xl space-y-2">
+              <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-[10px] text-amber-500 font-bold font-mono">ORDER: {selectedReturn.order_number}</span>
                   <span className="text-[9px] text-neutral-500">{new Date(selectedReturn.created_at).toLocaleString()}</span>
                 </div>
-                <h4 className="text-xs font-bold text-white uppercase">{selectedReturn.customer_name}</h4>
-                <div className="flex flex-col gap-1 text-[10px] text-neutral-400 font-mono pt-1">
+                <h4 className="text-xs font-bold text-neutral-900 uppercase">{selectedReturn.customer_name}</h4>
+                <div className="flex flex-col gap-1 text-[10px] text-neutral-500 font-mono pt-1">
                   <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-neutral-500" /> {selectedReturn.customer_phone}</span>
                   {selectedReturn.customer_email && <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-neutral-500" /> {selectedReturn.customer_email}</span>}
                 </div>
@@ -241,35 +241,35 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
 
               {/* Items returning list */}
               <div className="space-y-2">
-                <span className="block text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Returning Items Details</span>
+                <span className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Returning Items Details</span>
                 <div className="space-y-2">
                   {parseItems(selectedReturn.items).map((it, idx) => (
-                    <div key={idx} className="p-3 bg-[#070707] border border-neutral-900 rounded-xl flex justify-between items-center text-[11px]">
+                    <div key={idx} className="p-3 bg-neutral-50 border border-neutral-200/80 rounded-xl flex justify-between items-center text-[11px]">
                       <div>
-                        <span className="text-white block font-semibold">{it.product_name || 'Heelsup footwear'}</span>
+                        <span className="text-neutral-900 block font-semibold">{it.product_name || 'Heelsup footwear'}</span>
                         <span className="text-neutral-500 text-[9px] font-mono">Size: {it.size} | Qty: {it.quantity || 1}</span>
                       </div>
-                      <span className="font-mono text-neutral-400">₹{it.price ? (it.price / 100).toFixed(2) : '0.00'}</span>
+                      <span className="font-mono text-neutral-500">₹{it.price ? (it.price / 100).toFixed(2) : '0.00'}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Reason card */}
-              <div className="p-4 bg-[#1b120c]/60 border border-amber-900/20 rounded-xl space-y-1">
+              <div className="p-4 bg-neutral-50 border border-amber-900/20 rounded-xl space-y-1">
                 <span className="block text-[8px] font-bold text-amber-500 uppercase tracking-wider">Reason of Return Claim:</span>
-                <p className="text-[11px] text-neutral-300 leading-relaxed italic">"{selectedReturn.reason}"</p>
+                <p className="text-[11px] text-neutral-800 leading-relaxed italic">"{selectedReturn.reason}"</p>
               </div>
 
               {/* Action Notes Form */}
               <div className="space-y-3 pt-2">
-                <label className="block text-[9px] font-bold text-neutral-400 uppercase tracking-wider">Claim Review Notes</label>
+                <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Claim Review Notes</label>
                 <textarea
                   rows={3}
                   value={actionNotes}
                   onChange={e => setActionNotes(e.target.value)}
                   placeholder="Record packaging conditions, replacement tracking numbers, or processing logs here..."
-                  className="w-full bg-[#121211] border border-neutral-850 rounded-xl p-3 text-xs text-white focus:outline-none"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl p-3 text-xs text-neutral-900 focus:outline-none"
                 />
               </div>
 
@@ -289,7 +289,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
                       <button
                         onClick={() => handleUpdateStatus('rejected')}
                         disabled={updatingStatus}
-                        className="py-2.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-rose-500 hover:text-neutral-950 transition-colors"
+                        className="py-2.5 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-rose-500 hover:text-neutral-950 transition-colors"
                       >
                         Reject Claim
                       </button>
@@ -308,7 +308,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
                     <button
                       onClick={() => handleUpdateStatus('completed')}
                       disabled={updatingStatus}
-                      className="col-span-2 py-2.5 bg-[#ead2ae] text-neutral-950 font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-[#b17e3f] transition-colors"
+                      className="col-span-2 py-2.5 bg-neutral-900 text-white font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-neutral-800 transition-colors"
                     >
                       {selectedReturn.return_type === 'exchange' ? 'Ship Replacement Item' : 'Issue Net Refund'}
                     </button>
@@ -319,7 +319,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
 
             <button
               onClick={() => setSelectedReturn(null)}
-              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-850 border border-neutral-850 text-white font-semibold rounded-xl text-xs uppercase"
+              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-200 border border-neutral-200 text-neutral-900 font-semibold rounded-xl text-xs uppercase"
             >
               Close claim panel
             </button>
