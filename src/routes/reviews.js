@@ -11,7 +11,7 @@ export async function reviewsRouter(request, env) {
     if (path === '/latest' && method === 'GET') {
         try {
             const reviews = await env.DB.prepare(
-                `SELECT r.id, r.rating, r.title, r.body, r.created_at, 
+                `SELECT r.id, r.rating, r.title, r.body, r.created_at, r.merchant_reply,
                         (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name,
                         p.name as product_name, p.id as product_id
                  FROM product_reviews r 
@@ -34,7 +34,7 @@ export async function reviewsRouter(request, env) {
         if (!productId) return error('product_id required');
         try {
             const reviews = await env.DB.prepare(
-                `SELECT r.id, r.rating, r.title, r.body, r.created_at, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name
+                `SELECT r.id, r.rating, r.title, r.body, r.created_at, r.merchant_reply, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name
            FROM product_reviews r LEFT JOIN users u ON r.user_id = u.id
            WHERE r.product_id = ? AND r.status = 'approved' ORDER BY r.created_at DESC`
             ).bind(productId).all();

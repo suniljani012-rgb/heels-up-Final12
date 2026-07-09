@@ -1,0 +1,313 @@
+import React, { useState } from 'react';
+import { Plus, Edit3, Trash2, X, Search } from 'lucide-react';
+
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  image_url?: string;
+  sort_order: number;
+  active: boolean;
+}
+
+interface CategoriesManagerProps {
+  categories: Category[];
+  token: string;
+  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
+  onRefresh: () => void;
+}
+
+export default function CategoriesManager({ categories, token, showToast, onRefresh }: CategoriesManagerProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+
+  // Form states
+  const [catName, setCatName] = useState('');
+  const [catSlug, setCatSlug] = useState('');
+  const [catDescription, setCatDescription] = useState('');
+  const [catImageUrl, setCatImageUrl] = useState('');
+  const [catSortOrder, setCatSortOrder] = useState('0');
+  const [catActive, setCatActive] = useState(true);
+
+  // Filter categories
+  const filtered = categories.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Open add
+  const handleOpenAdd = () => {
+    setEditingCategory(null);
+    setCatName('');
+    setCatSlug('');
+    setCatDescription('');
+    setCatImageUrl('');
+    setCatSortOrder('0');
+    setCatActive(true);
+    setDrawerOpen(true);
+  };
+
+  // Open edit
+  const handleOpenEdit = (c: Category) => {
+    setEditingCategory(c);
+    setCatName(c.name);
+    setCatSlug(c.slug);
+    setCatDescription(c.description || '');
+    setCatImageUrl(c.image_url || '');
+    setCatSortOrder(c.sort_order.toString());
+    setCatActive(c.active);
+    setDrawerOpen(true);
+  };
+
+  // Submit Form
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!catName || !catSlug) {
+      showToast('error', 'Missing Fields', 'Category Name and Slug are required.');
+      return;
+    }
+
+    const payload = {
+      name: catName.trim(),
+      slug: catSlug.trim().toLowerCase(),
+      description: catDescription.trim(),
+      image_url: catImageUrl.trim(),
+      sort_order: parseInt(catSortOrder) || 0,
+      active: catActive
+    };
+
+    try {
+      const url = editingCategory ? `/api/admin/categories/${editingCategory.id}` : '/api/admin/categories';
+      const method = editingCategory ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('success', 'Category Saved', `Category '${catName}' recorded.`);
+        setDrawerOpen(false);
+        onRefresh();
+      } else {
+        showToast('error', 'Sync Failed', data.error || 'Server rejected changes.');
+      }
+    } catch {
+      showToast('error', 'Network Error', 'Failed to connect to category database.');
+    }
+  };
+
+  // Delete category
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this category? Products linked to it will not be deleted, but category links will break.')) return;
+    try {
+      const res = await fetch(`/api/admin/categories/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('success', 'Category Purged', 'Category removed successfully.');
+        onRefresh();
+      } else {
+        showToast('error', 'Delete Denied', data.error || 'Access denied.');
+      }
+    } catch {
+      showToast('error', 'Sync Failure', 'Failed to submit delete query.');
+    }
+  };
+
+  return (
+    <div className="space-y-6 text-white animate-fade-in relative">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-light text-white font-display italic">Categories Manager</h1>
+          <p className="text-xs text-neutral-400">Classify footwear items into storefront collections</p>
+        </div>
+        <button
+          onClick={handleOpenAdd}
+          className="px-4 py-2 bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
+        >
+          <Plus className="w-4 h-4" /> Add Category
+        </button>
+      </div>
+
+      {/* Filter Row */}
+      <div className="bg-[#0f0f0e] border border-neutral-900 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search categories..."
+            className="w-full bg-[#121211] border border-neutral-850 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-primary/50"
+          />
+        </div>
+      </div>
+
+      {/* Grid List */}
+      <div className="bg-[#0f0f0e] border border-neutral-900 rounded-3xl overflow-hidden shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="bg-[#121211] text-neutral-400 border-b border-neutral-850 font-mono">
+                <th className="p-4 w-20">Sort Order</th>
+                <th className="p-4">Category Name</th>
+                <th className="p-4">Slug</th>
+                <th className="p-4">Description</th>
+                <th className="p-4">Status</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-900/60">
+              {filtered.map((c) => (
+                <tr key={c.id} className="hover:bg-[#121211]/20 transition-colors">
+                  <td className="p-4 font-mono text-neutral-350 font-bold">{c.sort_order}</td>
+                  <td className="p-4 font-bold text-white text-xs">{c.name}</td>
+                  <td className="p-4 font-mono text-neutral-400">{c.slug}</td>
+                  <td className="p-4 text-neutral-400 max-w-xs truncate">{c.description || '—'}</td>
+                  <td className="p-4">
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${c.active ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' : 'bg-neutral-800 text-neutral-500'}`}>
+                      {c.active ? 'Active' : 'Draft'}
+                    </span>
+                  </td>
+                  <td className="p-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleOpenEdit(c)}
+                        className="p-1.5 bg-neutral-800 hover:bg-neutral-700 hover:text-primary rounded-lg transition-all"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        className="p-1.5 bg-neutral-800 hover:bg-[#ef4444]/15 hover:text-rose-500 rounded-lg transition-all"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-24 text-center text-neutral-500 italic font-mono bg-[#0f0f0e]">No category match criteria.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Drawer */}
+      {drawerOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div onClick={() => setDrawerOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-xs"></div>
+          <div className="w-full max-w-md bg-[#0e0e0d] border-l border-neutral-900 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-primary font-mono">
+                  {editingCategory ? 'Modify Category' : 'Create Category'}
+                </h3>
+                <button onClick={() => setDrawerOpen(false)} className="p-1 hover:bg-neutral-850 rounded-lg text-neutral-400 hover:text-white transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-5 text-xs">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Category Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={catName}
+                    onChange={(e) => {
+                      setCatName(e.target.value);
+                      if (!editingCategory) setCatSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''));
+                    }}
+                    placeholder="e.g. Oxford Jodhpur Boots"
+                    className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Category Slug</label>
+                  <input
+                    type="text"
+                    required
+                    value={catSlug}
+                    onChange={(e) => setCatSlug(e.target.value)}
+                    placeholder="e.g. oxford-jodhpur-boots"
+                    className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Description (Optional)</label>
+                  <textarea
+                    rows={3}
+                    value={catDescription}
+                    onChange={(e) => setCatDescription(e.target.value)}
+                    placeholder="Brief description for catalog headers..."
+                    className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none leading-relaxed"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Banner Image URL (Optional)</label>
+                  <input
+                    type="text"
+                    value={catImageUrl}
+                    onChange={(e) => setCatImageUrl(e.target.value)}
+                    placeholder="https://media.heelsup.in/categories/..."
+                    className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none font-mono"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Sort Order Position</label>
+                    <input
+                      type="number"
+                      value={catSortOrder}
+                      onChange={(e) => setCatSortOrder(e.target.value)}
+                      className="w-full bg-[#121211] border border-neutral-850 rounded-xl px-3 py-2 text-white focus:outline-none font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-400 mb-1">Status</label>
+                    <div className="flex items-center gap-2 pt-2">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={catActive}
+                          onChange={(e) => setCatActive(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-8 h-4 bg-neutral-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-500 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-primary/80"></div>
+                        <span className="ml-2 text-neutral-450 text-[10px] font-bold">Category Active</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 bg-primary hover:bg-primary/95 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
+                >
+                  Save Category Record
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

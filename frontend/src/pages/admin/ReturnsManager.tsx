@@ -61,13 +61,13 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
     setUpdatingStatus(true);
 
     try {
-      const res = await fetch(`/api/admin/returns/${selectedReturn.id}/${status}`, {
-        method: 'PUT',
+      const res = await fetch(`/api/admin/returns/${selectedReturn.id}/status`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
         },
-        body: JSON.stringify({ action_notes: actionNotes.trim() })
+        body: JSON.stringify({ status, admin_note: actionNotes.trim(), admin_notes: actionNotes.trim() })
       });
       const data = await res.json();
       if (data.success) {

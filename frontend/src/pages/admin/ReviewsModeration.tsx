@@ -66,10 +66,12 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
   const handleApprove = async (id: number) => {
     try {
       const res = await fetch(`/api/admin/reviews/${id}/approve`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
-        }
+        },
+        body: JSON.stringify({ status: 'approved' })
       });
       const data = await res.json();
       if (data.success) {

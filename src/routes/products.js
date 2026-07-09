@@ -360,10 +360,10 @@ export async function productsRouter(request, env) {
 
             const [reviews, images, related, sizeStock, colors] = await Promise.all([
               env.DB.prepare(
-                `SELECT r.id, r.rating, r.title, r.body, r.created_at, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name
-         FROM product_reviews r LEFT JOIN users u ON r.user_id = u.id
-         WHERE r.product_id = ? AND r.status = 'approved'
-         ORDER BY r.created_at DESC LIMIT 10`
+                `SELECT r.id, r.rating, r.title, r.body, r.created_at, r.merchant_reply, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name
+          FROM product_reviews r LEFT JOIN users u ON r.user_id = u.id
+          WHERE r.product_id = ? AND r.status = 'approved'
+          ORDER BY r.created_at DESC LIMIT 10`
               ).bind(product.id).all(),
               env.DB.prepare(
                 "SELECT id, url, alt, sort_order, is_primary FROM product_images WHERE product_id=? ORDER BY sort_order ASC, id ASC"
@@ -413,7 +413,7 @@ export async function productsRouter(request, env) {
 
             const [reviews, images, sizeStock, colors] = await Promise.all([
               env.DB.prepare(
-                `SELECT r.id, r.rating, r.title, r.body, r.created_at, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name
+                `SELECT r.id, r.rating, r.title, r.body, r.created_at, r.merchant_reply, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name
          FROM product_reviews r LEFT JOIN users u ON r.user_id = u.id
          WHERE r.product_id = ? AND r.status = 'approved'
          ORDER BY r.created_at DESC LIMIT 10`

@@ -574,6 +574,12 @@ export default function Product() {
                   </div>
                   <h5 className="text-xs font-bold text-gray-800 mt-3">{rev.title}</h5>
                   <p className="text-xs text-gray-600 mt-1 leading-relaxed">{rev.body}</p>
+                  {rev.merchant_reply && (
+                    <div className="mt-4 p-3 bg-gray-50 border-l-2 border-primary rounded-r-lg text-xs">
+                      <p className="font-bold text-gray-850 text-[10px] uppercase tracking-wider">Merchant Response</p>
+                      <p className="text-gray-600 mt-1 italic">"{rev.merchant_reply}"</p>
+                    </div>
+                  )}
                 </div>
               ))
             )}
