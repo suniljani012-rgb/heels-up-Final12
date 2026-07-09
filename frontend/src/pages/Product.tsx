@@ -47,6 +47,7 @@ interface Review {
   body: string;
   created_at: string;
   reviewer_name: string;
+  merchant_reply?: string;
 }
 
 export default function Product() {

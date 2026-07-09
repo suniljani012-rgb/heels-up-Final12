@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Plus, Trash2, Edit3, X, UploadCloud, ChevronLeft, ChevronRight, Sliders, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Search, Plus, Trash2, Edit3, X, UploadCloud, ChevronLeft, ChevronRight, Sliders, CheckCircle2, ShieldAlert, RefreshCw } from 'lucide-react';
 import HeicImage from '../../components/HeicImage';
 
 interface Product {

@@ -154,14 +154,15 @@ interface Staff {
   notes?: string;
   last_login_at?: string;
   created_at?: string;
+  two_factor_enabled?: boolean;
 }
 
 interface Customer {
   id: number;
   first_name: string;
-  last_name: string;
+  last_name?: string;
   email: string;
-  phone: string;
+  phone?: string;
   orders_count: number;
   total_spent: number;
   created_at: string;
@@ -172,16 +173,20 @@ interface ReturnRequest {
   id: number;
   order_id: number;
   order_number: string;
-  user_id: number;
-  reviewer_name: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string;
+  return_type: 'refund' | 'exchange';
   reason: string;
-  status: 'pending' | 'approved' | 'rejected';
-  refund_amount: number;
+  items: any;
+  status: 'pending' | 'approved' | 'received' | 'completed' | 'rejected' | any;
+  action_notes?: string;
   admin_notes?: string;
   created_at: string;
+  updated_at: string;
   description?: string;
-  items?: any[];
   images?: string;
+  refund_amount?: number;
 }
 
 interface Toast {
@@ -201,6 +206,8 @@ interface Review {
   product_name: string;
   product_id: number;
   status: 'pending' | 'approved' | 'rejected';
+  approved: boolean;
+  merchant_reply?: string;
 }
 
 // ── GLOBAL FETCH INTERCEPTOR SETUP ──────────────────────────────────────────
@@ -285,7 +292,7 @@ export default function Admin() {
   const [settingsList, setSettingsList] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [posSalesList, setPosSalesList] = useState<any[]>([]);
-  const [rawColorsList, setRawColorsList] = useState<{ color_name: string; hex_code: string }[]>([]);
+  const [rawColorsList, setRawColorsList] = useState<{ id: number; color_name: string; hex_code: string }[]>([]);
 
   // Colors Tab CRUD States
   const [colorModalOpen, setColorModalOpen] = useState(false);
@@ -295,7 +302,7 @@ export default function Admin() {
   const [exportInventory, setExportInventory] = useState(true);
   const [exportChannel, setExportChannel] = useState(true);
   const [exportCustomer, setExportCustomer] = useState(true);
-  const [editingColor, setEditingColor] = useState<{ color_name: string; hex_code: string } | null>(null);
+  const [editingColor, setEditingColor] = useState<{ id?: number; color_name: string; hex_code: string } | null>(null);
   const [colorNameInput, setColorNameInput] = useState('');
   const [colorHexInput, setColorHexInput] = useState('');
 
@@ -3182,7 +3189,7 @@ export default function Admin() {
             <ProductsManager
               products={productsList}
               categories={categoriesList}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
@@ -3191,7 +3198,7 @@ export default function Admin() {
           {activeTab === 'stock' && (
             <StockManager
               products={productsList}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
@@ -3200,7 +3207,7 @@ export default function Admin() {
           {activeTab === 'orders' && (
             <OrdersManager
               orders={ordersList}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
@@ -3209,7 +3216,7 @@ export default function Admin() {
           {activeTab === 'categories' && (
             <CategoriesManager
               categories={categoriesList}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
@@ -3218,7 +3225,7 @@ export default function Admin() {
           {activeTab === 'coupons' && (
             <CouponsManager
               coupons={couponsList}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
@@ -3227,7 +3234,7 @@ export default function Admin() {
           {activeTab === 'banners' && (
             <BannersManager
               banners={bannersList}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
@@ -3236,7 +3243,7 @@ export default function Admin() {
           {activeTab === 'pages' && (
             <PagesManager
               pages={pagesList}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
@@ -3245,7 +3252,7 @@ export default function Admin() {
           {activeTab === 'settings' && (
             <SettingsManager
               settings={settingsList}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
@@ -3262,7 +3269,7 @@ export default function Admin() {
                 two_factor_enabled: st.two_factor_enabled || false,
                 created_at: st.created_at || ''
               }))}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
@@ -3275,7 +3282,7 @@ export default function Admin() {
                 name: c.color_name,
                 hex_code: c.hex_code
               }))}
-              token={token}
+              token={token || ""}
               showToast={showToast}
               onRefresh={loadAllData}
             />
