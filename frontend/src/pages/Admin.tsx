@@ -18,7 +18,6 @@ import BannersManager from './admin/BannersManager';
 import PagesManager from './admin/PagesManager';
 import SettingsManager from './admin/SettingsManager';
 import StaffManager from './admin/StaffManager';
-import ColorsManager from './admin/ColorsManager';
 import CustomersManager from './admin/CustomersManager';
 
 import PosTerminal from './admin/PosTerminal';
@@ -272,7 +271,7 @@ export default function Admin() {
   const [resettingPassword, setResettingPassword] = useState(false);
 
   // Active Panel Navigation Tab
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'stock' | 'orders' | 'categories' | 'customers' | 'reviews' | 'coupons' | 'banners' | 'pages' | 'settings' | 'pos' | 'audits' | 'returns' | 'analysis' | 'staff' | 'colors'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'stock' | 'orders' | 'categories' | 'customers' | 'reviews' | 'coupons' | 'banners' | 'pages' | 'settings' | 'pos' | 'audits' | 'returns' | 'analysis' | 'staff'>('dashboard');
 
   // Sidebar Layout Collapsed State
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -292,9 +291,7 @@ export default function Admin() {
   const [settingsList, setSettingsList] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [posSalesList, setPosSalesList] = useState<any[]>([]);
-  const [rawColorsList, setRawColorsList] = useState<{ id: number; color_name: string; hex_code: string }[]>([]);
 
-  // Colors Tab CRUD States
   const [colorModalOpen, setColorModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [exportLedger, setExportLedger] = useState(true);
@@ -330,7 +327,6 @@ export default function Admin() {
   const [analysisMinAmt, setAnalysisMinAmt] = useState('');
   const [analysisMaxAmt, setAnalysisMaxAmt] = useState('');
 
-  // NEW: Colors states for modal & POS
   const [colorMap, setColorMap] = useState<Record<string, string>>({});
   const [prodColor, setProdColor] = useState('Default');
   const [prodColorCustom, setProdColorCustom] = useState('');
@@ -674,23 +670,6 @@ export default function Admin() {
     }
   };
 
-  // Load Database Colors Hex Map
-  const loadColors = async () => {
-    try {
-      const res = await fetch('/api/colors');
-      const data = await res.json();
-      if (data.success && data.data) {
-        setRawColorsList(data.data);
-        const map: Record<string, string> = {};
-        data.data.forEach((c: any) => {
-          map[c.color_name.toLowerCase().trim()] = c.hex_code;
-        });
-        setColorMap(map);
-      }
-    } catch (e) {
-      console.error('Failed to load colors:', e);
-    }
-  };
 
   // Main Load Data
   const loadAllData = async () => {
@@ -711,7 +690,6 @@ export default function Admin() {
         fetchSec('/api/admin/settings', setSettingsList),
         fetchSec('/api/admin/returns', setReturnsList),
         fetchSec('/api/admin/pos/sales?all=true', setPosSalesList),
-        loadColors(),
       ]);
     } catch (e) {
       showToast('error', 'Sync Failure', 'Failed to retrieve administrative data.');
@@ -1257,70 +1235,6 @@ export default function Admin() {
     }
   };
 
-  // Colors CRUD Handlers
-  const handleOpenAddColor = () => {
-    setEditingColor(null);
-    setColorNameInput('');
-    setColorHexInput('#000000');
-    setColorModalOpen(true);
-  };
-
-  const handleOpenEditColor = (col: any) => {
-    setEditingColor(col);
-    setColorNameInput(col.color_name);
-    setColorHexInput(col.hex_code);
-    setColorModalOpen(true);
-  };
-
-  const handleColorSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!colorNameInput || !colorHexInput) {
-      showToast('error', 'Missing Fields', 'Please enter color name and hex code.');
-      return;
-    }
-    const hex = colorHexInput.startsWith('#') ? colorHexInput : `#${colorHexInput}`;
-    const url = editingColor ? `/api/admin/colors/${editingColor.color_name}` : '/api/admin/colors';
-    const method = editingColor ? 'PUT' : 'POST';
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ color_name: colorNameInput.trim(), hex_code: hex.trim() })
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast('success', 'Color Saved', `Color '${colorNameInput}' mapping updated.`);
-        setColorModalOpen(false);
-        loadColors();
-      } else {
-        showToast('error', 'Failed', data.error || 'Server error.');
-      }
-    } catch {
-      showToast('error', 'Network Error', 'Failed to connect to color service.');
-    }
-  };
-
-  const handleDeleteColor = async (colorName: string) => {
-    if (!window.confirm(`Delete color mapping for '${colorName}'?`)) return;
-    try {
-      const res = await fetch(`/api/admin/colors/${colorName}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast('success', 'Color Deleted', `Mapping for '${colorName}' removed.`);
-        loadColors();
-      } else {
-        showToast('error', 'Failed', data.error || 'Server error.');
-      }
-    } catch {
-      showToast('error', 'Network Error', 'Failed to connect.');
-    }
-  };
 
   // Advanced Analysis Filter Logic
   const getFilteredTransactions = () => {
@@ -1645,7 +1559,7 @@ export default function Admin() {
       const allowedTabs = [
         'dashboard', 'products', 'stock', 'orders', 'categories', 'customers',
         'reviews', 'coupons', 'banners', 'pages', 'pos', 'returns',
-        'audits', 'settings', 'analysis', 'staff', 'colors'
+        'audits', 'settings', 'analysis', 'staff'
       ].filter(hasPermission);
       
       if (allowedTabs.length > 0 && !allowedTabs.includes(activeTab)) {
@@ -2955,7 +2869,6 @@ export default function Admin() {
     { id: 'product_reviews', label: 'product_reviews' },
     { id: 'returns', label: 'returns' },
     { id: 'settings', label: 'settings' },
-    { id: 'colors', label: 'colors' }
   ];
 
   const menuSections = [
@@ -2980,7 +2893,6 @@ export default function Admin() {
         { id: 'products', label: 'Products Catalog', icon: 'fas fa-shoe-prints' },
         { id: 'stock', label: 'Stock Inventory', icon: 'fas fa-boxes' },
         { id: 'categories', label: 'Categories', icon: 'fas fa-tags' },
-        { id: 'colors', label: 'Database Colors', icon: 'fas fa-palette' },
       ]
     },
     {
@@ -3238,18 +3150,6 @@ export default function Admin() {
             />
           )}
 
-          {activeTab === 'colors' && (
-            <ColorsManager
-              colors={rawColorsList.map((c) => ({
-                id: c.id,
-                name: c.color_name,
-                hex_code: c.hex_code
-              }))}
-              token={token || ""}
-              showToast={showToast}
-              onRefresh={loadAllData}
-            />
-          )}
 
           {activeTab === 'customers' && (
             <CustomersManager
