@@ -20,10 +20,17 @@ async function getSetting(env, key, fallback = '') {
 async function generateOrderNumber(env) {
     const today = new Date();
     const prefix = `HU-${today.getUTCFullYear()}${String(today.getUTCMonth() + 1).padStart(2, '0')}${String(today.getUTCDate()).padStart(2, '0')}`;
-    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM orders WHERE order_number LIKE ?").bind(`${prefix}-%`).first();
-    const seq = String((row?.c || 0) + 1).padStart(4, '0');
-    const rand = Math.floor(1000 + Math.random() * 9000);
-    return `${prefix}-${seq}-${rand}`;
+    const row = await env.DB.prepare("SELECT order_number FROM orders WHERE order_number LIKE ? ORDER BY id DESC LIMIT 1").bind(`${prefix}-%`).first();
+    let nextSeq = 1;
+    if (row && row.order_number) {
+        const parts = row.order_number.split('-');
+        const lastSeq = parseInt(parts[parts.length - 1]);
+        if (!isNaN(lastSeq)) {
+            nextSeq = lastSeq + 1;
+        }
+    }
+    const seq = String(nextSeq).padStart(4, '0');
+    return `${prefix}-${seq}`;
 }
 
 function normalizeEmail(e) {

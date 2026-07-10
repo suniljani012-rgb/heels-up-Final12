@@ -5,8 +5,17 @@ import { ok, list, created, error, serverError } from '../utils/response.js';
 async function genOrderNumber(env) {
     const today = new Date();
     const prefix = `HU-OFL-${today.getUTCFullYear()}`;
-    const row = await env.DB.prepare("SELECT COUNT(*) as c FROM offline_sales WHERE sale_number LIKE ?").bind(`${prefix}%`).first();
-    const seq = String((row?.c || 0) + 1).padStart(4, "0");
+    const row = await env.DB.prepare("SELECT sale_number FROM offline_sales WHERE sale_number LIKE ? ORDER BY id DESC LIMIT 1").bind(`${prefix}%`).first();
+    let nextSeq = 1;
+    if (row && row.sale_number) {
+        // e.g. HU-OFL-20260005 -> last 4 digits are 0005
+        const lastSeqStr = row.sale_number.replace(prefix, '');
+        const lastSeq = parseInt(lastSeqStr);
+        if (!isNaN(lastSeq)) {
+            nextSeq = lastSeq + 1;
+        }
+    }
+    const seq = String(nextSeq).padStart(4, "0");
     return `${prefix}${seq}`;
 }
 
