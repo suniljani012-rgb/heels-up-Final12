@@ -271,7 +271,13 @@ export default function Admin() {
   const [resettingPassword, setResettingPassword] = useState(false);
 
   // Active Panel Navigation Tab
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'stock' | 'orders' | 'categories' | 'customers' | 'reviews' | 'coupons' | 'banners' | 'pages' | 'settings' | 'pos' | 'audits' | 'returns' | 'analysis' | 'staff'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'stock' | 'orders' | 'categories' | 'customers' | 'reviews' | 'coupons' | 'banners' | 'pages' | 'settings' | 'pos' | 'audits' | 'returns' | 'analysis' | 'staff'>(() => {
+    return (localStorage.getItem('admin_active_tab') as any) || 'dashboard';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('admin_active_tab', activeTab);
+  }, [activeTab]);
 
   // Sidebar Layout Collapsed State
   const [sidebarOpen, setSidebarOpen] = useState(true);
