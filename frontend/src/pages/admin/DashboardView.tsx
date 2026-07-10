@@ -215,13 +215,15 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#1f2937',
+                      backgroundColor: '#ffffff',
                       borderRadius: '12px',
-                      color: '#ffffff',
-                      border: 'none',
+                      color: '#000000',
+                      border: '1px solid #e5e5e5',
                       fontSize: '11px',
                       fontFamily: 'Aptos, sans-serif'
                     }}
+                    itemStyle={{ color: '#000000' }}
+                    labelStyle={{ color: '#000000', fontWeight: 'bold' }}
                     formatter={(value: any) => [`₹${value.toLocaleString('en-IN')}`, 'Revenue']}
                   />
                   <Area
@@ -273,12 +275,15 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#1f2937',
+                        backgroundColor: '#ffffff',
                         borderRadius: '8px',
-                        color: '#ffffff',
-                        border: 'none',
-                        fontSize: '10px'
+                        color: '#000000',
+                        border: '1px solid #e5e5e5',
+                        fontSize: '10px',
+                        fontFamily: 'Aptos, sans-serif'
                       }}
+                      itemStyle={{ color: '#000000' }}
+                      labelStyle={{ color: '#000000', fontWeight: 'bold' }}
                       formatter={(value: any) => [`${value}%`, 'Share']}
                     />
                     <Legend

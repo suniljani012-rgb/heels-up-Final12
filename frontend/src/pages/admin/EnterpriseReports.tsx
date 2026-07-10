@@ -341,12 +341,15 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
                     <YAxis stroke="#888888" fontSize={9} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}`} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#1f2937',
+                        backgroundColor: '#ffffff',
                         borderRadius: '12px',
-                        color: '#ffffff',
-                        border: 'none',
-                        fontSize: '10px'
+                        color: '#000000',
+                        border: '1px solid #e5e5e5',
+                        fontSize: '10px',
+                        fontFamily: 'Aptos, sans-serif'
                       }}
+                      itemStyle={{ color: '#000000' }}
+                      labelStyle={{ color: '#000000', fontWeight: 'bold' }}
                       formatter={(value: any) => [`₹${value.toLocaleString('en-IN')}`, 'Revenue']}
                     />
                     <Area type="monotone" dataKey="Revenue" stroke="#db2777" strokeWidth={2} fillOpacity={1} fill="url(#colorReportRevenue)" />
@@ -394,12 +397,15 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
                     <YAxis stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#1f2937',
+                        backgroundColor: '#ffffff',
                         borderRadius: '8px',
-                        color: '#ffffff',
-                        border: 'none',
-                        fontSize: '10px'
+                        color: '#000000',
+                        border: '1px solid #e5e5e5',
+                        fontSize: '10px',
+                        fontFamily: 'Aptos, sans-serif'
                       }}
+                      itemStyle={{ color: '#000000' }}
+                      labelStyle={{ color: '#000000', fontWeight: 'bold' }}
                     />
                     <Bar dataKey="Products" radius={[4, 4, 0, 0]}>
                       {rechartsBarData.map((entry, index) => {
