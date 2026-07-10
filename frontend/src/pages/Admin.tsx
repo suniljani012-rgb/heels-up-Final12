@@ -3019,7 +3019,7 @@ export default function Admin() {
       </aside>
 
       {/* Main Workspace Content */}
-      <div className="flex-1 flex flex-col min-h-screen bg-[#f5f5f4]">
+      <div className="flex-1 flex flex-col min-h-screen bg-[#f5f5f4] min-w-0">
         {/* Header */}
         <header className="h-16 bg-white border-b border-neutral-200/80 flex items-center justify-between px-6 sticky top-0 z-20">
           <div className="flex items-center gap-4">
