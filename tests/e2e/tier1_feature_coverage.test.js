@@ -452,7 +452,7 @@ addTest(1, 'F7.3: Fetch all settings and verify updated values', async () => {
 
 addTest(1, 'F7.4: Fetch public settings and verify key filtering', async () => {
     // Write a sensitive secret setting
-    await executeD1Query("INSERT OR REPLACE INTO settings (key, value) VALUES ('resend_api_key', '\"sensitive_token_xyz\"')");
+    await executeD1Query("INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES ('resend_api_key', '\"sensitive_token_xyz\"', datetime('now'))");
     
     const res = await fetch(`${baseUrl}/api/settings/public`, { method: 'GET' });
     assert.strictEqual(res.status, 200);

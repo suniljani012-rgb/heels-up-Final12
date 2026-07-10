@@ -132,7 +132,10 @@ export default function Product() {
         if (data.success && data.data) {
           const detail = data.data.product
           setProduct(detail)
-          setReviews(data.data.reviews || [])
+          const reviewsRes = await fetch(`/api/products/${productId}/reviews`)
+          const reviewsData = await reviewsRes.json()
+          const reviewsList = reviewsData.data || []
+          setReviews(reviewsList)
           
           // Image array assembly
           const fetchedImgs = data.data.images?.map((i: any) => i.url) || []
@@ -162,7 +165,7 @@ export default function Product() {
           // Save to cache for 0.01ms rendering on next visit!
           localStorage.setItem(`heelsup_cached_product_${productId}`, JSON.stringify({
             product: detail,
-            reviews: data.data.reviews || [],
+            reviews: reviewsList,
             images: allImages,
             related: relatedList
           }))
@@ -258,7 +261,7 @@ export default function Product() {
 
     setSubmittingReview(true)
     try {
-      const res = await fetch('/api/reviews', {
+      const res = await fetch(`/api/products/${product.id}/reviews`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

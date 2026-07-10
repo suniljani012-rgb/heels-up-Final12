@@ -73,8 +73,16 @@ export async function posRouter(request, env) {
         const { user, error: authError } = await requireAdmin(request, env);
         if (authError) return authError;
         try {
-            const { customer_name, customer_phone, items, payment_method, discount, notes, created_at } = await request.json();
+            const { customer_name, customer_phone, items, payment_method, discount, notes, created_at, sales_channel } = await request.json();
             if (!items || items.length === 0) return error('No items in sale');
+
+            let channel = 'POS';
+            if (sales_channel !== undefined && sales_channel !== null) {
+                if (!['POS', 'WhatsApp', 'Instagram'].includes(sales_channel)) {
+                    return error('Invalid channel name', 400);
+                }
+                channel = sales_channel;
+            }
 
             // Find staff entry mapping to logged-in user (admin/staff/manager)
             let servedByStaffId = null;
@@ -123,12 +131,12 @@ export async function posRouter(request, env) {
                 INSERT INTO offline_sales (
                     sale_number, customer_name, customer_phone, items_json,
                     subtotal, discount, total, payment_method, notes,
-                    created_by, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    created_by, created_at, sales_channel
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).bind(
                 saleNumber, customer_name || 'Walk-in', customer_phone || null, itemsJson,
                 subtotal, discountAmt, total, payment_method || 'Cash', notes || null,
-                user.id, finalCreatedAt
+                user.id, finalCreatedAt, channel
             ).run();
 
             const saleId = saleRes.meta?.last_row_id;

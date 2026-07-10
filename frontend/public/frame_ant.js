@@ -20,7 +20,11 @@
     '/api/reviews',
     '/api/coupons',
     '/api/banners',
-    '/api/settings'
+    '/api/settings',
+    '/api/orders/my',
+    '/api/addresses',
+    '/api/colors',
+    '/api/auth/profile'
   ];
 
   // Helper to validate and sanitize query parameters (prevents client-side SQL Injection/Manipulation)
@@ -134,7 +138,20 @@
       }
     }
 
-    return originalFetch(input, init);
+    const response = await originalFetch(input, init);
+    if (isGet && response.status === 200 && targetEndpoints.includes(path)) {
+      try {
+        const clonedRes = response.clone();
+        const freshData = await clonedRes.json();
+        apiCache.set(path, {
+          data: freshData,
+          timestamp: Date.now()
+        });
+      } catch (e) {
+        // Safe fail
+      }
+    }
+    return response;
   };
 
   // Start prewarming once DOM is ready or token is set

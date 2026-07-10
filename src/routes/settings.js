@@ -87,10 +87,9 @@ export async function settingsRouter(request, env) {
                 } else {
                     serializedValue = String(value);
                 }
-                await env.DB.run(
-                    "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-                    key, serializedValue
-                );
+                await env.DB.prepare(
+                    "INSERT INTO settings (key, value, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')"
+                ).bind(key, serializedValue).run();
             }
             return ok(null, 'Settings updated');
         } catch (e) { return serverError('Failed to update settings'); }

@@ -31,6 +31,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [announcementIndex, setAnnouncementIndex] = useState(0)
   const [logoFailed, setLogoFailed] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [categories, setCategories] = useState<any[]>([])
   const [announcements, setAnnouncements] = useState<string[]>([
     "🎉 NEW ARRIVALS — Summer Collection is Live!",
@@ -77,6 +78,15 @@ export default function Header() {
     }, 4500)
     return () => clearInterval(interval)
   }, [announcements])
+
+  const handleSearchSubmit = (e: any) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`)
+    } else {
+      navigate('/shop')
+    }
+  }
 
   const cartCount = getCartCount()
   const wishlistCount = wishlistItems.length
@@ -161,13 +171,22 @@ export default function Header() {
           {/* Action Icons */}
           <div className="flex items-center gap-4 text-gray-700">
             {/* Search */}
-            <button
-              onClick={() => navigate('/shop')}
-              className="p-1.5 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-colors"
-              title="Search"
-            >
-              <Search className="w-5 h-5" />
-            </button>
+            <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-32 focus:w-44 transition-all duration-300 py-1 pl-3 pr-8 text-xs border border-gray-200 rounded-full focus:outline-none focus:border-[#d4456b] focus:ring-1 focus:ring-[#d4456b]"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 text-gray-400 hover:text-gray-900 transition-colors"
+                title="Search"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </form>
 
             {/* Wishlist */}
             <Link

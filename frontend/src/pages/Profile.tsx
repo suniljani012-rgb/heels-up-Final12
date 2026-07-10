@@ -1391,18 +1391,18 @@ export default function Profile() {
                   className="absolute left-6 top-1/2 -translate-y-1/2 h-0.5 bg-emerald-500 transition-all duration-500 -z-10" 
                   style={{
                     width: selectedOrderForDetails.order_status === 'delivered' ? '100%' :
-                           selectedOrderForDetails.order_status === 'shipped' ? '66%' :
-                           selectedOrderForDetails.order_status === 'confirmed' ? '33%' : '0%'
+                           selectedOrderForDetails.order_status === 'out_for_delivery' ? '66%' :
+                           selectedOrderForDetails.order_status === 'shipped' ? '33%' : '0%'
                   }}
                 />
 
                 {[
                   { label: 'Placed', status: 'placed', date: selectedOrderForDetails.created_at },
-                  { label: 'Confirmed', status: 'confirmed', date: selectedOrderForDetails.confirmed_at },
                   { label: 'Shipped', status: 'shipped', date: selectedOrderForDetails.shipped_at },
+                  { label: 'Out for Delivery', status: 'out_for_delivery', date: selectedOrderForDetails.out_for_delivery_at },
                   { label: 'Delivered', status: 'delivered', date: selectedOrderForDetails.delivered_at }
                 ].map((step, idx) => {
-                  const statuses = ['placed', 'confirmed', 'shipped', 'delivered'];
+                  const statuses = ['placed', 'shipped', 'out_for_delivery', 'delivered'];
                   const currentIdx = statuses.indexOf(selectedOrderForDetails.order_status);
                   const stepIdx = statuses.indexOf(step.status);
                   const isActive = stepIdx <= currentIdx;

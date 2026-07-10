@@ -1,5 +1,5 @@
 // worker/src/routes/products.js
-import { requireAdmin } from '../middleware/auth.js';
+import { requireAdmin, requireAuth } from '../middleware/auth.js';
 import { ok, list, created, error, notFound, serverError } from '../utils/response.js';
 
 function slug(name) {
@@ -241,6 +241,59 @@ export async function productsRouter(request, env) {
     const method = request.method;
     const params = url.searchParams;
 
+    // GET /api/products/:id/reviews
+    if (path.match(/^\/\d+\/reviews$/) && method === 'GET') {
+        const id = parseInt(path.split('/')[1]);
+        try {
+            const reviews = await env.DB.prepare(
+                `SELECT r.id, r.rating, r.title, r.body, r.created_at, r.merchant_reply, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name 
+                FROM product_reviews r 
+                LEFT JOIN users u ON r.user_id = u.id 
+                WHERE r.product_id = ? AND r.status = 'approved' 
+                ORDER BY r.created_at DESC`
+            ).bind(id).all();
+            return ok(reviews.results || []);
+        } catch (e) {
+            console.error('Fetch reviews error:', e);
+            return serverError('Failed to fetch reviews');
+        }
+    }
+
+    // POST /api/products/:id/reviews
+    if (path.match(/^\/\d+\/reviews$/) && method === 'POST') {
+        const { user, error: authError } = await requireAuth(request, env);
+        if (authError) return authError;
+        const id = parseInt(path.split('/')[1]);
+        try {
+            const { rating, title, body, order_id } = await request.json();
+            
+            // Perform input type-checks and length-sanitization (prevent SQL injections and overflow)
+            const ratingInt = Number(rating);
+            if (!Number.isInteger(ratingInt) || ratingInt < 1 || ratingInt > 5) {
+                return error('Rating must be an integer between 1 and 5', 400);
+            }
+            
+            let cleanTitle = null;
+            if (title !== undefined && title !== null) {
+                cleanTitle = String(title).trim().slice(0, 100);
+            }
+            let cleanBody = null;
+            if (body !== undefined && body !== null) {
+                cleanBody = String(body).trim().slice(0, 1000);
+            }
+            
+            await env.DB.prepare(
+                `INSERT INTO product_reviews (product_id, user_id, order_id, rating, title, body, status, created_at) 
+                 VALUES (?, ?, ?, ?, ?, ?, 'pending', datetime('now'))`
+            ).bind(id, user.id, order_id || null, ratingInt, cleanTitle, cleanBody).run();
+            
+            return created(null, 'Review submitted — pending approval');
+        } catch (e) {
+            console.error('Submit review error:', e);
+            return serverError('Failed to submit review');
+        }
+    }
+
     // GET /api/products — public listing with filters
     if (path === '/' && method === 'GET') {
         try {
@@ -257,6 +310,7 @@ export async function productsRouter(request, env) {
             const minPrice = params.get('min_price');
             const maxPrice = params.get('max_price');
             const sizeFilter = params.get('size');
+            const color = params.get('color');
             const isAdmin = request.headers.get('x-is-admin') === 'true' || params.get('all') === 'true';
             let where = isAdmin ? [] : ['p.active = 1'];
             let binds = [];
@@ -295,6 +349,10 @@ export async function productsRouter(request, env) {
                 where.push(`EXISTS (SELECT 1 FROM product_size_stock pss WHERE pss.product_id = p.id AND pss.size_label = ? AND pss.stock > 0)`);
                 binds.push(sizeFilter);
             }
+            if (color) {
+                where.push('LOWER(p.name) LIKE ?');
+                binds.push(`% - ${color.toLowerCase()}`);
+            }
 
             const sortMap = {
                 newest: 'p.id DESC',
@@ -302,6 +360,7 @@ export async function productsRouter(request, env) {
                 price_low: 'p.price ASC',
                 price_high: 'p.price DESC',
                 name: 'p.name ASC',
+                rating: 'avg_rating DESC',
             };
             const orderBy = sortMap[sort] || 'p.id DESC';
             const whereStr = where.length ? 'WHERE ' + where.join(' AND ') : '';

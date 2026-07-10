@@ -51,9 +51,11 @@ export default function Shop() {
   const searchQ = searchParams.get('q') || ''
   const priceMin = searchParams.get('min') || ''
   const priceMax = searchParams.get('max') || ''
+  const size = searchParams.get('size') || ''
+  const color = searchParams.get('color') || ''
 
   const [loading, setLoading] = useState(() => {
-    const isInitial = !category && page === 1 && sort === 'newest' && !searchQ && !priceMin && !priceMax
+    const isInitial = !category && page === 1 && sort === 'newest' && !searchQ && !priceMin && !priceMax && !size && !color
     if (isInitial) {
       const cached = localStorage.getItem('heelsup_cached_shop_products')
       return !cached
@@ -110,7 +112,7 @@ export default function Shop() {
   // Fetch product list
   useEffect(() => {
     async function fetchProducts() {
-      const isInitial = !category && page === 1 && sort === 'newest' && !searchQ && !priceMin && !priceMax
+      const isInitial = !category && page === 1 && sort === 'newest' && !searchQ && !priceMin && !priceMax && !size && !color
       if (!isInitial) {
         setLoading(true)
       }
@@ -123,6 +125,8 @@ export default function Shop() {
         if (searchQ) queryParams.set('q', searchQ)
         if (priceMin) queryParams.set('min_price', String(Number(priceMin) * 100)) // to paise
         if (priceMax) queryParams.set('max_price', String(Number(priceMax) * 100)) // to paise
+        if (size) queryParams.set('size', size)
+        if (color) queryParams.set('color', color)
 
         const res = await fetch(`/api/products?${queryParams.toString()}`)
         const data = await res.json()
@@ -152,7 +156,7 @@ export default function Shop() {
       }
     }
     fetchProducts()
-  }, [category, page, sort, searchQ, priceMin, priceMax])
+  }, [category, page, sort, searchQ, priceMin, priceMax, size, color])
 
   const updateParam = (key: string, value: string) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -211,7 +215,8 @@ export default function Shop() {
     { value: 'newest', label: 'Newest Arrivals' },
     { value: 'price_low', label: 'Price: Low to High' },
     { value: 'price_high', label: 'Price: High to Low' },
-    { value: 'name', label: 'Alphabetical' }
+    { value: 'name', label: 'Alphabetical' },
+    { value: 'rating', label: 'Customer Rating' }
   ]
 
   return (
@@ -291,6 +296,55 @@ export default function Shop() {
                 onChange={(e) => updateParam('max', e.target.value)}
                 className="w-full border border-gray-200 rounded-lg p-2 text-xs text-center focus:outline-none focus:border-primary bg-white"
               />
+            </div>
+          </div>
+
+          {/* Filter by Size */}
+          <div className="border border-gray-100 rounded-xl p-6 bg-white shadow-sm">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-4">Filter by Size</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {['36', '37', '38', '39', '40', '41'].map((sz) => {
+                const isSelected = size === sz
+                return (
+                  <button
+                    key={sz}
+                    onClick={() => updateParam('size', isSelected ? '' : sz)}
+                    className={`py-2 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-primary border-primary text-white font-bold'
+                        : 'border-gray-200 text-gray-700 hover:border-gray-400 bg-white'
+                    }`}
+                  >
+                    UK {sz}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Filter by Color */}
+          <div className="border border-gray-100 rounded-xl p-6 bg-white shadow-sm">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-4">Filter by Color</h3>
+            <div className="flex flex-wrap gap-2">
+              {Object.keys(globalColorMap).map((colorName) => {
+                const hex = globalColorMap[colorName]
+                const isSelected = color.toLowerCase() === colorName
+                return (
+                  <button
+                    key={colorName}
+                    onClick={() => updateParam('color', isSelected ? '' : colorName)}
+                    title={colorName.charAt(0).toUpperCase() + colorName.slice(1)}
+                    className={`w-7 h-7 rounded-full border transition-all relative flex items-center justify-center cursor-pointer ${
+                      isSelected ? 'border-primary ring-2 ring-primary/30 scale-110' : 'border-gray-200 hover:border-gray-400'
+                    }`}
+                    style={{ backgroundColor: hex }}
+                  >
+                    {isSelected && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                    )}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
