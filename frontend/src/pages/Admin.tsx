@@ -2916,7 +2916,7 @@ export default function Admin() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f5f5f4] text-neutral-900 font-sans flex flex-col md:flex-row relative">
+    <div className="min-h-screen bg-[#f5f5f4] text-neutral-900 font-sans flex relative">
       {/* Floating Toasts container */}
       <div className="fixed top-5 right-5 z-50 space-y-3 w-80 pointer-events-none">
         {toasts.map((toast) => (
@@ -2958,7 +2958,7 @@ export default function Admin() {
       )}
 
       {/* Sidebar Panel */}
-      <aside className={`w-64 bg-white border-r border-neutral-200/80 flex flex-col justify-between shrink-0 h-screen md:h-[100dvh] sticky top-0 transition-transform z-30 fixed left-0 top-0 md:sticky ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`w-64 bg-white border-r border-neutral-200/80 flex flex-col justify-between shrink-0 h-screen fixed left-0 top-0 transition-transform z-30 md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         {/* Brand */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-neutral-200/80 shrink-0">
           <span className="text-lg font-bold tracking-tight text-neutral-900 font-display flex items-center gap-1.5">
@@ -3019,7 +3019,7 @@ export default function Admin() {
       </aside>
 
       {/* Main Workspace Content */}
-      <div className="flex-1 flex flex-col min-h-screen bg-[#f5f5f4]">
+      <div className="flex-1 flex flex-col min-h-screen bg-[#f5f5f4] md:pl-64">
         {/* Header */}
         <header className="h-16 bg-white border-b border-neutral-200/80 flex items-center justify-between px-6 sticky top-0 z-20">
           <div className="flex items-center gap-4">
