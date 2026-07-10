@@ -42,40 +42,42 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
 
   return (
     <div className="space-y-6 text-neutral-900 animate-fade-in relative">
-      <div>
-        <h1 className="text-2xl font-light text-neutral-900 font-display italic">Registered Customers</h1>
-        <p className="text-xs text-neutral-500">Moderate customer accounts, view order profiles and purchase logs</p>
-      </div>
-
-      {/* Filter Row */}
-      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
-            placeholder="Search customers by name, email, phone..."
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
-          />
+      <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+        <div>
+          <h1 className="text-3xl font-light text-neutral-900 font-display italic">Registered Customers</h1>
+          <p className="text-xs text-neutral-500">Moderate customer accounts, view order profiles and purchase logs</p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
-          <button
-            disabled={page === 0}
-            onClick={() => setPage(p => p - 1)}
-            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span>{page + 1} / {Math.ceil(filtered.length / itemsPerPage) || 1}</span>
-          <button
-            disabled={(page + 1) * itemsPerPage >= filtered.length}
-            onClick={() => setPage(p => p + 1)}
-            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+        {/* Filter Row */}
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
+              placeholder="Search customers by name, email, phone..."
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
+            <button
+              disabled={page === 0}
+              onClick={() => setPage(p => p - 1)}
+              className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span>{page + 1} / {Math.ceil(filtered.length / itemsPerPage) || 1}</span>
+            <button
+              disabled={(page + 1) * itemsPerPage >= filtered.length}
+              onClick={() => setPage(p => p + 1)}
+              className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 

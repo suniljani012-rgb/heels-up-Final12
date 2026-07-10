@@ -114,30 +114,32 @@ export default function PagesManager({ pages, token, showToast, onRefresh }: Pag
 
   return (
     <div className="space-y-6 text-neutral-900 animate-fade-in relative">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-light text-neutral-900 font-display italic">Static Pages</h1>
-          <p className="text-xs text-neutral-500">Configure storefront content like privacy policy, sizing guides, and terms</p>
+      <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-light text-neutral-900 font-display italic">Static Pages</h1>
+            <p className="text-xs text-neutral-500">Configure storefront content like privacy policy, sizing guides, and terms</p>
+          </div>
+          <button
+            onClick={handleOpenAdd}
+            className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
+          >
+            <Plus className="w-4 h-4" /> Add Static Page
+          </button>
         </div>
-        <button
-          onClick={handleOpenAdd}
-          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
-        >
-          <Plus className="w-4 h-4" /> Add Static Page
-        </button>
-      </div>
 
-      {/* Filter Row */}
-      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search pages..."
-            className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
-          />
+        {/* Filter Row */}
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex items-center justify-between gap-4 shadow-md">
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search pages..."
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
+            />
+          </div>
         </div>
       </div>
 

@@ -72,63 +72,68 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Search and Action Bar */}
-      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
-          <div className="relative flex-1 min-w-[180px]">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
-              <Search className="w-4 h-4" />
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => {
-                setSearchQuery(e.target.value);
-                setPage(0);
-              }}
-              placeholder="Search by admin email, action or details..."
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 focus:outline-none focus:border-amber-500/60"
-            />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5" /> Filter:
-            </span>
-            <select
-              value={selectedAction}
-              onChange={e => {
-                setSelectedAction(e.target.value);
-                setPage(0);
-              }}
-              className="bg-neutral-50 border border-neutral-200 rounded-xl px-2.5 py-1.5 text-xs text-neutral-900 focus:outline-none"
-            >
-              <option value="">All Actions</option>
-              {actionOptions.map(act => (
-                <option key={act} value={act}>{act}</option>
-              ))}
-            </select>
-          </div>
+      <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+        <div>
+          <h1 className="text-3xl font-light text-neutral-900 font-display italic">Audit Registry Logs</h1>
+          <p className="text-xs text-neutral-500">Observe backend admin actions, security triggers and transaction audits</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onRefresh}
-            className="p-2 border border-neutral-200 hover:bg-neutral-200 rounded-xl text-neutral-500 hover:text-neutral-900 transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-          
-          {filteredLogs.length > 0 && (
+        {/* Search and Action Bar */}
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+            <div className="relative flex-1 min-w-[180px]">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
+                <Search className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  setPage(0);
+                }}
+                placeholder="Search by admin email, action or details..."
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 focus:outline-none focus:border-amber-500/60"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
+                <Filter className="w-3.5 h-3.5" /> Filter:
+              </span>
+              <select
+                value={selectedAction}
+                onChange={e => {
+                  setSelectedAction(e.target.value);
+                  setPage(0);
+                }}
+                className="bg-neutral-50 border border-neutral-200 rounded-xl px-2.5 py-1.5 text-xs text-neutral-900 focus:outline-none"
+              >
+                <option value="">All Actions</option>
+                {actionOptions.map(act => (
+                  <option key={act} value={act}>{act}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
             <button
-              onClick={handleExportCsv}
-              className="px-3 py-2 border border-neutral-200 hover:bg-neutral-200 text-neutral-900 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              onClick={onRefresh}
+              className="p-2 border border-neutral-200 hover:bg-neutral-200 rounded-xl text-neutral-500 hover:text-neutral-900 transition-colors"
             >
-              <Download className="w-3.5 h-3.5" /> Dump Registry
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
-          )}
-
-
+            
+            {filteredLogs.length > 0 && (
+              <button
+                onClick={handleExportCsv}
+                className="px-3 py-2 border border-neutral-200 hover:bg-neutral-200 text-neutral-900 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
+              >
+                <Download className="w-3.5 h-3.5" /> Dump Registry
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

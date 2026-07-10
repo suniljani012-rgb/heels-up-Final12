@@ -202,13 +202,13 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Parameters Panel */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-neutral-200/80 p-5 rounded-2xl">
-        <div className="space-y-1">
-          <h2 className="text-lg font-bold text-neutral-900 font-display italic">Enterprise Reports</h2>
-          <p className="text-[10px] text-neutral-500 font-medium">Export sales, stock value and cancelled logs.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
+      <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-neutral-200/80 p-5 rounded-2xl shadow-md">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-light text-neutral-900 font-display italic">Enterprise Reports</h1>
+            <p className="text-xs text-neutral-500">Export sales, stock value and cancelled logs.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
           <select
             value={reportType}
             onChange={e => {
@@ -243,6 +243,7 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
           </button>
         </div>
       </div>
+    </div>
 
       {/* Aggregate Cards Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

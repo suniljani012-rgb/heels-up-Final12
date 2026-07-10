@@ -248,9 +248,9 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
 
   return (
     <div className="space-y-6 text-neutral-900 animate-fade-in relative">
-      <div className="sticky top-16 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+      <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
         <div>
-          <h1 className="text-2xl font-light text-neutral-900 font-display italic">Billing Orders Registry</h1>
+          <h1 className="text-3xl font-light text-neutral-900 font-display italic">Billing Orders Registry</h1>
           <p className="text-xs text-neutral-500">Process and fulfill customer retail logs and transaction manifests</p>
         </div>
 

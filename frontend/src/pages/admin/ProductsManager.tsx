@@ -421,11 +421,11 @@ export default function ProductsManager({ products, categories, token, showToast
 
   return (
     <div className="space-y-6 text-neutral-900 animate-fade-in">
-      <div className="sticky top-16 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+      <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-light text-neutral-900 font-display italic">Products Catalog</h1>
+            <h1 className="text-3xl font-light text-neutral-900 font-display italic">Products Catalog</h1>
             <p className="text-xs text-neutral-500">Manage individual product style and colorway variants</p>
           </div>
           <div className="flex items-center gap-2">

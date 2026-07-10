@@ -92,45 +92,52 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
 
   return (
     <div className="space-y-6 animate-fade-in relative">
-      {/* Search and Filters */}
-      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
-          <div className="relative flex-1 min-w-[180px]">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
-              <Search className="w-4 h-4" />
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by order number, customer phone, reason..."
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 focus:outline-none focus:border-amber-500/60"
-            />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-neutral-500 uppercase">Status:</span>
-            <select
-              value={filterStatus}
-              onChange={e => setFilterStatus(e.target.value)}
-              className="bg-neutral-50 border border-neutral-200 rounded-xl px-2.5 py-1.5 text-xs text-neutral-900 focus:outline-none"
-            >
-              <option value="">All Claims</option>
-              <option value="pending">Pending Claim</option>
-              <option value="approved">Approved</option>
-              <option value="received">Items Received</option>
-              <option value="completed">Completed / Exchanged</option>
-              <option value="rejected">Rejected Claim</option>
-            </select>
-          </div>
+      <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+        <div>
+          <h1 className="text-3xl font-light text-neutral-900 font-display italic">Exchanges & Returns</h1>
+          <p className="text-xs text-neutral-500">Track customer exchanges, refund requests and return logs</p>
         </div>
 
-        <button
-          onClick={onRefresh}
-          className="p-2 border border-neutral-200 hover:bg-neutral-200 rounded-xl text-neutral-500 hover:text-neutral-900 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-        </button>
+        {/* Search and Filters */}
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+            <div className="relative flex-1 min-w-[180px]">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
+                <Search className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search by order number, customer phone, reason..."
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 focus:outline-none focus:border-amber-500/60"
+              />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-neutral-500 uppercase">Status:</span>
+              <select
+                value={filterStatus}
+                onChange={e => setFilterStatus(e.target.value)}
+                className="bg-neutral-50 border border-neutral-200 rounded-xl px-2.5 py-1.5 text-xs text-neutral-900 focus:outline-none"
+              >
+                <option value="">All Claims</option>
+                <option value="pending">Pending Claim</option>
+                <option value="approved">Approved</option>
+                <option value="received">Items Received</option>
+                <option value="completed">Completed / Exchanged</option>
+                <option value="rejected">Rejected Claim</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            onClick={onRefresh}
+            className="p-2 border border-neutral-200 hover:bg-neutral-200 rounded-xl text-neutral-500 hover:text-neutral-900 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Claims List Table */}

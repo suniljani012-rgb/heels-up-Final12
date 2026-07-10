@@ -2964,9 +2964,14 @@ export default function Admin() {
           <span className="text-lg font-bold tracking-tight text-neutral-900 font-display flex items-center gap-1.5">
             <Sliders className="w-5 h-5" /> HeelsUp Admin
           </span>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-neutral-500 hover:text-neutral-900">
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={loadAllData} disabled={dataLoading} title="Sync Database" className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-500 hover:text-neutral-900 transition-colors">
+              <RefreshCw className={`w-3.5 h-3.5 ${dataLoading ? 'animate-spin' : ''}`} />
+            </button>
+            <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-500 hover:text-neutral-900">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
         
         {/* Menu Items */}
@@ -3020,12 +3025,12 @@ export default function Admin() {
 
       {/* Main Workspace Content */}
       <div className="flex-1 flex flex-col h-full overflow-y-auto bg-[#f5f5f4] min-w-0">
-        {/* Header */}
-        <header className="h-16 bg-white border-b border-neutral-200/80 flex items-center justify-between px-6 sticky top-0 z-20">
+        {/* Header - Mobile Only */}
+        <header className="h-16 bg-white border-b border-neutral-200/80 flex items-center justify-between px-6 sticky top-0 z-20 md:hidden">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1.5 text-neutral-500 hover:bg-neutral-50 rounded-lg transition-colors md:hidden"
+              className="p-1.5 text-neutral-500 hover:bg-neutral-50 rounded-lg transition-colors"
             >
               <Sliders className="w-5 h-5 rotate-90" />
             </button>
@@ -3038,14 +3043,10 @@ export default function Admin() {
             <button
               onClick={loadAllData}
               disabled={dataLoading}
-              className="px-3 py-1.5 bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 text-[10px] font-bold text-neutral-700 rounded-xl uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-50"
+              className="p-1.5 hover:bg-neutral-100 text-neutral-500 rounded-lg transition-colors"
             >
-              <RefreshCw className={`w-3 h-3 ${dataLoading ? 'animate-spin' : ''}`} />
-              {dataLoading ? 'Syncing...' : 'Sync Database'}
+              <RefreshCw className={`w-4 h-4 ${dataLoading ? 'animate-spin' : ''}`} />
             </button>
-            <div className="text-[10px] text-neutral-500 font-mono hidden sm:block">
-              <span>Cloudflare D1: heelsup-live</span>
-            </div>
           </div>
         </header>
 

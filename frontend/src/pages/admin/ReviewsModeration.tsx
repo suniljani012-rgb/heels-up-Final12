@@ -152,6 +152,62 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
 
   return (
     <div className="space-y-6 animate-fade-in relative">
+      <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+        <div>
+          <h1 className="text-3xl font-light text-neutral-900 font-display italic">Customer Reviews Moderation</h1>
+          <p className="text-xs text-neutral-500">Approve customer feedback, rating submissions and draft merchant replies</p>
+        </div>
+
+        {/* Filters Toolbar */}
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
+          <div className="flex flex-wrap items-center gap-3 flex-grow max-w-lg">
+            <div className="relative flex-grow">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
+                <Star className="w-4 h-4" />
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search reviewer, product, title details..."
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 focus:outline-none focus:border-amber-500/60"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-neutral-500 uppercase flex items-center gap-1"><Filter className="w-3.5 h-3.5" /> Stars:</span>
+              <select
+                value={filterRating}
+                onChange={e => setFilterRating(Number(e.target.value))}
+                className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
+              >
+                <option value="0">All Ratings</option>
+                <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                <option value="3">⭐⭐⭐ 3 Stars</option>
+                <option value="2">⭐⭐ 2 Stars</option>
+                <option value="1">⭐ 1 Star</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-neutral-500 uppercase">Status:</span>
+              <select
+                value={filterStatus}
+                onChange={e => setFilterStatus(e.target.value as any)}
+                className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
+              >
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending Approval</option>
+                <option value="approved">Approved</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Aggregate review cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white border border-neutral-200/80 p-4 rounded-xl">
@@ -178,55 +234,6 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
           <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Approved reviews</span>
           <span className="block text-base font-bold font-mono text-emerald-700 mt-1">{stats.approved} items</span>
           <span className="text-[7px] text-emerald-500 font-bold uppercase mt-1 block">Live on storefront</span>
-        </div>
-      </div>
-
-      {/* Filters Toolbar */}
-      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3 flex-grow max-w-lg">
-          <div className="relative flex-grow">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
-              <Star className="w-4 h-4" />
-            </span>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search reviewer, product, title details..."
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 focus:outline-none focus:border-amber-500/60"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-neutral-500 uppercase flex items-center gap-1"><Filter className="w-3.5 h-3.5" /> Stars:</span>
-            <select
-              value={filterRating}
-              onChange={e => setFilterRating(Number(e.target.value))}
-              className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
-            >
-              <option value="0">All Ratings</option>
-              <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
-              <option value="4">⭐⭐⭐⭐ 4 Stars</option>
-              <option value="3">⭐⭐⭐ 3 Stars</option>
-              <option value="2">⭐⭐ 2 Stars</option>
-              <option value="1">⭐ 1 Star</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-neutral-500 uppercase">Status:</span>
-            <select
-              value={filterStatus}
-              onChange={e => setFilterStatus(e.target.value as any)}
-              className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
-            >
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending Approval</option>
-              <option value="approved">Approved</option>
-            </select>
-          </div>
         </div>
       </div>
 

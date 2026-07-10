@@ -124,10 +124,10 @@ export default function CategoriesManager({ categories, token, showToast, onRefr
 
   return (
     <div className="space-y-6 text-neutral-900 animate-fade-in relative">
-      <div className="sticky top-16 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+      <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-light text-neutral-900 font-display italic">Categories Manager</h1>
+            <h1 className="text-3xl font-light text-neutral-900 font-display italic">Categories Manager</h1>
             <p className="text-xs text-neutral-500">Classify footwear items into storefront collections</p>
           </div>
           <button
