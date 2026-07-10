@@ -421,54 +421,55 @@ export default function ProductsManager({ products, categories, token, showToast
 
   return (
     <div className="space-y-6 text-neutral-900 animate-fade-in">
-
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-light text-neutral-900 font-display italic">Products Catalog</h1>
-          <p className="text-xs text-neutral-500">Manage individual product style and colorway variants</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={handleDownloadTemplate}
-            className="px-3 py-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all">
-            <Download className="w-3.5 h-3.5" /> CSV Template
-          </button>
-          <button onClick={() => { setShowBulkModal(true); setCsvFile(null); setCsvResult(null); }}
-            className="px-3 py-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all">
-            <FileText className="w-3.5 h-3.5" /> Bulk Import
-          </button>
-          <button onClick={handleOpenAdd}
-            className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all">
-            <Plus className="w-4 h-4" /> Add Product
-          </button>
-        </div>
-      </div>
-
-      {/* Filter Row */}
-      <div className="bg-white border border-neutral-200 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-            <input type="text" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }}
-              placeholder="Search by name, SKU..." className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none" />
+      <div className="sticky top-16 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-light text-neutral-900 font-display italic">Products Catalog</h1>
+            <p className="text-xs text-neutral-500">Manage individual product style and colorway variants</p>
           </div>
-          <select value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setPage(0); }}
-            className="bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-900 focus:outline-none">
-            <option value="">All Categories</option>
-            {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-          </select>
+          <div className="flex items-center gap-2">
+            <button onClick={handleDownloadTemplate}
+              className="px-3 py-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all">
+              <Download className="w-3.5 h-3.5" /> CSV Template
+            </button>
+            <button onClick={() => { setShowBulkModal(true); setCsvFile(null); setCsvResult(null); }}
+              className="px-3 py-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all">
+              <FileText className="w-3.5 h-3.5" /> Bulk Import
+            </button>
+            <button onClick={handleOpenAdd}
+              className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all">
+              <Plus className="w-4 h-4" /> Add Product
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
-          <span className="text-neutral-400">{filteredProducts.length} products</span>
-          <button disabled={page === 0} onClick={() => setPage(p => p - 1)}
-            className="p-1.5 hover:bg-neutral-100 rounded-lg border border-neutral-200 disabled:opacity-30">
-            <ChevronLeft className="w-3.5 h-3.5" />
-          </button>
-          <span>{page + 1} / {Math.ceil(filteredProducts.length / itemsPerPage) || 1}</span>
-          <button disabled={(page + 1) * itemsPerPage >= filteredProducts.length} onClick={() => setPage(p => p + 1)}
-            className="p-1.5 hover:bg-neutral-100 rounded-lg border border-neutral-200 disabled:opacity-30">
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
+
+        {/* Filter Row */}
+        <div className="bg-white border border-neutral-200 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <input type="text" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setPage(0); }}
+                placeholder="Search by name, SKU..." className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none" />
+            </div>
+            <select value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setPage(0); }}
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs text-neutral-900 focus:outline-none">
+              <option value="">All Categories</option>
+              {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
+            <span className="text-neutral-400">{filteredProducts.length} products</span>
+            <button disabled={page === 0} onClick={() => setPage(p => p - 1)}
+              className="p-1.5 hover:bg-neutral-100 rounded-lg border border-neutral-200 disabled:opacity-30">
+              <ChevronLeft className="w-3.5 h-3.5" />
+            </button>
+            <span>{page + 1} / {Math.ceil(filteredProducts.length / itemsPerPage) || 1}</span>
+            <button disabled={(page + 1) * itemsPerPage >= filteredProducts.length} onClick={() => setPage(p => p + 1)}
+              className="p-1.5 hover:bg-neutral-100 rounded-lg border border-neutral-200 disabled:opacity-30">
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </div>
 

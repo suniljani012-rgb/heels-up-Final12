@@ -248,64 +248,66 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
 
   return (
     <div className="space-y-6 text-neutral-900 animate-fade-in relative">
-      <div>
-        <h1 className="text-2xl font-light text-neutral-900 font-display italic">Billing Orders Registry</h1>
-        <p className="text-xs text-neutral-500">Process and fulfill customer retail logs and transaction manifests</p>
-      </div>
-
-      {/* Filter Row */}
-      <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
-        <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
-          <div className="relative flex-1 min-w-[180px]">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
-              placeholder="Search order #, customer..."
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
-            />
-          </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
-            className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
-          >
-            <option value="all">All Statuses</option>
-            <option value="placed">Placed</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <select
-            value={sourceFilter}
-            onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
-            className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
-          >
-            <option value="all">All Channels</option>
-            <option value="web">Web Storefront</option>
-            <option value="pos">In-store POS</option>
-            <option value="whatsapp">WhatsApp Order</option>
-          </select>
+      <div className="sticky top-16 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
+        <div>
+          <h1 className="text-2xl font-light text-neutral-900 font-display italic">Billing Orders Registry</h1>
+          <p className="text-xs text-neutral-500">Process and fulfill customer retail logs and transaction manifests</p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
-          <button
-            disabled={page === 0}
-            onClick={() => setPage(p => p - 1)}
-            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span>{page + 1} / {Math.ceil(filteredOrders.length / itemsPerPage) || 1}</span>
-          <button
-            disabled={(page + 1) * itemsPerPage >= filteredOrders.length}
-            onClick={() => setPage(p => p + 1)}
-            className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+        {/* Filter Row */}
+        <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-md">
+          <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
+                placeholder="Search order #, customer..."
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2 text-xs text-neutral-900 placeholder-neutral-500 focus:outline-none focus:border-primary/50"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
+            >
+              <option value="all">All Statuses</option>
+              <option value="placed">Placed</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <select
+              value={sourceFilter}
+              onChange={(e) => { setSourceFilter(e.target.value); setPage(0); }}
+              className="bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-1.5 text-xs text-neutral-900 focus:outline-none"
+            >
+              <option value="all">All Channels</option>
+              <option value="web">Web Storefront</option>
+              <option value="pos">In-store POS</option>
+              <option value="whatsapp">WhatsApp Order</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-500">
+            <button
+              disabled={page === 0}
+              onClick={() => setPage(p => p - 1)}
+              className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span>{page + 1} / {Math.ceil(filteredOrders.length / itemsPerPage) || 1}</span>
+            <button
+              disabled={(page + 1) * itemsPerPage >= filteredOrders.length}
+              onClick={() => setPage(p => p + 1)}
+              className="p-1 hover:bg-neutral-100 rounded border border-neutral-200 disabled:opacity-30"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
