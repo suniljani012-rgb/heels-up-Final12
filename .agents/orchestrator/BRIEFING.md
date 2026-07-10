@@ -65,7 +65,7 @@ Redesign the HeelsUp Admin Panel and POS terminal according to the requirements 
 
 ## Active Timers
 - Heartbeat cron: task-15
-- Safety timer: task-204
+- Safety timer: task-221
 - On succession: kill all timers before spawning successor
 - On context truncation: run `manage_task(Action="list")` — re-create if missing
 
