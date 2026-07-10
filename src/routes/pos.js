@@ -2,6 +2,15 @@
 import { requireAdmin } from '../middleware/auth.js';
 import { ok, list, created, error, serverError } from '../utils/response.js';
 
+async function getSetting(env, key, fallback = '') {
+    try {
+        const row = await env.DB.prepare('SELECT value FROM settings WHERE key = ?').bind(key).first();
+        return row ? row.value : fallback;
+    } catch {
+        return fallback;
+    }
+}
+
 async function genOrderNumber(env) {
     const today = new Date();
     const prefix = `HU-OFL-${today.getUTCFullYear()}`;
@@ -24,6 +33,40 @@ export async function posRouter(request, env) {
     // Support both /api/admin/pos and /api/pos namespaces
     const path = url.pathname.replace('/api/admin/pos', '').replace('/api/pos', '') || '/';
     const method = request.method;
+
+    // POST /api/pos/initiate-payment — initiate Razorpay payment for POS
+    if (path === '/initiate-payment' && method === 'POST') {
+        const { user, error: authError } = await requireAdmin(request, env);
+        if (authError) return authError;
+        try {
+            const body = await request.json();
+            const amountPaise = Math.round(parseFloat(body.amount) * 100);
+            if (!amountPaise || amountPaise <= 0) return error('Invalid amount');
+
+            const rzpKeyId = String(await getSetting(env, "razorpay_key_id", env.RAZORPAY_KEY_ID || "")).trim();
+            const rzpKeySecret = String(await getSetting(env, "razorpay_key_secret", env.RAZORPAY_KEY_SECRET || "")).trim();
+            if (!rzpKeyId || !rzpKeySecret) return error("Payment gateway not configured. Contact admin.", 503);
+
+            const basicAuth = btoa(`${rzpKeyId}:${rzpKeySecret}`);
+            const rzpRes = await fetch("https://api.razorpay.com/v1/orders", {
+                method: "POST",
+                headers: { Authorization: `Basic ${basicAuth}`, "content-type": "application/json" },
+                body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt: `POS-${Date.now()}` })
+            });
+            if (!rzpRes.ok) {
+                const t = await rzpRes.text();
+                return error("Payment gateway error: " + t, 502);
+            }
+            const rzpOrder = await rzpRes.json();
+            return ok({
+                key: rzpKeyId,
+                razorpayOrder: rzpOrder
+            });
+        } catch (e) {
+            console.error('POS initiate payment error:', e);
+            return serverError('Failed to initiate POS payment');
+        }
+    }
 
     // POST /api/pos/sale — create POS/offline sale
     if (path === '/sale' && method === 'POST') {

@@ -303,49 +303,128 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
 
   const handleCheckout = async () => {
     if (cart.length === 0) { showToast('error', 'Checkout Denied', 'Billing list is empty.'); return; }
-    const channelNotes = saleChannel === 'whatsapp' ? '📱 WhatsApp Sale' : saleChannel === 'instagram' ? '📸 Instagram Sale' : saleChannel === 'phone' ? '📞 Phone Order' : 'In-Store POS Sale';
-    const payload = {
-      customer_name: customerName.trim() || 'Walk-in Customer',
-      customer_phone: customerPhone.trim() || '0000000000',
-      customer_email: customerEmail.trim() || 'pos-customer@heelsup.in',
-      payment_method: paymentMethod,
-      items: cart.map(item => ({
-        product_id: item.product.id,
-        product_name: item.product.name,
-        size: item.size,
-        color: item.color,
-        quantity: item.qty,
-        price: item.customPrice !== undefined ? Math.round(item.customPrice * 100) : item.product.price,
-        sku: item.product.sku,
-        image: item.product.images?.[0] || ''
-      })),
-      subtotal_amount: subtotalPaise / 100,
-      shipping_amount: 0,
-      discount_amount: totalDiscountPaise / 100,
-      total_amount: totalPayablePaise / 100,
-      notes: `${channelNotes} | GST Rate: ${gstRate}%${notes !== 'In-Store POS Sale' ? ' | ' + notes : ''}`,
-      coupon_code: appliedCoupon ? appliedCoupon.code : null,
-      created_at: new Date().toISOString()
-    };
-    try {
-      const res = await fetch('/api/admin/pos/sale', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}` },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.success && data.order) {
-        showToast('success', 'Sale Completed', `Invoice #${data.order.order_number} issued.`);
-        setPrintedOrder(data.order);
-        setCart([]); setCustomerName(''); setCustomerPhone(''); setCustomerEmail('');
-        setCouponCode(''); setAppliedCoupon(null); setCustomDiscount(0);
-        setSaleChannel('in-store');
-        onOrderCreated();
-      } else {
-        showToast('error', 'Checkout Failed', data.error || 'Server rejected POS sale.');
+    
+    const finalizeSale = async (rzpPaymentId?: string) => {
+      const channelNotes = saleChannel === 'whatsapp' ? '📱 WhatsApp Sale' : saleChannel === 'instagram' ? '📸 Instagram Sale' : saleChannel === 'phone' ? '📞 Phone Order' : 'In-Store POS Sale';
+      const paymentNotes = rzpPaymentId ? ` | Razorpay TxID: ${rzpPaymentId}` : '';
+      const payload = {
+        customer_name: customerName.trim() || 'Walk-in Customer',
+        customer_phone: customerPhone.trim() || '0000000000',
+        customer_email: customerEmail.trim() || 'pos-customer@heelsup.in',
+        payment_method: paymentMethod,
+        items: cart.map(item => ({
+          product_id: item.product.id,
+          product_name: item.product.name,
+          size: item.size,
+          color: item.color,
+          quantity: item.qty,
+          price: item.customPrice !== undefined ? Math.round(item.customPrice * 100) : item.product.price,
+          sku: item.product.sku,
+          image: item.product.images?.[0] || ''
+        })),
+        subtotal_amount: subtotalPaise / 100,
+        shipping_amount: 0,
+        discount_amount: totalDiscountPaise / 100,
+        total_amount: totalPayablePaise / 100,
+        notes: `${channelNotes} | GST Rate: ${gstRate}%${notes !== 'In-Store POS Sale' && notes ? ' | ' + notes : ''}${paymentNotes}`,
+        coupon_code: appliedCoupon ? appliedCoupon.code : null,
+        created_at: new Date().toISOString()
+      };
+      try {
+        const res = await fetch('/api/admin/pos/sale', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}` },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success && data.order) {
+          showToast('success', 'Sale Completed', `Invoice #${data.order.order_number} issued.`);
+          setPrintedOrder(data.order);
+          setCart([]); setCustomerName(''); setCustomerPhone(''); setCustomerEmail('');
+          setCouponCode(''); setAppliedCoupon(null); setCustomDiscount(0);
+          setSaleChannel('in-store');
+          onOrderCreated();
+        } else {
+          showToast('error', 'Checkout Failed', data.error || 'Server rejected POS sale.');
+        }
+      } catch {
+        showToast('error', 'Connection Failure', 'Could not record transaction.');
       }
-    } catch {
-      showToast('error', 'Connection Failure', 'Could not record transaction.');
+    };
+
+    if (paymentMethod === 'upi') {
+      try {
+        showToast('info', 'Generating UPI QR', 'Contacting Razorpay Gateway...');
+        // 1. Call POS Payment Initiate API
+        const initRes = await fetch('/api/admin/pos/initiate-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}` },
+          body: JSON.stringify({ amount: totalPayablePaise / 100 })
+        });
+        const initData = await initRes.json();
+        if (!initData.success) {
+          showToast('error', 'Gateway Error', initData.error || 'Failed to initialize payment order.');
+          return;
+        }
+
+        const { key, razorpayOrder } = initData.data;
+
+        // 2. Launch Razorpay with prefilled UPI QR
+        const rzpOptions = {
+          key: key,
+          amount: razorpayOrder.amount,
+          currency: 'INR',
+          name: 'HeelsUp Boutique POS',
+          description: `POS Bill Amount: ₹${(totalPayablePaise / 100).toFixed(2)}`,
+          image: '/logo.png',
+          order_id: razorpayOrder.id,
+          prefill: {
+            name: customerName.trim() || 'POS Customer',
+            contact: customerPhone.trim() || '9999999999',
+            email: customerEmail.trim() || 'pos-customer@heelsup.in',
+            method: 'upi'
+          },
+          config: {
+            display: {
+              blocks: {
+                banks: {
+                  name: 'Scan & Pay UPI QR',
+                  instruments: [
+                    {
+                      method: 'upi',
+                      flows: ['qr']
+                    }
+                  ]
+                }
+              },
+              sequence: ['block.banks'],
+              preferences: {
+                show_default_blocks: false
+              }
+            }
+          },
+          theme: {
+            color: '#2563eb'
+          },
+          handler: async function (response: any) {
+            showToast('success', 'UPI Payment Received', `Razorpay ID: ${response.razorpay_payment_id}`);
+            await finalizeSale(response.razorpay_payment_id);
+          },
+          modal: {
+            ondismiss: function () {
+              showToast('warning', 'Payment Cancelled', 'Merchant cancelled the Razorpay window.');
+            }
+          }
+        };
+
+        const rzp = new (window as any).Razorpay(rzpOptions);
+        rzp.open();
+      } catch (e) {
+        showToast('error', 'Razorpay Failure', 'Could not open UPI payment interface.');
+      }
+    } else {
+      // Direct offline sale for cash/card/etc.
+      await finalizeSale();
     }
   };
 
