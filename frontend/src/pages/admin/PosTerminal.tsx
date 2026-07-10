@@ -1,11 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   ShoppingCart, Search, Trash2, Plus, X, Printer, User, DollarSign,
-  MessageCircle, CreditCard, Banknote, Smartphone, CheckCircle2, Package
+  MessageCircle, CreditCard, Banknote, Smartphone, CheckCircle2, Package,
+  ChevronDown, ArrowRight
 } from 'lucide-react';
 import HeicImage from '../../components/HeicImage';
 
-// Instagram SVG icon (lucide-react may not have Instagram in older versions)
+// Instagram SVG icon
 const InstagramIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
@@ -33,6 +34,7 @@ interface Product {
   sizes: string[];
   colors?: string[];
   color_variants?: ColorVariant[];
+  size_stock?: { size_label: string; stock: number }[];
 }
 
 interface PosTerminalProps {
@@ -47,17 +49,27 @@ type PaymentMethod = 'cash' | 'upi' | 'card' | 'whatsapp' | 'instagram';
 type SaleChannel = 'in-store' | 'whatsapp' | 'instagram' | 'phone';
 
 export default function PosTerminal({ products, categories, coupons, showToast, onOrderCreated }: PosTerminalProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  // Cart/Billing list state
   const [cart, setCart] = useState<{ product: Product; size: string; color: string; qty: number; customPrice?: number }[]>([]);
 
-  // Customer
+  // Item selector form states
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [searchProductQuery, setSearchProductQuery] = useState('');
+  const [showProductDropdown, setShowProductDropdown] = useState(false);
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
+  const [itemPriceOverride, setItemPriceOverride] = useState('');
+  const [itemQty, setItemQty] = useState(1);
+
+  const productDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Customer info
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [saleChannel, setSaleChannel] = useState<SaleChannel>('in-store');
 
-  // Financials
+  // Billing and discounts
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null);
   const [customDiscount, setCustomDiscount] = useState<number>(0);
@@ -65,41 +77,85 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [notes, setNotes] = useState('In-Store POS Sale');
 
-  // Drawer
+  // Drawer float and drops
   const [drawerStartCash, setDrawerStartCash] = useState<number>(5000);
   const [cashDrops, setCashDrops] = useState<{ amount: number; reason: string; time: string }[]>([]);
   const [dropAmount, setDropAmount] = useState<number>(0);
   const [dropReason, setDropReason] = useState('');
   const [showDrawerManager, setShowDrawerManager] = useState(false);
 
-  // Size + Color Selection Modal
-  const [activeSizeProduct, setActiveSizeProduct] = useState<Product | null>(null);
-  const [selectedSize, setSelectedSize] = useState<string>('');
-  const [selectedColor, setSelectedColor] = useState<string>('');
-
-  // Derived: available sizes for selected color
-  const availableSizesForColor = useMemo(() => {
-    if (!activeSizeProduct) return [];
-    if (activeSizeProduct.color_variants && activeSizeProduct.color_variants.length > 0 && selectedColor) {
-      const cv = activeSizeProduct.color_variants.find(v => v.color === selectedColor);
-      if (cv) return cv.size_stock.filter(ss => ss.stock > 0).map(ss => ss.size_label);
-      return [];
-    }
-    return activeSizeProduct.sizes || [];
-  }, [activeSizeProduct, selectedColor]);
-
-  // Invoice
+  // Print invoice modal state
   const [printedOrder, setPrintedOrder] = useState<any | null>(null);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(p => {
-      if (!p.active) return false;
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.sku.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCat = selectedCategory ? p.category === selectedCategory : true;
-      return matchesSearch && matchesCat;
-    });
-  }, [products, searchQuery, selectedCategory]);
+  // Filter products for the searchable dropdown
+  const filteredProductOptions = useMemo(() => {
+    if (!searchProductQuery.trim()) {
+      return products.filter(p => p.active);
+    }
+    const q = searchProductQuery.toLowerCase();
+    return products.filter(p => p.active && (p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)));
+  }, [products, searchProductQuery]);
 
+  // Derived colors for the selected product
+  const availableColors = useMemo(() => {
+    if (!selectedProduct) return [];
+    if (selectedProduct.color_variants && selectedProduct.color_variants.length > 0) {
+      return selectedProduct.color_variants.map(cv => cv.color);
+    }
+    return selectedProduct.colors || [];
+  }, [selectedProduct]);
+
+  // Derived sizes & stocks based on selected product and selected color
+  const sizeStockOptions = useMemo(() => {
+    if (!selectedProduct) return [];
+    if (selectedProduct.color_variants && selectedProduct.color_variants.length > 0) {
+      const cv = selectedProduct.color_variants.find(v => v.color === selectedColor);
+      return cv ? cv.size_stock : [];
+    }
+    // Fallback: If no color_variants, return size_stock from main product
+    return selectedProduct.sizes.map(sz => {
+      const found = selectedProduct.size_stock?.find((ss: any) => ss.size_label === sz);
+      return { size_label: sz, stock: found ? found.stock : 99 };
+    });
+  }, [selectedProduct, selectedColor]);
+
+  // Auto-fill color and size when product changes
+  useEffect(() => {
+    if (selectedProduct) {
+      const defaultColor = availableColors[0] || '';
+      setSelectedColor(defaultColor);
+      setItemPriceOverride((selectedProduct.price / 100).toString());
+    } else {
+      setSelectedColor('');
+      setSelectedSize('');
+      setItemPriceOverride('');
+    }
+    setItemQty(1);
+  }, [selectedProduct, availableColors]);
+
+  // Auto-fill size when color changes
+  useEffect(() => {
+    if (sizeStockOptions.length > 0) {
+      // Find first size with stock > 0, otherwise first size
+      const instock = sizeStockOptions.find(opt => opt.stock > 0);
+      setSelectedSize(instock ? instock.size_label : sizeStockOptions[0].size_label);
+    } else {
+      setSelectedSize('');
+    }
+  }, [selectedColor, sizeStockOptions]);
+
+  // Handle outside click for product dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (productDropdownRef.current && !productDropdownRef.current.contains(event.target as Node)) {
+        setShowProductDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Financial calculations
   const subtotalPaise = useMemo(() =>
     cart.reduce((sum, item) => {
       const price = item.customPrice !== undefined ? item.customPrice * 100 : item.product.price;
@@ -127,44 +183,80 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
     return drawerStartCash + totalCashSales + drops;
   }, [drawerStartCash, cashDrops]);
 
-  const handleProductClick = (p: Product) => {
-    setActiveSizeProduct(p);
-    // Default to first color variant or first color
-    const firstColor = p.color_variants?.[0]?.color || p.colors?.[0] || '';
-    setSelectedColor(firstColor);
-    // Default to first in-stock size for that color
-    if (p.color_variants && p.color_variants.length > 0) {
-      const cv = p.color_variants.find(v => v.color === firstColor);
-      const firstInStockSize = cv?.size_stock.find(ss => ss.stock > 0)?.size_label || '';
-      setSelectedSize(firstInStockSize);
-    } else {
-      setSelectedSize(p.sizes?.[0] || '');
+  // Add selected item to billing list (cart)
+  const handleAddItemToBill = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct) {
+      showToast('error', 'Select Product', 'Please select a product first.');
+      return;
     }
-  };
+    if (!selectedSize) {
+      showToast('error', 'Select Size', 'Please select a valid size.');
+      return;
+    }
 
-  const handleConfirmAddToCart = () => {
-    if (!activeSizeProduct) return;
-    if (!selectedSize) { showToast('warning', 'Select Size', 'Please select a size before adding to cart.'); return; }
+    // Check stock availability
+    const variantOpt = sizeStockOptions.find(opt => opt.size_label === selectedSize);
+    const availableStock = variantOpt ? variantOpt.stock : 0;
+    if (availableStock < itemQty) {
+      showToast('warning', 'Low Stock', `Only ${availableStock} units available for this selection.`);
+      return;
+    }
+
+    const priceOverrideNum = parseFloat(itemPriceOverride);
+    const hasOverride = !isNaN(priceOverrideNum) && priceOverrideNum !== (selectedProduct.price / 100);
+
     const existingIdx = cart.findIndex(item =>
-      item.product.id === activeSizeProduct.id &&
+      item.product.id === selectedProduct.id &&
       item.size === selectedSize &&
       item.color === selectedColor
     );
+
     if (existingIdx > -1) {
       const updated = [...cart];
-      updated[existingIdx].qty += 1;
+      const newQty = updated[existingIdx].qty + itemQty;
+      if (availableStock < newQty) {
+        showToast('error', 'Limit Exceeded', `Cannot add more. Max stock is ${availableStock}.`);
+        return;
+      }
+      updated[existingIdx].qty = newQty;
+      if (hasOverride) updated[existingIdx].customPrice = priceOverrideNum;
       setCart(updated);
     } else {
-      setCart(prev => [...prev, { product: activeSizeProduct, size: selectedSize, color: selectedColor, qty: 1 }]);
+      setCart(prev => [...prev, {
+        product: selectedProduct,
+        size: selectedSize,
+        color: selectedColor,
+        qty: itemQty,
+        customPrice: hasOverride ? priceOverrideNum : undefined
+      }]);
     }
-    setActiveSizeProduct(null);
-    showToast('success', 'Added to Cart', `${activeSizeProduct.name} (Size ${selectedSize}) added.`);
+
+    showToast('success', 'Added', `${selectedProduct.name} added to bill.`);
+    // Reset product selection
+    setSelectedProduct(null);
+    setSearchProductQuery('');
   };
 
   const updateQty = (idx: number, delta: number) => {
     const updated = [...cart];
-    updated[idx].qty += delta;
-    if (updated[idx].qty <= 0) updated.splice(idx, 1);
+    const item = updated[idx];
+    
+    // Check stock
+    const cv = item.product.color_variants?.find(v => v.color === item.color);
+    const variantOpt = cv ? cv.size_stock.find(ss => ss.size_label === item.size) : null;
+    const availableStock = variantOpt ? variantOpt.stock : 99;
+
+    const newQty = item.qty + delta;
+    if (newQty <= 0) {
+      updated.splice(idx, 1);
+    } else {
+      if (newQty > availableStock) {
+        showToast('warning', 'Low Stock', `Only ${availableStock} units are in stock.`);
+        return;
+      }
+      updated[idx].qty = newQty;
+    }
     setCart(updated);
   };
 
@@ -201,17 +293,16 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
     showToast('info', 'Cash Outflow Registered', 'Safe drop transaction recorded.');
   };
 
-  // WhatsApp share link
   const handleShareWhatsApp = () => {
     if (cart.length === 0) { showToast('error', 'Empty Cart', 'Add products before sharing.'); return; }
-    const items = cart.map(item => `• ${item.product.name} (Size: ${item.size}) x${item.qty} — ₹${((item.customPrice ?? item.product.price / 100) * item.qty).toFixed(0)}`).join('\n');
+    const items = cart.map(item => `• ${item.product.name} (${item.color && item.color + ' · '}Size: ${item.size}) x${item.qty} — ₹${((item.customPrice ?? item.product.price / 100) * item.qty).toFixed(0)}`).join('\n');
     const msg = `*HeelsUp Order Summary*\n\nCustomer: ${customerName || 'Walk-in'}\n\n${items}\n\n*Total: ₹${(totalPayablePaise / 100).toFixed(0)}*\n\nThank you for choosing HeelsUp! 👟`;
     const url = `https://wa.me/${customerPhone ? '91' + customerPhone : ''}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
   };
 
   const handleCheckout = async () => {
-    if (cart.length === 0) { showToast('error', 'Checkout Denied', 'Cart is empty.'); return; }
+    if (cart.length === 0) { showToast('error', 'Checkout Denied', 'Billing list is empty.'); return; }
     const channelNotes = saleChannel === 'whatsapp' ? '📱 WhatsApp Sale' : saleChannel === 'instagram' ? '📸 Instagram Sale' : saleChannel === 'phone' ? '📞 Phone Order' : 'In-Store POS Sale';
     const payload = {
       customer_name: customerName.trim() || 'Walk-in Customer',
@@ -222,6 +313,7 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
         product_id: item.product.id,
         product_name: item.product.name,
         size: item.size,
+        color: item.color,
         quantity: item.qty,
         price: item.customPrice !== undefined ? Math.round(item.customPrice * 100) : item.product.price,
         sku: item.product.sku,
@@ -272,13 +364,13 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
   };
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-5 animate-fade-in text-neutral-900">
 
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-neutral-200 p-5 rounded-2xl shadow-sm">
         <div>
           <h2 className="text-lg font-bold text-neutral-900 font-display italic">POS Terminal</h2>
-          <p className="text-[10px] text-neutral-500 font-medium">In-store & social commerce billing · Cash register & invoice</p>
+          <p className="text-[10px] text-neutral-500 font-medium">Traditional Quick Invoice and Sales Ledger Billing</p>
         </div>
 
         {/* Sale Channel Selector */}
@@ -301,347 +393,351 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
 
         <button
           onClick={() => setShowDrawerManager(!showDrawerManager)}
-          className="px-4 py-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+          className="px-4 py-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-800 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
         >
           <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
           Drawer: ₹{currentDrawerCash.toFixed(0)}
         </button>
       </div>
 
-      {/* Main POS Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-
-        {/* LEFT: Product Catalog (8 cols) */}
-        <div className="xl:col-span-8 space-y-4">
-          <div className="bg-white border border-neutral-200 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-12 gap-3 shadow-sm">
-            <div className="md:col-span-8 relative">
-              <Search className="absolute inset-y-0 left-3 h-full w-4 text-neutral-400 flex items-center" />
-              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Scan barcode or type name / SKU..."
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-neutral-400" />
-            </div>
-            <div className="md:col-span-4">
-              <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2.5 text-xs text-neutral-900 focus:outline-none">
-                <option value="">All Categories</option>
-                {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto pr-1">
-            {filteredProducts.length === 0 ? (
-              <div className="col-span-full py-16 text-center text-xs text-neutral-400 border border-dashed border-neutral-200 rounded-2xl">
-                No matching products found.
-              </div>
-            ) : (
-              filteredProducts.map(p => {
-                const priceRs = (p.price / 100).toLocaleString('en-IN');
-                return (
-                  <div key={p.id} onClick={() => handleProductClick(p)}
-                    className="bg-white border border-neutral-200 rounded-xl p-3 flex flex-col justify-between hover:border-neutral-400 hover:shadow-md transition-all cursor-pointer group">
-                    <div className="aspect-square bg-neutral-50 border border-neutral-100 rounded-lg overflow-hidden flex items-center justify-center relative mb-2.5">
-                      <HeicImage src={p.images?.[0] || ''} alt={p.name} className="max-w-full max-h-full object-contain" />
-                      {p.stock <= 2 && (
-                        <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-rose-50 border border-rose-200 rounded text-[8px] font-bold text-rose-600 uppercase">
-                          Low ({p.stock})
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-wider block mb-0.5 font-mono">{p.sku}</span>
-                      <h4 className="text-[10px] font-semibold text-neutral-900 group-hover:text-neutral-700 transition-colors line-clamp-2 leading-tight">{p.name}</h4>
-                      <div className="flex justify-between items-center mt-1.5">
-                        <span className="text-[11px] font-bold text-neutral-900 font-mono">₹{priceRs}</span>
-                        <span className="text-[8px] text-neutral-400 font-semibold">{p.category}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* RIGHT: Cart & Checkout (4 cols) */}
-        <div className="xl:col-span-4 bg-white border border-neutral-200 rounded-2xl shadow-sm overflow-hidden">
-          {/* Cart Header */}
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-neutral-200 bg-neutral-50">
-            <h3 className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
-              <ShoppingCart className="w-4 h-4 text-neutral-600" />
-              Cart ({cart.length} items)
+      {/* Main Billing Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        
+        {/* LEFT: Product Selection & Bill Table (8 cols) */}
+        <div className="lg:col-span-8 space-y-4">
+          
+          {/* Product Selection Form */}
+          <div className="bg-white border border-neutral-200 p-5 rounded-2xl shadow-sm space-y-4">
+            <h3 className="text-xs font-bold text-neutral-800 uppercase tracking-wider border-b border-neutral-100 pb-2">
+              Select Product & Variant
             </h3>
-            {cart.length > 0 && (
-              <button onClick={() => setCart([])} className="text-[9px] font-bold text-rose-500 hover:text-rose-600 uppercase tracking-wider">
-                Clear All
-              </button>
-            )}
-          </div>
+            
+            <form onSubmit={handleAddItemToBill} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+              {/* Dropdown search for Product */}
+              <div className="md:col-span-5 relative" ref={productDropdownRef}>
+                <label className="block text-[9px] font-bold text-neutral-500 uppercase mb-1">Search & Select Product</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Type name or SKU..."
+                    value={selectedProduct ? `${selectedProduct.name} (${selectedProduct.sku})` : searchProductQuery}
+                    onChange={(e) => {
+                      if (selectedProduct) setSelectedProduct(null);
+                      setSearchProductQuery(e.target.value);
+                      setShowProductDropdown(true);
+                    }}
+                    onFocus={() => setShowProductDropdown(true)}
+                    className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-3 pr-8 py-2 text-xs font-semibold focus:outline-none focus:border-neutral-400"
+                  />
+                  <ChevronDown className="w-4 h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
+                  
+                  {selectedProduct && (
+                    <button
+                      type="button"
+                      onClick={() => { setSelectedProduct(null); setSearchProductQuery(''); }}
+                      className="absolute right-8 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-rose-500"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
 
-          <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
-            {/* Cart Items */}
-            <div className="space-y-2.5 min-h-[80px]">
-              {cart.length === 0 ? (
-                <div className="py-10 text-center text-xs text-neutral-400">Select products to add to cart</div>
-              ) : (
-                cart.map((item, idx) => {
-                  const itemPrice = item.customPrice !== undefined ? item.customPrice : item.product.price / 100;
-                  return (
-                    <div key={`${item.product.id}-${item.size}`} className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2 relative">
-                      <button onClick={() => removeFromCart(idx)} className="absolute top-2 right-2 text-neutral-400 hover:text-rose-500 transition-colors">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                      <div className="flex gap-2.5 pr-5">
-                        <div className="w-9 h-9 bg-white border border-neutral-200 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
-                          <HeicImage src={item.product.images?.[0]} alt="" className="w-full h-full object-contain" />
+                {showProductDropdown && (
+                  <div className="absolute left-0 right-0 mt-1.5 max-h-60 overflow-y-auto bg-white border border-neutral-200 rounded-xl shadow-xl z-20 divide-y divide-neutral-50">
+                    {filteredProductOptions.length === 0 ? (
+                      <div className="p-3 text-center text-xs text-neutral-400 italic">No products found</div>
+                    ) : (
+                      filteredProductOptions.map(p => (
+                        <div
+                          key={p.id}
+                          onClick={() => {
+                            setSelectedProduct(p);
+                            setShowProductDropdown(false);
+                          }}
+                          className="p-3 hover:bg-neutral-50 cursor-pointer flex items-center justify-between text-xs transition-colors"
+                        >
+                          <div className="font-semibold text-neutral-800">
+                            {p.name}
+                            <span className="block text-[9px] font-mono text-neutral-400 uppercase mt-0.5">{p.sku}</span>
+                          </div>
+                          <span className="font-bold text-neutral-900 font-mono">₹{(p.price / 100).toFixed(0)}</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-[10px] font-semibold text-neutral-900 truncate">{item.product.name}</h4>
-                          <span className="text-[8px] text-neutral-500 font-mono uppercase block">{item.color && `${item.color} · `}UK {item.size} · {item.product.sku}</span>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center pt-1 border-t border-neutral-100">
-                        <div className="flex items-center gap-1">
-                          <span className="text-[8px] text-neutral-400 uppercase font-semibold">Override ₹</span>
-                          <input type="number" step="0.01"
-                            placeholder={(item.product.price / 100).toString()}
-                            value={item.customPrice !== undefined ? item.customPrice : ''}
-                            onChange={e => updateCustomPrice(idx, e.target.value)}
-                            className="w-16 bg-white border border-neutral-200 rounded-lg px-1.5 py-0.5 text-[10px] text-right font-mono text-neutral-900 focus:outline-none" />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => updateQty(idx, -1)}
-                            className="w-6 h-6 bg-white hover:bg-neutral-100 border border-neutral-200 rounded-lg flex items-center justify-center text-neutral-600 transition-colors">
-                            <span className="font-bold text-xs leading-none">−</span>
-                          </button>
-                          <span className="text-[10px] font-bold text-neutral-900 font-mono w-4 text-center">{item.qty}</span>
-                          <button onClick={() => updateQty(idx, 1)}
-                            className="w-6 h-6 bg-white hover:bg-neutral-100 border border-neutral-200 rounded-lg flex items-center justify-center text-neutral-600 transition-colors">
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </div>
-                        <span className="text-[10px] font-bold text-neutral-900 font-mono">₹{(itemPrice * item.qty).toFixed(0)}</span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Customer */}
-            <div className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2.5">
-              <span className="block text-[9px] font-bold text-neutral-600 uppercase tracking-wider flex items-center gap-1">
-                <User className="w-3 h-3" /> Customer Info
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <input type="text" placeholder="Customer Name" value={customerName} onChange={e => setCustomerName(e.target.value)}
-                  className="bg-white border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[10px] text-neutral-900 focus:outline-none col-span-2" />
-                <input type="text" placeholder="Phone (+91...)" maxLength={10} value={customerPhone} onChange={e => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
-                  className="bg-white border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[10px] text-neutral-900 focus:outline-none font-mono" />
-                <input type="email" placeholder="Email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)}
-                  className="bg-white border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[10px] text-neutral-900 focus:outline-none" />
+                      ))
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* WhatsApp Quick Share */}
-              {(saleChannel === 'whatsapp' || saleChannel === 'instagram') && (
-                <button
-                  onClick={handleShareWhatsApp}
-                  className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${saleChannel === 'whatsapp' ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'}`}
+              {/* Color Dropdown */}
+              <div className="md:col-span-2">
+                <label className="block text-[9px] font-bold text-neutral-500 uppercase mb-1">Color</label>
+                <select
+                  disabled={!selectedProduct || availableColors.length === 0}
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-2 text-xs font-semibold text-neutral-800 focus:outline-none disabled:opacity-50"
                 >
-                  {saleChannel === 'whatsapp' ? <MessageCircle className="w-3.5 h-3.5" /> : <InstagramIcon className="w-3.5 h-3.5" />}
-                  Share Cart via {saleChannel === 'whatsapp' ? 'WhatsApp' : 'Instagram'}
+                  {availableColors.length === 0 && <option value="">N/A</option>}
+                  {availableColors.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              {/* Size Dropdown */}
+              <div className="md:col-span-2">
+                <label className="block text-[9px] font-bold text-neutral-500 uppercase mb-1">Size & Stock</label>
+                <select
+                  disabled={!selectedProduct || sizeStockOptions.length === 0}
+                  value={selectedSize}
+                  onChange={(e) => setSelectedSize(e.target.value)}
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-2 py-2 text-xs font-semibold text-neutral-800 focus:outline-none disabled:opacity-50"
+                >
+                  {sizeStockOptions.length === 0 && <option value="">N/A</option>}
+                  {sizeStockOptions.map(opt => (
+                    <option key={opt.size_label} value={opt.size_label}>
+                      UK {opt.size_label} ({opt.stock} left)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Price Override Input */}
+              <div className="md:col-span-2">
+                <label className="block text-[9px] font-bold text-neutral-500 uppercase mb-1">Price (₹)</label>
+                <input
+                  type="number"
+                  disabled={!selectedProduct}
+                  value={itemPriceOverride}
+                  onChange={(e) => setItemPriceOverride(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs font-mono text-right text-neutral-900 focus:outline-none disabled:opacity-50"
+                />
+              </div>
+
+              {/* Qty and Submit */}
+              <div className="md:col-span-1">
+                <button
+                  type="submit"
+                  disabled={!selectedProduct}
+                  className="w-full py-2 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl flex items-center justify-center transition-colors active:scale-95 disabled:opacity-50 shadow-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Billing List Table */}
+          <div className="bg-white border border-neutral-200 rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-neutral-100 flex items-center justify-between bg-neutral-50/50">
+              <h3 className="text-xs font-bold text-neutral-900 flex items-center gap-1.5 uppercase tracking-wider">
+                Invoice items ({cart.length})
+              </h3>
+              {cart.length > 0 && (
+                <button onClick={() => setCart([])} className="text-[9px] font-bold text-rose-500 hover:text-rose-600 uppercase tracking-widest">
+                  Clear All
                 </button>
               )}
             </div>
 
-            {/* Coupons & Discount */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Promo Code</label>
-                <div className="flex gap-1.5">
-                  <input type="text" placeholder="CODE" value={couponCode} onChange={e => setCouponCode(e.target.value)}
-                    className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-[10px] uppercase text-neutral-900 focus:outline-none font-mono" />
-                  <button onClick={handleApplyCoupon}
-                    className="px-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-[9px] font-bold whitespace-nowrap transition-colors">
-                    Apply
-                  </button>
-                </div>
-                {appliedCoupon && (
-                  <p className="text-[9px] text-emerald-600 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> {appliedCoupon.code} applied
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1">
-                <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Manual Discount (₹)</label>
-                <input type="number" placeholder="0" value={customDiscount || ''}
-                  onChange={e => setCustomDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-1.5 text-[10px] text-right text-neutral-900 focus:outline-none font-mono" />
-              </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-100 font-mono text-[9px] uppercase tracking-wider">
+                    <th className="p-3.5">Product Description</th>
+                    <th className="p-3.5 w-32">Unit Price (₹)</th>
+                    <th className="p-3.5 w-32 text-center">Quantity</th>
+                    <th className="p-3.5 w-32 text-right">Subtotal</th>
+                    <th className="p-3.5 w-16 text-right"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {cart.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-16 text-center text-neutral-400 italic">
+                        Select a product above to build your invoice
+                      </td>
+                    </tr>
+                  ) : (
+                    cart.map((item, idx) => {
+                      const itemPrice = item.customPrice !== undefined ? item.customPrice : item.product.price / 100;
+                      return (
+                        <tr key={`${item.product.id}-${item.size}-${item.color}`} className="hover:bg-neutral-50/40">
+                          <td className="p-3.5">
+                            <div className="flex items-center gap-3">
+                              {item.product.images?.[0] && (
+                                <div className="w-9 h-9 border border-neutral-200 rounded-lg overflow-hidden flex items-center justify-center shrink-0">
+                                  <HeicImage src={item.product.images[0]} className="w-full h-full object-contain" />
+                                </div>
+                              )}
+                              <div>
+                                <span className="font-bold text-neutral-900 block">{item.product.name}</span>
+                                <span className="text-[9px] text-neutral-500 font-mono block mt-0.5">
+                                  SKU: {item.product.sku} {item.color && `· Color: ${item.color}`} · Size: UK {item.size}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3.5">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.customPrice !== undefined ? item.customPrice : ''}
+                              placeholder={(item.product.price / 100).toString()}
+                              onChange={e => updateCustomPrice(idx, e.target.value)}
+                              className="w-24 bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1 text-xs text-right font-mono text-neutral-900 focus:outline-none"
+                            />
+                          </td>
+                          <td className="p-3.5">
+                            <div className="flex items-center justify-center gap-2">
+                              <button onClick={() => updateQty(idx, -1)}
+                                className="w-6 h-6 bg-white hover:bg-neutral-100 border border-neutral-200 rounded-lg flex items-center justify-center text-neutral-600 transition-colors">
+                                <span className="font-bold text-xs leading-none">−</span>
+                              </button>
+                              <span className="text-xs font-bold text-neutral-900 font-mono w-5 text-center">{item.qty}</span>
+                              <button onClick={() => updateQty(idx, 1)}
+                                className="w-6 h-6 bg-white hover:bg-neutral-100 border border-neutral-200 rounded-lg flex items-center justify-center text-neutral-600 transition-colors">
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </td>
+                          <td className="p-3.5 text-right font-mono font-bold text-neutral-900 text-xs">
+                            ₹{(itemPrice * item.qty).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="p-3.5 text-right">
+                            <button onClick={() => removeFromCart(idx)} className="text-neutral-400 hover:text-rose-500 p-1 rounded transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-
-            {/* Tax & Payment */}
-            <div className="grid grid-cols-2 gap-2.5 border-t border-neutral-100 pt-3">
-              <div className="space-y-1">
-                <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">GST Slab</label>
-                <select value={gstRate} onChange={e => setGstRate(Number(e.target.value))}
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-[10px] text-neutral-900 focus:outline-none">
-                  <option value="0">0% Exempt</option>
-                  <option value="5">5% GST (Flat)</option>
-                  <option value="12">12% GST (Standard)</option>
-                  <option value="18">18% GST (Luxury)</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Payment Mode</label>
-                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-[10px] text-neutral-900 focus:outline-none">
-                  <option value="cash">💵 Cash</option>
-                  <option value="upi">📱 UPI / QR</option>
-                  <option value="card">💳 Card</option>
-                  <option value="whatsapp">📩 WhatsApp Pay</option>
-                  <option value="instagram">📸 Instagram Pay</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Order Notes</label>
-              <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-1.5 text-[10px] text-neutral-900 focus:outline-none" />
-            </div>
-
-            {/* Receipt Summary */}
-            <div className="bg-neutral-50 border border-neutral-200 p-3 rounded-xl space-y-1.5 text-[10px] font-mono">
-              <div className="flex justify-between text-neutral-500">
-                <span>Subtotal</span><span>₹{(subtotalPaise / 100).toFixed(2)}</span>
-              </div>
-              {totalDiscountPaise > 0 && (
-                <div className="flex justify-between text-rose-500 font-bold">
-                  <span>Discount</span><span>-₹{(totalDiscountPaise / 100).toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-neutral-400 text-[9px]">
-                <span>Base Value</span><span>₹{(baseAmountPaise / 100).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-neutral-400 text-[9px]">
-                <span>GST ({gstRate}%) incl.</span><span>₹{(gstAmountPaise / 100).toFixed(2)}</span>
-              </div>
-              <div className="border-t border-neutral-200 pt-1.5 flex justify-between text-xs font-bold text-neutral-900">
-                <span>NET PAYABLE</span><span>₹{(totalPayablePaise / 100).toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Checkout Button */}
-            <button onClick={handleCheckout} disabled={cart.length === 0}
-              className={`w-full py-3.5 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all shadow-md active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2 ${saleChannel === 'whatsapp' ? 'bg-emerald-600 hover:bg-emerald-700' : saleChannel === 'instagram' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : 'bg-neutral-900 hover:bg-neutral-100'}`}>
-              {paymentIcons[paymentMethod]}
-              {saleChannel === 'whatsapp' ? 'Confirm WhatsApp Sale' : saleChannel === 'instagram' ? 'Confirm Instagram Sale' : 'Complete Sale'}
-            </button>
           </div>
+        </div>
+
+        {/* RIGHT: Checkout & Summary Panel (4 cols) */}
+        <div className="lg:col-span-4 bg-white border border-neutral-200 rounded-2xl shadow-sm p-4 space-y-4">
+          
+          {/* Customer */}
+          <div className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2.5">
+            <span className="block text-[9px] font-bold text-neutral-700 uppercase tracking-wider flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5" /> Customer details
+            </span>
+            <div className="space-y-2">
+              <input type="text" placeholder="Customer Name" value={customerName} onChange={e => setCustomerName(e.target.value)}
+                className="w-full bg-white border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs text-neutral-900 focus:outline-none" />
+              <div className="grid grid-cols-2 gap-2">
+                <input type="text" placeholder="Phone (+91...)" maxLength={10} value={customerPhone} onChange={e => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
+                  className="bg-white border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs text-neutral-900 focus:outline-none font-mono" />
+                <input type="email" placeholder="Email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)}
+                  className="bg-white border border-neutral-200 rounded-lg px-2.5 py-1.5 text-xs text-neutral-900 focus:outline-none" />
+              </div>
+            </div>
+
+            {/* Social quick share links */}
+            {(saleChannel === 'whatsapp' || saleChannel === 'instagram') && (
+              <button
+                onClick={handleShareWhatsApp}
+                className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${saleChannel === 'whatsapp' ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'}`}
+              >
+                {saleChannel === 'whatsapp' ? <MessageCircle className="w-3.5 h-3.5" /> : <InstagramIcon className="w-3.5 h-3.5" />}
+                Share Cart via {saleChannel === 'whatsapp' ? 'WhatsApp' : 'Instagram'}
+              </button>
+            )}
+          </div>
+
+          {/* Coupons & Manual Discount */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-1">
+              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Promo Coupon</label>
+              <div className="flex gap-1.5">
+                <input type="text" placeholder="CODE" value={couponCode} onChange={e => setCouponCode(e.target.value)}
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-[10px] uppercase text-neutral-900 focus:outline-none font-mono" />
+                <button onClick={handleApplyCoupon}
+                  className="px-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-[9px] font-bold whitespace-nowrap transition-colors">
+                  Apply
+                </button>
+              </div>
+              {appliedCoupon && (
+                <p className="text-[9px] text-emerald-600 font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> {appliedCoupon.code} active
+                </p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Discount (₹)</label>
+              <input type="number" placeholder="0" value={customDiscount || ''}
+                onChange={e => setCustomDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-1.5 text-xs text-right text-neutral-900 focus:outline-none font-mono" />
+            </div>
+          </div>
+
+          {/* GST Slab & Payment Mode */}
+          <div className="grid grid-cols-2 gap-2.5 border-t border-neutral-100 pt-3">
+            <div className="space-y-1">
+              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">GST Slab</label>
+              <select value={gstRate} onChange={e => setGstRate(Number(e.target.value))}
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-xs text-neutral-900 focus:outline-none">
+                <option value="0">0% Exempt</option>
+                <option value="5">5% GST (Flat)</option>
+                <option value="12">12% GST (Standard)</option>
+                <option value="18">18% GST (Luxury)</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Payment Mode</label>
+              <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-xs text-neutral-900 focus:outline-none">
+                <option value="cash">💵 Cash</option>
+                <option value="upi">📱 UPI / QR</option>
+                <option value="card">💳 Card</option>
+                <option value="whatsapp">📩 WhatsApp Pay</option>
+                <option value="instagram">📸 Instagram Pay</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Order Notes</label>
+            <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
+              className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-1.5 text-xs text-neutral-900 focus:outline-none" />
+          </div>
+
+          {/* Summary */}
+          <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl space-y-2 text-xs font-mono">
+            <div className="flex justify-between text-neutral-500">
+              <span>Subtotal</span><span>₹{(subtotalPaise / 100).toFixed(2)}</span>
+            </div>
+            {totalDiscountPaise > 0 && (
+              <div className="flex justify-between text-rose-500 font-bold">
+                <span>Discount</span><span>-₹{(totalDiscountPaise / 100).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-neutral-400 text-[11px]">
+              <span>Base Value</span><span>₹{(baseAmountPaise / 100).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-neutral-400 text-[11px]">
+              <span>GST ({gstRate}%) incl.</span><span>₹{(gstAmountPaise / 100).toFixed(2)}</span>
+            </div>
+            <div className="border-t border-neutral-200 pt-2 flex justify-between text-sm font-bold text-neutral-900">
+              <span>NET PAYABLE</span><span>₹{(totalPayablePaise / 100).toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Checkout Button */}
+          <button onClick={handleCheckout} disabled={cart.length === 0}
+            className={`w-full py-4 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all shadow-md active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2 ${saleChannel === 'whatsapp' ? 'bg-emerald-600 hover:bg-emerald-700' : saleChannel === 'instagram' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : 'bg-neutral-900 hover:bg-neutral-800'}`}>
+            {paymentIcons[paymentMethod]}
+            {saleChannel === 'whatsapp' ? 'Confirm WhatsApp Sale' : saleChannel === 'instagram' ? 'Confirm Instagram Sale' : 'Complete Sale & Print'}
+          </button>
         </div>
       </div>
 
-      {/* Size Selector Modal — Color First, then Size */}
-      {activeSizeProduct && (
-        <div className="fixed inset-0 z-50 flex justify-center items-center">
-          <div onClick={() => setActiveSizeProduct(null)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="bg-white border border-neutral-200 w-full max-w-sm rounded-2xl p-6 relative z-10 space-y-5 shadow-xl">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
-              <div>
-                <h4 className="text-[10px] text-neutral-500 font-mono font-bold uppercase">{activeSizeProduct.sku}</h4>
-                <h3 className="text-sm font-bold text-neutral-900 mt-0.5">{activeSizeProduct.name}</h3>
-                <span className="text-[10px] text-neutral-400 font-mono">₹{(activeSizeProduct.price / 100).toLocaleString('en-IN')}</span>
-              </div>
-              <button onClick={() => setActiveSizeProduct(null)} className="p-1.5 rounded-lg border border-neutral-200 text-neutral-500 hover:text-neutral-900">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Step 1: Color Selection */}
-            {(() => {
-              const colorList = activeSizeProduct.color_variants && activeSizeProduct.color_variants.length > 0
-                ? activeSizeProduct.color_variants.map(cv => cv.color)
-                : (activeSizeProduct.colors || []);
-              return colorList.length > 0 ? (
-                <div className="space-y-2">
-                  <label className="block text-[9px] font-bold text-neutral-600 uppercase tracking-wider">
-                    1. Select Color
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {colorList.map(c => (
-                      <button key={c} onClick={() => {
-                        setSelectedColor(c);
-                        // Auto-select first in-stock size for this color
-                        if (activeSizeProduct.color_variants) {
-                          const cv = activeSizeProduct.color_variants.find(v => v.color === c);
-                          const firstSize = cv?.size_stock.find(ss => ss.stock > 0)?.size_label || '';
-                          setSelectedSize(firstSize);
-                        }
-                      }}
-                        className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${selectedColor === c
-                          ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm'
-                          : 'border-neutral-200 hover:border-neutral-400 text-neutral-700 bg-white'}`}>
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : null;
-            })()}
-
-            {/* Step 2: Size Selection (filtered by color) */}
-            <div className="space-y-2">
-              <label className="block text-[9px] font-bold text-neutral-600 uppercase tracking-wider">
-                {(activeSizeProduct.color_variants && activeSizeProduct.color_variants.length > 0) ? '2. Select Size' : 'Select Size'}
-                {selectedColor && <span className="ml-1 font-normal text-neutral-400 normal-case">for {selectedColor}</span>}
-              </label>
-              {availableSizesForColor.length === 0 ? (
-                <p className="text-xs text-rose-400 italic">No stock available for this color.</p>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {availableSizesForColor.map(sz => {
-                    // Get stock count for this size+color combo
-                    const cv = activeSizeProduct.color_variants?.find(v => v.color === selectedColor);
-                    const stock = cv?.size_stock.find(ss => ss.size_label === sz)?.stock ?? null;
-                    const outOfStock = stock !== null && stock === 0;
-                    return (
-                      <button key={sz} disabled={outOfStock} onClick={() => setSelectedSize(sz)}
-                        className={`py-2.5 rounded-xl border text-xs font-bold font-mono transition-all relative
-                          ${outOfStock ? 'border-neutral-100 text-neutral-300 bg-neutral-50 cursor-not-allowed' :
-                          selectedSize === sz ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm' :
-                          'border-neutral-200 hover:border-neutral-400 text-neutral-700 bg-white'}`}>
-                        UK {sz}
-                        {stock !== null && !outOfStock && (
-                          <span className={`block text-[8px] font-mono mt-0.5 ${selectedSize === sz ? 'text-neutral-300' : 'text-neutral-400'}`}>{stock} left</span>
-                        )}
-                        {outOfStock && <span className="block text-[8px] text-neutral-300 mt-0.5">Out</span>}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Summary row */}
-            {selectedColor && selectedSize && (
-              <div className="flex items-center justify-between px-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-[10px] font-mono text-neutral-600">
-                <span>Adding: <strong className="text-neutral-900">{selectedColor}</strong> · Size <strong className="text-neutral-900">UK {selectedSize}</strong></span>
-              </div>
-            )}
-
-            <button onClick={handleConfirmAddToCart} disabled={!selectedSize}
-              className="w-full py-3 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400 text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-colors active:scale-95">
-              Add to Cart
-            </button>
-          </div>
-        </div>
-      )}
-
-
-      {/* Cash Drawer Manager */}
+      {/* Drawer Float manager */}
       {showDrawerManager && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div onClick={() => setShowDrawerManager(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
@@ -705,7 +801,7 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
               </div>
             </div>
             <button onClick={() => setShowDrawerManager(false)}
-              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-100 text-white font-semibold rounded-xl text-xs uppercase transition-colors">
+              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded-xl text-xs uppercase transition-colors">
               Close Register
             </button>
           </div>
@@ -769,7 +865,7 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
             </div>
             <div className="flex gap-3 mt-5 w-full">
               <button onClick={() => window.print()}
-                className="flex-1 py-2.5 bg-neutral-900 text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-neutral-100 flex items-center justify-center gap-1.5 transition-colors">
+                className="flex-1 py-2.5 bg-neutral-900 text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-neutral-800 flex items-center justify-center gap-1.5 transition-colors">
                 <Printer className="w-3.5 h-3.5" /> Print
               </button>
               <button onClick={() => setPrintedOrder(null)}
