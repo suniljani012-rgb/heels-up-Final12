@@ -14,6 +14,11 @@ const InstagramIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+interface ColorVariant {
+  color: string;
+  size_stock: { size_label: string; stock: number }[];
+}
+
 interface Product {
   id: number;
   name: string;
@@ -27,6 +32,7 @@ interface Product {
   images: string[];
   sizes: string[];
   colors?: string[];
+  color_variants?: ColorVariant[];
 }
 
 interface PosTerminalProps {
@@ -43,7 +49,7 @@ type SaleChannel = 'in-store' | 'whatsapp' | 'instagram' | 'phone';
 export default function PosTerminal({ products, categories, coupons, showToast, onOrderCreated }: PosTerminalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [cart, setCart] = useState<{ product: Product; size: string; qty: number; customPrice?: number }[]>([]);
+  const [cart, setCart] = useState<{ product: Product; size: string; color: string; qty: number; customPrice?: number }[]>([]);
 
   // Customer
   const [customerName, setCustomerName] = useState('');
@@ -66,10 +72,21 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
   const [dropReason, setDropReason] = useState('');
   const [showDrawerManager, setShowDrawerManager] = useState(false);
 
-  // Size Selection
+  // Size + Color Selection Modal
   const [activeSizeProduct, setActiveSizeProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [selectedColor, setSelectedColor] = useState<string>('');
+
+  // Derived: available sizes for selected color
+  const availableSizesForColor = useMemo(() => {
+    if (!activeSizeProduct) return [];
+    if (activeSizeProduct.color_variants && activeSizeProduct.color_variants.length > 0 && selectedColor) {
+      const cv = activeSizeProduct.color_variants.find(v => v.color === selectedColor);
+      if (cv) return cv.size_stock.filter(ss => ss.stock > 0).map(ss => ss.size_label);
+      return [];
+    }
+    return activeSizeProduct.sizes || [];
+  }, [activeSizeProduct, selectedColor]);
 
   // Invoice
   const [printedOrder, setPrintedOrder] = useState<any | null>(null);
@@ -112,19 +129,33 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
 
   const handleProductClick = (p: Product) => {
     setActiveSizeProduct(p);
-    setSelectedSize(p.sizes?.[0] || '');
-    setSelectedColor(p.colors?.[0] || '');
+    // Default to first color variant or first color
+    const firstColor = p.color_variants?.[0]?.color || p.colors?.[0] || '';
+    setSelectedColor(firstColor);
+    // Default to first in-stock size for that color
+    if (p.color_variants && p.color_variants.length > 0) {
+      const cv = p.color_variants.find(v => v.color === firstColor);
+      const firstInStockSize = cv?.size_stock.find(ss => ss.stock > 0)?.size_label || '';
+      setSelectedSize(firstInStockSize);
+    } else {
+      setSelectedSize(p.sizes?.[0] || '');
+    }
   };
 
   const handleConfirmAddToCart = () => {
     if (!activeSizeProduct) return;
-    const existingIdx = cart.findIndex(item => item.product.id === activeSizeProduct.id && item.size === selectedSize);
+    if (!selectedSize) { showToast('warning', 'Select Size', 'Please select a size before adding to cart.'); return; }
+    const existingIdx = cart.findIndex(item =>
+      item.product.id === activeSizeProduct.id &&
+      item.size === selectedSize &&
+      item.color === selectedColor
+    );
     if (existingIdx > -1) {
       const updated = [...cart];
       updated[existingIdx].qty += 1;
       setCart(updated);
     } else {
-      setCart(prev => [...prev, { product: activeSizeProduct, size: selectedSize, qty: 1 }]);
+      setCart(prev => [...prev, { product: activeSizeProduct, size: selectedSize, color: selectedColor, qty: 1 }]);
     }
     setActiveSizeProduct(null);
     showToast('success', 'Added to Cart', `${activeSizeProduct.name} (Size ${selectedSize}) added.`);
@@ -366,7 +397,7 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-[10px] font-semibold text-neutral-900 truncate">{item.product.name}</h4>
-                          <span className="text-[8px] text-neutral-500 font-mono uppercase block">Sz: {item.size} · {item.product.sku}</span>
+                          <span className="text-[8px] text-neutral-500 font-mono uppercase block">{item.color && `${item.color} · `}UK {item.size} · {item.product.sku}</span>
                         </div>
                       </div>
                       <div className="flex justify-between items-center pt-1 border-t border-neutral-100">
@@ -512,54 +543,103 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
         </div>
       </div>
 
-      {/* Size Selector Modal */}
+      {/* Size Selector Modal — Color First, then Size */}
       {activeSizeProduct && (
         <div className="fixed inset-0 z-50 flex justify-center items-center">
           <div onClick={() => setActiveSizeProduct(null)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="bg-white border border-neutral-200 w-full max-w-sm rounded-2xl p-6 relative z-10 space-y-5 shadow-xl">
+            {/* Header */}
             <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
               <div>
                 <h4 className="text-[10px] text-neutral-500 font-mono font-bold uppercase">{activeSizeProduct.sku}</h4>
                 <h3 className="text-sm font-bold text-neutral-900 mt-0.5">{activeSizeProduct.name}</h3>
+                <span className="text-[10px] text-neutral-400 font-mono">₹{(activeSizeProduct.price / 100).toLocaleString('en-IN')}</span>
               </div>
               <button onClick={() => setActiveSizeProduct(null)} className="p-1.5 rounded-lg border border-neutral-200 text-neutral-500 hover:text-neutral-900">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
+            {/* Step 1: Color Selection */}
+            {(() => {
+              const colorList = activeSizeProduct.color_variants && activeSizeProduct.color_variants.length > 0
+                ? activeSizeProduct.color_variants.map(cv => cv.color)
+                : (activeSizeProduct.colors || []);
+              return colorList.length > 0 ? (
+                <div className="space-y-2">
+                  <label className="block text-[9px] font-bold text-neutral-600 uppercase tracking-wider">
+                    1. Select Color
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {colorList.map(c => (
+                      <button key={c} onClick={() => {
+                        setSelectedColor(c);
+                        // Auto-select first in-stock size for this color
+                        if (activeSizeProduct.color_variants) {
+                          const cv = activeSizeProduct.color_variants.find(v => v.color === c);
+                          const firstSize = cv?.size_stock.find(ss => ss.stock > 0)?.size_label || '';
+                          setSelectedSize(firstSize);
+                        }
+                      }}
+                        className={`px-4 py-2 text-xs font-bold rounded-xl border transition-all ${selectedColor === c
+                          ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm'
+                          : 'border-neutral-200 hover:border-neutral-400 text-neutral-700 bg-white'}`}>
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Step 2: Size Selection (filtered by color) */}
             <div className="space-y-2">
-              <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Select Size</label>
-              <div className="grid grid-cols-4 gap-2">
-                {activeSizeProduct.sizes.map(sz => (
-                  <button key={sz} onClick={() => setSelectedSize(sz)}
-                    className={`py-2.5 text-xs font-bold font-mono rounded-xl border transition-all ${selectedSize === sz ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-200 hover:border-neutral-400 text-neutral-700 bg-white'}`}>
-                    {sz}
-                  </button>
-                ))}
-              </div>
+              <label className="block text-[9px] font-bold text-neutral-600 uppercase tracking-wider">
+                {(activeSizeProduct.color_variants && activeSizeProduct.color_variants.length > 0) ? '2. Select Size' : 'Select Size'}
+                {selectedColor && <span className="ml-1 font-normal text-neutral-400 normal-case">for {selectedColor}</span>}
+              </label>
+              {availableSizesForColor.length === 0 ? (
+                <p className="text-xs text-rose-400 italic">No stock available for this color.</p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {availableSizesForColor.map(sz => {
+                    // Get stock count for this size+color combo
+                    const cv = activeSizeProduct.color_variants?.find(v => v.color === selectedColor);
+                    const stock = cv?.size_stock.find(ss => ss.size_label === sz)?.stock ?? null;
+                    const outOfStock = stock !== null && stock === 0;
+                    return (
+                      <button key={sz} disabled={outOfStock} onClick={() => setSelectedSize(sz)}
+                        className={`py-2.5 rounded-xl border text-xs font-bold font-mono transition-all relative
+                          ${outOfStock ? 'border-neutral-100 text-neutral-300 bg-neutral-50 cursor-not-allowed' :
+                          selectedSize === sz ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm' :
+                          'border-neutral-200 hover:border-neutral-400 text-neutral-700 bg-white'}`}>
+                        UK {sz}
+                        {stock !== null && !outOfStock && (
+                          <span className={`block text-[8px] font-mono mt-0.5 ${selectedSize === sz ? 'text-neutral-300' : 'text-neutral-400'}`}>{stock} left</span>
+                        )}
+                        {outOfStock && <span className="block text-[8px] text-neutral-300 mt-0.5">Out</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {activeSizeProduct.colors && activeSizeProduct.colors.length > 0 && (
-              <div className="space-y-2">
-                <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Select Color</label>
-                <div className="flex flex-wrap gap-2">
-                  {activeSizeProduct.colors.map(c => (
-                    <button key={c} onClick={() => setSelectedColor(c)}
-                      className={`px-3 py-1.5 text-[10px] font-bold rounded-xl border transition-all ${selectedColor === c ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-200 hover:border-neutral-400 text-neutral-700 bg-white'}`}>
-                      {c}
-                    </button>
-                  ))}
-                </div>
+            {/* Summary row */}
+            {selectedColor && selectedSize && (
+              <div className="flex items-center justify-between px-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-[10px] font-mono text-neutral-600">
+                <span>Adding: <strong className="text-neutral-900">{selectedColor}</strong> · Size <strong className="text-neutral-900">UK {selectedSize}</strong></span>
               </div>
             )}
 
-            <button onClick={handleConfirmAddToCart}
-              className="w-full py-3 bg-neutral-900 hover:bg-neutral-100 text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-colors">
+            <button onClick={handleConfirmAddToCart} disabled={!selectedSize}
+              className="w-full py-3 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400 text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-colors active:scale-95">
               Add to Cart
             </button>
           </div>
         </div>
       )}
+
 
       {/* Cash Drawer Manager */}
       {showDrawerManager && (
@@ -663,7 +743,7 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
                   <div key={idx} className="flex justify-between text-[9px]">
                     <div className="w-1/2 min-w-0 truncate">
                       <span>{item.product_name}</span>
-                      <span className="block text-[8px] text-gray-400">Sz: {item.size}</span>
+                      <span className="block text-[8px] text-gray-400">{item.color && `${item.color} · `}UK {item.size}</span>
                     </div>
                     <span className="w-1/6 text-center font-bold">{item.quantity}</span>
                     <span className="w-1/3 text-right font-mono">₹{((item.price * item.quantity) / 100).toFixed(2)}</span>

@@ -68,13 +68,13 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
   return (
     <div className="space-y-6 animate-fade-in text-neutral-900">
       {/* Welcome header info card */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-[#171715] to-[#0e0e0d] border border-neutral-200/80 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="absolute -right-16 -top-16 w-44 h-44 bg-neutral-50 rounded-full blur-3xl"></div>
+      <div className="relative overflow-hidden bg-white border border-neutral-200 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="absolute -right-8 -top-8 w-40 h-40 bg-neutral-100 rounded-full blur-3xl opacity-60"></div>
         <div className="space-y-1.5 relative z-10">
-          <span className="text-[9px] uppercase tracking-widest font-black text-neutral-900 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5" /> HeelsUp Intelligence Engine
+          <span className="text-[9px] uppercase tracking-widest font-black text-neutral-500 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> HeelsUp Intelligence Engine
           </span>
-          <h1 className="text-2xl font-light font-display italic">Overview Dashboard</h1>
+          <h1 className="text-2xl font-light font-display italic text-neutral-900">Overview Dashboard</h1>
           <p className="text-xs text-neutral-500">Real-time e-commerce logs and retail metrics registry</p>
         </div>
       </div>
