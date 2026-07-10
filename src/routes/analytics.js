@@ -212,25 +212,27 @@ export async function dashboardStatsRouter(request, env) {
                     COALESCE(SUM(total), 0) as total_pos_sales
                 FROM offline_sales WHERE created_at BETWEEN ? AND ?
             `).bind(fromDt, toDt),
-            // 5: Category sales share (union online & offline)
+            // 5: Category sales share (LEFT JOIN categories to fetch actual database categories)
             env.DB.prepare(`
-                SELECT p.category, SUM(sales.qty) as quantity_sold, SUM(sales.amount) as revenue
-                FROM (
-                    SELECT oi.product_id, oi.quantity as qty, oi.line_total as amount
+                SELECT c.name as category, c.product_count, COALESCE(SUM(sales.amount), 0) as revenue
+                FROM categories c
+                LEFT JOIN products p ON p.category = c.name
+                LEFT JOIN (
+                    SELECT oi.product_id, oi.line_total as amount
                     FROM order_items oi
                     JOIN orders o ON o.id = oi.order_id
                     WHERE o.created_at BETWEEN ? AND ? AND o.payment_status = 'paid'
                     
                     UNION ALL
                     
-                    SELECT osi.product_id, osi.quantity as qty, osi.total_price as amount
+                    SELECT osi.product_id, osi.total_price as amount
                     FROM offline_sale_items osi
                     JOIN offline_sales os ON os.id = osi.sale_id
                     WHERE os.created_at BETWEEN ? AND ?
-                ) sales
-                JOIN products p ON p.id = sales.product_id
-                GROUP BY p.category
-                ORDER BY revenue DESC
+                ) sales ON sales.product_id = p.id
+                WHERE c.active = 1
+                GROUP BY c.name, c.product_count
+                ORDER BY revenue DESC, c.product_count DESC
             `).bind(fromDt, toDt, fromDt, toDt)
         ]);
 
@@ -241,19 +243,30 @@ export async function dashboardStatsRouter(request, env) {
         const posStats = results[4].results[0] || { pos_sales_count: 0, total_pos_sales: 0 };
         const categorySales = results[5]?.results || [];
 
-        // Format category share percentages
+        // Format category share percentages dynamically based on actual database categories
         const totalCatRevenue = categorySales.reduce((sum, item) => sum + (item.revenue || 0), 0);
-        const categorySalesFormatted = totalCatRevenue > 0
-            ? categorySales.map(item => ({
+        let categorySalesFormatted = [];
+
+        if (totalCatRevenue > 0) {
+            categorySalesFormatted = categorySales.map(item => ({
                 category: item.category,
                 value: Math.round((item.revenue / totalCatRevenue) * 100)
-              }))
-            : [
-                { category: 'Oxford Jodhpur', value: 45 },
-                { category: 'Chelsea Boot', value: 30 },
-                { category: 'Double Monk', value: 15 },
-                { category: 'Loafers', value: 10 }
-              ];
+            }));
+        } else {
+            // Fallback: calculate based on product count share of actual database categories
+            const totalProductsCount = categorySales.reduce((sum, item) => sum + (item.product_count || 0), 0);
+            if (totalProductsCount > 0) {
+                categorySalesFormatted = categorySales.map(item => ({
+                    category: item.category,
+                    value: Math.round((item.product_count / totalProductsCount) * 100)
+                }));
+            } else {
+                categorySalesFormatted = categorySales.map(item => ({
+                    category: item.category,
+                    value: 0
+                }));
+            }
+        }
 
         return ok({
             totalProducts,
