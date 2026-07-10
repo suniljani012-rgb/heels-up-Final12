@@ -204,7 +204,7 @@ export default function BannersManager({ banners, token, showToast, onRefresh }:
               <div className="flex items-center gap-3 pt-3 border-t border-neutral-200/80/60">
                 <button
                   onClick={() => handleOpenEdit(b)}
-                  className="flex-1 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-200 font-bold rounded-xl text-[10px] uppercase tracking-wider text-center"
+                  className="flex-1 py-1.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-bold rounded-xl text-[10px] uppercase tracking-wider text-center"
                 >
                   Edit Banner
                 </button>

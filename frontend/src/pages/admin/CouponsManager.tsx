@@ -190,7 +190,7 @@ export default function CouponsManager({ coupons, token, showToast, onRefresh }:
                 <tr key={c.id} className="hover:bg-neutral-50/20 transition-colors">
                   <td className="p-4 font-mono font-bold text-neutral-900 text-xs">{c.code}</td>
                   <td className="p-4 text-neutral-500 capitalize">{c.type}</td>
-                  <td className="p-4 font-mono font-bold text-neutral-200">
+                  <td className="p-4 font-mono font-bold text-neutral-900">
                     {c.type === 'percentage' ? `${c.value}%` : `₹${c.value}`}
                   </td>
                   <td className="p-4 font-mono text-neutral-500">₹{(c.min_order / 100).toFixed(0)}</td>

@@ -46,17 +46,17 @@
   --color-accent-light: var(--color-accent-300);
   --color-accent-dark: var(--color-accent-700);
 
-  --font-display: 'Aptos', 'Cormorant Garamond', 'Georgia', serif;
-  --font-heading: 'Aptos', 'Playfair Display', 'Georgia', serif;
-  --font-body: 'Aptos', 'DM Sans', 'Helvetica Neue', sans-serif;
-  --font-sans: 'Aptos', system-ui, -apple-system, sans-serif;
+  --font-display: 'Aptos', 'Segoe UI', system-ui, sans-serif;
+  --font-heading: 'Aptos', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Aptos', 'Segoe UI', system-ui, sans-serif;
+  --font-sans: 'Aptos', 'Segoe UI', system-ui, sans-serif;
 }
 
 
 html, body {
   font-family: var(--font-body);
-  background-color: #fcfbf9;
-  color: #1a1816;
+  background-color: #f5f5f4;
+  color: #000000;
   margin: 0;
   padding: 0;
   overflow-x: hidden;

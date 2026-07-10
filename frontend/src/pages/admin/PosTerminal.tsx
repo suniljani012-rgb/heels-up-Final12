@@ -819,7 +819,7 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
               <p>DLF Phase 4, Galleria Market, Gurugram</p>
               <p>Tel: +91 99999-88888 | GSTIN: 06AAAAA1111A1Z1</p>
               <div className="h-[1px] border-t border-dashed border-gray-300 my-2" />
-              <p className="font-bold">INVOICE: {printedOrder.order_number}</p>
+              <p className="font-bold">INVOICE: <span className="text-blue-600 font-bold">{printedOrder.order_number}</span></p>
               <p>Date: {new Date(printedOrder.created_at || Date.now()).toLocaleString()}</p>
               <p>Mode: {printedOrder.payment_method?.toUpperCase()}</p>
               <p>Channel: {saleChannel.toUpperCase()}</p>

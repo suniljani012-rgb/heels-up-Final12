@@ -330,13 +330,13 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
             <tbody className="divide-y divide-neutral-100">
               {paginatedOrders.map((o) => (
                 <tr key={o.id} className="hover:bg-neutral-50/20 transition-colors">
-                  <td className="p-4 font-mono font-bold text-neutral-200">#{o.order_number}</td>
-                  <td className="p-4 text-neutral-500 font-mono">{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+                  <td className="p-4 font-mono font-bold text-blue-600">#{o.order_number}</td>
+                  <td className="p-4 text-neutral-900 font-mono">{new Date(o.created_at).toLocaleDateString('en-IN')}</td>
                   <td className="p-4">
                     <h4 className="font-bold text-neutral-900 text-xs">{o.customer_name}</h4>
                     <span className="text-[9px] text-neutral-500 font-mono">{o.customer_phone}</span>
                   </td>
-                  <td className="p-4 font-mono font-bold text-neutral-200">₹{(o.total_amount / 100).toFixed(2)}</td>
+                  <td className="p-4 font-mono font-bold text-black">₹{(o.total_amount / 100).toFixed(2)}</td>
                   <td className="p-4">
                     <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${o.source === 'pos' ? 'bg-sky-500/10 border border-sky-500/20 text-sky-600' : 'bg-neutral-100 text-neutral-500'}`}>
                       {o.source}
@@ -395,7 +395,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-neutral-200/80 pb-4">
                 <h3 className="text-sm font-bold uppercase tracking-widest text-neutral-900 font-mono">
-                  Modify Manifest: #{selectedOrder.order_number}
+                  Modify Manifest: <span className="text-blue-600">#{selectedOrder.order_number}</span>
                 </h3>
                 <button onClick={() => setSelectedOrder(null)} className="p-1 hover:bg-neutral-200 rounded-lg text-neutral-500 hover:text-neutral-900 transition-colors">
                   <X className="w-5 h-5" />

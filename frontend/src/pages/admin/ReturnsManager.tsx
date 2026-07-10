@@ -170,7 +170,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
               <tbody className="divide-y divide-neutral-100 font-sans text-neutral-900">
                 {filteredReturns.map(r => (
                   <tr key={r.id} className="hover:bg-neutral-50/25 transition-colors">
-                    <td className="p-3 font-mono text-[10px] text-amber-500 font-bold">
+                    <td className="p-3 font-mono text-[10px] text-blue-600 font-bold">
                       {r.order_number}
                     </td>
                     <td className="p-3">
@@ -236,7 +236,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
               {/* Order and Customer Contact Card */}
               <div className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] text-amber-500 font-bold font-mono">ORDER: {selectedReturn.order_number}</span>
+                  <span className="text-[10px] text-blue-600 font-bold font-mono">ORDER: {selectedReturn.order_number}</span>
                   <span className="text-[9px] text-neutral-500">{new Date(selectedReturn.created_at).toLocaleString()}</span>
                 </div>
                 <h4 className="text-xs font-bold text-neutral-900 uppercase">{selectedReturn.customer_name}</h4>

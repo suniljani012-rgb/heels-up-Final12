@@ -103,7 +103,7 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
                   <td className="p-4 font-mono text-neutral-700">{c.email}</td>
                   <td className="p-4 font-mono text-neutral-500">{c.phone || '—'}</td>
                   <td className="p-4 text-center font-mono">{c.orders_count || 0} orders</td>
-                  <td className="p-4 text-center font-mono font-bold text-neutral-200">₹{((c.total_spent || 0) / 100).toFixed(2)}</td>
+                  <td className="p-4 text-center font-mono font-bold text-neutral-900">₹{((c.total_spent || 0) / 100).toFixed(2)}</td>
                   <td className="p-4 text-neutral-500 font-mono">{new Date(c.created_at || Date.now()).toLocaleDateString('en-IN')}</td>
                   <td className="p-4 text-right">
                     <button
