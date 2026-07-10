@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Wallet, ShoppingCart, Footprints, RotateCcw, AlertTriangle, ArrowUpRight, TrendingUp, Sparkles, RefreshCw } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 interface DashboardViewProps {
   data: any;
@@ -182,85 +183,57 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
           </div>
 
           {!collapsedSalesTrend && (
-            <div className="relative pt-4">
-              <svg className="w-full h-64 overflow-visible" viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#171717" stopOpacity="0.2" />
-                    <stop offset="100%" stopColor="#171717" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-
-                {/* Y Grid Lines */}
-                <line x1="45" y1="20" x2="675" y2="20" stroke="#e5e5e5" strokeWidth="1" />
-                <line x1="45" y1="70" x2="675" y2="70" stroke="#e5e5e5" strokeWidth="1" />
-                <line x1="45" y1="120" x2="675" y2="120" stroke="#e5e5e5" strokeWidth="1" />
-                <line x1="45" y1="170" x2="675" y2="170" stroke="#e5e5e5" strokeWidth="1" />
-                <line x1="45" y1="220" x2="675" y2="220" stroke="#d4d4d4" strokeWidth="1.5" />
-
-                {/* Y Axis Labels */}
-                {yLabels.map((val, idx) => {
-                  const y = 220 - idx * 50;
-                  return (
-                    <text key={idx} x="35" y={y + 4} textAnchor="end" className="text-[9px] fill-neutral-500 font-mono font-bold">
-                      ₹{val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}
-                    </text>
-                  );
-                })}
-
-                {/* Area path */}
-                {areaPath && <path d={areaPath} fill="url(#areaGradient)" />}
-
-                {/* Line path */}
-                {linePath && (
-                  <path
-                    d={linePath}
-                    fill="none"
-                    stroke="#171717"
-                    strokeWidth="3"
-                    strokeLinecap="round"
+            <div className="h-64 pt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={trendData.map((d: any) => ({
+                    name: d.label,
+                    Revenue: (d.revenue || 0) / 100
+                  }))}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="name"
+                    stroke="#888888"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
                   />
-                )}
-
-                {/* Points & Hover Tooltips */}
-                {chartPoints.map((p: any, idx: number) => (
-                  <g key={idx} className="group/node">
-                    <circle
-                      cx={p.x}
-                      cy={p.y}
-                      r="4"
-                      className="fill-white stroke-neutral-900 stroke-2 hover:r-6 cursor-pointer transition-all"
-                    />
-                    <text
-                      x={p.x}
-                      y="235"
-                      textAnchor="middle"
-                      className="text-[9px] fill-neutral-400 font-mono"
-                    >
-                      {p.label}
-                    </text>
-                    {/* Tooltip on Node Hover */}
-                    <g className="opacity-0 group-hover/node:opacity-100 transition-opacity duration-200">
-                      <rect
-                        x={p.x - 35}
-                        y={p.y - 32}
-                        width="70"
-                        height="20"
-                        rx="6"
-                        className="fill-neutral-900 stroke-neutral-200 stroke"
-                      />
-                      <text
-                        x={p.x}
-                        y={p.y - 19}
-                        textAnchor="middle"
-                        className="text-[8px] fill-white font-mono font-bold"
-                      >
-                        ₹{p.val.toFixed(0)}
-                      </text>
-                    </g>
-                  </g>
-                ))}
-              </svg>
+                  <YAxis
+                    stroke="#888888"
+                    fontSize={10}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `₹${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}`}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1f2937',
+                      borderRadius: '12px',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontSize: '11px',
+                      fontFamily: 'Aptos, sans-serif'
+                    }}
+                    formatter={(value: any) => [`₹${value.toLocaleString('en-IN')}`, 'Revenue']}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="Revenue"
+                    stroke="#2563eb"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#colorRevenue)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           )}
         </div>
@@ -280,21 +253,45 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
             </div>
 
             {!collapsedCategoryShare && (
-              <div className="space-y-3.5 pt-2">
-                {catShare.map((cat: any, idx: number) => (
-                  <div key={idx} className="space-y-1.5">
-                    <div className="flex justify-between text-[11px] font-mono text-neutral-700">
-                      <span>{cat.category || 'Oxford Shoes'}</span>
-                      <span className="text-neutral-900 font-bold">{cat.value || 0}%</span>
-                    </div>
-                    <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden border border-neutral-200/80/40">
-                      <div
-                        className="h-full bg-neutral-900 rounded-full"
-                        style={{ width: `${cat.value || 0}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+              <div className="h-64 pt-2 flex flex-col items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={catShare}
+                      cx="50%"
+                      cy="45%"
+                      innerRadius={50}
+                      outerRadius={75}
+                      paddingAngle={4}
+                      dataKey="value"
+                      nameKey="category"
+                    >
+                      {catShare.map((entry: any, index: number) => {
+                        const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#ef4444'];
+                        return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
+                      })}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '10px'
+                      }}
+                      formatter={(value: any) => [`${value}%`, 'Share']}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={36}
+                      iconType="circle"
+                      iconSize={6}
+                      formatter={(value: any) => (
+                        <span className="text-[9px] font-semibold text-neutral-700 font-sans">{value}</span>
+                      )}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             )}
           </div>

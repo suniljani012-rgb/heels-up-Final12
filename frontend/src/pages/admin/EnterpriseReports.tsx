@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Download, RefreshCw, Activity, Info, Minus, X, Tag } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 
 interface EnterpriseReportsProps {
   orders: any[];
@@ -179,6 +180,32 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
     });
   }, [products]);
 
+  // NEW: Recharts Data configurations
+  const rechartsDailyData = useMemo(() => {
+    const dailyData: { [key: string]: number } = {};
+    orders.forEach(o => {
+      const dateStr = o.created_at?.split('T')[0];
+      if (dateStr && dateStr >= dateFrom && dateStr <= dateTo && o.order_status !== 'cancelled') {
+        dailyData[dateStr] = (dailyData[dateStr] || 0) + o.total_amount;
+      }
+    });
+    return Object.keys(dailyData).sort().map(d => ({
+      date: d,
+      Revenue: dailyData[d] / 100
+    }));
+  }, [orders, dateFrom, dateTo]);
+
+  const rechartsBarData = useMemo(() => {
+    const counts: { [key: string]: number } = {};
+    products.forEach(p => {
+      counts[p.category] = (counts[p.category] || 0) + 1;
+    });
+    return Object.keys(counts).slice(0, 5).map(cat => ({
+      name: cat,
+      Products: counts[cat]
+    }));
+  }, [products]);
+
   // CSV Exporter
   const exportCsv = () => {
     if (compiledData.length === 0) return;
@@ -297,42 +324,34 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
           </div>
           
           <div className={`card-body p-5 space-y-4 ${collapsedRevenueGrowthTrend ? 'hidden' : ''}`}>
-            <div className="h-44 relative bg-neutral-50 border border-neutral-200 rounded-xl p-3">
-              {lineChartData.points.length === 0 ? (
+            <div className="h-48 relative bg-white border border-neutral-200 rounded-xl p-3">
+              {rechartsDailyData.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-xs text-neutral-500">No sales transactions in target timeframe.</div>
               ) : (
-                <svg viewBox="0 0 500 140" className="w-full h-full overflow-visible">
-                  <defs>
-                    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#171717" stopOpacity="0.25" />
-                      <stop offset="100%" stopColor="#171717" stopOpacity="0.00" />
-                    </linearGradient>
-                  </defs>
-                  {/* Horizontal Grid lines */}
-                  <line x1="10" y1="20" x2="490" y2="20" stroke="#e5e5e5" strokeDasharray="3" />
-                  <line x1="10" y1="60" x2="490" y2="60" stroke="#e5e5e5" strokeDasharray="3" />
-                  <line x1="10" y1="100" x2="490" y2="100" stroke="#e5e5e5" strokeDasharray="3" />
-                  <line x1="10" y1="120" x2="490" y2="120" stroke="#e5e5e5" />
-                  
-                  {/* Area Gradient fill */}
-                  <path d={lineChartData.area} fill="url(#glow)" />
-                  {/* Stroke line path */}
-                  <path d={lineChartData.path} fill="none" stroke="#171717" strokeWidth="2" strokeLinecap="round" />
-                  
-                  {/* Dots */}
-                  {lineChartData.points.map((pt, i) => (
-                    <circle
-                      key={i}
-                      cx={pt.x}
-                      cy={pt.y}
-                      r="3"
-                      fill="white"
-                      stroke="#171717"
-                      strokeWidth="1.5"
-                      className="cursor-pointer hover:r-4 transition-all"
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={rechartsDailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorReportRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ec4899" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#ec4899" stopOpacity={0.0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                    <XAxis dataKey="date" stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#888888" fontSize={9} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val >= 1000 ? `${(val/1000).toFixed(0)}k` : val}`} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        borderRadius: '12px',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '10px'
+                      }}
+                      formatter={(value: any) => [`₹${value.toLocaleString('en-IN')}`, 'Revenue']}
                     />
-                  ))}
-                </svg>
+                    <Area type="monotone" dataKey="Revenue" stroke="#db2777" strokeWidth={2} fillOpacity={1} fill="url(#colorReportRevenue)" />
+                  </AreaChart>
+                </ResponsiveContainer>
               )}
             </div>
           </div>
@@ -364,19 +383,32 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
           </div>
           
           <div className={`card-body p-5 space-y-4 ${collapsedTopCategoryShare ? 'hidden' : ''}`}>
-            <div className="h-44 bg-neutral-50 border border-neutral-200 rounded-xl p-3 relative">
-              {categoryBarData.length === 0 ? (
+            <div className="h-44 bg-white border border-neutral-200 rounded-xl p-3 relative">
+              {rechartsBarData.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-xs text-neutral-500">No product inventory cataloged.</div>
               ) : (
-                <svg viewBox="0 0 320 140" className="w-full h-full overflow-visible">
-                  {categoryBarData.map((bar, i) => (
-                    <g key={i}>
-                      <rect x={bar.x} y={bar.y} width="22" height={bar.height} fill="#171717" opacity="0.8" rx="2" className="hover:opacity-100 transition-opacity" />
-                      <text x={bar.x + 11} y={bar.y - 4} textAnchor="middle" className="fill-neutral-400 text-[7px] font-mono">{bar.value}</text>
-                      <text x={bar.x + 11} y="138" textAnchor="middle" className="fill-neutral-500 text-[7px] uppercase font-bold tracking-wider">{bar.label.slice(0, 4)}</text>
-                    </g>
-                  ))}
-                </svg>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={rechartsBarData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                    <XAxis dataKey="name" stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
+                    <YAxis stroke="#888888" fontSize={9} tickLine={false} axisLine={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1f2937',
+                        borderRadius: '8px',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '10px'
+                      }}
+                    />
+                    <Bar dataKey="Products" radius={[4, 4, 0, 0]}>
+                      {rechartsBarData.map((entry, index) => {
+                        const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'];
+                        return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               )}
             </div>
           </div>
