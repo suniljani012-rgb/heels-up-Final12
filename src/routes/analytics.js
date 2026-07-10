@@ -233,7 +233,26 @@ export async function dashboardStatsRouter(request, env) {
                 WHERE c.active = 1
                 GROUP BY c.name, c.product_count
                 ORDER BY revenue DESC, c.product_count DESC
-            `).bind(fromDt, toDt, fromDt, toDt)
+            `).bind(fromDt, toDt, fromDt, toDt),
+            // 6: 7-day daily revenue trend (online & offline combined)
+            env.DB.prepare(`
+                SELECT 
+                    date(created_at) as sale_date,
+                    SUM(amount) as revenue
+                FROM (
+                    SELECT created_at, total_amount as amount
+                    FROM orders
+                    WHERE created_at >= date('now', '-6 days') AND payment_status = 'paid'
+                    
+                    UNION ALL
+                    
+                    SELECT created_at, total as amount
+                    FROM offline_sales
+                    WHERE created_at >= date('now', '-6 days')
+                )
+                GROUP BY sale_date
+                ORDER BY sale_date ASC
+            `)
         ]);
 
         const s = results[0].results[0] || {};
@@ -242,6 +261,7 @@ export async function dashboardStatsRouter(request, env) {
         const topProducts = results[3].results || [];
         const posStats = results[4].results[0] || { pos_sales_count: 0, total_pos_sales: 0 };
         const categorySales = results[5]?.results || [];
+        const dailySalesRaw = results[6]?.results || [];
 
         // Format category share percentages dynamically based on actual database categories
         const totalCatRevenue = categorySales.reduce((sum, item) => sum + (item.revenue || 0), 0);
@@ -268,6 +288,20 @@ export async function dashboardStatsRouter(request, env) {
             }
         }
 
+        // Format 7-day revenue trend data in paise for the dashboard chart
+        const trendData = [];
+        const nowMs = Date.now();
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(nowMs - i * 86400000);
+            const isoDateStr = d.toISOString().slice(0, 10);
+            const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+            const match = dailySalesRaw.find(row => row.sale_date === isoDateStr);
+            trendData.push({
+                label,
+                revenue: match ? Math.round((match.revenue || 0) * 100) : 0
+            });
+        }
+
         return ok({
             totalProducts,
             totalOrders: s.total_orders || 0,
@@ -284,6 +318,7 @@ export async function dashboardStatsRouter(request, env) {
             recentOrders,
             topProducts,
             category_sales: categorySalesFormatted,
+            daily_sales: trendData,
             // POS stats mapping for frontend widgets
             total_sales: s.total_revenue || 0,
             orders_count: s.total_orders || 0,
