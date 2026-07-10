@@ -2967,13 +2967,10 @@ export default function Admin() {
       <aside className={`w-64 bg-white border-r border-neutral-200/80 flex flex-col justify-between shrink-0 h-full z-30 transition-transform fixed left-0 top-0 md:relative md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         {/* Brand */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-neutral-200/80 shrink-0">
-          <span className="text-lg font-bold tracking-tight text-neutral-900 font-sans uppercase flex items-center gap-2">
-            <img src="/logo.png" alt="HeelsUp Logo" className="w-6 h-6 object-contain rounded-md" /> HeelsUp Admin
+          <span className="text-xl font-bold tracking-tight text-neutral-900 font-sans uppercase flex items-center gap-3">
+            <img src="/logo.png" alt="HeelsUp Logo" className="h-9 w-auto object-contain" /> Admin
           </span>
           <div className="flex items-center gap-2">
-            <button onClick={loadAllData} disabled={dataLoading} title="Sync Database" className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-500 hover:text-neutral-900 transition-colors">
-              <RefreshCw className={`w-3.5 h-3.5 ${dataLoading ? 'animate-spin' : ''}`} />
-            </button>
             <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-500 hover:text-neutral-900">
               <X className="w-5 h-5" />
             </button>
