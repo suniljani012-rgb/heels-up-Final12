@@ -324,7 +324,8 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
       discount_amount: totalDiscountPaise / 100,
       total_amount: totalPayablePaise / 100,
       notes: `${channelNotes} | GST Rate: ${gstRate}%${notes !== 'In-Store POS Sale' ? ' | ' + notes : ''}`,
-      coupon_code: appliedCoupon ? appliedCoupon.code : null
+      coupon_code: appliedCoupon ? appliedCoupon.code : null,
+      created_at: new Date().toISOString()
     };
     try {
       const res = await fetch('/api/admin/pos/sale', {

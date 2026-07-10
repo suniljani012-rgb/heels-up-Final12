@@ -1,19 +1,14 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Search, Plus, Trash2, Edit3, X, UploadCloud, ChevronLeft, ChevronRight, RefreshCw, Download, FileText, CheckCircle2, AlertTriangle, Palette } from 'lucide-react';
+import { Search, Plus, Trash2, Edit3, X, UploadCloud, ChevronLeft, ChevronRight, RefreshCw, Download, FileText, CheckCircle2, AlertTriangle, Box } from 'lucide-react';
 import HeicImage from '../../components/HeicImage';
 
 // --- Interfaces ---
-interface ColorVariant {
-  color: string;        // e.g. "Black", "Tan", "White"
-  size_stock: { size_label: string; stock: number }[];
-}
-
 interface Product {
   id: number;
   name: string;
   sku: string;
   category: string;
-  price: number;
+  price: number; // in paise
   original_price: number | null;
   stock: number;
   active: boolean;
@@ -30,7 +25,6 @@ interface Product {
   meta_desc?: string;
   size_stock?: { size_label: string; stock: number }[];
   colors?: string[];
-  color_variants?: ColorVariant[];
 }
 
 interface ProductsManagerProps {
@@ -43,13 +37,26 @@ interface ProductsManagerProps {
 
 const STANDARD_SIZES = ['6', '7', '8', '9', '10', '11'];
 
-// Create a blank color variant
-const blankVariant = (color = ''): ColorVariant => ({
-  color,
-  size_stock: STANDARD_SIZES.map(s => ({ size_label: s, stock: 0 }))
-});
+// Helper to parse CSV line handling quotes
+function parseCSVLine(line: string) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
 
-// --- Component ---
 export default function ProductsManager({ products, categories, token, showToast, onRefresh }: ProductsManagerProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -58,17 +65,18 @@ export default function ProductsManager({ products, categories, token, showToast
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [activeTab, setActiveTab] = useState<'basic' | 'colors' | 'media' | 'seo'>('basic');
+  const [activeTab, setActiveTab] = useState<'basic' | 'stock' | 'media' | 'seo'>('basic');
 
-  // Bulk CSV
+  // Bulk CSV modal states
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvLoading, setCsvLoading] = useState(false);
   const [csvResult, setCsvResult] = useState<{ success: number; errors: string[] } | null>(null);
   const csvRef = useRef<HTMLInputElement>(null);
 
-  // Basic form fields
-  const [prodName, setProdName] = useState('');
+  // Form states
+  const [prodStyleName, setProdStyleName] = useState('');
+  const [prodColor, setProdColor] = useState('');
   const [prodSku, setProdSku] = useState('');
   const [prodCategory, setProdCategory] = useState('');
   const [prodPrice, setProdPrice] = useState('');
@@ -85,14 +93,32 @@ export default function ProductsManager({ products, categories, token, showToast
   const [prodMetaTitle, setProdMetaTitle] = useState('');
   const [prodMetaDesc, setProdMetaDesc] = useState('');
 
-  // Color-Size Variants (key feature)
-  const [colorVariants, setColorVariants] = useState<ColorVariant[]>([blankVariant()]);
-  const [newColorInput, setNewColorInput] = useState('');
+  // Size stock inputs (UK 6 - UK 11)
+  const [sizeStockValues, setSizeStockValues] = useState<Record<string, number>>({
+    '6': 0, '7': 0, '8': 0, '9': 0, '10': 0, '11': 0
+  });
 
   const [tagInput, setTagInput] = useState('');
   const [uploadingImages, setUploadingImages] = useState(false);
 
-  // --- Computed ---
+  // Helper to extract color from name
+  const extractColor = (name: string) => {
+    if (!name) return '';
+    const parts = name.split(' - ');
+    if (parts.length > 1) {
+      return parts[parts.length - 1].trim();
+    }
+    return '';
+  };
+
+  // Helper to extract style name from full product name
+  const extractStyleName = (name: string) => {
+    if (!name) return '';
+    const parts = name.split(' - ');
+    return parts[0].trim();
+  };
+
+  // Computed products list
   const filteredProducts = useMemo(() =>
     products.filter(p => {
       const term = searchQuery.toLowerCase();
@@ -106,104 +132,77 @@ export default function ProductsManager({ products, categories, token, showToast
     return filteredProducts.slice(start, start + itemsPerPage);
   }, [filteredProducts, page]);
 
-  // Total stock across all color variants
-  const totalStock = colorVariants.reduce((sum, cv) =>
-    sum + cv.size_stock.reduce((s2, ss) => s2 + ss.stock, 0), 0);
+  const totalStock = useMemo(() => {
+    return Object.values(sizeStockValues).reduce((sum, val) => sum + val, 0);
+  }, [sizeStockValues]);
 
-  // --- Helpers ---
+  // Reset form fields
   const resetForm = () => {
-    setProdName(''); setProdSku(''); setProdCategory(categories[0]?.name || '');
-    setProdPrice(''); setProdOriginalPrice('');
-    setProdActive(true); setProdFeatured(false); setProdIsNew(true); setProdIsTrending(false);
-    setProdImages([]); setProdDescription(''); setProdBrand('HeelsUp');
-    setProdTags([]); setProdShowMrp(true); setProdMetaTitle(''); setProdMetaDesc('');
-    setColorVariants([blankVariant()]);
-    setNewColorInput('');
+    setProdStyleName('');
+    setProdColor('');
+    setProdSku('');
+    setProdCategory(categories[0]?.name || 'Heels');
+    setProdPrice('');
+    setProdOriginalPrice('');
+    setProdActive(true);
+    setProdFeatured(false);
+    setProdIsNew(true);
+    setProdIsTrending(false);
+    setProdImages([]);
+    setProdDescription('');
+    setProdBrand('HeelsUp');
+    setProdTags([]);
+    setProdShowMrp(true);
+    setProdMetaTitle('');
+    setProdMetaDesc('');
+    setSizeStockValues({ '6': 0, '7': 0, '8': 0, '9': 0, '10': 0, '11': 0 });
     setTagInput('');
   };
 
+  // Load product into form fields
   const loadFromProduct = (p: Product) => {
-    setProdName(p.name); setProdSku(p.sku); setProdCategory(p.category);
+    setProdStyleName(extractStyleName(p.name));
+    setProdColor(extractColor(p.name));
+    setProdSku(p.sku);
+    setProdCategory(p.category);
     setProdPrice((p.price / 100).toString());
     setProdOriginalPrice(p.original_price ? (p.original_price / 100).toString() : '');
-    setProdActive(p.active); setProdFeatured(p.featured); setProdIsNew(p.is_new); setProdIsTrending(p.is_trending);
-    setProdImages(p.images || []); setProdDescription(p.description || '');
-    setProdBrand(p.brand || 'HeelsUp'); setProdTags(p.tags || []);
+    setProdActive(p.active);
+    setProdFeatured(p.featured);
+    setProdIsNew(p.is_new);
+    setProdIsTrending(p.is_trending);
+    setProdImages(p.images || []);
+    setProdDescription(p.description || '');
+    setProdBrand(p.brand || 'HeelsUp');
+    setProdTags(p.tags || []);
     setProdShowMrp(p.show_mrp !== undefined ? p.show_mrp : true);
-    setProdMetaTitle(p.meta_title || ''); setProdMetaDesc(p.meta_desc || '');
+    setProdMetaTitle(p.meta_title || '');
+    setProdMetaDesc(p.meta_desc || '');
 
-    // Load color variants — support both old format (colors + size_stock) and new format (color_variants)
-    if (p.color_variants && p.color_variants.length > 0) {
-      const mapped = p.color_variants.map(cv => ({
-        color: cv.color,
-        size_stock: STANDARD_SIZES.map(sz => {
-          const found = cv.size_stock.find(ss => ss.size_label === sz);
-          return { size_label: sz, stock: found ? found.stock : 0 };
-        })
-      }));
-      setColorVariants(mapped);
-    } else if (p.colors && p.colors.length > 0) {
-      // Migrate old format: spread existing size_stock across each color
-      const mapped = p.colors.map(color => ({
-        color,
-        size_stock: STANDARD_SIZES.map(sz => {
-          const found = p.size_stock?.find(ss => ss.size_label === sz);
-          return { size_label: sz, stock: found ? Math.round(found.stock / p.colors!.length) : 0 };
-        })
-      }));
-      setColorVariants(mapped);
+    // Populate sizes stock
+    const stocks: Record<string, number> = { '6': 0, '7': 0, '8': 0, '9': 0, '10': 0, '11': 0 };
+    if (p.size_stock && p.size_stock.length > 0) {
+      p.size_stock.forEach(ss => {
+        stocks[ss.size_label] = ss.stock;
+      });
     } else {
-      // No colors — single "Default" variant
-      const mapped: ColorVariant[] = [{
-        color: '',
-        size_stock: STANDARD_SIZES.map(sz => {
-          const found = p.size_stock?.find(ss => ss.size_label === sz);
-          return { size_label: sz, stock: found ? found.stock : 0 };
-        })
-      }];
-      setColorVariants(mapped);
+      // Auto fallback
+      const perSize = p.sizes.length ? Math.floor(p.stock / p.sizes.length) : 0;
+      p.sizes.forEach(sz => {
+        stocks[sz] = perSize;
+      });
     }
+    setSizeStockValues(stocks);
   };
 
   const handleOpenAdd = () => { resetForm(); setActiveTab('basic'); setEditingProduct(null); setDrawerOpen(true); };
   const handleOpenEdit = (p: Product) => { setEditingProduct(p); loadFromProduct(p); setActiveTab('basic'); setDrawerOpen(true); };
 
-  // Add new color row
-  const handleAddColorRow = () => {
-    const name = newColorInput.trim();
-    if (!name) { showToast('error', 'Color Required', 'Type a color name first (e.g. Black, White, Tan)'); return; }
-    if (colorVariants.some(cv => cv.color.toLowerCase() === name.toLowerCase())) {
-      showToast('warning', 'Duplicate Color', `"${name}" already exists.`); return;
-    }
-    setColorVariants(prev => [...prev, blankVariant(name)]);
-    setNewColorInput('');
+  const handleStockChange = (sizeLabel: string, val: number) => {
+    setSizeStockValues(prev => ({ ...prev, [sizeLabel]: Math.max(0, val) }));
   };
 
-  // Remove a color row
-  const handleRemoveColorRow = (idx: number) => {
-    if (colorVariants.length <= 1) { showToast('warning', 'Minimum 1 Color', 'At least one color/variant row is required.'); return; }
-    setColorVariants(prev => prev.filter((_, i) => i !== idx));
-  };
-
-  // Update color name
-  const handleColorNameChange = (idx: number, name: string) => {
-    setColorVariants(prev => prev.map((cv, i) => i === idx ? { ...cv, color: name } : cv));
-  };
-
-  // Update stock for a specific color + size
-  const handleStockChange = (colorIdx: number, sizeLabel: string, val: number) => {
-    setColorVariants(prev => prev.map((cv, ci) => {
-      if (ci !== colorIdx) return cv;
-      return {
-        ...cv,
-        size_stock: cv.size_stock.map(ss =>
-          ss.size_label === sizeLabel ? { ...ss, stock: Math.max(0, val) } : ss
-        )
-      };
-    }));
-  };
-
-  // Image upload
+  // HEIC conversion and image upload
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     setUploadingImages(true);
@@ -216,44 +215,46 @@ export default function ProductsManager({ products, categories, token, showToast
           const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
           const blob = Array.isArray(converted) ? converted[0] : converted;
           formData.append('files', new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' }));
-        } else { formData.append('files', file); }
+        } else {
+          formData.append('files', file);
+        }
       }
       const res = await fetch('/api/admin/upload', {
-        method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
       });
       const data = await res.json();
       if (data.success && data.data) {
         setProdImages(prev => [...prev, ...data.data.urls]);
-        showToast('success', 'Images Uploaded', `${data.data.urls.length} images uploaded.`);
-      } else { showToast('error', 'Upload Error', data.error || 'Upload failed.'); }
-    } catch { showToast('error', 'Upload Failed', 'Image upload pipeline error.'); }
-    finally { setUploadingImages(false); }
+        showToast('success', 'Images Uploaded', `${data.data.urls.length} images uploaded successfully.`);
+      } else {
+        showToast('error', 'Upload Error', data.error || 'Upload failed.');
+      }
+    } catch {
+      showToast('error', 'Upload Failed', 'Image upload pipeline error.');
+    } finally {
+      setUploadingImages(false);
+    }
   };
 
-  // Submit
+  // Submit / Save handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prodName || !prodSku || !prodPrice) {
-      showToast('error', 'Missing Fields', 'Name, SKU and price are required.'); return;
-    }
-    if (colorVariants.some(cv => !cv.color.trim())) {
-      showToast('error', 'Color Name Missing', 'Every color row must have a color name.'); return;
+    if (!prodStyleName || !prodSku || !prodPrice) {
+      showToast('error', 'Missing Fields', 'Name, SKU and price are required.');
+      return;
     }
 
-    // Build payload
-    const allSizeStock: { size_label: string; stock: number }[] = [];
-    const sizeMap: Record<string, number> = {};
-    colorVariants.forEach(cv => {
-      cv.size_stock.forEach(ss => {
-        sizeMap[ss.size_label] = (sizeMap[ss.size_label] || 0) + ss.stock;
-      });
-    });
-    STANDARD_SIZES.forEach(sz => {
-      allSizeStock.push({ size_label: sz, stock: sizeMap[sz] || 0 });
-    });
+    const finalName = prodColor.trim() ? `${prodStyleName.trim()} - ${prodColor.trim()}` : prodStyleName.trim();
+
+    const size_stock = STANDARD_SIZES.map(sz => ({
+      size_label: sz,
+      stock: sizeStockValues[sz] || 0
+    }));
 
     const payload = {
-      name: prodName.trim(),
+      name: finalName,
       sku: prodSku.trim().toUpperCase(),
       category: prodCategory,
       price: Math.round(parseFloat(prodPrice) * 100),
@@ -263,7 +264,7 @@ export default function ProductsManager({ products, categories, token, showToast
       featured: prodFeatured,
       is_new: prodIsNew,
       is_trending: prodIsTrending,
-      sizes: allSizeStock.filter(s => s.stock > 0).map(s => s.size_label),
+      sizes: size_stock.filter(s => s.stock > 0).map(s => s.size_label),
       images: prodImages,
       description: prodDescription.trim(),
       brand: prodBrand.trim(),
@@ -271,12 +272,7 @@ export default function ProductsManager({ products, categories, token, showToast
       show_mrp: prodShowMrp,
       meta_title: prodMetaTitle.trim(),
       meta_desc: prodMetaDesc.trim(),
-      size_stock: allSizeStock,
-      colors: colorVariants.map(cv => cv.color).filter(Boolean),
-      color_variants: colorVariants.map(cv => ({
-        color: cv.color,
-        size_stock: cv.size_stock.filter(ss => ss.stock > 0)
-      }))
+      size_stock: size_stock
     };
 
     try {
@@ -289,97 +285,112 @@ export default function ProductsManager({ products, categories, token, showToast
       });
       const data = await res.json();
       if (data.success) {
-        showToast('success', 'Product Saved', `"${prodName}" saved successfully.`);
-        setDrawerOpen(false); onRefresh();
-      } else { showToast('error', 'Save Failed', data.error || 'Server rejected.'); }
-    } catch { showToast('error', 'Network Error', 'Could not connect to server.'); }
+        showToast('success', 'Product Saved', `"${finalName}" saved successfully.`);
+        setDrawerOpen(false);
+        onRefresh();
+      } else {
+        showToast('error', 'Save Failed', data.error || 'Server rejected changes.');
+      }
+    } catch {
+      showToast('error', 'Network Error', 'Could not connect to database server.');
+    }
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Delete this product permanently?')) return;
+    if (!window.confirm('Delete this product variant permanently?')) return;
     try {
       const res = await fetch(`/api/admin/products/${id}`, {
-        method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
-      if (data.success) { showToast('success', 'Deleted', 'Product removed.'); onRefresh(); }
-      else showToast('error', 'Delete Failed', data.error || 'Access denied.');
-    } catch { showToast('error', 'Network Error', 'Failed.'); }
+      if (data.success) {
+        showToast('success', 'Deleted', 'Product removed successfully.');
+        onRefresh();
+      } else {
+        showToast('error', 'Delete Failed', data.error || 'Access denied.');
+      }
+    } catch {
+      showToast('error', 'Network Error', 'Operation failed.');
+    }
   };
 
-  // CSV Template
+  // CSV Template download
   const handleDownloadTemplate = () => {
-    const headers = ['name', 'sku', 'category', 'price', 'original_price', 'description', 'brand', 'colors', 'tags',
-      'black_stock_6', 'black_stock_7', 'black_stock_8', 'black_stock_9', 'black_stock_10', 'black_stock_11',
-      'white_stock_6', 'white_stock_7', 'white_stock_8', 'white_stock_9', 'white_stock_10', 'white_stock_11',
-      'active', 'featured', 'is_new', 'is_trending', 'meta_title', 'meta_desc'];
-    const example = ['Oxford Double Strap', 'HU-OX-01', 'Jodhpuris', '4999', '8999', 'Premium leather oxford', 'HeelsUp',
-      'Black;White', 'wedding;premium', '5', '10', '8', '6', '4', '2', '3', '5', '4', '2', '1', '0',
-      'true', 'false', 'true', 'false', 'Premium Oxford Boots', 'Buy premium oxford boots'];
-    const note = ['# Colors column: use semicolons. Stock columns: use color_size format. Add more color columns as needed.'];
-    const csv = [note[0], headers.join(','), example.join(',')].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const headers = [
+      'name', 'color', 'sku', 'category', 'price', 'original_price', 'brand', 'description', 'tags',
+      'stock_6', 'stock_7', 'stock_8', 'stock_9', 'stock_10', 'stock_11',
+      'active', 'featured', 'is_new', 'is_trending', 'meta_title', 'meta_desc'
+    ];
+    const example = [
+      'Oxford Double Strap', 'Black', 'HU-OX-01-BLK', 'Jodhpuris', '4999', '8999', 'HeelsUp', 'Premium leather oxford', 'wedding;premium',
+      '5', '10', '8', '6', '4', '2',
+      'true', 'false', 'true', 'false', 'Premium Oxford Boots', 'Buy premium oxford boots'
+    ];
+    const csv = [headers.join(','), example.join(',')].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'heelsup_products_template.csv'; a.click();
+    a.href = url;
+    a.download = 'heelsup_bulk_products_template.csv';
+    a.click();
     URL.revokeObjectURL(url);
-    showToast('info', 'Template Downloaded', 'Fill colors column with semicolon-separated names. Each color gets its own stock_6...stock_11 columns.');
+    showToast('info', 'Template Downloaded', 'Use the downloaded template for your bulk updates.');
   };
 
   // CSV Bulk Upload
   const handleBulkUpload = async () => {
     if (!csvFile) { showToast('error', 'No File', 'Select a CSV file first.'); return; }
-    setCsvLoading(true); setCsvResult(null);
+    setCsvLoading(true);
+    setCsvResult(null);
     try {
       const text = await csvFile.text();
-      const lines = text.trim().split('\n').filter(l => !l.startsWith('#'));
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      const rows = lines.slice(1).filter(l => l.trim());
+      const lines = text.trim().split('\n').filter(l => l.trim() && !l.startsWith('#'));
+      const headers = parseCSVLine(lines[0]);
+      const rows = lines.slice(1);
       let successCount = 0;
       const errors: string[] = [];
 
       for (let i = 0; i < rows.length; i++) {
-        const vals = rows[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        const vals = parseCSVLine(rows[i]);
         const row: any = {};
-        headers.forEach((h, idx) => { row[h] = vals[idx] || ''; });
-        if (!row.name || !row.sku || !row.price) { errors.push(`Row ${i + 2}: Missing name/sku/price`); continue; }
-
-        const colorList = row.colors ? row.colors.split(';').map((c: string) => c.trim()).filter(Boolean) : ['Default'];
-
-        // Build color_variants from columns like black_stock_6, white_stock_7 etc.
-        const color_variants: ColorVariant[] = colorList.map((color: string) => {
-          const prefix = color.toLowerCase().replace(/\s+/g, '_');
-          return {
-            color,
-            size_stock: STANDARD_SIZES.map(sz => ({
-              size_label: sz,
-              stock: parseInt(row[`${prefix}_stock_${sz}`] || '0') || 0
-            }))
-          };
+        headers.forEach((h, idx) => {
+          row[h] = vals[idx] || '';
         });
 
-        const sizeMap: Record<string, number> = {};
-        color_variants.forEach(cv => cv.size_stock.forEach(ss => {
-          sizeMap[ss.size_label] = (sizeMap[ss.size_label] || 0) + ss.stock;
+        if (!row.name || !row.sku || !row.price) {
+          errors.push(`Row ${i + 2}: Missing product name, sku, or price.`);
+          continue;
+        }
+
+        const finalName = row.color ? `${row.name} - ${row.color}` : row.name;
+
+        const size_stock = STANDARD_SIZES.map(sz => ({
+          size_label: sz,
+          stock: parseInt(row[`stock_${sz}`] || '0') || 0
         }));
-        const size_stock = STANDARD_SIZES.map(sz => ({ size_label: sz, stock: sizeMap[sz] || 0 }));
-        const totalStockRow = size_stock.reduce((a, s) => a + s.stock, 0);
+        const totalStockRow = size_stock.reduce((sum, s) => sum + s.stock, 0);
 
         const payload = {
-          name: row.name, sku: row.sku.toUpperCase(),
-          category: row.category || (categories[0]?.name || ''),
+          name: finalName,
+          sku: row.sku.toUpperCase().trim(),
+          category: row.category || (categories[0]?.name || 'Heels'),
           price: Math.round(parseFloat(row.price) * 100),
           original_price: row.original_price ? Math.round(parseFloat(row.original_price) * 100) : null,
-          description: row.description || '', brand: row.brand || 'HeelsUp',
-          colors: colorList,
-          color_variants,
-          tags: row.tags ? row.tags.split(';').map((t: string) => t.trim()).filter(Boolean) : [],
+          stock: totalStockRow,
           sizes: size_stock.filter(s => s.stock > 0).map(s => s.size_label),
-          size_stock, stock: totalStockRow,
-          active: row.active !== 'false', featured: row.featured === 'true',
-          is_new: row.is_new !== 'false', is_trending: row.is_trending === 'true',
-          images: [], show_mrp: true,
-          meta_title: row.meta_title || '', meta_desc: row.meta_desc || ''
+          images: [],
+          description: row.description || '',
+          brand: row.brand || 'HeelsUp',
+          tags: row.tags ? row.tags.split(';').map((t: string) => t.trim()).filter(Boolean) : [],
+          show_mrp: true,
+          meta_title: row.meta_title || '',
+          meta_desc: row.meta_desc || '',
+          size_stock: size_stock,
+          active: row.active !== 'false',
+          featured: row.featured === 'true',
+          is_new: row.is_new !== 'false',
+          is_trending: row.is_trending === 'true'
         };
 
         try {
@@ -389,15 +400,23 @@ export default function ProductsManager({ products, categories, token, showToast
             body: JSON.stringify(payload)
           });
           const data = await res.json();
-          if (data.success) successCount++;
-          else errors.push(`Row ${i + 2} (${row.sku}): ${data.error || 'Server error'}`);
-        } catch { errors.push(`Row ${i + 2} (${row.sku}): Network error`); }
+          if (data.success) {
+            successCount++;
+          } else {
+            errors.push(`Row ${i + 2} (${row.sku}): ${data.error || 'Server error'}`);
+          }
+        } catch {
+          errors.push(`Row ${i + 2} (${row.sku}): Network failure`);
+        }
       }
 
       setCsvResult({ success: successCount, errors });
       if (successCount > 0) onRefresh();
-    } catch { showToast('error', 'CSV Error', 'Failed to parse CSV.'); }
-    finally { setCsvLoading(false); }
+    } catch (e) {
+      showToast('error', 'CSV Error', 'Failed to process CSV file.');
+    } finally {
+      setCsvLoading(false);
+    }
   };
 
   return (
@@ -407,7 +426,7 @@ export default function ProductsManager({ products, categories, token, showToast
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-light text-neutral-900 font-display italic">Products Catalog</h1>
-          <p className="text-xs text-neutral-500">Manage footwear collections with color-size stock variants</p>
+          <p className="text-xs text-neutral-500">Manage individual product style and colorway variants</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleDownloadTemplate}
@@ -460,10 +479,9 @@ export default function ProductsManager({ products, categories, token, showToast
             <thead>
               <tr className="bg-neutral-50 text-neutral-500 border-b border-neutral-200 font-mono uppercase tracking-widest text-[10px]">
                 <th className="p-4 w-14">Image</th>
-                <th className="p-4">Product</th>
+                <th className="p-4">Style & Variant Name</th>
                 <th className="p-4">SKU</th>
                 <th className="p-4">Category</th>
-                <th className="p-4">Colors</th>
                 <th className="p-4">Price</th>
                 <th className="p-4">Stock</th>
                 <th className="p-4">Status</th>
@@ -488,16 +506,6 @@ export default function ProductsManager({ products, categories, token, showToast
                   </td>
                   <td className="p-4 font-mono text-neutral-700 font-semibold">{p.sku}</td>
                   <td className="p-4 text-neutral-500">{p.category}</td>
-                  <td className="p-4">
-                    <div className="flex flex-wrap gap-1">
-                      {(p.color_variants || []).slice(0, 4).map((cv, i) => (
-                        <span key={i} className="text-[9px] bg-neutral-100 border border-neutral-200 text-neutral-700 px-1.5 py-0.5 rounded font-mono">{cv.color}</span>
-                      ))}
-                      {!p.color_variants && (p.colors || []).slice(0, 4).map((c, i) => (
-                        <span key={i} className="text-[9px] bg-neutral-100 border border-neutral-200 text-neutral-700 px-1.5 py-0.5 rounded font-mono">{c}</span>
-                      ))}
-                    </div>
-                  </td>
                   <td className="p-4 font-mono font-bold text-neutral-900">
                     ₹{(p.price / 100).toFixed(0)}
                     {p.original_price && <span className="text-[10px] text-neutral-400 line-through ml-2">₹{(p.original_price / 100).toFixed(0)}</span>}
@@ -527,7 +535,7 @@ export default function ProductsManager({ products, categories, token, showToast
                 </tr>
               ))}
               {paginatedProducts.length === 0 && (
-                <tr><td colSpan={9} className="py-24 text-center text-neutral-400 italic font-mono">No products match the filter.</td></tr>
+                <tr><td colSpan={8} className="py-24 text-center text-neutral-400 italic font-mono">No products match the filter.</td></tr>
               )}
             </tbody>
           </table>
@@ -538,13 +546,13 @@ export default function ProductsManager({ products, categories, token, showToast
       {drawerOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div onClick={() => setDrawerOpen(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="w-full max-w-2xl bg-white border-l border-neutral-200 shadow-2xl relative z-10 flex flex-col h-full">
+          <div className="w-full max-w-xl bg-white border-l border-neutral-200 shadow-2xl relative z-10 flex flex-col h-full">
 
             {/* Drawer Header */}
             <div className="flex items-center justify-between border-b border-neutral-200 px-6 py-4 shrink-0">
               <div>
                 <h3 className="text-sm font-bold text-neutral-900">{editingProduct ? `Edit: ${editingProduct.name}` : 'Add New Product'}</h3>
-                <p className="text-[10px] text-neutral-500 mt-0.5">Total stock across all colors: <strong>{totalStock}</strong> units</p>
+                <p className="text-[10px] text-neutral-500 mt-0.5">Total stock count: <strong>{totalStock}</strong> units</p>
               </div>
               <button onClick={() => setDrawerOpen(false)} className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-500">
                 <X className="w-5 h-5" />
@@ -553,12 +561,11 @@ export default function ProductsManager({ products, categories, token, showToast
 
             {/* Tab Nav */}
             <div className="flex border-b border-neutral-200 shrink-0">
-              {(['basic', 'colors', 'media', 'seo'] as const).map(tab => (
+              {(['basic', 'stock', 'media', 'seo'] as const).map(tab => (
                 <button key={tab} onClick={() => setActiveTab(tab)}
                   className={`px-4 py-3 text-[11px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 ${activeTab === tab ? 'text-neutral-900 border-b-2 border-neutral-900' : 'text-neutral-400 hover:text-neutral-700'}`}>
-                  {tab === 'colors' && <Palette className="w-3 h-3" />}
-                  {tab === 'basic' ? 'Basic Info' : tab === 'colors' ? `Colors & Stock` : tab === 'media' ? 'Images' : 'SEO'}
-                  {tab === 'colors' && <span className="bg-neutral-900 text-white text-[8px] px-1.5 py-0.5 rounded-full">{colorVariants.length}</span>}
+                  {tab === 'stock' && <Box className="w-3 h-3" />}
+                  {tab === 'basic' ? 'Basic Info' : tab === 'stock' ? 'Sizes & Stock' : tab === 'media' ? 'Images' : 'SEO'}
                 </button>
               ))}
             </div>
@@ -572,19 +579,25 @@ export default function ProductsManager({ products, categories, token, showToast
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Style Name *</label>
-                      <input type="text" required value={prodName} onChange={e => setProdName(e.target.value)}
+                      <input type="text" required value={prodStyleName} onChange={e => setProdStyleName(e.target.value)}
                         placeholder="e.g. Oxford Double Strap"
                         className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none" />
                     </div>
                     <div>
-                      <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">SKU *</label>
-                      <input type="text" required value={prodSku} onChange={e => setProdSku(e.target.value)}
-                        placeholder="HU-OX-01"
-                        className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 font-mono focus:outline-none" />
+                      <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Color (Variant)</label>
+                      <input type="text" value={prodColor} onChange={e => setProdColor(e.target.value)}
+                        placeholder="e.g. Black, Tan, White"
+                        className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">SKU *</label>
+                      <input type="text" required value={prodSku} onChange={e => setProdSku(e.target.value)}
+                        placeholder="HU-OX-01-BLK"
+                        className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 font-mono focus:outline-none" />
+                    </div>
                     <div>
                       <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Category</label>
                       <select value={prodCategory} onChange={e => setProdCategory(e.target.value)}
@@ -592,6 +605,9 @@ export default function ProductsManager({ products, categories, token, showToast
                         {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                       </select>
                     </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Price (₹) *</label>
                       <input type="number" step="0.01" required value={prodPrice} onChange={e => setProdPrice(e.target.value)}
@@ -602,6 +618,16 @@ export default function ProductsManager({ products, categories, token, showToast
                       <input type="number" step="0.01" value={prodOriginalPrice} onChange={e => setProdOriginalPrice(e.target.value)}
                         placeholder="8999" className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 font-mono focus:outline-none" />
                     </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Show MRP Badge</label>
+                      <div className="flex items-center gap-3 pt-2">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" checked={prodShowMrp} onChange={e => setProdShowMrp(e.target.checked)} className="sr-only peer" />
+                          <div className="w-9 h-5 bg-neutral-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-neutral-900"></div>
+                          <span className="ml-2 text-neutral-600 text-[10px] font-semibold">{prodShowMrp ? 'Visible' : 'Hidden'}</span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -610,15 +636,18 @@ export default function ProductsManager({ products, categories, token, showToast
                       <input type="text" value={prodBrand} onChange={e => setProdBrand(e.target.value)}
                         className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none" />
                     </div>
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Show MRP Badge</label>
-                      <div className="flex items-center gap-3 pt-2.5">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input type="checkbox" checked={prodShowMrp} onChange={e => setProdShowMrp(e.target.checked)} className="sr-only peer" />
-                          <div className="w-9 h-5 bg-neutral-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-neutral-900"></div>
-                          <span className="ml-2 text-neutral-600 text-[10px] font-semibold">{prodShowMrp ? 'Visible' : 'Hidden'}</span>
+                    <div className="flex flex-wrap items-center gap-4 pt-4 uppercase tracking-wider text-[9px] font-bold text-neutral-500">
+                      {[
+                        { label: 'Publish', value: prodActive, setter: setProdActive },
+                        { label: 'Featured', value: prodFeatured, setter: setProdFeatured },
+                        { label: 'New', value: prodIsNew, setter: setProdIsNew },
+                        { label: 'Trending', value: prodIsTrending, setter: setProdIsTrending },
+                      ].map(({ label, value, setter }) => (
+                        <label key={label} className="flex items-center gap-1.5 cursor-pointer">
+                          <input type="checkbox" checked={value} onChange={e => setter(e.target.checked)}
+                            className="rounded border-neutral-300 w-3.5 h-3.5 accent-neutral-900" /> {label}
                         </label>
-                      </div>
+                      ))}
                     </div>
                   </div>
 
@@ -642,93 +671,34 @@ export default function ProductsManager({ products, categories, token, showToast
                         placeholder="Add tag, Enter to add..." className="bg-transparent border-0 text-neutral-900 placeholder-neutral-400 focus:outline-none py-0.5 flex-1 min-w-[120px]" />
                     </div>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-5 pt-3 border-t border-neutral-100 font-mono font-bold text-[9px] uppercase tracking-wider text-neutral-500">
-                    {[
-                      { label: 'Publish', value: prodActive, setter: setProdActive },
-                      { label: 'Featured', value: prodFeatured, setter: setProdFeatured },
-                      { label: 'New Release', value: prodIsNew, setter: setProdIsNew },
-                      { label: 'Trending', value: prodIsTrending, setter: setProdIsTrending },
-                    ].map(({ label, value, setter }) => (
-                      <label key={label} className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={value} onChange={e => setter(e.target.checked)}
-                          className="rounded border-neutral-300 w-3.5 h-3.5 accent-neutral-900" /> {label}
-                      </label>
-                    ))}
-                  </div>
                 </>
               )}
 
-              {/* ---- COLORS & STOCK TAB ---- */}
-              {activeTab === 'colors' && (
+              {/* ---- SIZES & STOCK TAB ---- */}
+              {activeTab === 'stock' && (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
                     <div>
-                      <h4 className="text-xs font-bold text-neutral-900">Color — Size Stock Matrix</h4>
-                      <p className="text-[10px] text-neutral-500 mt-0.5">Each color has its own size-wise stock count</p>
+                      <h4 className="text-xs font-bold text-neutral-900">Per-Size Inventory levels</h4>
+                      <p className="text-[10px] text-neutral-500 mt-0.5">Specify stock counts per size for UK 6 to UK 11</p>
                     </div>
-                    <span className="text-[10px] font-bold text-neutral-500 font-mono">Total: {totalStock} units</span>
+                    <span className="text-[11px] font-bold text-neutral-600 font-mono bg-neutral-100 px-3 py-1 rounded-lg">Total: {totalStock} units</span>
                   </div>
 
-                  {/* Color rows */}
-                  {colorVariants.map((cv, colorIdx) => (
-                    <div key={colorIdx} className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 space-y-3">
-                      {/* Color name header */}
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1">
-                          <label className="block text-[9px] uppercase tracking-wider font-bold text-neutral-500 mb-1">Color Name</label>
-                          <input
-                            type="text"
-                            value={cv.color}
-                            onChange={e => handleColorNameChange(colorIdx, e.target.value)}
-                            placeholder="e.g. Black, Tan, White, Dark Brown"
-                            className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 font-semibold focus:outline-none focus:border-neutral-400 placeholder-neutral-400"
-                          />
-                        </div>
-                        <button type="button" onClick={() => handleRemoveColorRow(colorIdx)}
-                          className="mt-5 p-2 bg-white hover:bg-rose-50 border border-neutral-200 hover:border-rose-200 text-neutral-400 hover:text-rose-500 rounded-xl transition-all">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                  <div className="grid grid-cols-3 gap-4">
+                    {STANDARD_SIZES.map(sz => (
+                      <div key={sz} className="bg-neutral-50 border border-neutral-200 rounded-xl p-3 flex flex-col justify-between items-center text-center">
+                        <label className="block text-[10px] font-bold text-neutral-500 font-mono uppercase mb-1">UK {sz}</label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={sizeStockValues[sz] || 0}
+                          onChange={e => handleStockChange(sz, parseInt(e.target.value) || 0)}
+                          className="w-full bg-white border border-neutral-200 rounded-lg py-1.5 px-2 text-center text-neutral-900 font-semibold font-mono text-xs focus:outline-none focus:border-neutral-500"
+                        />
                       </div>
-
-                      {/* Size Stock Grid for this color */}
-                      <div>
-                        <div className="grid grid-cols-6 gap-2">
-                          {cv.size_stock.map((ss, sizeIdx) => (
-                            <div key={sizeIdx} className="text-center">
-                              <label className="block text-[9px] font-bold font-mono text-neutral-500 mb-1">UK {ss.size_label}</label>
-                              <input
-                                type="number" min={0}
-                                value={ss.stock}
-                                onChange={e => handleStockChange(colorIdx, ss.size_label, parseInt(e.target.value) || 0)}
-                                className="w-full bg-white border border-neutral-200 rounded-lg py-1.5 px-1 text-center text-neutral-900 font-mono text-xs focus:outline-none focus:border-neutral-500"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-[9px] text-neutral-400 mt-1.5 text-right">
-                          Subtotal for {cv.color || 'this color'}: <strong className="text-neutral-600">{cv.size_stock.reduce((a, s) => a + s.stock, 0)} units</strong>
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Add New Color Row */}
-                  <div className="flex items-center gap-2 pt-2">
-                    <input
-                      type="text"
-                      value={newColorInput}
-                      onChange={e => setNewColorInput(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddColorRow(); } }}
-                      placeholder="Type color name (e.g. White, Tan, Cognac) and press Add"
-                      className="flex-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2.5 text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-neutral-400"
-                    />
-                    <button type="button" onClick={handleAddColorRow}
-                      className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all shrink-0">
-                      <Plus className="w-3.5 h-3.5" /> Add Color
-                    </button>
+                    ))}
                   </div>
-                  <p className="text-[9px] text-neutral-400">Each color row has its own size-stock per UK size 6–11.</p>
                 </div>
               )}
 
@@ -759,7 +729,7 @@ export default function ProductsManager({ products, categories, token, showToast
               {activeTab === 'seo' && (
                 <div className="space-y-4">
                   <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-5 space-y-4">
-                    <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-500">SEO Parameters</h4>
+                    <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-500">SEO parameters</h4>
                     <div>
                       <label className="block text-[9px] uppercase font-bold text-neutral-500 mb-1">Meta Title</label>
                       <input type="text" value={prodMetaTitle} onChange={e => setProdMetaTitle(e.target.value)}
@@ -802,7 +772,7 @@ export default function ProductsManager({ products, categories, token, showToast
             <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
               <div>
                 <h3 className="text-sm font-bold text-neutral-900">Bulk Product Import</h3>
-                <p className="text-[10px] text-neutral-500 mt-0.5">CSV with color-size stock columns</p>
+                <p className="text-[10px] text-neutral-500 mt-0.5">Import products with size-stock details</p>
               </div>
               <button onClick={() => setShowBulkModal(false)} className="p-1.5 hover:bg-neutral-100 rounded-lg text-neutral-500"><X className="w-4 h-4" /></button>
             </div>

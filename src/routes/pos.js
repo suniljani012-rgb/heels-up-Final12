@@ -21,7 +21,7 @@ export async function posRouter(request, env) {
         const { user, error: authError } = await requireAdmin(request, env);
         if (authError) return authError;
         try {
-            const { customer_name, customer_phone, items, payment_method, discount, notes } = await request.json();
+            const { customer_name, customer_phone, items, payment_method, discount, notes, created_at } = await request.json();
             if (!items || items.length === 0) return error('No items in sale');
 
             // Find staff entry mapping to logged-in user (admin/staff/manager)
@@ -62,17 +62,21 @@ export async function posRouter(request, env) {
             const saleNumber = await genOrderNumber(env);
             const itemsJson = JSON.stringify(processedItems);
 
+            // Format timestamp matching SQLite datetime
+            const rawDate = created_at || new Date().toISOString();
+            const finalCreatedAt = rawDate.replace('T', ' ').substring(0, 19);
+
             // Insert offline_sales matching remote schema
             const saleRes = await env.DB.prepare(`
                 INSERT INTO offline_sales (
                     sale_number, customer_name, customer_phone, items_json,
                     subtotal, discount, total, payment_method, notes,
                     created_by, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).bind(
                 saleNumber, customer_name || 'Walk-in', customer_phone || null, itemsJson,
                 subtotal, discountAmt, total, payment_method || 'Cash', notes || null,
-                user.id
+                user.id, finalCreatedAt
             ).run();
 
             const saleId = saleRes.meta?.last_row_id;
