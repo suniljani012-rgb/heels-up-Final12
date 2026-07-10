@@ -121,7 +121,7 @@ export default function PagesManager({ pages, token, showToast, onRefresh }: Pag
         </div>
         <button
           onClick={handleOpenAdd}
-          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
+          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" /> Add Static Page
         </button>
@@ -154,14 +154,14 @@ export default function PagesManager({ pages, token, showToast, onRefresh }: Pag
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-900/60">
+            <tbody className="divide-y divide-neutral-100">
               {filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-neutral-50/20 transition-colors">
                   <td className="p-4 font-bold text-neutral-900 text-xs">{p.title}</td>
                   <td className="p-4 font-mono text-neutral-500">/{p.slug}</td>
                   <td className="p-4 text-neutral-500 font-mono">{p.content?.length || 0} characters</td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${p.active ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700' : 'bg-neutral-800 text-neutral-500'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${p.active ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700' : 'bg-neutral-100 text-neutral-500'}`}>
                       {p.active ? 'Active' : 'Draft'}
                     </span>
                   </td>
@@ -175,7 +175,7 @@ export default function PagesManager({ pages, token, showToast, onRefresh }: Pag
                       </button>
                       <button
                         onClick={() => handleDelete(p.id)}
-                        className="p-1.5 bg-neutral-800 hover:bg-rose-50 hover:bg-rose-100 hover:text-rose-600 rounded-lg transition-all"
+                        className="p-1.5 bg-neutral-100 hover:bg-rose-50 hover:bg-rose-100 hover:text-rose-600 rounded-lg transition-all"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -257,14 +257,14 @@ export default function PagesManager({ pages, token, showToast, onRefresh }: Pag
                       onChange={(e) => setPageActive(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-8 h-4 bg-neutral-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-500 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-neutral-900/80"></div>
+                    <div className="w-8 h-4 bg-neutral-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-500 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-white"></div>
                     <span className="ml-2 text-neutral-500 text-[10px] font-bold">Publish Page (Make Public)</span>
                   </label>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
+                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
                 >
                   Save Static Page
                 </button>

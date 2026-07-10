@@ -237,7 +237,7 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
           </div>
           <button
             onClick={handleCompileReport}
-            className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+            className="px-4 py-2 bg-neutral-900 hover:bg-neutral-100 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors"
           >
             Generate Report
           </button>
@@ -258,8 +258,8 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
         </div>
         <div className="bg-white border border-neutral-200/80 p-4 rounded-xl">
           <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Average Order</span>
-          <span className="block text-base font-bold font-mono text-neutral-850 mt-1">₹{stats.avgOrder.toFixed(2)}</span>
-          <span className="text-[7px] text-neutral-850 font-semibold mt-1 block">Ticket size</span>
+          <span className="block text-base font-bold font-mono text-neutral-700 mt-1">₹{stats.avgOrder.toFixed(2)}</span>
+          <span className="text-[7px] text-neutral-700 font-semibold mt-1 block">Ticket size</span>
         </div>
         <div className="bg-white border border-neutral-200/80 p-4 rounded-xl">
           <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Cancellation Rate</span>
@@ -417,7 +417,7 @@ export default function EnterpriseReports({ orders, products, showToast }: Enter
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-900/60">
+              <tbody className="divide-y divide-neutral-100">
                 {compiledData.map((row, idx) => (
                   <tr key={idx} className="hover:bg-neutral-50/25 transition-colors text-neutral-900">
                     {Object.keys(row).map(k => (

@@ -1,19 +1,32 @@
 import React, { useState, useMemo } from 'react';
-import { ShoppingCart, Search, Trash2, Plus, X, Printer, User, DollarSign } from 'lucide-react';
+import {
+  ShoppingCart, Search, Trash2, Plus, X, Printer, User, DollarSign,
+  MessageCircle, CreditCard, Banknote, Smartphone, CheckCircle2, Package
+} from 'lucide-react';
 import HeicImage from '../../components/HeicImage';
+
+// Instagram SVG icon (lucide-react may not have Instagram in older versions)
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+  </svg>
+);
 
 interface Product {
   id: number;
   name: string;
   sku: string;
   category: string;
-  price: number; // in paise
+  price: number;
   original_price: number | null;
   stock: number;
   active: boolean;
   featured: boolean;
   images: string[];
   sizes: string[];
+  colors?: string[];
 }
 
 interface PosTerminalProps {
@@ -24,39 +37,43 @@ interface PosTerminalProps {
   onOrderCreated: () => void;
 }
 
+type PaymentMethod = 'cash' | 'upi' | 'card' | 'whatsapp' | 'instagram';
+type SaleChannel = 'in-store' | 'whatsapp' | 'instagram' | 'phone';
+
 export default function PosTerminal({ products, categories, coupons, showToast, onOrderCreated }: PosTerminalProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [cart, setCart] = useState<{ product: Product; size: string; qty: number; customPrice?: number }[]>([]);
-  
-  // Customer parameters
+
+  // Customer
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
-  
-  // Financial adjustments
+  const [saleChannel, setSaleChannel] = useState<SaleChannel>('in-store');
+
+  // Financials
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null);
-  const [customDiscount, setCustomDiscount] = useState<number>(0); // in Rupees
-  const [gstRate, setGstRate] = useState<number>(18); // Default 18% GST for premium footwear
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'upi' | 'card'>('cash');
+  const [customDiscount, setCustomDiscount] = useState<number>(0);
+  const [gstRate, setGstRate] = useState<number>(18);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [notes, setNotes] = useState('In-Store POS Sale');
-  
-  // Drawer parameters
-  const [drawerStartCash, setDrawerStartCash] = useState<number>(5000); // 5000 Rs starting float
+
+  // Drawer
+  const [drawerStartCash, setDrawerStartCash] = useState<number>(5000);
   const [cashDrops, setCashDrops] = useState<{ amount: number; reason: string; time: string }[]>([]);
   const [dropAmount, setDropAmount] = useState<number>(0);
   const [dropReason, setDropReason] = useState('');
   const [showDrawerManager, setShowDrawerManager] = useState(false);
-  
-  // Sizes Selection Modal
+
+  // Size Selection
   const [activeSizeProduct, setActiveSizeProduct] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState<string>('');
-  
-  // Printable Invoice state
+  const [selectedColor, setSelectedColor] = useState<string>('');
+
+  // Invoice
   const [printedOrder, setPrintedOrder] = useState<any | null>(null);
 
-  // Filtered Products
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       if (!p.active) return false;
@@ -66,59 +83,41 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
     });
   }, [products, searchQuery, selectedCategory]);
 
-  // POS Drawer Cash Balance calculation
-  const totalCashSales = useMemo(() => {
-    if (!printedOrder) return 0;
-    // Calculated based on completed sales in the current session
-    return 0; // Simulated/Local session
-  }, [printedOrder]);
+  const subtotalPaise = useMemo(() =>
+    cart.reduce((sum, item) => {
+      const price = item.customPrice !== undefined ? item.customPrice * 100 : item.product.price;
+      return sum + (price * item.qty);
+    }, 0), [cart]);
 
+  const couponDiscountPaise = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    if (appliedCoupon.discount_type === 'percentage') return Math.round((subtotalPaise * appliedCoupon.discount_value) / 100);
+    return appliedCoupon.discount_value * 100;
+  }, [appliedCoupon, subtotalPaise]);
+
+  const totalDiscountPaise = useMemo(() =>
+    Math.min(subtotalPaise, couponDiscountPaise + (customDiscount * 100)),
+    [couponDiscountPaise, customDiscount, subtotalPaise]);
+
+  const taxableAmountPaise = Math.max(0, subtotalPaise - totalDiscountPaise);
+  const gstAmountPaise = Math.round((taxableAmountPaise * gstRate) / (100 + gstRate));
+  const baseAmountPaise = taxableAmountPaise - gstAmountPaise;
+  const totalPayablePaise = taxableAmountPaise;
+
+  const totalCashSales = 0;
   const currentDrawerCash = useMemo(() => {
     const drops = cashDrops.reduce((acc, d) => acc - d.amount, 0);
     return drawerStartCash + totalCashSales + drops;
-  }, [drawerStartCash, totalCashSales, cashDrops]);
+  }, [drawerStartCash, cashDrops]);
 
-  // Cart Subtotal in Paise
-  const subtotalPaise = useMemo(() => {
-    return cart.reduce((sum, item) => {
-      const price = item.customPrice !== undefined ? item.customPrice * 100 : item.product.price;
-      return sum + (price * item.qty);
-    }, 0);
-  }, [cart]);
-
-  // Coupon Discount in Paise
-  const couponDiscountPaise = useMemo(() => {
-    if (!appliedCoupon) return 0;
-    if (appliedCoupon.discount_type === 'percentage') {
-      return Math.round((subtotalPaise * appliedCoupon.discount_value) / 100);
-    } else {
-      return appliedCoupon.discount_value * 100; // stored in Rs, convert to paise
-    }
-  }, [appliedCoupon, subtotalPaise]);
-
-  // Total discount in Paise (Coupon + Custom)
-  const totalDiscountPaise = useMemo(() => {
-    const customDiscPaise = customDiscount * 100;
-    return Math.min(subtotalPaise, couponDiscountPaise + customDiscPaise);
-  }, [couponDiscountPaise, customDiscount, subtotalPaise]);
-
-  // GST calculation
-  const taxableAmountPaise = Math.max(0, subtotalPaise - totalDiscountPaise);
-  const gstAmountPaise = Math.round((taxableAmountPaise * gstRate) / (100 + gstRate)); // Inclusive GST calculation
-  const baseAmountPaise = taxableAmountPaise - gstAmountPaise;
-
-  const totalPayablePaise = taxableAmountPaise;
-
-  // Add Item
   const handleProductClick = (p: Product) => {
     setActiveSizeProduct(p);
-    setSelectedSize(p.sizes?.[0] || '38');
+    setSelectedSize(p.sizes?.[0] || '');
+    setSelectedColor(p.colors?.[0] || '');
   };
 
   const handleConfirmAddToCart = () => {
     if (!activeSizeProduct) return;
-    
-    // Check if item already in cart
     const existingIdx = cart.findIndex(item => item.product.id === activeSizeProduct.id && item.size === selectedSize);
     if (existingIdx > -1) {
       const updated = [...cart];
@@ -127,95 +126,62 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
     } else {
       setCart(prev => [...prev, { product: activeSizeProduct, size: selectedSize, qty: 1 }]);
     }
-    
     setActiveSizeProduct(null);
-    showToast('success', 'Cart Updated', `${activeSizeProduct.name} (Size ${selectedSize}) added.`);
+    showToast('success', 'Added to Cart', `${activeSizeProduct.name} (Size ${selectedSize}) added.`);
   };
 
-  // Cart Qty updates
   const updateQty = (idx: number, delta: number) => {
     const updated = [...cart];
     updated[idx].qty += delta;
-    if (updated[idx].qty <= 0) {
-      updated.splice(idx, 1);
-    }
+    if (updated[idx].qty <= 0) updated.splice(idx, 1);
     setCart(updated);
   };
 
-  // Remove Item
   const removeFromCart = (idx: number) => {
     const updated = [...cart];
     updated.splice(idx, 1);
     setCart(updated);
   };
 
-  // Custom Price Update
   const updateCustomPrice = (idx: number, valueStr: string) => {
     const numVal = parseFloat(valueStr);
     const updated = [...cart];
-    if (isNaN(numVal) || numVal < 0) {
-      delete updated[idx].customPrice;
-    } else {
-      updated[idx].customPrice = numVal;
-    }
+    if (isNaN(numVal) || numVal < 0) delete updated[idx].customPrice;
+    else updated[idx].customPrice = numVal;
     setCart(updated);
   };
 
-  // Coupon lookup
   const handleApplyCoupon = () => {
-    if (!couponCode.trim()) {
-      setAppliedCoupon(null);
-      return;
-    }
+    if (!couponCode.trim()) { setAppliedCoupon(null); return; }
     const found = coupons.find(c => c.code.toLowerCase() === couponCode.trim().toLowerCase());
-    if (!found) {
-      showToast('error', 'Invalid Coupon', 'The coupon code does not exist.');
-      setAppliedCoupon(null);
-      return;
-    }
-    if (!found.active) {
-      showToast('error', 'Expired Coupon', 'This promotion is no longer active.');
-      setAppliedCoupon(null);
-      return;
-    }
-    if (subtotalPaise / 100 < found.min_purchase) {
-      showToast('warning', 'Threshold Not Met', `Minimum purchase of ₹${found.min_purchase} required.`);
-      setAppliedCoupon(null);
-      return;
-    }
-    
+    if (!found) { showToast('error', 'Invalid Coupon', 'Coupon code does not exist.'); setAppliedCoupon(null); return; }
+    if (!found.active) { showToast('error', 'Expired Coupon', 'This promotion is no longer active.'); setAppliedCoupon(null); return; }
+    if (subtotalPaise / 100 < found.min_purchase) { showToast('warning', 'Threshold Not Met', `Min purchase of ₹${found.min_purchase} required.`); setAppliedCoupon(null); return; }
     setAppliedCoupon(found);
     showToast('success', 'Coupon Applied', `Discount of ${found.discount_value}${found.discount_type === 'percentage' ? '%' : ' Rs'} activated.`);
   };
 
-  // Cash drop
   const handleAddCashDrop = (e: React.FormEvent) => {
     e.preventDefault();
-    if (dropAmount <= 0 || !dropReason.trim()) {
-      showToast('error', 'Fields Required', 'Please enter a valid amount and payout reason.');
-      return;
-    }
-    if (dropAmount > currentDrawerCash) {
-      showToast('error', 'Limit Exceeded', 'Cannot payout more cash than current drawer balance.');
-      return;
-    }
-    setCashDrops(prev => [...prev, {
-      amount: dropAmount,
-      reason: dropReason,
-      time: new Date().toLocaleTimeString()
-    }]);
-    setDropAmount(0);
-    setDropReason('');
-    showToast('info', 'Cash Outflow Registered', 'Safe drop transaction recorded successfully.');
+    if (dropAmount <= 0 || !dropReason.trim()) { showToast('error', 'Fields Required', 'Enter a valid amount and reason.'); return; }
+    if (dropAmount > currentDrawerCash) { showToast('error', 'Limit Exceeded', 'Cannot payout more than drawer balance.'); return; }
+    setCashDrops(prev => [...prev, { amount: dropAmount, reason: dropReason, time: new Date().toLocaleTimeString() }]);
+    setDropAmount(0); setDropReason('');
+    showToast('info', 'Cash Outflow Registered', 'Safe drop transaction recorded.');
   };
 
-  // POS Checkout Sale submit
-  const handleCheckout = async () => {
-    if (cart.length === 0) {
-      showToast('error', 'Checkout Denied', 'Your shopping cart is empty.');
-      return;
-    }
+  // WhatsApp share link
+  const handleShareWhatsApp = () => {
+    if (cart.length === 0) { showToast('error', 'Empty Cart', 'Add products before sharing.'); return; }
+    const items = cart.map(item => `• ${item.product.name} (Size: ${item.size}) x${item.qty} — ₹${((item.customPrice ?? item.product.price / 100) * item.qty).toFixed(0)}`).join('\n');
+    const msg = `*HeelsUp Order Summary*\n\nCustomer: ${customerName || 'Walk-in'}\n\n${items}\n\n*Total: ₹${(totalPayablePaise / 100).toFixed(0)}*\n\nThank you for choosing HeelsUp! 👟`;
+    const url = `https://wa.me/${customerPhone ? '91' + customerPhone : ''}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  };
 
+  const handleCheckout = async () => {
+    if (cart.length === 0) { showToast('error', 'Checkout Denied', 'Cart is empty.'); return; }
+    const channelNotes = saleChannel === 'whatsapp' ? '📱 WhatsApp Sale' : saleChannel === 'instagram' ? '📸 Instagram Sale' : saleChannel === 'phone' ? '📞 Phone Order' : 'In-Store POS Sale';
     const payload = {
       customer_name: customerName.trim() || 'Walk-in Customer',
       customer_phone: customerPhone.trim() || '0000000000',
@@ -234,122 +200,129 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
       shipping_amount: 0,
       discount_amount: totalDiscountPaise / 100,
       total_amount: totalPayablePaise / 100,
-      notes: `${notes} | GST Rate: ${gstRate}%`,
+      notes: `${channelNotes} | GST Rate: ${gstRate}%${notes !== 'In-Store POS Sale' ? ' | ' + notes : ''}`,
       coupon_code: appliedCoupon ? appliedCoupon.code : null
     };
-
     try {
       const res = await fetch('/api/admin/pos/sale', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}` },
         body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success && data.order) {
-        showToast('success', 'POS Sale Logged', `Invoice #${data.order.order_number} issued successfully.`);
+        showToast('success', 'Sale Completed', `Invoice #${data.order.order_number} issued.`);
         setPrintedOrder(data.order);
-        
-        // Reset POS fields
-        setCart([]);
-        setCustomerName('');
-        setCustomerPhone('');
-        setCustomerEmail('');
-        setCouponCode('');
-        setAppliedCoupon(null);
-        setCustomDiscount(0);
-        setNotes('In-Store POS Sale');
+        setCart([]); setCustomerName(''); setCustomerPhone(''); setCustomerEmail('');
+        setCouponCode(''); setAppliedCoupon(null); setCustomDiscount(0);
+        setSaleChannel('in-store');
         onOrderCreated();
       } else {
-        showToast('error', 'Checkout Failed', data.error || 'Server rejected POS sale validation.');
+        showToast('error', 'Checkout Failed', data.error || 'Server rejected POS sale.');
       }
-    } catch (err) {
-      showToast('error', 'Connection Failure', 'Could not record transaction to cloud database.');
+    } catch {
+      showToast('error', 'Connection Failure', 'Could not record transaction.');
     }
   };
 
+  const channelColors: Record<SaleChannel, string> = {
+    'in-store': 'border-neutral-900 bg-neutral-900 text-white',
+    'whatsapp': 'border-emerald-500 bg-emerald-500 text-white',
+    'instagram': 'border-purple-500 bg-purple-500 text-white',
+    'phone': 'border-blue-500 bg-blue-500 text-white',
+  };
+
+  const paymentIcons: Record<PaymentMethod, React.ReactNode> = {
+    cash: <Banknote className="w-3.5 h-3.5" />,
+    upi: <Smartphone className="w-3.5 h-3.5" />,
+    card: <CreditCard className="w-3.5 h-3.5" />,
+    whatsapp: <MessageCircle className="w-3.5 h-3.5" />,
+    instagram: <InstagramIcon className="w-3.5 h-3.5" />,
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in relative">
-      {/* POS Controls / Top Info Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-neutral-200/80 p-5 rounded-2xl">
+    <div className="space-y-5 animate-fade-in">
+
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-neutral-200 p-5 rounded-2xl shadow-sm">
         <div>
-          <h2 className="text-lg font-bold text-neutral-900 font-display italic">POS terminal</h2>
-          <p className="text-[10px] text-neutral-500 font-medium">In-store billing panel & register log.</p>
+          <h2 className="text-lg font-bold text-neutral-900 font-display italic">POS Terminal</h2>
+          <p className="text-[10px] text-neutral-500 font-medium">In-store & social commerce billing · Cash register & invoice</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowDrawerManager(!showDrawerManager)}
-            className="px-4 py-2 border border-neutral-200 hover:bg-neutral-200 text-neutral-800 hover:text-neutral-900 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
-          >
-            <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
-            Drawer: ₹{currentDrawerCash.toFixed(2)}
-          </button>
+
+        {/* Sale Channel Selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-wider mr-1">Channel:</span>
+          {(['in-store', 'whatsapp', 'instagram', 'phone'] as SaleChannel[]).map(ch => (
+            <button
+              key={ch}
+              onClick={() => { setSaleChannel(ch); setNotes(ch === 'in-store' ? 'In-Store POS Sale' : ch === 'whatsapp' ? 'WhatsApp Sale' : ch === 'instagram' ? 'Instagram DM Sale' : 'Phone Order'); }}
+              className={`px-3 py-1.5 rounded-xl text-[10px] font-bold border transition-all flex items-center gap-1.5 ${saleChannel === ch ? channelColors[ch] : 'border-neutral-200 text-neutral-500 hover:bg-neutral-50'}`}
+            >
+              {ch === 'whatsapp' && <MessageCircle className="w-3 h-3" />}
+              {ch === 'instagram' && <InstagramIcon className="w-3 h-3" />}
+              {ch === 'in-store' && <Package className="w-3 h-3" />}
+              {ch === 'phone' && <Smartphone className="w-3 h-3" />}
+              {ch === 'in-store' ? 'In-Store' : ch.charAt(0).toUpperCase() + ch.slice(1)}
+            </button>
+          ))}
         </div>
+
+        <button
+          onClick={() => setShowDrawerManager(!showDrawerManager)}
+          className="px-4 py-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+        >
+          <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+          Drawer: ₹{currentDrawerCash.toFixed(0)}
+        </button>
       </div>
 
-      {/* POS Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN: Catalog and Search (8 cols) */}
-        <div className="xl:col-span-8 space-y-6">
-          {/* Filters Panel */}
-          <div className="bg-white border border-neutral-200/80 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-12 gap-4">
+      {/* Main POS Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+
+        {/* LEFT: Product Catalog (8 cols) */}
+        <div className="xl:col-span-8 space-y-4">
+          <div className="bg-white border border-neutral-200 p-4 rounded-2xl grid grid-cols-1 md:grid-cols-12 gap-3 shadow-sm">
             <div className="md:col-span-8 relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
-                <Search className="w-4 h-4" />
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Scan barcode or type style name, sku..."
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-amber-500/60"
-              />
+              <Search className="absolute inset-y-0 left-3 h-full w-4 text-neutral-400 flex items-center" />
+              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Scan barcode or type name / SKU..."
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl pl-9 pr-4 py-2.5 text-xs text-neutral-900 focus:outline-none focus:border-neutral-400" />
             </div>
             <div className="md:col-span-4">
-              <select
-                value={selectedCategory}
-                onChange={e => setSelectedCategory(e.target.value)}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2.5 text-xs text-neutral-900 focus:outline-none"
-              >
+              <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2.5 text-xs text-neutral-900 focus:outline-none">
                 <option value="">All Categories</option>
-                {categories.map(c => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
-                ))}
+                {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
           </div>
 
-          {/* Products Catalog Display Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-h-[60vh] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto pr-1">
             {filteredProducts.length === 0 ? (
-              <div className="col-span-full py-16 text-center text-xs text-neutral-500 border border-dashed border-neutral-200 rounded-2xl">
-                No matching product inventory found.
+              <div className="col-span-full py-16 text-center text-xs text-neutral-400 border border-dashed border-neutral-200 rounded-2xl">
+                No matching products found.
               </div>
             ) : (
               filteredProducts.map(p => {
                 const priceRs = (p.price / 100).toLocaleString('en-IN');
                 return (
-                  <div
-                    key={p.id}
-                    onClick={() => handleProductClick(p)}
-                    className="bg-white border border-neutral-200/80 rounded-xl p-3 flex flex-col justify-between hover:border-amber-500/30 transition-all cursor-pointer group"
-                  >
-                    <div className="aspect-square bg-neutral-50 border border-neutral-200 rounded-lg overflow-hidden flex items-center justify-center relative mb-2.5">
+                  <div key={p.id} onClick={() => handleProductClick(p)}
+                    className="bg-white border border-neutral-200 rounded-xl p-3 flex flex-col justify-between hover:border-neutral-400 hover:shadow-md transition-all cursor-pointer group">
+                    <div className="aspect-square bg-neutral-50 border border-neutral-100 rounded-lg overflow-hidden flex items-center justify-center relative mb-2.5">
                       <HeicImage src={p.images?.[0] || ''} alt={p.name} className="max-w-full max-h-full object-contain" />
                       {p.stock <= 2 && (
-                        <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-rose-500/10 border border-rose-500/20 rounded text-[8px] font-bold text-rose-500 uppercase">
-                          Low Stock ({p.stock})
+                        <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-rose-50 border border-rose-200 rounded text-[8px] font-bold text-rose-600 uppercase">
+                          Low ({p.stock})
                         </div>
                       )}
                     </div>
                     <div>
-                      <span className="text-[8px] font-bold text-neutral-500 uppercase tracking-wider block mb-0.5">{p.sku}</span>
-                      <h4 className="text-[10px] font-bold text-neutral-900 group-hover:text-amber-500 transition-colors line-clamp-1">{p.name}</h4>
+                      <span className="text-[8px] font-bold text-neutral-400 uppercase tracking-wider block mb-0.5 font-mono">{p.sku}</span>
+                      <h4 className="text-[10px] font-semibold text-neutral-900 group-hover:text-neutral-700 transition-colors line-clamp-2 leading-tight">{p.name}</h4>
                       <div className="flex justify-between items-center mt-1.5">
-                        <span className="text-[11px] font-bold text-neutral-850 font-mono">₹{priceRs}</span>
-                        <span className="text-[8px] text-neutral-500 font-semibold">{p.category}</span>
+                        <span className="text-[11px] font-bold text-neutral-900 font-mono">₹{priceRs}</span>
+                        <span className="text-[8px] text-neutral-400 font-semibold">{p.category}</span>
                       </div>
                     </div>
                   </div>
@@ -359,402 +332,338 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Sales Receipt cart panel (4 cols) */}
-        <div className="xl:col-span-4 bg-white border border-neutral-200/80 rounded-2xl p-5 space-y-5 shadow-lg relative">
-          <div className="flex items-center justify-between border-b border-neutral-200/80 pb-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
-              <ShoppingCart className="w-4 h-4 text-amber-500" />
-              Sales Basket ({cart.length})
+        {/* RIGHT: Cart & Checkout (4 cols) */}
+        <div className="xl:col-span-4 bg-white border border-neutral-200 rounded-2xl shadow-sm overflow-hidden">
+          {/* Cart Header */}
+          <div className="flex items-center justify-between px-5 py-3.5 border-b border-neutral-200 bg-neutral-50">
+            <h3 className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
+              <ShoppingCart className="w-4 h-4 text-neutral-600" />
+              Cart ({cart.length} items)
             </h3>
             {cart.length > 0 && (
-              <button
-                onClick={() => setCart([])}
-                className="text-[9px] font-bold text-rose-500 hover:text-rose-600 transition-colors uppercase tracking-wider"
-              >
-                Clear Cart
+              <button onClick={() => setCart([])} className="text-[9px] font-bold text-rose-500 hover:text-rose-600 uppercase tracking-wider">
+                Clear All
               </button>
             )}
           </div>
 
-          {/* Cart items list */}
-          <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
-            {cart.length === 0 ? (
-              <div className="py-12 text-center text-xs text-neutral-500">
-                Cart is empty. Select products on the left.
-              </div>
-            ) : (
-              cart.map((item, idx) => {
-                const itemPrice = item.customPrice !== undefined ? item.customPrice : item.product.price / 100;
-                return (
-                  <div key={`${item.product.id}-${item.size}`} className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2 relative">
-                    <button
-                      onClick={() => removeFromCart(idx)}
-                      className="absolute top-2 right-2 text-neutral-500 hover:text-neutral-900"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    <div className="flex gap-3">
-                      <div className="w-10 h-10 bg-white border border-neutral-200 rounded flex items-center justify-center overflow-hidden shrink-0">
-                        <HeicImage src={item.product.images?.[0]} alt="" className="w-full h-full object-contain" />
+          <div className="p-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+            {/* Cart Items */}
+            <div className="space-y-2.5 min-h-[80px]">
+              {cart.length === 0 ? (
+                <div className="py-10 text-center text-xs text-neutral-400">Select products to add to cart</div>
+              ) : (
+                cart.map((item, idx) => {
+                  const itemPrice = item.customPrice !== undefined ? item.customPrice : item.product.price / 100;
+                  return (
+                    <div key={`${item.product.id}-${item.size}`} className="p-3 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2 relative">
+                      <button onClick={() => removeFromCart(idx)} className="absolute top-2 right-2 text-neutral-400 hover:text-rose-500 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                      <div className="flex gap-2.5 pr-5">
+                        <div className="w-9 h-9 bg-white border border-neutral-200 rounded-lg flex items-center justify-center overflow-hidden shrink-0">
+                          <HeicImage src={item.product.images?.[0]} alt="" className="w-full h-full object-contain" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-[10px] font-semibold text-neutral-900 truncate">{item.product.name}</h4>
+                          <span className="text-[8px] text-neutral-500 font-mono uppercase block">Sz: {item.size} · {item.product.sku}</span>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0 pr-5">
-                        <h4 className="text-[10px] font-bold text-neutral-900 truncate">{item.product.name}</h4>
-                        <span className="text-[8px] font-bold text-neutral-500 uppercase tracking-wider block font-mono">
-                          Size: {item.size} | SKU: {item.product.sku} | ₹{itemPrice.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex justify-between items-center pt-1 border-t border-neutral-200/80">
-                      {/* Custom pricing override input */}
-                      <div className="flex items-center gap-1">
-                        <span className="text-[8px] text-neutral-500 uppercase font-semibold">Override:</span>
-                        <input
-                          type="number"
-                          step="0.01"
-                          placeholder={(item.product.price / 100).toString()}
-                          value={item.customPrice !== undefined ? item.customPrice : ''}
-                          onChange={e => updateCustomPrice(idx, e.target.value)}
-                          className="w-16 bg-white border border-neutral-200 rounded px-1.5 py-0.5 text-[10px] text-right font-mono text-neutral-850 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Quantity selector */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateQty(idx, -1)}
-                          className="p-0.5 bg-white hover:bg-neutral-800 border border-neutral-200 rounded text-neutral-500"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                        <span className="text-[10px] font-bold text-neutral-900 font-mono">{item.qty}</span>
-                        <button
-                          onClick={() => updateQty(idx, 1)}
-                          className="p-0.5 bg-white hover:bg-neutral-800 border border-neutral-200 rounded text-neutral-500"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                      <div className="flex justify-between items-center pt-1 border-t border-neutral-100">
+                        <div className="flex items-center gap-1">
+                          <span className="text-[8px] text-neutral-400 uppercase font-semibold">Override ₹</span>
+                          <input type="number" step="0.01"
+                            placeholder={(item.product.price / 100).toString()}
+                            value={item.customPrice !== undefined ? item.customPrice : ''}
+                            onChange={e => updateCustomPrice(idx, e.target.value)}
+                            className="w-16 bg-white border border-neutral-200 rounded-lg px-1.5 py-0.5 text-[10px] text-right font-mono text-neutral-900 focus:outline-none" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => updateQty(idx, -1)}
+                            className="w-6 h-6 bg-white hover:bg-neutral-100 border border-neutral-200 rounded-lg flex items-center justify-center text-neutral-600 transition-colors">
+                            <span className="font-bold text-xs leading-none">−</span>
+                          </button>
+                          <span className="text-[10px] font-bold text-neutral-900 font-mono w-4 text-center">{item.qty}</span>
+                          <button onClick={() => updateQty(idx, 1)}
+                            className="w-6 h-6 bg-white hover:bg-neutral-100 border border-neutral-200 rounded-lg flex items-center justify-center text-neutral-600 transition-colors">
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                        <span className="text-[10px] font-bold text-neutral-900 font-mono">₹{(itemPrice * item.qty).toFixed(0)}</span>
                       </div>
                     </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Customer Lookup Form */}
-          <div className="p-3.5 bg-neutral-50/50 border border-neutral-200/80 rounded-xl space-y-3">
-            <span className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider flex items-center gap-1">
-              <User className="w-3 h-3 text-amber-500" /> Customer Information
-            </span>
-            <div className="grid grid-cols-2 gap-2.5">
-              <input
-                type="text"
-                placeholder="Customer Name"
-                value={customerName}
-                onChange={e => setCustomerName(e.target.value)}
-                className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[10px] text-neutral-900 focus:outline-none"
-              />
-              <input
-                type="text"
-                placeholder="Phone Number"
-                maxLength={10}
-                value={customerPhone}
-                onChange={e => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
-                className="bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[10px] text-neutral-900 focus:outline-none"
-              />
+                  );
+                })
+              )}
             </div>
-            <input
-              type="email"
-              placeholder="Email (Optional)"
-              value={customerEmail}
-              onChange={e => setCustomerEmail(e.target.value)}
-              className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[10px] text-neutral-900 focus:outline-none"
-            />
-          </div>
 
-          {/* Coupons & Adjustments */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Promo Coupon</label>
-              <div className="flex gap-1.5">
-                <input
-                  type="text"
-                  placeholder="CODE"
-                  value={couponCode}
-                  onChange={e => setCouponCode(e.target.value)}
-                  className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1 text-[10px] uppercase text-neutral-900 focus:outline-none font-mono"
-                />
+            {/* Customer */}
+            <div className="p-3.5 bg-neutral-50 border border-neutral-200 rounded-xl space-y-2.5">
+              <span className="block text-[9px] font-bold text-neutral-600 uppercase tracking-wider flex items-center gap-1">
+                <User className="w-3 h-3" /> Customer Info
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="text" placeholder="Customer Name" value={customerName} onChange={e => setCustomerName(e.target.value)}
+                  className="bg-white border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[10px] text-neutral-900 focus:outline-none col-span-2" />
+                <input type="text" placeholder="Phone (+91...)" maxLength={10} value={customerPhone} onChange={e => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
+                  className="bg-white border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[10px] text-neutral-900 focus:outline-none font-mono" />
+                <input type="email" placeholder="Email" value={customerEmail} onChange={e => setCustomerEmail(e.target.value)}
+                  className="bg-white border border-neutral-200 rounded-lg px-2.5 py-1.5 text-[10px] text-neutral-900 focus:outline-none" />
+              </div>
+
+              {/* WhatsApp Quick Share */}
+              {(saleChannel === 'whatsapp' || saleChannel === 'instagram') && (
                 <button
-                  onClick={handleApplyCoupon}
-                  className="px-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-900 rounded-lg text-[9px] font-bold"
+                  onClick={handleShareWhatsApp}
+                  className={`w-full py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all ${saleChannel === 'whatsapp' ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'}`}
                 >
-                  Apply
+                  {saleChannel === 'whatsapp' ? <MessageCircle className="w-3.5 h-3.5" /> : <InstagramIcon className="w-3.5 h-3.5" />}
+                  Share Cart via {saleChannel === 'whatsapp' ? 'WhatsApp' : 'Instagram'}
                 </button>
+              )}
+            </div>
+
+            {/* Coupons & Discount */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Promo Code</label>
+                <div className="flex gap-1.5">
+                  <input type="text" placeholder="CODE" value={couponCode} onChange={e => setCouponCode(e.target.value)}
+                    className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-[10px] uppercase text-neutral-900 focus:outline-none font-mono" />
+                  <button onClick={handleApplyCoupon}
+                    className="px-2.5 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg text-[9px] font-bold whitespace-nowrap transition-colors">
+                    Apply
+                  </button>
+                </div>
+                {appliedCoupon && (
+                  <p className="text-[9px] text-emerald-600 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> {appliedCoupon.code} applied
+                  </p>
+                )}
+              </div>
+              <div className="space-y-1">
+                <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Manual Discount (₹)</label>
+                <input type="number" placeholder="0" value={customDiscount || ''}
+                  onChange={e => setCustomDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-1.5 text-[10px] text-right text-neutral-900 focus:outline-none font-mono" />
               </div>
             </div>
-            <div className="space-y-1">
-              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Custom Discount (₹)</label>
-              <input
-                type="number"
-                placeholder="0.00"
-                value={customDiscount || ''}
-                onChange={e => setCustomDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-1.5 text-[10px] text-right text-neutral-900 focus:outline-none font-mono"
-              />
-            </div>
-          </div>
 
-          {/* Tax Slabs & Payments */}
-          <div className="grid grid-cols-2 gap-3 border-t border-neutral-200/80 pt-3">
-            <div className="space-y-1">
-              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Inclusive GST Slab</label>
-              <select
-                value={gstRate}
-                onChange={e => setGstRate(Number(e.target.value))}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-[10px] text-neutral-900 focus:outline-none"
-              >
-                <option value="5">5% GST (Flat)</option>
-                <option value="12">12% GST (Standard)</option>
-                <option value="18">18% GST (Footwear/Lux)</option>
-                <option value="0">0% Exempt</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Payment Method</label>
-              <select
-                value={paymentMethod}
-                onChange={e => setPaymentMethod(e.target.value as any)}
-                className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-[10px] text-neutral-900 focus:outline-none"
-              >
-                <option value="cash">💵 Cash In-Hand</option>
-                <option value="upi">📱 UPI QR Payment</option>
-                <option value="card">💳 Card Terminal</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Receipt Financial Calculations Summary */}
-          <div className="bg-neutral-50 p-3 rounded-xl space-y-2 text-[10px] font-mono">
-            <div className="flex justify-between text-neutral-500">
-              <span>Subtotal Amount:</span>
-              <span>₹{(subtotalPaise / 100).toFixed(2)}</span>
-            </div>
-            {totalDiscountPaise > 0 && (
-              <div className="flex justify-between text-rose-500 font-bold">
-                <span>Promotional Discount:</span>
-                <span>-₹{(totalDiscountPaise / 100).toFixed(2)}</span>
+            {/* Tax & Payment */}
+            <div className="grid grid-cols-2 gap-2.5 border-t border-neutral-100 pt-3">
+              <div className="space-y-1">
+                <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">GST Slab</label>
+                <select value={gstRate} onChange={e => setGstRate(Number(e.target.value))}
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-[10px] text-neutral-900 focus:outline-none">
+                  <option value="0">0% Exempt</option>
+                  <option value="5">5% GST (Flat)</option>
+                  <option value="12">12% GST (Standard)</option>
+                  <option value="18">18% GST (Luxury)</option>
+                </select>
               </div>
-            )}
-            <div className="flex justify-between text-neutral-500 text-[9px]">
-              <span>Base Value:</span>
-              <span>₹{(baseAmountPaise / 100).toFixed(2)}</span>
+              <div className="space-y-1">
+                <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Payment Mode</label>
+                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value as PaymentMethod)}
+                  className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-2 py-1.5 text-[10px] text-neutral-900 focus:outline-none">
+                  <option value="cash">💵 Cash</option>
+                  <option value="upi">📱 UPI / QR</option>
+                  <option value="card">💳 Card</option>
+                  <option value="whatsapp">📩 WhatsApp Pay</option>
+                  <option value="instagram">📸 Instagram Pay</option>
+                </select>
+              </div>
             </div>
-            <div className="flex justify-between text-neutral-500 text-[9px]">
-              <span>GST Inclusive ({gstRate}%):</span>
-              <span>₹{(gstAmountPaise / 100).toFixed(2)}</span>
-            </div>
-            <div className="h-[1px] bg-neutral-900 my-1" />
-            <div className="flex justify-between text-xs font-bold text-neutral-900">
-              <span className="text-neutral-850">NET PAYABLE:</span>
-              <span className="text-neutral-850">₹{(totalPayablePaise / 100).toFixed(2)}</span>
-            </div>
-          </div>
 
-          {/* Checkout Button */}
-          <button
-            onClick={handleCheckout}
-            disabled={cart.length === 0}
-            className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-neutral-950 font-bold rounded-xl text-xs uppercase tracking-widest transition-all shadow-lg active:scale-[0.98]"
-          >
-            Submit Cashier Sale
-          </button>
+            {/* Notes */}
+            <div>
+              <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Order Notes</label>
+              <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
+                className="w-full bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-1.5 text-[10px] text-neutral-900 focus:outline-none" />
+            </div>
+
+            {/* Receipt Summary */}
+            <div className="bg-neutral-50 border border-neutral-200 p-3 rounded-xl space-y-1.5 text-[10px] font-mono">
+              <div className="flex justify-between text-neutral-500">
+                <span>Subtotal</span><span>₹{(subtotalPaise / 100).toFixed(2)}</span>
+              </div>
+              {totalDiscountPaise > 0 && (
+                <div className="flex justify-between text-rose-500 font-bold">
+                  <span>Discount</span><span>-₹{(totalDiscountPaise / 100).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-neutral-400 text-[9px]">
+                <span>Base Value</span><span>₹{(baseAmountPaise / 100).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-neutral-400 text-[9px]">
+                <span>GST ({gstRate}%) incl.</span><span>₹{(gstAmountPaise / 100).toFixed(2)}</span>
+              </div>
+              <div className="border-t border-neutral-200 pt-1.5 flex justify-between text-xs font-bold text-neutral-900">
+                <span>NET PAYABLE</span><span>₹{(totalPayablePaise / 100).toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Checkout Button */}
+            <button onClick={handleCheckout} disabled={cart.length === 0}
+              className={`w-full py-3.5 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all shadow-md active:scale-[0.98] disabled:opacity-40 flex items-center justify-center gap-2 ${saleChannel === 'whatsapp' ? 'bg-emerald-600 hover:bg-emerald-700' : saleChannel === 'instagram' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' : 'bg-neutral-900 hover:bg-neutral-100'}`}>
+              {paymentIcons[paymentMethod]}
+              {saleChannel === 'whatsapp' ? 'Confirm WhatsApp Sale' : saleChannel === 'instagram' ? 'Confirm Instagram Sale' : 'Complete Sale'}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* MODAL: Size Selector Drawer */}
+      {/* Size Selector Modal */}
       {activeSizeProduct && (
         <div className="fixed inset-0 z-50 flex justify-center items-center">
-          <div onClick={() => setActiveSizeProduct(null)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="bg-white border border-neutral-200/80 w-full max-w-sm rounded-2xl p-6 relative z-10 space-y-5">
-            <div className="flex items-center justify-between border-b border-neutral-200/80 pb-3">
+          <div onClick={() => setActiveSizeProduct(null)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="bg-white border border-neutral-200 w-full max-w-sm rounded-2xl p-6 relative z-10 space-y-5 shadow-xl">
+            <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
               <div>
-                <h4 className="text-xs text-neutral-500 font-bold uppercase tracking-wider">{activeSizeProduct.sku}</h4>
-                <h3 className="text-sm font-bold text-neutral-900">{activeSizeProduct.name}</h3>
+                <h4 className="text-[10px] text-neutral-500 font-mono font-bold uppercase">{activeSizeProduct.sku}</h4>
+                <h3 className="text-sm font-bold text-neutral-900 mt-0.5">{activeSizeProduct.name}</h3>
               </div>
-              <button
-                onClick={() => setActiveSizeProduct(null)}
-                className="p-1 rounded-lg border border-neutral-200 text-neutral-500 hover:text-neutral-900"
-              >
+              <button onClick={() => setActiveSizeProduct(null)} className="p-1.5 rounded-lg border border-neutral-200 text-neutral-500 hover:text-neutral-900">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             <div className="space-y-2">
-              <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Select Size Variant</label>
+              <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Select Size</label>
               <div className="grid grid-cols-4 gap-2">
                 {activeSizeProduct.sizes.map(sz => (
-                  <button
-                    key={sz}
-                    onClick={() => setSelectedSize(sz)}
-                    className={`py-2 text-xs font-bold font-mono rounded-lg border transition-all ${
-                      selectedSize === sz
-                        ? 'border-amber-500 bg-amber-500/10 text-amber-500'
-                        : 'border-neutral-200 hover:border-neutral-700 text-neutral-900 bg-white'
-                    }`}
-                  >
+                  <button key={sz} onClick={() => setSelectedSize(sz)}
+                    className={`py-2.5 text-xs font-bold font-mono rounded-xl border transition-all ${selectedSize === sz ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-200 hover:border-neutral-400 text-neutral-700 bg-white'}`}>
                     {sz}
                   </button>
                 ))}
               </div>
             </div>
 
-            <button
-              onClick={handleConfirmAddToCart}
-              className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-colors"
-            >
-              Add Selected Variant
+            {activeSizeProduct.colors && activeSizeProduct.colors.length > 0 && (
+              <div className="space-y-2">
+                <label className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Select Color</label>
+                <div className="flex flex-wrap gap-2">
+                  {activeSizeProduct.colors.map(c => (
+                    <button key={c} onClick={() => setSelectedColor(c)}
+                      className={`px-3 py-1.5 text-[10px] font-bold rounded-xl border transition-all ${selectedColor === c ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-200 hover:border-neutral-400 text-neutral-700 bg-white'}`}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <button onClick={handleConfirmAddToCart}
+              className="w-full py-3 bg-neutral-900 hover:bg-neutral-100 text-white text-xs font-bold rounded-xl uppercase tracking-wider transition-colors">
+              Add to Cart
             </button>
           </div>
         </div>
       )}
 
-      {/* DRAWER: Safe Register Logs Manager */}
+      {/* Cash Drawer Manager */}
       {showDrawerManager && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          <div onClick={() => setShowDrawerManager(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="w-full max-w-md bg-white border-l border-neutral-200/80 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-neutral-200/80 pb-4">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-900 flex items-center gap-1.5">
-                  <DollarSign className="w-4 h-4 text-emerald-500" /> Cash Register Manager
+          <div onClick={() => setShowDrawerManager(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="w-full max-w-md bg-white border-l border-neutral-200 shadow-2xl relative z-10 p-6 flex flex-col justify-between h-full overflow-y-auto">
+            <div className="space-y-5">
+              <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
+                <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4 text-emerald-500" /> Cash Register
                 </h3>
-                <button
-                  onClick={() => setShowDrawerManager(false)}
-                  className="p-1.5 rounded-lg border border-neutral-200 text-neutral-500 hover:text-neutral-900"
-                >
+                <button onClick={() => setShowDrawerManager(false)} className="p-1.5 rounded-lg border border-neutral-200 text-neutral-500 hover:text-neutral-900">
                   <X className="w-4 h-4" />
                 </button>
               </div>
-
-              {/* Status matrix */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-neutral-50 p-4 border border-neutral-200 rounded-xl">
-                  <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Starting Float</span>
-                  <input
-                    type="number"
-                    value={drawerStartCash}
-                    onChange={e => setDrawerStartCash(Math.max(0, parseFloat(e.target.value) || 0))}
-                    className="w-full bg-transparent border-b border-neutral-200 text-lg font-bold font-mono text-neutral-900 mt-1 py-0.5 focus:outline-none focus:border-amber-500"
-                  />
+                  <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Opening Float</span>
+                  <input type="number" value={drawerStartCash} onChange={e => setDrawerStartCash(Math.max(0, parseFloat(e.target.value) || 0))}
+                    className="w-full bg-transparent border-b border-neutral-200 text-lg font-bold font-mono text-neutral-900 mt-1 py-0.5 focus:outline-none focus:border-neutral-500" />
                 </div>
-                <div className="bg-neutral-50 p-4 border border-neutral-200 rounded-xl">
-                  <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Actual Balance</span>
-                  <span className="block text-lg font-bold font-mono text-emerald-700 mt-1">₹{currentDrawerCash.toFixed(2)}</span>
+                <div className="bg-emerald-50 p-4 border border-emerald-200 rounded-xl">
+                  <span className="block text-[8px] font-bold text-emerald-600 uppercase tracking-wider">Drawer Balance</span>
+                  <span className="block text-lg font-bold font-mono text-emerald-700 mt-1">₹{currentDrawerCash.toFixed(0)}</span>
                 </div>
               </div>
 
-              {/* Register Action Payout Form */}
-              <form onSubmit={handleAddCashDrop} className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-4">
-                <span className="block text-[9px] font-bold text-neutral-900 uppercase tracking-wider">Log Safe Cash Drop / Cash Drawer Outflow</span>
+              <form onSubmit={handleAddCashDrop} className="p-4 bg-neutral-50 border border-neutral-200 rounded-xl space-y-3">
+                <span className="block text-[9px] font-bold text-neutral-700 uppercase tracking-wider">Log Cash Drop / Outflow</span>
                 <div>
-                  <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Outflow Amount (₹)</label>
-                  <input
-                    type="number"
-                    required
-                    value={dropAmount || ''}
-                    onChange={e => setDropAmount(Math.max(0, parseFloat(e.target.value) || 0))}
-                    placeholder="0.00"
-                    className="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-xs font-mono text-neutral-900 focus:outline-none"
-                  />
+                  <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Amount (₹)</label>
+                  <input type="number" required value={dropAmount || ''} onChange={e => setDropAmount(Math.max(0, parseFloat(e.target.value) || 0))}
+                    placeholder="0.00" className="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-xs font-mono text-neutral-900 focus:outline-none" />
                 </div>
                 <div>
-                  <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Reason / Destination</label>
-                  <input
-                    type="text"
-                    required
-                    value={dropReason}
-                    onChange={e => setDropReason(e.target.value)}
-                    placeholder="e.g. Bank Safe Drop, Vendor Payout"
-                    className="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-xs text-neutral-900 focus:outline-none"
-                  />
+                  <label className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider mb-1">Reason</label>
+                  <input type="text" required value={dropReason} onChange={e => setDropReason(e.target.value)}
+                    placeholder="e.g. Bank deposit, Vendor payment"
+                    className="w-full bg-white border border-neutral-200 rounded-lg px-3 py-2 text-xs text-neutral-900 focus:outline-none" />
                 </div>
-                <button
-                  type="submit"
-                  className="w-full py-2 bg-rose-500 hover:bg-rose-600 text-neutral-900 font-bold rounded-lg text-xs uppercase tracking-wider transition-colors"
-                >
-                  Record Cash Payout
+                <button type="submit" className="w-full py-2 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-lg text-xs uppercase tracking-wider transition-colors">
+                  Record Outflow
                 </button>
               </form>
 
-              {/* Drop list log */}
               <div className="space-y-2">
-                <span className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Drawer Payouts Log</span>
-                <div className="space-y-2 divide-y divide-neutral-900 max-h-48 overflow-y-auto">
+                <span className="block text-[9px] font-bold text-neutral-500 uppercase tracking-wider">Drop Log</span>
+                <div className="space-y-1.5 max-h-48 overflow-y-auto">
                   {cashDrops.length === 0 ? (
-                    <div className="py-6 text-center text-[10px] text-neutral-600">No cash drops recorded today.</div>
+                    <div className="py-6 text-center text-[10px] text-neutral-400">No drops recorded today.</div>
                   ) : (
                     cashDrops.map((d, i) => (
-                      <div key={i} className="pt-2 flex justify-between text-[10px] font-mono">
+                      <div key={i} className="flex justify-between text-[10px] font-mono p-2 border border-neutral-100 rounded-lg">
                         <div>
-                          <span className="text-neutral-900 block font-sans font-semibold">{d.reason}</span>
-                          <span className="text-neutral-500 text-[8px]">{d.time}</span>
+                          <span className="text-neutral-700 font-semibold font-sans">{d.reason}</span>
+                          <span className="text-neutral-400 text-[8px] block">{d.time}</span>
                         </div>
-                        <span className="text-rose-500 font-bold">-₹{d.amount.toFixed(2)}</span>
+                        <span className="text-rose-500 font-bold">-₹{d.amount.toFixed(0)}</span>
                       </div>
                     ))
                   )}
                 </div>
               </div>
             </div>
-            
-            <button
-              onClick={() => setShowDrawerManager(false)}
-              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-200 border border-neutral-200 text-neutral-900 font-semibold rounded-xl text-xs uppercase transition-colors"
-            >
-              Close Drawer Register
+            <button onClick={() => setShowDrawerManager(false)}
+              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-100 text-white font-semibold rounded-xl text-xs uppercase transition-colors">
+              Close Register
             </button>
           </div>
         </div>
       )}
 
-      {/* INVOICE THERMAL PRINTER MODAL DIALOG */}
+      {/* Invoice Print Modal */}
       {printedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div onClick={() => setPrintedOrder(null)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          <div className="bg-white text-black p-6 w-full max-w-sm rounded-lg shadow-2xl relative z-10 flex flex-col items-center">
-            {/* Header info */}
+          <div onClick={() => setPrintedOrder(null)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="bg-white text-black p-6 w-full max-w-sm rounded-2xl shadow-2xl relative z-10 flex flex-col items-center">
             <div className="w-full text-center space-y-1 font-mono border-b border-dashed border-gray-300 pb-4 mb-4 text-[10px]">
-              <h2 className="text-sm font-bold tracking-widest uppercase">HEELSUP BOUTIQUE</h2>
+              <h2 className="text-sm font-bold tracking-widest uppercase">HeelsUp Boutique</h2>
               <p>DLF Phase 4, Galleria Market, Gurugram</p>
               <p>Tel: +91 99999-88888 | GSTIN: 06AAAAA1111A1Z1</p>
-              <div className="h-[1px] my-2" />
+              <div className="h-[1px] border-t border-dashed border-gray-300 my-2" />
               <p className="font-bold">INVOICE: {printedOrder.order_number}</p>
               <p>Date: {new Date(printedOrder.created_at || Date.now()).toLocaleString()}</p>
-              <p>Type: {printedOrder.payment_method?.toUpperCase()} SALE</p>
-              <p>Cashier: Staff Admin</p>
+              <p>Mode: {printedOrder.payment_method?.toUpperCase()}</p>
+              <p>Channel: {saleChannel.toUpperCase()}</p>
             </div>
-
-            {/* Customer Details */}
             <div className="w-full text-left font-mono text-[9px] border-b border-dashed border-gray-300 pb-3 mb-3 space-y-0.5">
               <p><strong>Customer:</strong> {printedOrder.customer_name}</p>
               <p><strong>Phone:</strong> {printedOrder.customer_phone}</p>
               {printedOrder.customer_email && <p><strong>Email:</strong> {printedOrder.customer_email}</p>}
             </div>
-
-            {/* Items table */}
             <div className="w-full font-mono text-[10px] border-b border-dashed border-gray-300 pb-3 mb-3">
               <div className="flex justify-between font-bold border-b border-gray-200 pb-1 mb-1">
-                <span className="w-1/2">Item Description</span>
+                <span className="w-1/2">Item</span>
                 <span className="w-1/6 text-center">Qty</span>
-                <span className="w-1/3 text-right">Price</span>
+                <span className="w-1/3 text-right">Amount</span>
               </div>
               <div className="space-y-1.5">
                 {printedOrder.items?.map((item: any, idx: number) => (
                   <div key={idx} className="flex justify-between text-[9px]">
                     <div className="w-1/2 min-w-0 truncate">
                       <span>{item.product_name}</span>
-                      <span className="block text-[8px] text-gray-500">Sz: {item.size}</span>
+                      <span className="block text-[8px] text-gray-400">Sz: {item.size}</span>
                     </div>
                     <span className="w-1/6 text-center font-bold">{item.quantity}</span>
                     <span className="w-1/3 text-right font-mono">₹{((item.price * item.quantity) / 100).toFixed(2)}</span>
@@ -762,81 +671,29 @@ export default function PosTerminal({ products, categories, coupons, showToast, 
                 ))}
               </div>
             </div>
-
-            {/* Calculations breakdown */}
-            <div className="w-full font-mono text-[10px] space-y-1 border-b border-dashed border-gray-300 pb-3 mb-3">
-              <div className="flex justify-between">
-                <span>Items Subtotal:</span>
-                <span>₹{(printedOrder.subtotal_amount).toFixed(2)}</span>
-              </div>
+            <div className="w-full font-mono text-[10px] space-y-1 border-b border-dashed border-gray-300 pb-3 mb-4">
+              <div className="flex justify-between"><span>Subtotal:</span><span>₹{printedOrder.subtotal_amount?.toFixed(2)}</span></div>
               {printedOrder.discount_amount > 0 && (
                 <div className="flex justify-between text-red-600 font-semibold">
-                  <span>Promo Discounts:</span>
-                  <span>-₹{(printedOrder.discount_amount).toFixed(2)}</span>
+                  <span>Discount:</span><span>-₹{printedOrder.discount_amount?.toFixed(2)}</span>
                 </div>
               )}
               <div className="h-[1px] border-t border-gray-200 my-1" />
               <div className="flex justify-between font-bold text-xs">
-                <span>TOTAL AMOUNT:</span>
-                <span>₹{(printedOrder.total_amount).toFixed(2)}</span>
+                <span>TOTAL:</span><span>₹{printedOrder.total_amount?.toFixed(2)}</span>
               </div>
             </div>
-
-            {/* Footer Barcode / Thank note */}
-            <div className="w-full text-center font-mono text-[9px] space-y-4">
+            <div className="w-full text-center font-mono text-[9px] space-y-2">
               <p className="font-semibold italic">Thank you for shopping at HeelsUp!</p>
-              
-              {/* SVG Mock barcode representation */}
-              <div className="flex justify-center items-center py-2 bg-gray-100/50 rounded">
-                <svg width="180" height="30" className="overflow-visible">
-                  <rect x="10" y="0" width="3" height="30" fill="black" />
-                  <rect x="15" y="0" width="1" height="30" fill="black" />
-                  <rect x="18" y="0" width="2" height="30" fill="black" />
-                  <rect x="23" y="0" width="4" height="30" fill="black" />
-                  <rect x="30" y="0" width="1" height="30" fill="black" />
-                  <rect x="35" y="0" width="3" height="30" fill="black" />
-                  <rect x="40" y="0" width="2" height="30" fill="black" />
-                  <rect x="45" y="0" width="1" height="30" fill="black" />
-                  <rect x="48" y="0" width="4" height="30" fill="black" />
-                  <rect x="55" y="0" width="1" height="30" fill="black" />
-                  <rect x="60" y="0" width="2" height="30" fill="black" />
-                  <rect x="65" y="0" width="3" height="30" fill="black" />
-                  <rect x="70" y="0" width="1" height="30" fill="black" />
-                  <rect x="74" y="0" width="4" height="30" fill="black" />
-                  <rect x="80" y="0" width="2" height="30" fill="black" />
-                  <rect x="85" y="0" width="1" height="30" fill="black" />
-                  <rect x="90" y="0" width="3" height="30" fill="black" />
-                  <rect x="95" y="0" width="2" height="30" fill="black" />
-                  <rect x="100" y="0" width="1" height="30" fill="black" />
-                  <rect x="103" y="0" width="4" height="30" fill="black" />
-                  <rect x="110" y="0" width="2" height="30" fill="black" />
-                  <rect x="115" y="0" width="1" height="30" fill="black" />
-                  <rect x="120" y="0" width="3" height="30" fill="black" />
-                  <rect x="125" y="0" width="2" height="30" fill="black" />
-                  <rect x="130" y="0" width="4" height="30" fill="black" />
-                  <rect x="138" y="0" width="1" height="30" fill="black" />
-                  <rect x="142" y="0" width="2" height="30" fill="black" />
-                  <rect x="147" y="0" width="3" height="30" fill="black" />
-                  <rect x="152" y="0" width="1" height="30" fill="black" />
-                  <rect x="156" y="0" width="4" height="30" fill="black" />
-                  <rect x="162" y="0" width="2" height="30" fill="black" />
-                  <rect x="168" y="0" width="3" height="30" fill="black" />
-                </svg>
-              </div>
-              <p className="text-[8px] text-gray-500 uppercase tracking-widest">{printedOrder.order_number}</p>
+              <p className="text-[8px] text-gray-400">Follow us on Instagram & WhatsApp for new arrivals</p>
             </div>
-
-            <div className="flex gap-3 mt-6 w-full relative z-10 print:hidden">
-              <button
-                onClick={() => window.print()}
-                className="flex-1 py-2 bg-neutral-900 text-neutral-900 font-bold rounded-lg text-xs uppercase tracking-wider hover:bg-neutral-200 flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <Printer className="w-3.5 h-3.5" /> Print slip
+            <div className="flex gap-3 mt-5 w-full">
+              <button onClick={() => window.print()}
+                className="flex-1 py-2.5 bg-neutral-900 text-white font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-neutral-100 flex items-center justify-center gap-1.5 transition-colors">
+                <Printer className="w-3.5 h-3.5" /> Print
               </button>
-              <button
-                onClick={() => setPrintedOrder(null)}
-                className="flex-1 py-2 border border-gray-300 text-gray-600 font-bold rounded-lg text-xs uppercase tracking-wider hover:bg-gray-50 transition-colors"
-              >
+              <button onClick={() => setPrintedOrder(null)}
+                className="flex-1 py-2.5 border border-neutral-200 text-neutral-700 font-bold rounded-xl text-xs uppercase tracking-wider hover:bg-neutral-50 transition-colors">
                 Done
               </button>
             </div>

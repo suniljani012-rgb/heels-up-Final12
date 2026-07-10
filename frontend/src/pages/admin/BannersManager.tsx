@@ -166,7 +166,7 @@ export default function BannersManager({ banners, token, showToast, onRefresh }:
         </div>
         <button
           onClick={handleOpenAdd}
-          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
+          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" /> Add Banner
         </button>
@@ -183,10 +183,10 @@ export default function BannersManager({ banners, token, showToast, onRefresh }:
                 <span className="text-[10px] font-mono text-neutral-600">No image loaded</span>
               )}
               <div className="absolute top-3 right-3 flex items-center gap-2">
-                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${b.active ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700' : 'bg-neutral-800 text-neutral-500'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${b.active ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700' : 'bg-neutral-100 text-neutral-500'}`}>
                   {b.active ? 'Active' : 'Draft'}
                 </span>
-                <span className="bg-neutral-100/90 border border-neutral-200 px-2 py-0.5 rounded-full font-mono text-[9px] font-bold text-neutral-800">Order {b.sort_order}</span>
+                <span className="bg-neutral-100/90 border border-neutral-200 px-2 py-0.5 rounded-full font-mono text-[9px] font-bold text-neutral-700">Order {b.sort_order}</span>
               </div>
             </div>
 
@@ -293,7 +293,7 @@ export default function BannersManager({ banners, token, showToast, onRefresh }:
                           onChange={(e) => setActive(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-8 h-4 bg-neutral-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-500 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-neutral-900/80"></div>
+                        <div className="w-8 h-4 bg-neutral-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-500 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-white"></div>
                         <span className="ml-2 text-neutral-455 text-[10px] font-bold">Banner Active</span>
                       </label>
                     </div>
@@ -312,7 +312,7 @@ export default function BannersManager({ banners, token, showToast, onRefresh }:
                       placeholder="https://media.heelsup.in/banners/..."
                       className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none font-mono"
                     />
-                    <label className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[10px] font-mono font-bold uppercase rounded-xl cursor-pointer shrink-0">
+                    <label className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[10px] font-mono font-bold uppercase rounded-xl cursor-pointer shrink-0">
                       Upload
                       <input
                         type="file"
@@ -329,7 +329,7 @@ export default function BannersManager({ banners, token, showToast, onRefresh }:
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
+                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
                 >
                   Save Banner Record
                 </button>

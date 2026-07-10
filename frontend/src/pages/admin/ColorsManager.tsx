@@ -111,7 +111,7 @@ export default function ColorsManager({ colors, token, showToast, onRefresh }: C
         </div>
         <button
           onClick={handleOpenAdd}
-          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
+          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" /> Add Swatch
         </button>
@@ -221,7 +221,7 @@ export default function ColorsManager({ colors, token, showToast, onRefresh }: C
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
+                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
                 >
                   Save Swatch Definition
                 </button>

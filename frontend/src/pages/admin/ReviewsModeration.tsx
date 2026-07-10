@@ -118,16 +118,15 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
     setSubmittingReply(true);
 
     try {
-      // Save response using SQL engine since there is no standard REST route for merchant responses
-      const res = await fetch('/api/admin/query', {
-        method: 'POST',
+      // Save response using the dedicated PATCH route
+      const res = await fetch(`/api/admin/reviews/${selectedReview.id}/reply`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
         },
         body: JSON.stringify({
-          sql: 'UPDATE product_reviews SET merchant_reply = ? WHERE id = ?;',
-          params: [replyText.trim(), selectedReview.id]
+          reply: replyText.trim()
         })
       });
       const data = await res.json();
@@ -168,7 +167,7 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
         <div className="bg-white border border-neutral-200/80 p-4 rounded-xl">
           <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Total reviews</span>
           <span className="block text-base font-bold font-mono text-neutral-900 mt-1">{stats.total} entries</span>
-          <span className="text-[7px] text-neutral-850 font-semibold mt-1 block">Store overall feedback</span>
+          <span className="text-[7px] text-neutral-700 font-semibold mt-1 block">Store overall feedback</span>
         </div>
         <div className="bg-white border border-neutral-200/80 p-4 rounded-xl">
           <span className="block text-[8px] font-bold text-neutral-500 uppercase tracking-wider">Pending approval</span>
@@ -238,14 +237,14 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
             No customer reviews match your active filters.
           </div>
         ) : (
-          <div className="divide-y divide-neutral-900/60">
+          <div className="divide-y divide-neutral-100">
             {filteredReviews.map(rev => (
               <div key={rev.id} className="p-5 flex flex-col md:flex-row gap-6 hover:bg-neutral-50/20 transition-colors">
                 {/* Rating and reviewer column */}
                 <div className="md:w-56 shrink-0 space-y-1.5">
                   <div className="flex text-amber-500">
                     {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-current' : 'text-neutral-800'}`} />
+                      <Star key={i} className={`w-3.5 h-3.5 ${i < rev.rating ? 'fill-current' : 'text-neutral-700'}`} />
                     ))}
                   </div>
                   <div>
@@ -278,7 +277,7 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
                   
                   {rev.merchant_reply && (
                     <div className="p-3 bg-neutral-50/80 border border-neutral-200/80/50 rounded-xl space-y-1">
-                      <span className="block text-[8px] font-bold text-neutral-850 uppercase tracking-wider">Merchant response:</span>
+                      <span className="block text-[8px] font-bold text-neutral-700 uppercase tracking-wider">Merchant response:</span>
                       <p className="text-[10px] text-neutral-500 font-medium leading-relaxed">"{rev.merchant_reply}"</p>
                     </div>
                   )}
@@ -288,7 +287,7 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
                     {!rev.approved && (
                       <button
                         onClick={() => handleApprove(rev.id)}
-                        className="px-2.5 py-1.5 bg-emerald-500 text-neutral-950 font-bold rounded-lg text-[9px] uppercase tracking-wider flex items-center gap-1 hover:bg-emerald-600 transition-colors"
+                        className="px-2.5 py-1.5 bg-emerald-500 text-neutral-900 font-bold rounded-lg text-[9px] uppercase tracking-wider flex items-center gap-1 hover:bg-emerald-600 transition-colors"
                       >
                         <Check className="w-3.5 h-3.5" /> Approve review
                       </button>
@@ -301,7 +300,7 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
                     </button>
                     <button
                       onClick={() => handleDelete(rev.id)}
-                      className="px-2.5 py-1.5 border border-rose-950/20 text-rose-500 font-bold rounded-lg text-[9px] uppercase tracking-wider flex items-center gap-1 hover:bg-rose-500 hover:text-neutral-950 transition-colors"
+                      className="px-2.5 py-1.5 border border-rose-950/20 text-rose-500 font-bold rounded-lg text-[9px] uppercase tracking-wider flex items-center gap-1 hover:bg-rose-500 hover:text-neutral-900 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" /> Delete
                     </button>
@@ -357,7 +356,7 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
                 <button
                   type="submit"
                   disabled={submittingReply}
-                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-neutral-950 font-bold rounded-xl text-xs uppercase tracking-widest transition-all mt-4"
+                  className="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-neutral-900 font-bold rounded-xl text-xs uppercase tracking-widest transition-all mt-4"
                 >
                   {submittingReply ? 'Saving response...' : 'Save reply & publish'}
                 </button>
@@ -366,7 +365,7 @@ export default function ReviewsModeration({ reviews, onRefresh, showToast }: Rev
 
             <button
               onClick={() => setSelectedReview(null)}
-              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-200 border border-neutral-200 text-neutral-900 font-semibold rounded-xl text-xs uppercase"
+              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded-xl text-xs uppercase"
             >
               Cancel response
             </button>

@@ -94,11 +94,11 @@ export default function CustomersManager({ customers, onToggleBlock, showToast }
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-900/60">
+            <tbody className="divide-y divide-neutral-100">
               {paginated.map((c) => (
                 <tr key={c.id} className="hover:bg-neutral-50/20 transition-colors">
                   <td className="p-4 font-bold text-neutral-900 text-xs">{c.first_name} {c.last_name || ''}</td>
-                  <td className="p-4 font-mono text-neutral-800">{c.email}</td>
+                  <td className="p-4 font-mono text-neutral-700">{c.email}</td>
                   <td className="p-4 font-mono text-neutral-500">{c.phone || '—'}</td>
                   <td className="p-4 text-center font-mono">{c.orders_count || 0} orders</td>
                   <td className="p-4 text-center font-mono font-bold text-neutral-200">₹{((c.total_spent || 0) / 100).toFixed(2)}</td>

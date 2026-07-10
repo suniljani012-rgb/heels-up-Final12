@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Activity, Search, Filter, Trash2, Download, RefreshCw } from 'lucide-react';
+import { Activity, Search, Filter, Download, RefreshCw } from 'lucide-react';
 
 interface AuditLogsProps {
   logs: any[];
@@ -43,34 +43,7 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
     return Array.from(set);
   }, [logs]);
 
-  // Purge/Clear Logs
-  const handlePurgeLogs = async () => {
-    if (!window.confirm('CRITICAL WARNING: You are about to permanently delete all administrative audit logs from the database. This action is irreversible and violates safety compliance. Do you wish to continue?')) {
-      return;
-    }
-    try {
-      const res = await fetch('/api/admin/query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('heelsup_token')}`
-        },
-        body: JSON.stringify({
-          sql: 'DELETE FROM admin_audit_logs;'
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast('success', 'Registry Cleared', 'All administrative audit logs have been purged.');
-        onRefresh();
-        setPage(0);
-      } else {
-        showToast('error', 'Purge Denied', data.error || 'Server rejected audit clear query.');
-      }
-    } catch {
-      showToast('error', 'Connection Failure', 'Could not empty the audit log registry.');
-    }
-  };
+
 
   // Export to CSV
   const handleExportCsv = () => {
@@ -155,12 +128,7 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
             </button>
           )}
 
-          <button
-            onClick={handlePurgeLogs}
-            className="px-3 py-2 bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500 hover:text-neutral-950 text-rose-500 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
-          >
-            <Trash2 className="w-3.5 h-3.5" /> Purge Logs
-          </button>
+
         </div>
       </div>
 
@@ -209,17 +177,17 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
                   <th className="p-3 font-bold uppercase tracking-wider">Details Description</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-900/60 font-sans text-neutral-900">
+              <tbody className="divide-y divide-neutral-100 font-sans text-neutral-900">
                 {paginatedLogs.map(l => (
                   <tr key={l.id} className="hover:bg-neutral-50/25 transition-colors">
                     <td className="p-3 font-mono text-[10px] text-neutral-500 whitespace-nowrap">
                       {new Date(l.created_at || Date.now()).toLocaleString()}
                     </td>
-                    <td className="p-3 font-semibold text-neutral-800">
+                    <td className="p-3 font-semibold text-neutral-700">
                       {l.admin_email || 'System / Auto'}
                     </td>
                     <td className="p-3">
-                      <span className="px-2 py-0.5 bg-neutral-900 border border-neutral-200 rounded text-[9px] font-mono text-neutral-850 uppercase">
+                      <span className="px-2 py-0.5 bg-white border border-neutral-200 rounded text-[9px] font-mono text-neutral-700 uppercase">
                         {l.action}
                       </span>
                     </td>

@@ -160,14 +160,14 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
                   <th className="p-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-900/60 font-sans text-neutral-900">
+              <tbody className="divide-y divide-neutral-100 font-sans text-neutral-900">
                 {filteredReturns.map(r => (
                   <tr key={r.id} className="hover:bg-neutral-50/25 transition-colors">
                     <td className="p-3 font-mono text-[10px] text-amber-500 font-bold">
                       {r.order_number}
                     </td>
                     <td className="p-3">
-                      <div className="font-semibold text-neutral-800">{r.customer_name}</div>
+                      <div className="font-semibold text-neutral-700">{r.customer_name}</div>
                       <span className="text-[9px] text-neutral-500 block font-mono">{r.customer_phone}</span>
                     </td>
                     <td className="p-3 uppercase font-mono text-[10px]">
@@ -197,7 +197,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
                     <td className="p-3 text-right">
                       <button
                         onClick={() => openReturnDrawer(r)}
-                        className="p-1 text-neutral-850 hover:bg-neutral-900 rounded inline-flex items-center gap-1.5 text-[10px] uppercase font-bold"
+                        className="p-1 text-neutral-700 hover:bg-neutral-900 rounded inline-flex items-center gap-1.5 text-[10px] uppercase font-bold"
                       >
                         <Eye className="w-3.5 h-3.5" /> View Claim
                       </button>
@@ -258,7 +258,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
               {/* Reason card */}
               <div className="p-4 bg-neutral-50 border border-amber-900/20 rounded-xl space-y-1">
                 <span className="block text-[8px] font-bold text-amber-500 uppercase tracking-wider">Reason of Return Claim:</span>
-                <p className="text-[11px] text-neutral-800 leading-relaxed italic">"{selectedReturn.reason}"</p>
+                <p className="text-[11px] text-neutral-700 leading-relaxed italic">"{selectedReturn.reason}"</p>
               </div>
 
               {/* Action Notes Form */}
@@ -282,14 +282,14 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
                       <button
                         onClick={() => handleUpdateStatus('approved')}
                         disabled={updatingStatus}
-                        className="py-2.5 bg-emerald-500 text-neutral-950 font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-emerald-600 transition-colors"
+                        className="py-2.5 bg-emerald-500 text-neutral-900 font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-emerald-600 transition-colors"
                       >
                         Approve Claim
                       </button>
                       <button
                         onClick={() => handleUpdateStatus('rejected')}
                         disabled={updatingStatus}
-                        className="py-2.5 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-rose-500 hover:text-neutral-950 transition-colors"
+                        className="py-2.5 bg-rose-50 text-rose-700 border border-rose-200 font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-rose-500 hover:text-neutral-900 transition-colors"
                       >
                         Reject Claim
                       </button>
@@ -299,7 +299,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
                     <button
                       onClick={() => handleUpdateStatus('received')}
                       disabled={updatingStatus}
-                      className="col-span-2 py-2.5 bg-purple-500 text-neutral-950 font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-purple-600 transition-colors"
+                      className="col-span-2 py-2.5 bg-purple-500 text-neutral-900 font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-purple-600 transition-colors"
                     >
                       Confirm Item Received in Store
                     </button>
@@ -308,7 +308,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
                     <button
                       onClick={() => handleUpdateStatus('completed')}
                       disabled={updatingStatus}
-                      className="col-span-2 py-2.5 bg-neutral-900 text-white font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-neutral-800 transition-colors"
+                      className="col-span-2 py-2.5 bg-neutral-900 text-white font-bold rounded-lg text-[10px] uppercase tracking-wider hover:bg-neutral-100 transition-colors"
                     >
                       {selectedReturn.return_type === 'exchange' ? 'Ship Replacement Item' : 'Issue Net Refund'}
                     </button>
@@ -319,7 +319,7 @@ export default function ReturnsManager({ returns, onRefresh, showToast }: Return
 
             <button
               onClick={() => setSelectedReturn(null)}
-              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-200 border border-neutral-200 text-neutral-900 font-semibold rounded-xl text-xs uppercase"
+              className="w-full mt-6 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-semibold rounded-xl text-xs uppercase"
             >
               Close claim panel
             </button>

@@ -133,7 +133,7 @@ export default function StaffManager({ staff, token, showToast, onRefresh }: Sta
         </div>
         <button
           onClick={handleOpenAdd}
-          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
+          className="px-4 py-2 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 shadow-lg active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" /> Register Staff
         </button>
@@ -167,11 +167,11 @@ export default function StaffManager({ staff, token, showToast, onRefresh }: Sta
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-900/60">
+            <tbody className="divide-y divide-neutral-100">
               {filtered.map((s) => (
                 <tr key={s.id} className="hover:bg-neutral-50/20 transition-colors">
                   <td className="p-4 font-bold text-neutral-900 text-xs">{s.name || 'Anonymous User'}</td>
-                  <td className="p-4 font-mono text-neutral-800">{s.email}</td>
+                  <td className="p-4 font-mono text-neutral-700">{s.email}</td>
                   <td className="p-4 font-mono font-bold text-neutral-900 capitalize">{s.role}</td>
                   <td className="p-4">
                     <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${s.two_factor_enabled ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700' : 'bg-neutral-200 text-neutral-500'}`}>
@@ -179,7 +179,7 @@ export default function StaffManager({ staff, token, showToast, onRefresh }: Sta
                     </span>
                   </td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${s.active ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700' : 'bg-neutral-800 text-neutral-500'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${s.active ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-700' : 'bg-neutral-100 text-neutral-500'}`}>
                       {s.active ? 'Granted' : 'Suspended'}
                     </span>
                   </td>
@@ -193,7 +193,7 @@ export default function StaffManager({ staff, token, showToast, onRefresh }: Sta
                       </button>
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="p-1.5 bg-neutral-800 hover:bg-rose-50 hover:bg-rose-100 hover:text-rose-600 rounded-lg transition-all"
+                        className="p-1.5 bg-neutral-100 hover:bg-rose-50 hover:bg-rose-100 hover:text-rose-600 rounded-lg transition-all"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -274,7 +274,7 @@ export default function StaffManager({ staff, token, showToast, onRefresh }: Sta
                           onChange={(e) => setActive(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-8 h-4 bg-neutral-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-500 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-neutral-900/80"></div>
+                        <div className="w-8 h-4 bg-neutral-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-neutral-500 after:border-neutral-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-white"></div>
                         <span className="ml-2 text-neutral-500 text-[10px] font-bold">Access Granted</span>
                       </label>
                     </div>
@@ -297,7 +297,7 @@ export default function StaffManager({ staff, token, showToast, onRefresh }: Sta
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
+                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95"
                 >
                   Save Credentials
                 </button>

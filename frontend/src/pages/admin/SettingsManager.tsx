@@ -176,7 +176,7 @@ export default function SettingsManager({ settings, token, showToast, onRefresh 
           <button
             type="submit"
             disabled={saving || Object.keys(localValues).length === 0}
-            className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-900/95 disabled:bg-neutral-200 text-neutral-900 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-200 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
           >
             <Save className="w-4 h-4" />
             {saving ? 'Syncing Settings...' : 'Save Configurations'}

@@ -101,6 +101,21 @@ export async function reviewsRouter(request, env) {
         }
     }
 
+    // PATCH /api/reviews/:id/reply
+    if (path.match(/^\/\d+\/reply$/) && method === 'PATCH') {
+        const { user, error: authError } = await requireAdmin(request, env);
+        if (authError) return authError;
+        const id = path.match(/(\d+)/)[1];
+        try {
+            const { reply } = await request.json();
+            await env.DB.prepare("UPDATE product_reviews SET merchant_reply = ? WHERE id = ?").bind(reply, id).run();
+            return ok(null, 'Merchant reply submitted');
+        } catch (e) {
+            console.error('Reply review error:', e);
+            return serverError('Failed to save reply');
+        }
+    }
+
     // DELETE /api/reviews/:id
     if (path.match(/^\/\d+$/) && method === 'DELETE') {
         const { user, error: authError } = await requireAdmin(request, env);

@@ -69,7 +69,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
     <div className="space-y-6 animate-fade-in text-neutral-900">
       {/* Welcome header info card */}
       <div className="relative overflow-hidden bg-gradient-to-r from-[#171715] to-[#0e0e0d] border border-neutral-200/80 rounded-3xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="absolute -right-16 -top-16 w-44 h-44 bg-neutral-900/10 rounded-full blur-3xl"></div>
+        <div className="absolute -right-16 -top-16 w-44 h-44 bg-neutral-50 rounded-full blur-3xl"></div>
         <div className="space-y-1.5 relative z-10">
           <span className="text-[9px] uppercase tracking-widest font-black text-neutral-900 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" /> HeelsUp Intelligence Engine
@@ -285,7 +285,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
               <div className="space-y-3.5 pt-2">
                 {catShare.map((cat: any, idx: number) => (
                   <div key={idx} className="space-y-1.5">
-                    <div className="flex justify-between text-[11px] font-mono text-neutral-800">
+                    <div className="flex justify-between text-[11px] font-mono text-neutral-700">
                       <span>{cat.category || 'Oxford Shoes'}</span>
                       <span className="text-neutral-900 font-bold">{cat.value || 0}%</span>
                     </div>
@@ -310,7 +310,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
             <div className="space-y-3 pt-2 max-h-40 overflow-y-auto pr-1">
               {products.filter(p => p.stock <= 5).slice(0, 5).map((prod) => (
                 <div key={prod.id} className="flex justify-between items-center p-2.5 bg-rose-50/50 border border-rose-200/60 rounded-xl text-xs font-mono">
-                  <span className="truncate max-w-[130px] font-bold text-neutral-800">{prod.name}</span>
+                  <span className="truncate max-w-[130px] font-bold text-neutral-700">{prod.name}</span>
                   <span className="text-[10px] bg-[#ef4444]/20 border border-[#ef4444]/20 text-rose-600 px-1.5 py-0.5 rounded font-extrabold">
                     {prod.stock} stock
                   </span>

@@ -24,7 +24,7 @@ import CustomersManager from './admin/CustomersManager';
 import PosTerminal from './admin/PosTerminal';
 import ReturnsManager from './admin/ReturnsManager';
 import ReviewsModeration from './admin/ReviewsModeration';
-import DbConsole from './admin/DbConsole';
+
 import AuditLogs from './admin/AuditLogs';
 import EnterpriseReports from './admin/EnterpriseReports';
 
@@ -272,7 +272,7 @@ export default function Admin() {
   const [resettingPassword, setResettingPassword] = useState(false);
 
   // Active Panel Navigation Tab
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'stock' | 'orders' | 'categories' | 'customers' | 'reviews' | 'coupons' | 'banners' | 'pages' | 'settings' | 'pos' | 'sql' | 'audits' | 'returns' | 'analysis' | 'staff' | 'colors'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'products' | 'stock' | 'orders' | 'categories' | 'customers' | 'reviews' | 'coupons' | 'banners' | 'pages' | 'settings' | 'pos' | 'audits' | 'returns' | 'analysis' | 'staff' | 'colors'>('dashboard');
 
   // Sidebar Layout Collapsed State
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -588,11 +588,7 @@ export default function Admin() {
   // Stock quick update state
   const [stockUpdates, setStockUpdates] = useState<Record<string, Record<string, number>>>({});
 
-  // SQL Console inline state
-  const [sqlQuery, setSqlQuery] = useState('SELECT * FROM products LIMIT 10;');
-  const [sqlResults, setSqlResults] = useState<any | null>(null);
-  const [sqlError, setSqlError] = useState<string | null>(null);
-  const [sqlLoading, setSqlLoading] = useState(false);
+
 
   // POS Cart State
   const [posCart, setPosCart] = useState<{ product: Product; size: string; color: string; qty: number; price: number }[]>([]);
@@ -1649,7 +1645,7 @@ export default function Admin() {
       const allowedTabs = [
         'dashboard', 'products', 'stock', 'orders', 'categories', 'customers',
         'reviews', 'coupons', 'banners', 'pages', 'pos', 'returns',
-        'sql', 'audits', 'settings', 'analysis', 'staff', 'colors'
+        'audits', 'settings', 'analysis', 'staff', 'colors'
       ].filter(hasPermission);
       
       if (allowedTabs.length > 0 && !allowedTabs.includes(activeTab)) {
@@ -2181,16 +2177,12 @@ export default function Admin() {
 
   const handleToggleBlockCustomer = async (cust: Customer) => {
     try {
-      const res = await fetch(`/api/admin/query`, {
-        method: 'POST',
+      const res = await fetch(`/api/admin/customers/${cust.id}/toggle`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          sql: 'UPDATE users SET is_blocked = ? WHERE id = ?',
-          params: [cust.is_blocked ? 0 : 1, cust.id]
-        })
+        }
       });
       const data = await res.json();
       if (data.success) {
@@ -2204,35 +2196,7 @@ export default function Admin() {
     }
   };
 
-  // SQL Console Handler
-  const executeSqlQuery = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!sqlQuery.trim()) return;
-    setSqlLoading(true);
-    setSqlError(null);
-    setSqlResults(null);
-    try {
-      const res = await fetch('/api/admin/query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ sql: sqlQuery })
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setSqlResults(data.data);
-        showToast('success', 'Query Success', 'SQLite Statement completed.');
-      } else {
-        setSqlError(data.error || 'SQLite Syntax compilation error.');
-      }
-    } catch (err: any) {
-      setSqlError(err.message || 'SQLite connection loss.');
-    } finally {
-      setSqlLoading(false);
-    }
-  };
+
 
 
 
@@ -3033,7 +2997,6 @@ export default function Admin() {
         { id: 'banners', label: 'Homepage Banners', icon: 'fas fa-images' },
         { id: 'pages', label: 'Static Pages', icon: 'fas fa-file-alt' },
         { id: 'staff', label: 'Staff Management', icon: 'fas fa-user-shield' },
-        { id: 'sql', label: 'SQL DB Console', icon: 'fas fa-database' },
         { id: 'audits', label: 'Audit Logs', icon: 'fas fa-history' },
         { id: 'settings', label: 'Settings', icon: 'fas fa-cogs' },
       ]
@@ -3069,7 +3032,7 @@ export default function Admin() {
       {/* Floating Order Alert Banner */}
       {showOrderBanner && (
         <div className="fixed top-18 right-6 z-50 animate-slide-left pointer-events-auto bg-white text-neutral-900 p-4 rounded-xl shadow-2xl border border-neutral-200 flex items-center gap-3 w-80 max-w-sm">
-          <div className="w-8 h-8 rounded-full bg-neutral-900/20 border border-primary/30 flex items-center justify-center animate-pulse text-neutral-900">
+          <div className="w-8 h-8 rounded-full bg-neutral-50 border border-primary/30 flex items-center justify-center animate-pulse text-neutral-900">
             <ShoppingCart className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
@@ -3163,7 +3126,7 @@ export default function Admin() {
             <button
               onClick={loadAllData}
               disabled={dataLoading}
-              className="px-3 py-1.5 bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 text-[10px] font-bold text-neutral-800 rounded-xl uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-50"
+              className="px-3 py-1.5 bg-neutral-50 border border-neutral-200 hover:bg-neutral-100 text-[10px] font-bold text-neutral-700 rounded-xl uppercase tracking-wider flex items-center gap-1.5 transition-all disabled:opacity-50"
             >
               <RefreshCw className={`w-3 h-3 ${dataLoading ? 'animate-spin' : ''}`} />
               {dataLoading ? 'Syncing...' : 'Sync Database'}
@@ -3322,12 +3285,6 @@ export default function Admin() {
             />
           )}
 
-          {activeTab === 'sql' && (
-            <DbConsole
-              tables={dbTables}
-              showToast={showToast}
-            />
-          )}
 
           {activeTab === 'audits' && (
             <AuditLogs

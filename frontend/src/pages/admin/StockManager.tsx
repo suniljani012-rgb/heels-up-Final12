@@ -174,7 +174,7 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-900/60">
+            <tbody className="divide-y divide-neutral-100">
               {filteredProducts.map((p) => {
                 const hasChanges = modifiedStocks[p.id] && Object.keys(modifiedStocks[p.id]).length > 0;
                 
@@ -185,7 +185,7 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
 
                 return (
                   <tr key={p.id} className="hover:bg-neutral-50/20 transition-colors">
-                    <td className="p-4 font-mono font-bold text-neutral-800">{p.sku}</td>
+                    <td className="p-4 font-mono font-bold text-neutral-700">{p.sku}</td>
                     <td className="p-4">
                       <h4 className="font-bold text-neutral-900 text-xs">{p.name}</h4>
                       <span className="text-[9px] text-neutral-500 uppercase tracking-widest font-mono mt-0.5 block">{p.category}</span>
@@ -194,7 +194,7 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
                       const stockVal = getSizeStock(p, size);
                       return (
                         <td key={size} className="p-4 text-center">
-                          <div className="inline-flex items-center justify-center gap-1.5 bg-neutral-900 border border-neutral-200 rounded-lg p-1 w-20">
+                          <div className="inline-flex items-center justify-center gap-1.5 bg-white border border-neutral-200 rounded-lg p-1 w-20">
                             <button
                               type="button"
                               onClick={() => handleStockChange(p.id, size, stockVal - 1)}
@@ -220,7 +220,7 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
                       );
                     })}
                     <td className="p-4 text-center font-mono">
-                      <span className={`px-2.5 py-0.5 rounded font-extrabold text-[10px] ${totalCalculatedStock <= 5 ? 'bg-[#ef4444]/15 border border-[#ef4444]/25 text-rose-600 animate-pulse' : 'bg-neutral-800 text-neutral-800'}`}>
+                      <span className={`px-2.5 py-0.5 rounded font-extrabold text-[10px] ${totalCalculatedStock <= 5 ? 'bg-[#ef4444]/15 border border-[#ef4444]/25 text-rose-600 animate-pulse' : 'bg-neutral-100 text-neutral-700'}`}>
                         {totalCalculatedStock} units
                       </span>
                     </td>
@@ -229,7 +229,7 @@ export default function StockManager({ products, token, showToast, onRefresh }: 
                         <button
                           onClick={() => handleSaveStock(p)}
                           disabled={savingId === p.id}
-                          className="px-3 py-1.5 bg-neutral-900/80 hover:bg-neutral-900 text-neutral-900 border border-primary/20 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all active:scale-95 ml-auto shadow-md"
+                          className="px-3 py-1.5 bg-white hover:bg-neutral-900 text-white border border-primary/20 rounded-xl text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all active:scale-95 ml-auto shadow-md"
                         >
                           <Save className="w-3.5 h-3.5" />
                           {savingId === p.id ? 'Saving' : 'Save'}

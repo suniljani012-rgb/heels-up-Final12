@@ -325,7 +325,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                 <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-900/60">
+            <tbody className="divide-y divide-neutral-100">
               {paginatedOrders.map((o) => (
                 <tr key={o.id} className="hover:bg-neutral-50/20 transition-colors">
                   <td className="p-4 font-mono font-bold text-neutral-200">#{o.order_number}</td>
@@ -336,7 +336,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                   </td>
                   <td className="p-4 font-mono font-bold text-neutral-200">₹{(o.total_amount / 100).toFixed(2)}</td>
                   <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${o.source === 'pos' ? 'bg-sky-500/10 border border-sky-500/20 text-sky-600' : 'bg-neutral-800 text-neutral-500'}`}>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${o.source === 'pos' ? 'bg-sky-500/10 border border-sky-500/20 text-sky-600' : 'bg-neutral-100 text-neutral-500'}`}>
                       {o.source}
                     </span>
                   </td>
@@ -410,14 +410,14 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                         <h5 className="font-bold text-neutral-900">{item.product_name}</h5>
                         <span className="text-[9px] text-neutral-500 font-mono">Size UK-{item.size} {item.color ? `&middot; ${item.color}` : ''} &middot; {item.quantity} units</span>
                       </div>
-                      <span className="font-mono font-bold text-neutral-800">₹{((item.price * item.quantity) / 100).toFixed(2)}</span>
+                      <span className="font-mono font-bold text-neutral-700">₹{((item.price * item.quantity) / 100).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Address details */}
-              <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 space-y-3 text-xs leading-relaxed text-neutral-800">
+              <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 space-y-3 text-xs leading-relaxed text-neutral-700">
                 <h4 className="text-[10px] uppercase tracking-wider font-bold text-neutral-500 border-b border-neutral-200 pb-2">Customer Address Details</h4>
                 <p>
                   <strong>Ship To:</strong> {selectedOrder.customer_name}<br/>
@@ -428,7 +428,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                   {selectedOrder.city && <>{selectedOrder.city}, {selectedOrder.state || ''} - {selectedOrder.pincode || ''}</>}
                 </p>
                 {selectedOrder.notes && (
-                  <div className="mt-2 p-2.5 bg-neutral-900 border border-neutral-200 rounded-xl text-[11px] text-neutral-500 italic">
+                  <div className="mt-2 p-2.5 bg-white border border-neutral-200 rounded-xl text-[11px] text-neutral-500 italic">
                     Note: "{selectedOrder.notes}"
                   </div>
                 )}
@@ -478,7 +478,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                         value={courierName}
                         onChange={(e) => setCourierName(e.target.value)}
                         placeholder="e.g. Delhivery, Bluedart"
-                        className="w-full bg-neutral-900 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none"
+                        className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none"
                       />
                     </div>
                     <div>
@@ -488,7 +488,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                         value={trackingNumber}
                         onChange={(e) => setTrackingNumber(e.target.value)}
                         placeholder="e.g. 123456789"
-                        className="w-full bg-neutral-900 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none font-mono"
+                        className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none font-mono"
                       />
                     </div>
                   </div>
@@ -499,7 +499,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                       value={trackingUrl}
                       onChange={(e) => setTrackingUrl(e.target.value)}
                       placeholder="https://delhivery.com/track/..."
-                      className="w-full bg-neutral-900 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none font-mono"
+                      className="w-full bg-white border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none font-mono"
                     />
                   </div>
                 </div>
@@ -507,7 +507,7 @@ export default function OrdersManager({ orders, token, showToast, onRefresh }: O
                 <button
                   type="submit"
                   disabled={updatingStatus}
-                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-900/95 text-neutral-900 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 disabled:bg-neutral-800"
+                  className="w-full py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-md active:scale-95 disabled:bg-neutral-100"
                 >
                   {updatingStatus ? 'Syncing...' : 'Save Order Manifest'}
                 </button>
