@@ -2958,9 +2958,9 @@ export default function Admin() {
       )}
 
       {/* Sidebar Panel */}
-      <aside className={`w-64 bg-white border-r border-neutral-200/80 flex flex-col justify-between shrink-0 h-screen sticky top-0 transition-transform md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} z-30 fixed md:sticky`}>
+      <aside className={`w-64 bg-white border-r border-neutral-200/80 flex flex-col justify-between shrink-0 h-screen md:h-[100dvh] sticky top-0 transition-transform z-30 fixed left-0 top-0 md:sticky ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         {/* Brand */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-neutral-200/80">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-neutral-200/80 shrink-0">
           <span className="text-lg font-bold tracking-tight text-neutral-900 font-display flex items-center gap-1.5">
             <Sliders className="w-5 h-5" /> HeelsUp Admin
           </span>
@@ -2970,7 +2970,7 @@ export default function Admin() {
         </div>
         
         {/* Menu Items */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-4 py-6 space-y-6">
           {menuSections.map((sect, sIdx) => {
             const allowedItems = sect.items.filter(item => hasPermission(item.id));
             if (allowedItems.length === 0) return null;
@@ -3011,7 +3011,7 @@ export default function Admin() {
         </div>
         
         {/* Sign Out */}
-        <div className="p-4 border-t border-neutral-200/80">
+        <div className="p-4 border-t border-neutral-200/80 shrink-0">
           <button onClick={handleLogout} className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5">
             Sign Out
           </button>
