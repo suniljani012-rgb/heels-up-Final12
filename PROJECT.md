@@ -18,11 +18,13 @@ HeelsUp is structured as a full-stack Cloudflare App:
 ## Milestones
 | # | Name | Scope | Dependencies | Status |
 |---|---|---|---|---|
-| 1 | DbConsole Removal | Delete DbConsole.tsx, references in Admin.tsx, and backend route `/api/admin/query` | None | PLANNED |
-| 2 | Color & Size Input Alignment | Fix ColorsManager.tsx native color picker; replace UK sizes with EU sizes in ProductsManager.tsx | None | PLANNED |
-| 3 | Bulk CSV Upload & Template | Implement bulk CSV upload & template download in ProductsManager.tsx, parsing client-side | M2 | PLANNED |
-| 4 | POS Terminal Redesign & Channels | Run D1 migration for offline_sales, update POS backend checkout route, and POS checkout UI with channel selector | M1 | PLANNED |
-| 5 | Settings & Visual Contrast Alignment | Refactor SettingsManager.tsx PUT API to batch PUT, fix all bg-neutral-900 contrast issues | M2, M3, M4 | PLANNED |
+| 1 | DbConsole Removal | Delete DbConsole.tsx, references in Admin.tsx, and backend route `/api/admin/query` | None | DONE |
+| 2 | Color & Size Input Alignment | Fix ColorsManager.tsx native color picker; replace UK sizes with EU sizes in ProductsManager.tsx | None | DONE |
+| 3 | Bulk CSV Upload & Template | Implement bulk CSV upload & template download in ProductsManager.tsx, parsing client-side | M2 | DONE |
+| 4 | POS Terminal Redesign & Channels | Run D1 migration for offline_sales, update POS backend checkout route, and POS checkout UI with channel selector | M1 | DONE |
+| 5 | Settings & Visual Contrast Alignment | Refactor SettingsManager.tsx PUT API to batch PUT, fix all bg-neutral-900 contrast issues | M2, M3, M4 | DONE |
+| 6 | Storefront Enhancements | Implement search, filters, reviews, order tracking timeline, cache performance | M1-M5 | DONE |
+| 7 | Verification & Forensic Audit | Fix 15 failing tests and add storefront E2E tests | M1-M6 | IN_PROGRESS (Conv: 0b5970b1-72ff-4b27-a2a9-8d605ec46277) |
 
 ## Interface Contracts
 ### POS Checkout API (`POST /api/pos/sale`)

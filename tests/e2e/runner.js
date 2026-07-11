@@ -6,6 +6,8 @@ import { DatabaseSync } from 'node:sqlite';
 
 // Setup PATH env so child processes can locate node/npm/npx
 process.env.PATH = "C:\\Users\\Cyrix HealthCare\\AppData\\Local\\node-portable\\node-v22.16.0-win-x64;" + process.env.PATH;
+process.env.WRANGLER_SEND_METRICS = 'false';
+process.env.WRANGLER_TELEMETRY = '0';
 
 const baseUrl = 'http://localhost:8787';
 const registeredTests = [];
@@ -154,6 +156,22 @@ async function run() {
         }
     }
 
+    // Clean local D1 database files to ensure clean E2E test runs
+    try {
+        const d1Dir = path.resolve('.wrangler/state/v3/d1/miniflare-D1DatabaseObject');
+        if (fs.existsSync(d1Dir)) {
+            const files = fs.readdirSync(d1Dir);
+            for (const file of files) {
+                if (file.endsWith('.sqlite') || file.endsWith('.sqlite-shm') || file.endsWith('.sqlite-wal')) {
+                    fs.unlinkSync(path.join(d1Dir, file));
+                }
+            }
+            console.log('Cleaned local D1 database files.');
+        }
+    } catch (e) {
+        console.warn('Failed to clean local D1 database:', e.message);
+    }
+
     // 2. Apply Migrations
     console.log('Applying D1 database migrations locally...');
     try {
@@ -211,6 +229,7 @@ async function run() {
     await import('./tier3_cross_feature.test.js');
     await import('./tier4_real_world.test.js');
     await import('./refactor_checks.test.js');
+    await import('./tier5_storefront.test.js');
 
     console.log(`Loaded ${registeredTests.length} test cases.`);
 

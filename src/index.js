@@ -197,6 +197,33 @@ export default {
         }
       }
 
+      // Clear cache on mutations (POST, PUT, DELETE, PATCH) if response is 2xx
+      if (method !== "GET" && method !== "OPTIONS" && secureCorsResponse.status >= 200 && secureCorsResponse.status < 300) {
+        try {
+          const cache = caches.default;
+          const pathsToInvalidate = [];
+          if (pathNormalized.startsWith("/api/colors") || pathNormalized.startsWith("/api/admin/colors")) {
+            pathsToInvalidate.push(new URL("/api/colors", url.origin).toString());
+          }
+          if (pathNormalized.startsWith("/api/products") || pathNormalized.startsWith("/api/admin/products")) {
+            pathsToInvalidate.push(new URL("/api/products", url.origin).toString());
+            const match = pathNormalized.match(/^\/api\/(admin\/)?products\/(\d+)/);
+            if (match) {
+              pathsToInvalidate.push(new URL(`/api/products/${match[2]}`, url.origin).toString());
+            }
+          }
+          if (pathNormalized.startsWith("/api/settings") || pathNormalized.startsWith("/api/admin/settings")) {
+            pathsToInvalidate.push(new URL("/api/settings", url.origin).toString());
+            pathsToInvalidate.push(new URL("/api/settings/public", url.origin).toString());
+          }
+          for (const p of pathsToInvalidate) {
+            await cache.delete(new Request(p));
+          }
+        } catch (e) {
+          console.warn("Cache invalidation failed:", e);
+        }
+      }
+
       return secureCorsResponse;
     }
 

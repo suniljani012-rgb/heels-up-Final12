@@ -64,6 +64,12 @@ export async function settingsRouter(request, env) {
         const { user, error: authError } = await requireAdmin(request, env);
         if (authError) return authError;
         try {
+            // Size limit check
+            const contentLength = parseInt(request.headers.get('content-length') || '0');
+            if (contentLength > 512000) { // 500 KB limit
+                return error('Payload too large', 413);
+            }
+
             const body = await request.json();
             let updates = [];
             
@@ -76,6 +82,20 @@ export async function settingsRouter(request, env) {
             }
 
             if (!updates.length) return error('No settings provided', 400);
+
+            // Key Validation
+            for (const item of updates) {
+                if (!item || !item.key) {
+                    return error('Invalid settings key: key is required', 400);
+                }
+                const key = String(item.key).trim();
+                if (key.length === 0 || key.length > 100) {
+                    return error(`Invalid settings key length: "${key}"`, 400);
+                }
+                if (!/^[a-zA-Z0-9_\-\.]+$/.test(key)) {
+                    return error(`Invalid characters in settings key: "${key}"`, 400);
+                }
+            }
 
             for (const item of updates) {
                 if (!item || !item.key) continue;

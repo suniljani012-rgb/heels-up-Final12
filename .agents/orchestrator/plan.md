@@ -1,19 +1,32 @@
-# HeelsUp Admin Panel & POS Redesign Plan
+# HeelsUp Boutique Storefront & API Enhancements Plan
 
 ## Objective
-Redesign the HeelsUp Admin Panel and POS terminal according to the requirements in ORIGINAL_REQUEST.md.
+Implement missing storefront features, backend reviews API, security mitigations, and performance optimizations. Ensure all E2E tests pass.
 
 ## Strategy
-We will employ the **Project Pattern** (Dual Track):
-1. **E2E Testing Track**: Build a comprehensive, opaque-box, requirement-driven E2E test suite covering Tiers 1-4.
-2. **Implementation Track**: Redesign the UI and database/settings/API interactions based on the requirements.
-3. **Integration & Adversarial Hardening (Tier 5)**: Ensure all E2E tests pass, run Challenger checks, and verify integrity via Forensic Auditor.
+Use the **Project Pattern**:
+1. **Explore**: Identify codebase files and structure (Completed by Explorer).
+2. **Decompose & Implement**: Split the work into 7 milestones and dispatch to specialized Workers.
+3. **Verification**: Run E2E tests and Forensic Auditor to ensure correctness and zero integrity issues.
 
-## Action Plan
-- **Step 1: Explore & Analyze Codebase**: Deploy a read-only Explorer to understand the current layout, color palette swatches, settings APIs, POS layout, DB Console usage, and dependencies.
-- **Step 2: Define Project Architecture & Milestones (`PROJECT.md`)**: Define the decomposition of implementation tasks and E2E test features.
-- **Step 3: Dispatch E2E Testing Track**: E2E Testing Track Orchestrator creates tests.
-- **Step 4: Dispatch Implementation Track Milestones**: Run iteration loops (Explorer -> Worker -> Reviewer) for each milestone.
-- **Step 5: E2E Integration & Verification**: Run E2E tests against implementation and fix bugs.
-- **Step 6: Adversarial Hardening (Tier 5)**: Challenge implementation with adversarial tests and perform Forensic Integrity Audit.
-- **Step 7: Final Delivery & Notification**.
+## Milestones
+- **Milestone 1: Database Migration & Settings Constraint Fix**
+  - Add missing columns `brand`, `sales_channel`, and `out_for_delivery_at`.
+  - Fix settings table `updated_at` NOT NULL constraint failure in backend settings API.
+  - Verify baseline tests pass.
+- **Milestone 2: Global Search, Filtering, and Sorting**
+  - Implement navbar search bar in `Header.tsx` and redirection.
+  - Enable filters (Size, Color, Price) and sort (Rating, Price, Newest) on Shop page UI and backend `products.js`.
+- **Milestone 3: Product Reviews API & Detail Page UI**
+  - Implement GET/POST `/api/products/:id/reviews` backend endpoints.
+  - Add reviews list, stars, and submission form to Product detail page using new endpoints.
+- **Milestone 4: Visual Order Tracking Timeline**
+  - Implement step-by-step timeline stepper (Placed -> Shipped -> Out for Delivery -> Delivered) on `OrderTracking.tsx` and `Profile.tsx` views.
+- **Milestone 5: Input Sanitization & Stock Validation**
+  - Sanitize all client-side parameters to prevent SQL injection.
+  - Ensure strict stock level validations during checkout.
+- **Milestone 6: Performance Optimization via frame_ant.js**
+  - Leverage `frame_ant.js` preloading caches for products, shop filters, and profile logs to ensure preloaded sub-0.02ms cache hit loads.
+- **Milestone 7: Integration, Verification & Forensic Audit**
+  - Run full E2E test suite (100% pass).
+  - Verify clean status via Forensic Auditor.
