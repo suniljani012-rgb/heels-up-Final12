@@ -962,8 +962,47 @@ export async function productsRouter(request, env) {
         if (authError) return authError;
         const id = parseInt(path.slice(1));
         try {
-            await env.DB.prepare('DELETE FROM products WHERE id = ?').bind(id).run();
-            return ok(null, 'Product deleted');
+            // Retrieve all associated image URLs before deleting the product
+            const imageRows = await env.DB.prepare('SELECT url FROM product_images WHERE product_id = ?').bind(id).all();
+            const images = imageRows.results || [];
+            
+            // Delete product, size stock, images, and reviews from database
+            await env.DB.batch([
+                env.DB.prepare('DELETE FROM products WHERE id = ?').bind(id),
+                env.DB.prepare('DELETE FROM product_size_stock WHERE product_id = ?').bind(id),
+                env.DB.prepare('DELETE FROM product_images WHERE product_id = ?').bind(id),
+                env.DB.prepare('DELETE FROM product_reviews WHERE product_id = ?').bind(id)
+            ]);
+
+            // Delete files from R2
+            const bucket = env.MEDIA || env.BUCKET;
+            if (bucket) {
+                const helper = (urlStr) => {
+                    const marker = 'products/';
+                    const idx = urlStr.indexOf(marker);
+                    if (idx !== -1) return urlStr.substring(idx);
+                    try {
+                        const urlObj = new URL(urlStr, 'https://heelsup.in');
+                        const k = urlObj.searchParams.get('key');
+                        if (k) return decodeURIComponent(k);
+                    } catch {}
+                    return null;
+                };
+
+                for (const img of images) {
+                    const key = helper(img.url);
+                    if (key) {
+                        try {
+                            await bucket.delete(key);
+                            console.log(`[R2] Deleted product image key: ${key}`);
+                        } catch (r2Err) {
+                            console.error(`[R2] Failed to delete image key: ${key}`, r2Err);
+                        }
+                    }
+                }
+            }
+
+            return ok(null, 'Product and associated R2 images deleted');
         } catch (e) {
             console.error('Delete product error:', e);
             return serverError('Failed to delete product');

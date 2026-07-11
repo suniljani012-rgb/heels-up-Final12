@@ -21,6 +21,42 @@ export async function uploadRouter(request, env) {
             const bucket = env.MEDIA || env.BUCKET;
             if (!bucket) return error('R2 bucket binding not found', 500);
 
+            // Determine if we should optimize format based on client browser support
+            const accept = request.headers.get('accept') || '';
+            const supportsWebp = accept.includes('image/webp');
+            const supportsAvif = accept.includes('image/avif');
+
+            // If the environment has R2_PUBLIC_URL and accepts modern formats, we can use Cloudflare Image Resizing via fetch
+            if (env.R2_PUBLIC_URL && (supportsWebp || supportsAvif)) {
+                const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+                const resizeOptions = {
+                    cf: {
+                        image: {
+                            format: supportsAvif ? 'avif' : 'webp',
+                            quality: 85,
+                        }
+                    }
+                };
+                
+                try {
+                    const optimizedRes = await fetch(publicUrl, resizeOptions);
+                    if (optimizedRes.ok) {
+                        const headers = new Headers(optimizedRes.headers);
+                        const origin = request.headers.get('Origin') || '';
+                        const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];
+                        headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
+                        headers.set('Cache-Control', 'public, max-age=31536000');
+                        return new Response(optimizedRes.body, {
+                            status: optimizedRes.status,
+                            headers
+                        });
+                    }
+                } catch (fetchErr) {
+                    console.warn('Cloudflare Image Resizing fetch failed, falling back to direct R2 get:', fetchErr);
+                }
+            }
+
+            // Fallback: direct serve from R2 (not optimized, but 100% reliable)
             const object = await bucket.get(key);
             if (!object) return notFound('File not found');
 
