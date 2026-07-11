@@ -109,22 +109,24 @@ async function deductSizeStock(env, productId, sizeLabel, qty) {
     const beforeStock = prod ? prod.stock : 0;
     const afterStock = Math.max(0, beforeStock - qty);
 
+    const updates = [];
     // Deduct from size-specific stock if available
     if (sizeLabel) {
-        const row = await env.DB.prepare(
-            "SELECT stock FROM product_size_stock WHERE product_id=? AND size_label=?"
-        ).bind(productId, sizeLabel).first();
-        if (row) {
-            const newStock = Math.max(0, (row.stock || 0) - qty);
-            await env.DB.prepare(
-                "UPDATE product_size_stock SET stock=?, updated_at=datetime('now') WHERE product_id=? AND size_label=?"
-            ).bind(newStock, productId, sizeLabel).run();
-        }
+        updates.push(
+            env.DB.prepare(
+                "UPDATE product_size_stock SET stock = MAX(0, stock - ?), updated_at = datetime('now') WHERE product_id = ? AND size_label = ?"
+            ).bind(qty, productId, sizeLabel)
+        );
     }
     // Always deduct from legacy stock column (sum)
-    await env.DB.prepare(
-        "UPDATE products SET stock=MAX(0, stock-?), sold_count=COALESCE(sold_count,0)+?, updated_at=datetime('now') WHERE id=?"
-    ).bind(qty, qty, productId).run();
+    updates.push(
+        env.DB.prepare(
+            "UPDATE products SET stock = MAX(0, stock - ?), sold_count = COALESCE(sold_count, 0) + ?, updated_at = datetime('now') WHERE id = ?"
+        ).bind(qty, qty, productId)
+    );
+
+    // Run atomic batch update
+    await env.DB.batch(updates);
 
     // Log to inventory_log
     try {

@@ -149,15 +149,17 @@ async function fetchColorVariants(env, product) {
     return { colors: [], color_to_id: {} };
   }
 
-  const colors = [];
+  const colorsSet = new Set();
   const colorToId = {};
   for (const v of variants) {
     const color = extractColor(v.name);
-    colors.push(color);
-    colorToId[color] = v.id;
+    if (color && color !== 'Default' && color !== 'Nude/Default') {
+      colorsSet.add(color);
+      colorToId[color] = v.id;
+    }
   }
 
-  return { colors, color_to_id: colorToId };
+  return { colors: Array.from(colorsSet), color_to_id: colorToId };
 }
 
 // Helper: fetch distinct colors for multiple products as a map { productId: [colors] }

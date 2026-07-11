@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Header from './components/Header'
@@ -18,9 +18,10 @@ import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import OrderConfirmation from './pages/OrderConfirmation'
 import OrderTracking from './pages/OrderTracking'
-import Admin from './pages/Admin'
 import DynamicPage from './pages/DynamicPage'
 import NotFound from './pages/NotFound'
+
+const Admin = lazy(() => import('./pages/Admin'))
 
 const queryClient = new QueryClient()
 
@@ -106,8 +107,32 @@ function AppContent() {
           <Route path="/size-guide.html" element={<DynamicPage />} />
 
           {/* Admin Portal routes */}
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin.html" element={<Admin />} />
+          <Route
+            path="/admin"
+            element={
+              <Suspense fallback={
+                <div className="flex flex-col items-center justify-center min-h-[50vh] select-none">
+                  <div className="w-6 h-6 border-2 border-[#C9A96E] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-[10px] text-gray-400 mt-4 tracking-widest uppercase">Initializing Admin Console...</p>
+                </div>
+              }>
+                <Admin />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/admin.html"
+            element={
+              <Suspense fallback={
+                <div className="flex flex-col items-center justify-center min-h-[50vh] select-none">
+                  <div className="w-6 h-6 border-2 border-[#C9A96E] border-t-transparent rounded-full animate-spin" />
+                  <p className="text-[10px] text-gray-400 mt-4 tracking-widest uppercase">Initializing Admin Console...</p>
+                </div>
+              }>
+                <Admin />
+              </Suspense>
+            }
+          />
           
           {/* Fallback route */}
           <Route path="*" element={<NotFound />} />
