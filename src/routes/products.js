@@ -962,7 +962,17 @@ export async function productsRouter(request, env) {
         if (authError) return authError;
         const id = parseInt(path.slice(1));
         try {
-            // Retrieve all associated image URLs before deleting the product
+            // Check if product is referenced in any existing orders
+            const saleCheck = await env.DB.prepare('SELECT COUNT(*) as count FROM order_items WHERE product_id = ?').bind(id).first();
+            const hasSales = saleCheck && (saleCheck.count || 0) > 0;
+
+            if (hasSales) {
+                // Soft-delete: deactivate the product so order history is preserved
+                await env.DB.prepare('UPDATE products SET active = 0, updated_at = datetime(\'now\') WHERE id = ?').bind(id).run();
+                return ok({ soft_deleted: true }, 'Product has order history. Deactivated (soft-deleted) to preserve order records.');
+            }
+
+            // Hard-delete: retrieve all associated image URLs before deleting the product
             const imageRows = await env.DB.prepare('SELECT url FROM product_images WHERE product_id = ?').bind(id).all();
             const images = imageRows.results || [];
             

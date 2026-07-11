@@ -45,7 +45,7 @@ export async function uploadRouter(request, env) {
                         const origin = request.headers.get('Origin') || '';
                         const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];
                         headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
-                        headers.set('Cache-Control', 'public, max-age=31536000');
+                        headers.set('Cache-Control', 'public, max-age=31536000, immutable');
                         return new Response(optimizedRes.body, {
                             status: optimizedRes.status,
                             headers
@@ -65,7 +65,7 @@ export async function uploadRouter(request, env) {
             const origin = request.headers.get('Origin') || '';
             const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];
             headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
-            headers.set('Cache-Control', 'public, max-age=31536000');
+            headers.set('Cache-Control', 'public, max-age=31536000, immutable');
 
             return new Response(object.body, { headers });
         } catch (e) {
