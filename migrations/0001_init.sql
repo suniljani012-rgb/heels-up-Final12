@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS products (
   rating REAL NOT NULL DEFAULT 4.5,
   review_count INTEGER NOT NULL DEFAULT 0,
   description TEXT,
+  brand TEXT DEFAULT '',
   sizes_json TEXT,
   images_json TEXT,
   image_url TEXT,
