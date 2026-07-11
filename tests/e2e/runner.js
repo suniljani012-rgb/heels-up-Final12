@@ -168,6 +168,25 @@ async function run() {
             }
             console.log('Cleaned local D1 database files.');
         }
+
+        // Clean wrangler-persist D1 files as well
+        const persistDir = 'C:\\Users\\Public\\wrangler-persist';
+        if (fs.existsSync(persistDir)) {
+            const cleanDir = (dir) => {
+                const entries = fs.readdirSync(dir, { withFileTypes: true });
+                for (const entry of entries) {
+                    const fullPath = path.join(dir, entry.name);
+                    if (entry.isDirectory()) {
+                        cleanDir(fullPath);
+                        fs.rmdirSync(fullPath);
+                    } else {
+                        fs.unlinkSync(fullPath);
+                    }
+                }
+            };
+            cleanDir(persistDir);
+            console.log('Cleaned wrangler-persist D1 database folder.');
+        }
     } catch (e) {
         console.warn('Failed to clean local D1 database:', e.message);
     }

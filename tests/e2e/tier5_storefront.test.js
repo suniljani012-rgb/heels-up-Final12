@@ -5,6 +5,17 @@ const baseUrl = 'http://localhost:8787';
 
 // Test 83: Storefront Search
 addTest(5, '83. Storefront Search (Search query matching name/description)', async () => {
+    // Wait for dev server to recover if it is restarting from build file changes
+    let attempts = 15;
+    while (attempts > 0) {
+        try {
+            const testFetch = await fetch(`${baseUrl}/api/products?limit=1`, { method: 'GET' });
+            if (testFetch.status === 200 || testFetch.status === 404) break;
+        } catch (e) {}
+        attempts--;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
     // 1. Fetch products with search query 'stiletto'
     const res = await fetch(`${baseUrl}/api/products?search=stiletto`, { method: 'GET' });
     assert.strictEqual(res.status, 200);

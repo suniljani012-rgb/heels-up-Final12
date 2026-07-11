@@ -498,17 +498,18 @@ export async function ordersRouter(request, env) {
         if (!orderNumber) return error('Order number required', 400);
         try {
             const order = await env.DB.prepare(
-                `SELECT id, order_number, status, payment_status, tracking_number, tracking_url, shipping_carrier, created_at, updated_at FROM orders WHERE order_number = ?`
+                `SELECT id, order_number, order_status, payment_status, tracking_number, tracking_url, courier_name, created_at, updated_at FROM orders WHERE order_number = ?`
             ).bind(orderNumber.toUpperCase()).first();
             if (!order) return notFound('Order not found');
             const itemsRes = await env.DB.prepare('SELECT product_name, quantity, size_label, color FROM order_items WHERE order_id = ?').bind(order.id).all();
             return ok({
                 order_number: order.order_number,
-                status: order.status,
+                status: order.order_status,
+                order_status: order.order_status,
                 payment_status: order.payment_status,
                 tracking_number: order.tracking_number,
                 tracking_url: order.tracking_url,
-                shipping_carrier: order.shipping_carrier,
+                shipping_carrier: order.courier_name || 'Delhivery',
                 created_at: order.created_at,
                 updated_at: order.updated_at,
                 items: (itemsRes.results || []).map(i => ({
