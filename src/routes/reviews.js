@@ -75,7 +75,11 @@ export async function reviewsRouter(request, env) {
            FROM product_reviews r JOIN products p ON r.product_id = p.id LEFT JOIN users u ON r.user_id = u.id
            ORDER BY r.created_at DESC`
             ).all();
-            return list(reviews.results || []);
+            const formatted = (reviews.results || []).map(r => ({
+                ...r,
+                approved: r.status === 'approved'
+            }));
+            return list(formatted);
         } catch (e) {
             console.error('Admin fetch reviews error:', e);
             return serverError('Failed to fetch reviews');
