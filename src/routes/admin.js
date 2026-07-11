@@ -40,7 +40,6 @@ function rewritePath(request, newPathname) {
     const url = new URL(request.url);
     url.pathname = newPathname;
     const newHeaders = new Headers(request.headers);
-    newHeaders.set('x-is-admin', 'true');
     return new Request(url.toString(), {
         method: request.method,
         headers: newHeaders,
@@ -51,6 +50,10 @@ function rewritePath(request, newPathname) {
 
 // ── Main admin router ─────────────────────────────────────────
 export async function adminRouter(request, env) {
+    // Global auth gate — ALL /api/admin/* routes require admin role
+    const { user: adminUser, error: authError } = await requireAdmin(request, env);
+    if (authError) return authError;
+
     const url = new URL(request.url);
     const path = url.pathname; // e.g. /api/admin/reviews
 

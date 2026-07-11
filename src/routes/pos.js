@@ -76,6 +76,31 @@ export async function posRouter(request, env) {
             const { customer_name, customer_phone, items, payment_method, discount, notes, created_at, sales_channel } = await request.json();
             if (!items || items.length === 0) return error('No items in sale');
 
+            // Validate stock availability for all items first
+            for (const item of items) {
+                const product = await env.DB.prepare(
+                    'SELECT id, name, sku, price, stock FROM products WHERE id = ? AND active = 1'
+                ).bind(item.product_id).first();
+                if (!product) return error(`Product ${item.product_id} not found`, 400);
+
+                const qty = item.quantity || item.qty || 1;
+                
+                if (item.size && item.size !== 'Default' && item.size !== 'Nude/Default') {
+                    const sizeRow = await env.DB.prepare(
+                        "SELECT stock FROM product_size_stock WHERE product_id=? AND size_label=?"
+                    ).bind(item.product_id, item.size).first();
+                    if (sizeRow) {
+                        if (sizeRow.stock < qty) {
+                            return error(`Insufficient stock for product "${product.name}" (Size: ${item.size}). Available: ${sizeRow.stock}, Requested: ${qty}`, 400);
+                        }
+                    } else if (product.stock < qty) {
+                        return error(`Insufficient stock for product "${product.name}". Available: ${product.stock}, Requested: ${qty}`, 400);
+                    }
+                } else if (product.stock < qty) {
+                    return error(`Insufficient stock for product "${product.name}". Available: ${product.stock}, Requested: ${qty}`, 400);
+                }
+            }
+
             let channel = 'POS';
             if (sales_channel !== undefined && sales_channel !== null) {
                 if (!['POS', 'WhatsApp', 'Instagram'].includes(sales_channel)) {
@@ -197,8 +222,8 @@ export async function posRouter(request, env) {
             const all = url.searchParams.get('all') === 'true';
             const limit = all ? 1000 : parseInt(url.searchParams.get('limit') || '100');
             const sales = await env.DB.prepare(
-                `SELECT * FROM offline_sales ORDER BY id DESC LIMIT ${limit}`
-            ).all();
+                `SELECT * FROM offline_sales ORDER BY id DESC LIMIT ?`
+            ).bind(limit).all();
             return list(sales.results || []);
         } catch (e) {
             console.error('Fetch POS sales error:', e);

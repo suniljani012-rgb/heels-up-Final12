@@ -2,6 +2,15 @@
 import { requireAdmin, requireAuth } from '../middleware/auth.js';
 import { ok, list, created, error, notFound, serverError } from '../utils/response.js';
 
+function isValidEuSize(size) {
+    const s = String(size).trim();
+    const num = parseFloat(s);
+    if (isNaN(num)) return false;
+    if (num < 35 || num > 45) return false;
+    if (!/^\d+(\.\d+)?$/.test(s)) return false;
+    return true;
+}
+
 function slug(name) {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
 }
@@ -311,7 +320,16 @@ export async function productsRouter(request, env) {
             const maxPrice = params.get('max_price');
             const sizeFilter = params.get('size');
             const color = params.get('color');
-            const isAdmin = request.headers.get('x-is-admin') === 'true' || params.get('all') === 'true';
+            // Verify real admin auth — don't trust client headers
+            let isAdmin = false;
+            try {
+                const authHeader = request.headers.get('Authorization') || '';
+                if (authHeader.startsWith('Bearer ')) {
+                    const { verifyJWT } = await import('../utils/jwt.js');
+                    const payload = await verifyJWT(authHeader.slice(7), env.JWT_SECRET);
+                    isAdmin = payload && ['admin', 'staff', 'manager'].includes(payload.role);
+                }
+            } catch {}
             let where = isAdmin ? [] : ['p.active = 1'];
             let binds = [];
 
@@ -401,7 +419,16 @@ export async function productsRouter(request, env) {
     if (path.startsWith('/slug/') && method === 'GET') {
         const productSlug = path.replace('/slug/', '');
         try {
-            const isAdmin = request.headers.get('x-is-admin') === 'true' || params.get('all') === 'true';
+            // Verify real admin auth — don't trust client headers
+            let isAdmin = false;
+            try {
+                const authHeader = request.headers.get('Authorization') || '';
+                if (authHeader.startsWith('Bearer ')) {
+                    const { verifyJWT } = await import('../utils/jwt.js');
+                    const payload = await verifyJWT(authHeader.slice(7), env.JWT_SECRET);
+                    isAdmin = payload && ['admin', 'staff', 'manager'].includes(payload.role);
+                }
+            } catch {}
             const allProducts = await env.DB.prepare("SELECT id, name FROM products" + (isAdmin ? '' : ' WHERE active = 1')).all();
             const matched = (allProducts.results || []).find(p => slug(p.name) === productSlug);
             if (!matched) return notFound('Product not found');
@@ -459,7 +486,16 @@ export async function productsRouter(request, env) {
     if (path.match(/^\/\d+$/) && method === 'GET') {
         const id = parseInt(path.slice(1));
         try {
-            const isAdmin = request.headers.get('x-is-admin') === 'true' || params.get('all') === 'true';
+            // Verify real admin auth — don't trust client headers
+            let isAdmin = false;
+            try {
+                const authHeader = request.headers.get('Authorization') || '';
+                if (authHeader.startsWith('Bearer ')) {
+                    const { verifyJWT } = await import('../utils/jwt.js');
+                    const payload = await verifyJWT(authHeader.slice(7), env.JWT_SECRET);
+                    isAdmin = payload && ['admin', 'staff', 'manager'].includes(payload.role);
+                }
+            } catch {}
             const product = await env.DB.prepare(
                 `SELECT p.*, c.id as category_id,
                 (SELECT ROUND(AVG(rating),1) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as avg_rating,
@@ -530,10 +566,24 @@ export async function productsRouter(request, env) {
                 }));
             }
             if (!sizeStockArray.length) return error('size_stock required (array or object)', 400);
+            if (sizeStockArray.some(s => !isValidEuSize(s.size_label))) {
+                return error('Invalid size label. Must be a numeric EU shoe size between 35 and 45.', 400);
+            }
+
+            const prod = await env.DB.prepare('SELECT name, stock FROM products WHERE id = ?').bind(id).first();
+            const beforeStock = prod ? prod.stock : 0;
+
             await upsertSizeStock(env, id, sizeStockArray);
             // Also update aggregate stock on products table
             const total = sizeStockArray.reduce((sum, r) => sum + (parseInt(r.stock) || 0), 0);
             await env.DB.prepare('UPDATE products SET stock = ?, updated_at = datetime(\'now\') WHERE id = ?').bind(total, id).run();
+
+            const change = total - beforeStock;
+            if (change !== 0) {
+                await env.DB.prepare(
+                    "INSERT INTO inventory_log (product_id, product_name, change_type, quantity_before, quantity_change, quantity_after, reason, created_at) VALUES (?, ?, 'adjustment', ?, ?, ?, 'Size stock update', datetime('now'))"
+                ).bind(id, prod ? prod.name : 'Unknown Product', beforeStock, change, total).run();
+            }
             const rows = await fetchSizeStock(env, id);
             return ok({ product_id: id, size_stock: rows, total_stock: total }, 'Size stock updated');
         } catch (e) {
@@ -554,36 +604,86 @@ export async function productsRouter(request, env) {
             }
 
             const results = [];
+            // 1. Validation Pass
+            for (const item of products) {
+                const { name, sku, price, mrp, sizes, size_stock } = item;
+                if (!name || !sku || !price) {
+                    return error('Name, SKU and price are required for all products', 400);
+                }
+                const parsedPrice = parseFloat(price);
+                if (isNaN(parsedPrice) || parsedPrice < 0) {
+                    return error('Price must be a valid positive number', 400);
+                }
+                if (mrp && (isNaN(parseFloat(mrp)) || parseFloat(mrp) < 0)) {
+                    return error('MRP must be a valid positive number', 400);
+                }
+                if (sizes && sizes.some(s => !isValidEuSize(s))) {
+                    return error('Invalid size label in sizes list', 400);
+                }
+                if (size_stock && size_stock.some(s => !isValidEuSize(s.size_label))) {
+                    return error('Invalid size label in size_stock list', 400);
+                }
+                const reqColor = item.color || extractColor(item.name);
+                if (reqColor && reqColor !== 'Default' && reqColor !== 'Nude/Default') {
+                    const cleanColorName = String(reqColor).trim().toLowerCase();
+                    const colorRow = await env.DB.prepare(
+                        'SELECT hex_code FROM color_hex_mappings WHERE color_name = ?'
+                    ).bind(cleanColorName).first();
+                    if (!colorRow) {
+                        return error(`Color mapping not found for colorway: "${reqColor}"`, 400);
+                    }
+                }
+            }
+
+            // 2. Execution Pass (with duplicate SKU skipping)
+            const seenSkus = new Set();
             for (const item of products) {
                 const { name, sku, category, description, price, mrp, stock, sizes, images, brand, tags, is_new, is_trending, is_featured, size_stock } = item;
-                if (!name || !sku || !price) {
-                    continue; // Skip invalid products
+                
+                const cleanSku = String(sku).trim();
+                if (seenSkus.has(cleanSku)) {
+                    continue; // Skip duplicate SKU in same payload
                 }
+                seenSkus.add(cleanSku);
 
-                // Insert into products table
-                const result = await env.DB.prepare(
-                    `INSERT INTO products (name, sku, category, description, price, original_price, stock, active, featured, is_new, is_trending, show_mrp, sizes_json, images_json, brand, tags, created_at, updated_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 1, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *`
-                ).bind(
-                    name, sku, category || null, description || null,
-                    parseFloat(price), mrp ? parseFloat(mrp) : null,
-                    parseInt(stock || 0), is_featured ? 1 : 0, is_new ? 1 : 0, is_trending ? 1 : 0,
-                    JSON.stringify(sizes || []), JSON.stringify(images || []),
-                    brand || null, JSON.stringify(tags || [])
-                ).first();
-
-                if (result) {
-                    // Size stock handling
-                    if (size_stock && Array.isArray(size_stock) && size_stock.length > 0) {
-                        await upsertSizeStock(env, result.id, size_stock);
-                    } else if (sizes && sizes.length > 0 && stock) {
-                        const perSize = Math.floor(parseInt(stock || 0) / sizes.length);
-                        const autoSizeStock = sizes.map(s => ({ size_label: String(s), stock: perSize }));
-                        await upsertSizeStock(env, result.id, autoSizeStock);
+                try {
+                    const existing = await env.DB.prepare('SELECT id FROM products WHERE sku = ?').bind(cleanSku).first();
+                    if (existing) {
+                        continue; // Skip duplicate SKU in database
                     }
-                    const sizeStockRows = await fetchSizeStock(env, result.id);
-                    const colorsList = await fetchColorsForProduct(env, result.id);
-                    results.push(mapProduct(result, sizeStockRows, colorsList));
+
+                    const result = await env.DB.prepare(
+                        `INSERT INTO products (name, sku, category, description, price, original_price, stock, active, featured, is_new, is_trending, show_mrp, sizes_json, images_json, brand, tags, created_at, updated_at)
+                         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 1, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *`
+                    ).bind(
+                        name, cleanSku, category || null, description || null,
+                        parseFloat(price), mrp ? parseFloat(mrp) : null,
+                        parseInt(stock || 0), is_featured ? 1 : 0, is_new ? 1 : 0, is_trending ? 1 : 0,
+                        JSON.stringify(sizes || []), JSON.stringify(images || []),
+                        brand || null, JSON.stringify(tags || [])
+                    ).first();
+
+                    if (result) {
+                        if (size_stock && Array.isArray(size_stock) && size_stock.length > 0) {
+                            await upsertSizeStock(env, result.id, size_stock);
+                        } else if (sizes && sizes.length > 0 && stock) {
+                            const perSize = Math.floor(parseInt(stock || 0) / sizes.length);
+                            const autoSizeStock = sizes.map(s => ({ size_label: String(s), stock: perSize }));
+                            await upsertSizeStock(env, result.id, autoSizeStock);
+                        }
+
+                        const sizeStockRows = await fetchSizeStock(env, result.id);
+                        const colorsList = await fetchColorsForProduct(env, result.id);
+                        results.push(mapProduct(result, sizeStockRows, colorsList));
+                        
+                        // Log inventory creation
+                        await env.DB.prepare(
+                            "INSERT INTO inventory_log (product_id, product_name, change_type, quantity_before, quantity_change, quantity_after, reason, created_at) VALUES (?, ?, 'restock', 0, ?, ?, 'Product bulk created', datetime('now'))"
+                        ).bind(result.id, name, parseInt(stock || 0), parseInt(stock || 0)).run();
+                    }
+                } catch (err) {
+                    if (err.message?.includes('UNIQUE')) continue;
+                    throw err;
                 }
             }
 
@@ -603,12 +703,41 @@ export async function productsRouter(request, env) {
             const { name, sku, category, description, price, mrp, stock, sizes, images, brand, tags, is_new, is_trending, is_featured, meta_title, meta_desc, size_stock } = body;
             if (!name || !sku || !price) return error('Name, SKU and price are required');
 
+            // Size Validation
+            if (sizes && sizes.some(s => !isValidEuSize(s))) {
+                return error('Invalid size label. Must be a numeric EU shoe size between 35 and 45.', 400);
+            }
+            if (size_stock && size_stock.some(s => !isValidEuSize(s.size_label))) {
+                return error('Invalid size label in size stock.', 400);
+            }
+
+            // Price/MRP Validation
+            const parsedPrice = parseFloat(price);
+            if (isNaN(parsedPrice) || parsedPrice < 0) {
+                return error('Price must be a valid positive number', 400);
+            }
+            if (mrp && (isNaN(parseFloat(mrp)) || parseFloat(mrp) < 0)) {
+                return error('MRP must be a valid positive number', 400);
+            }
+
+            // Colorway validation
+            const reqColor = body.color || extractColor(body.name);
+            if (reqColor && reqColor !== 'Default' && reqColor !== 'Nude/Default') {
+                const cleanColorName = String(reqColor).trim().toLowerCase();
+                const colorRow = await env.DB.prepare(
+                    'SELECT hex_code FROM color_hex_mappings WHERE color_name = ?'
+                ).bind(cleanColorName).first();
+                if (!colorRow) {
+                    return error(`Color mapping not found for colorway: "${reqColor}"`, 400);
+                }
+            }
+
             const result = await env.DB.prepare(
                 `INSERT INTO products (name, sku, category, description, price, original_price, stock, active, featured, is_new, is_trending, show_mrp, sizes_json, images_json, brand, tags, meta_title, meta_description, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *`
+          VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *`
             ).bind(
                 name, sku, category || null, description || null,
-                parseFloat(price), mrp ? parseFloat(mrp) : null,
+                parsedPrice, mrp ? parseFloat(mrp) : null,
                 parseInt(stock || 0), is_featured ? 1 : 0, is_new ? 1 : 0, is_trending ? 1 : 0,
                 body.show_mrp !== false ? 1 : 0,
                 JSON.stringify(sizes || []), JSON.stringify(images || []),
@@ -625,6 +754,11 @@ export async function productsRouter(request, env) {
                 const autoSizeStock = sizes.map(s => ({ size_label: String(s), stock: perSize }));
                 await upsertSizeStock(env, result.id, autoSizeStock);
             }
+
+            // Log inventory creation
+            await env.DB.prepare(
+                "INSERT INTO inventory_log (product_id, product_name, change_type, quantity_before, quantity_change, quantity_after, reason, created_at) VALUES (?, ?, 'restock', 0, ?, ?, 'Product created', datetime('now'))"
+            ).bind(result.id, name, parseInt(stock || 0), parseInt(stock || 0)).run();
 
             const sizeStock2 = await fetchSizeStock(env, result.id);
             const colorsList = await fetchColorsForProduct(env, result.id);
@@ -644,6 +778,35 @@ export async function productsRouter(request, env) {
         try {
             const body = await request.json();
             const { name, category, description, price, mrp, stock, sizes, images, brand, tags, is_new, is_trending, is_featured, meta_title, meta_desc, size_stock } = body;
+
+            // Size Validation
+            if (sizes && sizes.some(s => !isValidEuSize(s))) {
+                return error('Invalid size label. Must be a numeric EU shoe size between 35 and 45.', 400);
+            }
+            if (size_stock && size_stock.some(s => !isValidEuSize(s.size_label))) {
+                return error('Invalid size label in size stock.', 400);
+            }
+
+            // Price/MRP Validation
+            const parsedPrice = parseFloat(price);
+            if (isNaN(parsedPrice) || parsedPrice < 0) {
+                return error('Price must be a valid positive number', 400);
+            }
+            if (mrp && (isNaN(parseFloat(mrp)) || parseFloat(mrp) < 0)) {
+                return error('MRP must be a valid positive number', 400);
+            }
+
+            // Colorway validation
+            const reqColor = body.color || extractColor(body.name);
+            if (reqColor && reqColor !== 'Default' && reqColor !== 'Nude/Default') {
+                const cleanColorName = String(reqColor).trim().toLowerCase();
+                const colorRow = await env.DB.prepare(
+                    'SELECT hex_code FROM color_hex_mappings WHERE color_name = ?'
+                ).bind(cleanColorName).first();
+                if (!colorRow) {
+                    return error(`Color mapping not found for colorway: "${reqColor}"`, 400);
+                }
+            }
 
             await env.DB.prepare(
                 `UPDATE products SET name=?, category=?, description=?, price=?, original_price=?,

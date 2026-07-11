@@ -92,6 +92,7 @@ export default function HeicImage({ src, fallback = 'assets/placeholder.jpg', cl
 
     return () => {
       active = false;
+      // Clean up object URL if component unmounts before cache is used elsewhere
     };
   }, [src, fallback]);
 

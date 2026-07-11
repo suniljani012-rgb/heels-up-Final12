@@ -5,6 +5,16 @@ const ITERATIONS = 100000;
 const KEY_LEN = 32;
 const ALGO = 'SHA-256';
 
+// Constant-time string comparison to prevent timing attacks
+function timingSafeEqual(a, b) {
+    if (a.length !== b.length) return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+}
+
 export async function hashPassword(password) {
     const enc = new TextEncoder();
     const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -34,7 +44,7 @@ export async function verifyPassword(password, stored) {
                 256
             );
             const computed = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, "0")).join("");
-            return computed === hash;
+            return timingSafeEqual(computed, hash);
         }
         
         // Support new format: pbkdf2:100000:saltHex:hashHex
@@ -47,7 +57,7 @@ export async function verifyPassword(password, stored) {
             keyMaterial, KEY_LEN * 8
         );
         const computedHex = Array.from(new Uint8Array(derived)).map(b => b.toString(16).padStart(2, '0')).join('');
-        return computedHex === hashHex;
+        return timingSafeEqual(computedHex, hashHex);
     } catch {
         return false;
     }

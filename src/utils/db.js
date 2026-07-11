@@ -56,19 +56,6 @@ export async function batch(db, statements) {
 }
 
 /**
- * Count rows matching a condition.
- * @param {D1Database} db
- * @param {string} table
- * @param {string} where  - e.g. "is_active = 1 AND category_id = ?"
- * @param {any[]} params
- * @returns {Promise<number>}
- */
-export async function count(db, table, where = '1=1', params = []) {
-    const row = await queryOne(db, `SELECT COUNT(*) as n FROM ${table} WHERE ${where}`, params);
-    return row?.n || 0;
-}
-
-/**
  * Paginated query helper.
  * Returns { rows, total, page, limit, pages }
  * @param {D1Database} db
@@ -100,48 +87,11 @@ export async function paginate(db, sql, params = [], page = 1, limit = 20, count
 }
 
 /**
- * Build a simple SET clause for UPDATE statements.
- * Only includes keys present in the data object.
- *
- * Usage:
- *   const { clause, values } = buildSet({ name, price, is_active });
- *   await run(db, `UPDATE products SET ${clause}, updated_at = ? WHERE id = ?`, [...values, now(), id]);
- *
- * @param {object} data  - Key-value pairs to update
- * @param {string[]} allowed - Whitelist of allowed fields
- * @returns {{ clause: string, values: any[] }}
- */
-export function buildSet(data, allowed = null) {
-    const entries = Object.entries(data)
-        .filter(([k, v]) => v !== undefined && (!allowed || allowed.includes(k)));
-
-    if (!entries.length) throw new Error('No valid fields to update');
-
-    const clause = entries.map(([k]) => `${k} = ?`).join(', ');
-    const values = entries.map(([, v]) => v);
-
-    return { clause, values };
-}
-
-/**
  * Current UTC datetime string for D1 (SQLite format).
  * @returns {string}  e.g. "2025-05-19 10:30:00"
  */
 export function now() {
     return new Date().toISOString().replace('T', ' ').slice(0, 19);
-}
-
-/**
- * Generate a short random ID (e.g. for order numbers).
- * @param {string} prefix  e.g. 'ORD'
- * @param {number} digits
- * @returns {string}  e.g. 'ORD-8472'
- */
-export function genId(prefix = '', digits = 6) {
-    const n = Math.floor(Math.random() * Math.pow(10, digits))
-        .toString()
-        .padStart(digits, '0');
-    return prefix ? `${prefix}-${n}` : n;
 }
 
 /**

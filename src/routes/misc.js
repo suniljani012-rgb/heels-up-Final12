@@ -12,9 +12,14 @@ export async function contactRouter(request, env) {
         try {
             const { name, email, phone, order, subject, message } = await request.json();
             if (!name || !email || !message) return error('Name, email and message required');
+            // Input validation — prevent oversized payloads and basic sanitization
+            const sanitize = (s) => s ? String(s).slice(0, 500).replace(/</g, '&lt;').replace(/>/g, '&gt;') : null;
+            if (name.length > 100 || email.length > 200 || message.length > 2000) {
+                return error('Input too long. Name: 100 chars, email: 200, message: 2000 max.', 400);
+            }
             await env.DB.prepare(
                 'INSERT INTO contact_messages (name, email, phone, order_ref, subject, message) VALUES (?, ?, ?, ?, ?, ?)'
-            ).bind(name, email, phone || null, order || null, subject || null, message).run();
+            ).bind(sanitize(name), sanitize(email), sanitize(phone), sanitize(order), sanitize(subject), sanitize(message)).run();
             return ok(null, 'Message sent! We will reply within 24 hours.');
         } catch (e) { return serverError('Failed to send message'); }
     }

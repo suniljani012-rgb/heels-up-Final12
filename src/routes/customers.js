@@ -46,7 +46,7 @@ export async function customersRouter(request, env) {
         if (authError) return authError;
         const id = path.slice(1);
         const { role } = await request.json();
-        if (role && ['customer', 'admin'].includes(role)) {
+        if (role && ['customer', 'staff', 'manager'].includes(role)) {
             await env.DB.prepare("UPDATE users SET role = ? WHERE id = ?").bind(role, id).run();
             return ok(null, 'Role updated');
         }

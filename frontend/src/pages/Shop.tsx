@@ -233,8 +233,12 @@ export default function Shop() {
           <input
             type="text"
             placeholder="Search products..."
-            value={searchQ}
-            onChange={(e) => updateParam('q', e.target.value)}
+            defaultValue={searchQ}
+            onChange={(e) => {
+              const val = e.target.value;
+              clearTimeout((window as any).__searchDebounce);
+              (window as any).__searchDebounce = setTimeout(() => updateParam('q', val), 300);
+            }}
             className="border border-gray-200 rounded-lg px-4 py-2 text-xs focus:outline-none focus:border-primary w-64 bg-white"
           />
         </div>
@@ -483,22 +487,35 @@ export default function Shop() {
                 <ChevronLeft className="w-4 h-4" />
               </button>
               
-              {[...Array(totalPages)].map((_, idx) => {
-                const pageNum = idx + 1
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => updateParam('page', String(pageNum))}
-                    className={`h-9 w-9 text-xs font-semibold rounded-lg border transition-all ${
-                      page === pageNum
-                        ? 'bg-primary border-primary text-white shadow-sm'
-                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                )
-              })}
+              {(() => {
+                // Smart pagination: show first, last, current, and nearby pages with ellipsis
+                const pages: (number | string)[] = [];
+                const delta = 2;
+                for (let i = 1; i <= totalPages; i++) {
+                  if (i === 1 || i === totalPages || (i >= page - delta && i <= page + delta)) {
+                    pages.push(i);
+                  } else if (pages[pages.length - 1] !== '...') {
+                    pages.push('...');
+                  }
+                }
+                return pages.map((p, idx) => {
+                  if (p === '...') return <span key={`ellipsis-${idx}`} className="px-1 text-gray-400 text-xs">…</span>;
+                  const pageNum = p as number;
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => updateParam('page', String(pageNum))}
+                      className={`h-9 w-9 text-xs font-semibold rounded-lg border transition-all ${
+                        page === pageNum
+                          ? 'bg-primary border-primary text-white shadow-sm'
+                          : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                });
+              })()}
 
               <button
                 onClick={() => updateParam('page', String(page + 1))}

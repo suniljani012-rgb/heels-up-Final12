@@ -11,11 +11,7 @@ const ALLOWED_ORIGINS = [
 export function corsHeaders(request) {
     const origin = request.headers.get('Origin') || '';
     let allowed = ALLOWED_ORIGINS[0];
-    if (origin && (
-        origin.startsWith('http://localhost:') || 
-        origin.startsWith('http://127.0.0.1:') || 
-        ALLOWED_ORIGINS.includes(origin)
-    )) {
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
         allowed = origin;
     }
     return {

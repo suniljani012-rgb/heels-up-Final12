@@ -120,7 +120,13 @@ async function _hmacVerify(secret, message, expectedHex) {
                             .map(b => b.toString(16).padStart(2, '0'))
                             .join('');
 
-    return hexSig === expectedHex;
+    // Constant-time comparison to prevent timing attacks
+    if (hexSig.length !== expectedHex.length) return false;
+    let result = 0;
+    for (let i = 0; i < hexSig.length; i++) {
+        result |= hexSig.charCodeAt(i) ^ expectedHex.charCodeAt(i);
+    }
+    return result === 0;
   } catch {
     return false;
   }

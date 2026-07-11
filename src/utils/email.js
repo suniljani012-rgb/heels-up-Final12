@@ -16,6 +16,17 @@ function formatCurrency(amountPaise) {
     });
 }
 
+// Escape HTML entities to prevent email HTML injection
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
 /**
  * Sends an email notification to the customer when their order status changes.
  * @param {object} env Cloudflare worker environment
@@ -194,11 +205,11 @@ function buildOrderEmailHtml(siteName, order, items, statusTitle, statusMessage,
         itemsHtml += `
             <tr>
                 <td style="padding: 12px; border-bottom: 1px solid #f2eade; vertical-align: middle;">
-                    <img src="${imageSrc}" alt="${item.product_name}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; border: 1px solid #f2eade; background-color: #ffffff;" />
+                    <img src="${escapeHtml(imageSrc)}" alt="${escapeHtml(item.product_name)}" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px; border: 1px solid #f2eade; background-color: #ffffff;" />
                 </td>
                 <td style="padding: 12px; border-bottom: 1px solid #f2eade; vertical-align: middle;">
-                    <span style="font-weight: bold; font-size: 13px; color: #1a1816; display: block;">${item.product_name}</span>
-                    <span style="font-size: 10px; color: #888888; font-family: monospace;">SKU: ${item.product_sku || 'N/A'} &middot; Size: ${item.size_label || 'Default'}</span>
+                    <span style="font-weight: bold; font-size: 13px; color: #1a1816; display: block;">${escapeHtml(item.product_name)}</span>
+                    <span style="font-size: 10px; color: #888888; font-family: monospace;">SKU: ${escapeHtml(item.product_sku || 'N/A')} &middot; Size: ${escapeHtml(item.size_label || 'Default')}</span>
                 </td>
                 <td style="padding: 12px; border-bottom: 1px solid #f2eade; text-align: center; vertical-align: middle; font-size: 12px; color: #555555;">
                     ${item.quantity}

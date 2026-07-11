@@ -209,41 +209,21 @@ interface Review {
   merchant_reply?: string;
 }
 
-// ── GLOBAL FETCH INTERCEPTOR SETUP ──────────────────────────────────────────
-if (typeof window !== 'undefined' && !(window as any).__fetch_intercepted) {
-  (window as any).__fetch_intercepted = true;
-  const originalFetch = window.fetch;
-  window.fetch = async function (input, init) {
-    const url = typeof input === 'string' ? input : (input instanceof URL ? input.href : input.url);
-    if (url.startsWith('/api/')) {
-      init = init || {};
-      init.headers = init.headers || {};
-      const token = localStorage.getItem('heelsup_token');
-      if (token) {
-        if (init.headers instanceof Headers) {
-          if (!init.headers.has('Authorization')) {
-            init.headers.set('Authorization', `Bearer ${token}`);
-          }
-        } else if (Array.isArray(init.headers)) {
-          if (!init.headers.some(([k]) => k.toLowerCase() === 'authorization')) {
-            init.headers.push(['Authorization', `Bearer ${token}`]);
-          }
-        } else {
-          if (!(init.headers as any)['Authorization']) {
-            (init.headers as any)['Authorization'] = `Bearer ${token}`;
-          }
-        }
-      }
-    }
-    const response = await originalFetch(input, init);
-    if (url.startsWith('/api/') && (response.status === 401 || response.status === 451) && !url.includes('/api/auth/login')) {
-      console.warn('Authentication token expired or unauthorized. Logging out.');
-      localStorage.removeItem('heelsup_token');
-      localStorage.removeItem('heelsup_user');
-      window.dispatchEvent(new Event('heelsup_unauthorized'));
-    }
-    return response;
-  };
+// ── Admin API fetch helper ──────────────────────────────────────────
+async function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const token = localStorage.getItem('heelsup_token');
+  const headers = new Headers(init.headers || {});
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  const response = await fetch(url, { ...init, headers });
+  if ((response.status === 401 || response.status === 451) && !url.includes('/api/auth/login')) {
+    console.warn('Authentication token expired or unauthorized. Logging out.');
+    localStorage.removeItem('heelsup_token');
+    localStorage.removeItem('heelsup_user');
+    window.dispatchEvent(new Event('heelsup_unauthorized'));
+  }
+  return response;
 }
 
 export default function Admin() {
@@ -1166,7 +1146,11 @@ export default function Admin() {
     };
 
     if (!editingStaff) {
-      payload.password = staffPassword || 'HeelsUp@2026';
+      if (!staffPassword || staffPassword.length < 8) {
+        showToast('Password is required (minimum 8 characters)', 'error');
+        return;
+      }
+      payload.password = staffPassword;
     }
 
     const url = editingStaff ? `/api/admin/staff/${editingStaff.user_id}` : '/api/admin/staff';
@@ -2734,7 +2718,7 @@ export default function Admin() {
                 <button
                   type="submit"
                   disabled={loggingIn}
-                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-neutral-900 bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
+                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-white bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
                 >
                   {loggingIn ? 'Validating...' : 'Secure Sign In'}
                 </button>
@@ -2763,7 +2747,7 @@ export default function Admin() {
                 <button
                   type="submit"
                   disabled={loggingIn}
-                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-neutral-900 bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
+                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-white bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
                 >
                   {loggingIn ? 'Verifying...' : 'Verify Passcode'}
                 </button>
@@ -2801,7 +2785,7 @@ export default function Admin() {
                 <button
                   type="submit"
                   disabled={resettingPassword}
-                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-neutral-900 bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
+                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-white bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
                 >
                   {resettingPassword ? 'Generating OTP...' : 'Send Recovery OTP'}
                 </button>
@@ -2851,7 +2835,7 @@ export default function Admin() {
                 <button
                   type="submit"
                   disabled={resettingPassword}
-                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-neutral-900 bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
+                  className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-xs font-bold uppercase tracking-wider rounded-xl text-white bg-neutral-900 hover:bg-neutral-200 focus:outline-none transition-all shadow-md active:scale-95 disabled:bg-neutral-200"
                 >
                   {resettingPassword ? 'Updating...' : 'Update Password'}
                 </button>

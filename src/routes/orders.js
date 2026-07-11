@@ -449,21 +449,37 @@ export async function ordersRouter(request, env) {
                 `SELECT * FROM orders WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?`
             ).bind(user.id, limit, offset).all();
 
-            const orders = [];
-            for (const o of (ordersRes.results || [])) {
+            const ordersList = ordersRes.results || [];
+            const orderIds = ordersList.map(o => o.id);
+
+            // Batch fetch all items for all orders in a single query
+            let allItems = [];
+            if (orderIds.length > 0) {
+                const placeholders = orderIds.map(() => '?').join(',');
                 const itemsRes = await env.DB.prepare(
-                    `SELECT product_name, image_url, size_label, color, quantity, unit_price FROM order_items WHERE order_id = ? LIMIT 4`
-                ).bind(o.id).all();
-                const items = (itemsRes.results || []).map(it => ({
-                    name: it.product_name,
-                    image: it.image_url,
-                    size: it.size_label,
-                    color: it.color,
-                    qty: it.quantity,
-                    price: it.unit_price
-                }));
-                orders.push({ ...formatOrder(o), items });
+                    `SELECT order_id, product_name, image_url, size_label, color, quantity, unit_price FROM order_items WHERE order_id IN (${placeholders})`
+                ).bind(...orderIds).all();
+                allItems = itemsRes.results || [];
             }
+
+            // Group items by order_id
+            const itemsByOrder = {};
+            for (const item of allItems) {
+                if (!itemsByOrder[item.order_id]) itemsByOrder[item.order_id] = [];
+                itemsByOrder[item.order_id].push({
+                    name: item.product_name,
+                    image: item.image_url,
+                    size: item.size_label,
+                    color: item.color,
+                    qty: item.quantity,
+                    price: item.unit_price
+                });
+            }
+
+            const orders = ordersList.map(o => ({
+                ...formatOrder(o),
+                items: (itemsByOrder[o.id] || []).slice(0, 4)
+            }));
 
             const total = countRow?.cnt || 0;
             return list(orders, { page, limit, total, pages: Math.ceil(total / limit) });
@@ -479,12 +495,26 @@ export async function ordersRouter(request, env) {
         if (!orderNumber) return error('Order number required', 400);
         try {
             const order = await env.DB.prepare(
-                `SELECT * FROM orders WHERE order_number = ?`
+                `SELECT id, order_number, status, payment_status, tracking_number, tracking_url, shipping_carrier, created_at, updated_at FROM orders WHERE order_number = ?`
             ).bind(orderNumber.toUpperCase()).first();
             if (!order) return notFound('Order not found');
-            const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(order.id).all();
-            const items = (itemsRes.results || []).map(formatItem);
-            return ok(formatOrder(order, items));
+            const itemsRes = await env.DB.prepare('SELECT product_name, quantity, size_label, color FROM order_items WHERE order_id = ?').bind(order.id).all();
+            return ok({
+                order_number: order.order_number,
+                status: order.status,
+                payment_status: order.payment_status,
+                tracking_number: order.tracking_number,
+                tracking_url: order.tracking_url,
+                shipping_carrier: order.shipping_carrier,
+                created_at: order.created_at,
+                updated_at: order.updated_at,
+                items: (itemsRes.results || []).map(i => ({
+                    product_name: i.product_name,
+                    quantity: i.quantity,
+                    size: i.size_label,
+                    color: i.color
+                }))
+            });
         } catch (e) {
             return serverError('Tracking lookup failed');
         }

@@ -26,7 +26,9 @@ export async function uploadRouter(request, env) {
 
             const headers = new Headers();
             object.writeHttpMetadata(headers);
-            headers.set('Access-Control-Allow-Origin', '*');
+            const origin = request.headers.get('Origin') || '';
+            const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];
+            headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
             headers.set('Cache-Control', 'public, max-age=31536000');
 
             return new Response(object.body, { headers });
@@ -38,7 +40,7 @@ export async function uploadRouter(request, env) {
 
     // POST /api/upload — upload image to R2
     if (path === '/' && method === 'POST') {
-        const { user, error: authError } = await requireAuth(request, env);
+        const { user, error: authError } = await requireAdmin(request, env);
         if (authError) return authError;
         try {
             const formData = await request.formData();

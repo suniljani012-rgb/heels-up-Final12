@@ -5,6 +5,20 @@ import { requireAuth } from '../middleware/auth.js';
 import { ok, created, error, unauthorized, serverError } from '../utils/response.js';
 import { sendInfobipSms } from '../utils/sms.js';
 
+// Crypto-secure OTP generation
+function generateSecureOTP() {
+    const array = new Uint32Array(1);
+    crypto.getRandomValues(array);
+    return String(100000 + (array[0] % 900000));
+}
+
+// SHA-256 hash for OTP storage
+async function sha256(message) {
+    const data = new TextEncoder().encode(message);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // ── UTILITY HELPERS ──────────────────────────────────────────────────────────
 async function getSetting(env, key, fallback = '') {
     try {
@@ -181,6 +195,7 @@ https://heelsup.in
 
 async function verifyOtp(env, email, otp, purpose) {
     const otpPlain = String(otp).trim();
+    const otpHash = await sha256(otpPlain);
     const token = await env.DB.prepare(
         'SELECT * FROM otp_tokens WHERE email=? AND purpose=? AND verified IN (0, 1) AND expires_at>? ORDER BY id DESC LIMIT 1'
     ).bind(email, purpose, nowIso()).first();
@@ -188,7 +203,7 @@ async function verifyOtp(env, email, otp, purpose) {
     if (!token) return { ok: false, error: 'OTP expired or not found. Request a new OTP.' };
     if ((token.attempts || 0) >= 5) return { ok: false, error: 'Too many incorrect attempts. Request a new OTP.' };
 
-    if (token.otp_hash !== otpPlain) {
+    if (token.otp_hash !== otpHash) {
         await env.DB.prepare('UPDATE otp_tokens SET attempts=attempts+1 WHERE id=?').bind(token.id).run();
         const rem = 5 - ((token.attempts || 0) + 1);
         return { ok: false, error: `Incorrect OTP. ${rem} attempts remaining.` };
@@ -233,12 +248,13 @@ export async function authRouter(request, env) {
             ).bind(email, purpose, hourAgo).first();
             if ((recent?.c || 0) >= 5) return error('Too many OTP requests. Wait 1 hour.', 429);
 
-            const otp = String(Math.floor(100000 + Math.random() * 900000));
+            const otp = generateSecureOTP();
+            const otpHash = await sha256(otp);
             const expiresAt = nowIso(parseInt(await getSetting(env, 'otp_expiry_minutes', '10')));
 
             await env.DB.prepare(
                 'INSERT INTO otp_tokens (email, otp_hash, purpose, attempts, verified, expires_at, created_at) VALUES (?,?,?,0,0,?,?)'
-            ).bind(email, otp, purpose, expiresAt, nowIso()).run();
+            ).bind(email, otpHash, purpose, expiresAt, nowIso()).run();
 
             const emailResult = await sendOtpEmail(env, email, otp, purpose);
             if (!emailResult.ok) return error(emailResult.error || 'Failed to send OTP. Please try again.', 502);
@@ -515,20 +531,18 @@ export async function authRouter(request, env) {
             ).bind(email, hourAgo).first();
             if ((recent?.c || 0) >= 3) return ok({ email }, 'An OTP has already been sent to your email.');
 
-            const otp = String(Math.floor(100000 + Math.random() * 900000));
+            const otp = generateSecureOTP();
+            const otpHash = await sha256(otp);
             const expiresAt = nowIso(parseInt(await getSetting(env, 'otp_expiry_minutes', '10')));
 
             await env.DB.prepare(
                 'INSERT INTO otp_tokens (email,otp_hash,purpose,attempts,verified,expires_at,created_at) VALUES (?,?,\'forgot\',0,0,?,?)'
-            ).bind(email, otp, expiresAt, nowIso()).run();
+            ).bind(email, otpHash, expiresAt, nowIso()).run();
 
             const emailResult = await sendOtpEmail(env, email, otp, 'forgot');
             if (!emailResult.ok) {
                 console.error('Failed to send recovery OTP:', emailResult.error);
-                return ok({
-                    email,
-                    warning: `OTP email delivery failed: ${emailResult.error || 'unknown error'}. Use code ${otp} to bypass lockout.`
-                }, 'OTP generated (email delivery failed)');
+                return error('Failed to send OTP email. Please try again or contact support.', 502);
             }
             return ok({ email }, 'Recovery OTP has been successfully sent to your email.');
         } catch (e) {
@@ -597,7 +611,9 @@ export async function authRouter(request, env) {
             const now = nowIso();
             if (!user) {
                 // Create a new user with random password
-                const randPw = Math.random().toString(36) + Math.random().toString(36);
+                const randBytes = new Uint8Array(32);
+                crypto.getRandomValues(randBytes);
+                const randPw = Array.from(randBytes).map(b => b.toString(36)).join('').slice(0, 24);
                 const hash = await hashPassword(randPw);
                 const fname = data.given_name || data.name || 'Google User';
                 const lname = data.family_name || '';
@@ -729,12 +745,13 @@ export async function authRouter(request, env) {
             }
 
             // Generate OTP
-            const otp = String(Math.floor(100000 + Math.random() * 900000));
+            const otp = generateSecureOTP();
+            const otpHash = await sha256(otp);
             const expiresAt = nowIso(10); // 10 minutes expiry
 
             await env.DB.prepare(
                 'INSERT INTO otp_tokens (email, otp_hash, purpose, attempts, verified, expires_at, created_at) VALUES (?, ?, \'change_email\', 0, 0, ?, ?)'
-            ).bind(newEmail, otp, expiresAt, nowIso()).run();
+            ).bind(newEmail, otpHash, expiresAt, nowIso()).run();
 
             const emailResult = await sendOtpEmail(env, newEmail, otp, 'change_email');
             if (!emailResult.ok) {

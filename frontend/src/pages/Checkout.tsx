@@ -296,7 +296,7 @@ export default function Checkout() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Shipping Form */}
-        <form onSubmit={handleSubmit} className="lg:col-span-7 space-y-6">
+        <form id="checkout-form" onSubmit={handleSubmit} className="lg:col-span-7 space-y-6">
           <div className="border border-gray-100 rounded-xl p-6 bg-white shadow-sm space-y-5">
             <h2 className="text-lg font-semibold text-gray-900 font-display italic border-b border-gray-100 pb-3">
               Shipping Information
@@ -531,7 +531,8 @@ export default function Checkout() {
             </div>
 
             <button
-              onClick={handleSubmit}
+              type="submit"
+              form="checkout-form"
               disabled={processing || items.length === 0}
               className="w-full py-4 bg-primary hover:bg-[#b17e3f] text-white rounded-lg font-bold text-xs tracking-wider uppercase shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >

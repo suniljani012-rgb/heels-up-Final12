@@ -227,20 +227,7 @@ export default function Home() {
           console.error("Error fetching settings:", settingsErr)
         }
 
-        // PREFETCH: Fetch ALL products (limit=100) and cache them so that clicking them load detail page instantly!
-        const allProdsRes = await fetch('/api/products?limit=100')
-        const allProdsData = await allProdsRes.json()
-        if (allProdsData.success && allProdsData.data) {
-          localStorage.setItem('heelsup_cached_shop_products', JSON.stringify(allProdsData.data))
-          allProdsData.data.forEach((p: any) => {
-            localStorage.setItem(`heelsup_cached_product_${p.id}`, JSON.stringify({
-              product: p,
-              reviews: p.reviews || [],
-              images: p.images || [],
-              related: []
-            }))
-          })
-        }
+        // Products are fetched on-demand — no need to pre-cache all 100+ products in localStorage
       } catch (err) {
         console.error("Error fetching homepage data:", err)
         if (banners.length === 0) setBanners(defaultBanners)
@@ -250,7 +237,7 @@ export default function Home() {
 
     // Slide Interval
     const slideTimer = setInterval(() => {
-      setBannerIndex((prev) => (prev + 1) % defaultBanners.length)
+      setBannerIndex((prev) => (prev + 1) % (banners.length || defaultBanners.length))
     }, 6000)
 
     return () => {

@@ -1,7 +1,7 @@
 // worker/src/routes/payment.js
 import { razorpay } from '../utils/razorpay.js';
 import { ok, error as err } from '../utils/response.js';
-import { optionalAuth } from '../middleware/auth.js';
+import { optionalAuth, requireAuth } from '../middleware/auth.js';
 import { createOrderRecord } from './orders.js';
 import { kvGet, kvDelete } from '../utils/db.js';
 
@@ -96,6 +96,9 @@ export async function paymentRouter(request, env) {
     try { body = await request.json(); }
     catch { return err('Invalid JSON', 400); }
 
+    const { user, error: authErr } = await requireAuth(request, env);
+    if (authErr) return authErr;
+
     const rzpOrderId = String(body.razorpay_order_id || "").trim();
     if (rzpOrderId) {
       await kvDelete(env, `pending_order:${rzpOrderId}`);
@@ -104,10 +107,9 @@ export async function paymentRouter(request, env) {
     const localOrderId = parseInt(body.orderId || 0);
     if (localOrderId) {
       const order = await env.DB.prepare("SELECT * FROM orders WHERE id=?").bind(localOrderId).first();
-      if (order) {
+      if (order && order.user_id === user.id) {
         if (order.payment_status === 'paid') return err("Already paid", 400);
-        await env.DB.prepare("DELETE FROM order_items WHERE order_id=?").bind(localOrderId).run();
-        await env.DB.prepare("DELETE FROM orders WHERE id=?").bind(localOrderId).run();
+        await env.DB.prepare("UPDATE orders SET status='cancelled', payment_status='failed', updated_at=? WHERE id=?").bind(new Date().toISOString(), localOrderId).run();
       }
     }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, Link } from 'react-router-dom'
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
+import DOMPurify from 'dompurify'
 
 export default function DynamicPage() {
   const location = useLocation()
@@ -94,7 +95,7 @@ export default function DynamicPage() {
         {/* Dynamic HTML Content */}
         <div
           className="prose prose-sm max-w-none text-gray-600 leading-relaxed space-y-4"
-          dangerouslySetInnerHTML={{ __html: pageData.content }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(pageData.content) }}
         />
       </div>
 
