@@ -5,6 +5,7 @@ import { razorpay } from '../utils/razorpay.js';
 import { sendInfobipSms } from '../utils/sms.js';
 import { sendOrderStatusEmail } from '../utils/email.js';
 import { kvPut } from '../utils/db.js';
+import { createDelhiveryShipment } from '../utils/delhivery.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -932,6 +933,71 @@ export async function ordersRouter(request, env) {
         } catch (e) {
             console.error('Bulk update error:', e);
             return serverError('Bulk update failed');
+        }
+    }
+
+    // ── POST /api/orders/admin/:id/book-delhivery ─────────────────────────────
+    if (path.match(/^\/admin\/\d+\/book-delhivery$/) && method === 'POST') {
+        const { error: authErr } = await requireAdmin(request, env);
+        if (authErr) return authErr;
+        const id = parseInt(path.match(/(\d+)/)?.[1]);
+        try {
+            // 1. Fetch order
+            const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(id).first();
+            if (!order) return error('Order not found', 404);
+            if (order.tracking_number) {
+                return error(`Shipment already booked for this order. AWB: ${order.tracking_number}`, 400);
+            }
+
+            // 2. Fetch order items
+            const itemsRes = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(id).all();
+            const items = itemsRes.results || [];
+            if (!items.length) return error('No items found for this order', 400);
+
+            // 3. Call Delhivery shipment creation utility
+            const result = await createDelhiveryShipment(env, order, items);
+            if (!result.success) {
+                return error(`Delhivery booking failed: ${result.error}`, 502);
+            }
+
+            // 4. Update order with tracking details
+            await env.DB.prepare(
+                `UPDATE orders SET 
+                    tracking_number = ?, 
+                    tracking_url = ?, 
+                    courier_name = 'Delhivery', 
+                    order_status = 'shipped', 
+                    shipped_at = datetime('now'),
+                    updated_at = datetime('now')
+                 WHERE id = ?`
+            ).bind(result.waybill, result.tracking_url, id).run();
+
+            // 5. Send SMS & Email update
+            try {
+                if (order.customer_phone) {
+                    await sendInfobipSms(
+                        env, 
+                        order.customer_phone, 
+                        `Dear ${order.customer_name}, your HeelsUp order #${order.order_number} has been shipped via Delhivery. Tracking Number: ${result.waybill}. Track here: ${result.tracking_url}`
+                    );
+                }
+            } catch (smsErr) {
+                console.error('[Delhivery] Failed to send dispatch SMS:', smsErr);
+            }
+
+            try {
+                await sendOrderStatusEmail(env, id, 'shipped');
+            } catch (emailErr) {
+                console.error('[Delhivery] Failed to send dispatch email:', emailErr);
+            }
+
+            return ok({
+                waybill: result.waybill,
+                tracking_url: result.tracking_url
+            }, 'Shipment successfully booked with Delhivery and order marked as Shipped.');
+        } catch (e) {
+            console.error('Delhivery booking endpoint error:', e);
+            return serverError('Failed to book Delhivery shipment');
         }
     }
 

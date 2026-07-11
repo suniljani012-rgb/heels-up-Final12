@@ -6,6 +6,7 @@
 import { adminGuard } from '../middleware/adminAuth.js';
 import { query, queryOne, run, now } from '../utils/db.js';
 import { ok, error } from '../utils/response.js';
+import { checkPincodeServiceability, trackDelhiveryShipment } from '../utils/delhivery.js';
 
 export async function handleShipping(request, env, path, method) {
 
@@ -56,14 +57,18 @@ export async function handleShipping(request, env, path, method) {
             return error('Invalid pincode — must be 6 digits');
         }
 
-        // In production: integrate with Shiprocket / Delhivery API
-        // For now: all Indian pincodes are serviceable
+        // Call live Delhivery pincode serviceability check
+        const result = await checkPincodeServiceability(env, String(pincode));
+        if (result.error) {
+            return error(`Serviceability check failed: ${result.error}`, 502);
+        }
+
         return ok({
             pincode,
-            serviceable: true,
-            cod_available: false,
-            prepaid_available: true,
-            estimated_days: '5-7',
+            serviceable: result.serviceable,
+            cod_available: result.cod,
+            prepaid_available: result.prepaid,
+            estimated_days: result.serviceable ? '3-5' : 'N/A',
         });
     }
 
@@ -72,23 +77,21 @@ export async function handleShipping(request, env, path, method) {
     if (method === 'GET' && trackMatch) {
         const awb = trackMatch[1];
 
-        // In production: call Shiprocket/Delhivery tracking API
-        // Stub response for development
+        // Call live Delhivery tracking API
+        const result = await trackDelhiveryShipment(env, awb);
+        if (!result.success) {
+            return error(result.error || 'Tracking details not found', 404);
+        }
+
         return ok({
             awb,
-            status: 'In Transit',
-            events: [
-                {
-                    timestamp: new Date(Date.now() - 86400000).toISOString(),
-                    location: 'Jodhpur, Rajasthan',
-                    description: 'Shipment picked up',
-                },
-                {
-                    timestamp: new Date(Date.now() - 43200000).toISOString(),
-                    location: 'Jaipur Hub',
-                    description: 'In transit to destination city',
-                },
-            ],
+            status: result.status || 'In Transit',
+            courier: result.courier_name || 'Delhivery',
+            events: (result.tracking_history || []).map(event => ({
+                timestamp: event.actrecT || event.actdate || new Date().toISOString(),
+                location: event.lc || event.scan_location || 'Transit Hub',
+                description: event.sd || event.instructions || event.status || 'Package in transit',
+            })),
         });
     }
 
