@@ -1,3 +1,4 @@
+import { useToastStore } from '../../store/useToastStore';
 import { useState, useMemo } from 'react';
 import { RotateCw, Search, Eye, RefreshCw, X, Phone, Mail } from 'lucide-react';
 
@@ -20,10 +21,10 @@ interface ReturnRequest {
 interface ReturnsManagerProps {
   returns: ReturnRequest[];
   onRefresh: () => void;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
 }
 
-export default function ReturnsManager({ returns, onRefresh, showToast }: ReturnsManagerProps) {
+export default function ReturnsManager({ returns, onRefresh }: ReturnsManagerProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   

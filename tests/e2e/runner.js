@@ -34,7 +34,10 @@ export function getAdminHeaders() {
 
 export async function executeD1Query(command) {
     try {
-        const d1Dir = path.resolve('.wrangler/state/v3/d1/miniflare-D1DatabaseObject');
+        let d1Dir = path.resolve('C:\\Users\\Public\\wrangler-persist\\v3\\d1\\miniflare-D1DatabaseObject');
+        if (!fs.existsSync(d1Dir)) {
+            d1Dir = path.resolve('.wrangler/state/v3/d1/miniflare-D1DatabaseObject');
+        }
         const files = fs.readdirSync(d1Dir);
         const dbFile = files.find(f => f.endsWith('.sqlite') && f !== 'metadata.sqlite');
         if (!dbFile) {
@@ -97,7 +100,7 @@ function parseDevVars() {
 
 async function startWranglerDev() {
     console.log('Starting wrangler dev server on port 8787...');
-    const child = spawn('npx', ['wrangler@4.110.0', 'dev', '--port', '8787'], {
+    const child = spawn('npx', ['wrangler@4.110.0', 'dev', '--port', '8787', '--persist-to', 'C:\\Users\\Public\\wrangler-persist'], {
         shell: true,
         stdio: 'pipe'
     });
@@ -154,7 +157,7 @@ async function run() {
     // 2. Apply Migrations
     console.log('Applying D1 database migrations locally...');
     try {
-        execSync('npx wrangler@4.110.0 d1 migrations apply DB --local', { stdio: 'inherit' });
+        execSync('npx wrangler@4.110.0 d1 migrations apply DB --local --persist-to C:\\Users\\Public\\wrangler-persist', { stdio: 'inherit' });
     } catch (e) {
         console.error('Migration failed:', e.message);
     }
@@ -207,6 +210,7 @@ async function run() {
     await import('./tier2_boundary_corner.test.js');
     await import('./tier3_cross_feature.test.js');
     await import('./tier4_real_world.test.js');
+    await import('./refactor_checks.test.js');
 
     console.log(`Loaded ${registeredTests.length} test cases.`);
 

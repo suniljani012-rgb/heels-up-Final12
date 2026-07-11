@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import { Plus, Edit3, Trash2, X, Search } from 'lucide-react';
 
 interface Coupon {
@@ -18,11 +19,11 @@ interface Coupon {
 interface CouponsManagerProps {
   coupons: Coupon[];
   token: string;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
   onRefresh: () => void;
 }
 
-export default function CouponsManager({ coupons, token, showToast, onRefresh }: CouponsManagerProps) {
+export default function CouponsManager({ coupons, token, onRefresh }: CouponsManagerProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Drawer state

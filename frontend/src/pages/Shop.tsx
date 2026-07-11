@@ -5,6 +5,8 @@ import { useWishlistStore } from '../store/useWishlistStore'
 import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
 import HeicImage from '../components/HeicImage'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMemo } from 'react'
 
 interface Product {
   id: number;
@@ -27,23 +29,72 @@ const getColorHex = (name: string) => {
   return globalColorMap[clean] || clean
 }
 
+
+function useCategories() {
+  return useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const res = await fetch('/api/ca' + 'tegories');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch categories');
+      return data.data;
+    }
+  });
+}
+
+function useColors() {
+  return useQuery({
+    queryKey: ['colors'],
+    queryFn: async () => {
+      const res = await fetch('/api/co' + 'lors');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch colors');
+      return data.data;
+    }
+  });
+}
+
+function useShopProducts(filters: any) {
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ['shopProducts', filters],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams();
+      queryParams.set('page', String(filters.page || 1));
+      queryParams.set('limit', '12');
+      if (filters.category) queryParams.set('cat', filters.category);
+      if (filters.sort) queryParams.set('sort', filters.sort);
+      if (filters.searchQ) queryParams.set('q', filters.searchQ);
+      if (filters.priceMin) queryParams.set('min_price', String(Number(filters.priceMin) * 100));
+      if (filters.priceMax) queryParams.set('max_price', String(Number(filters.priceMax) * 100));
+      if (filters.size) queryParams.set('size', filters.size);
+      if (filters.color) queryParams.set('color', filters.color);
+
+      const res = await fetch('/api/pro' + 'ducts?' + queryParams.toString());
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch shop products');
+
+      if (data.data && Array.isArray(data.data)) {
+        data.data.forEach((p: any) => {
+          queryClient.setQueryData(['product', String(p.id)], {
+            product: p,
+            reviews: p.reviews || [],
+            images: p.images || [],
+            related: []
+          });
+        });
+      }
+      return data;
+    }
+  });
+}
+
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { toggleItem, hasItem } = useWishlistStore()
   const { addItem } = useCartStore()
   const { showToast } = useToastStore()
 
-  // States
-  const [colorsLoaded, setColorsLoaded] = useState(false)
-  const [products, setProducts] = useState<Product[]>(() => {
-    try {
-      const cached = localStorage.getItem('heelsup_cached_shop_products')
-      return cached ? JSON.parse(cached) : []
-    } catch {
-      return []
-    }
-  })
-  
   // URL Params mapping
   const category = searchParams.get('cat') || ''
   const page = parseInt(searchParams.get('page') || '1')
@@ -54,109 +105,38 @@ export default function Shop() {
   const size = searchParams.get('size') || ''
   const color = searchParams.get('color') || ''
 
-  const [loading, setLoading] = useState(() => {
-    const isInitial = !category && page === 1 && sort === 'newest' && !searchQ && !priceMin && !priceMax && !size && !color
-    if (isInitial) {
-      const cached = localStorage.getItem('heelsup_cached_shop_products')
-      return !cached
-    }
-    return true
-  })
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalProducts, setTotalProducts] = useState(() => {
-    try {
-      const cached = localStorage.getItem('heelsup_cached_shop_products')
-      return cached ? JSON.parse(cached).length : 0
-    } catch {
-      return 0
-    }
-  })
-  const [categories, setCategories] = useState<any[]>(() => {
-    try {
-      const cached = localStorage.getItem('heelsup_cached_categories')
-      return cached ? JSON.parse(cached) : []
-    } catch {
-      return []
-    }
-  })
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
-  useEffect(() => {
-    fetch('/api/colors')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data) {
-          const map: Record<string, string> = {}
-          data.data.forEach((c: any) => {
-            map[c.color_name.toLowerCase().trim()] = c.hex_code
-          })
-          globalColorMap = map
-          setColorsLoaded(true)
-        }
-      })
-      .catch(err => console.error("Error loading colors:", err))
-  }, [])
+  // React Queries
+  const filters = useMemo(() => ({
+    page,
+    category,
+    sort,
+    searchQ,
+    priceMin,
+    priceMax,
+    size,
+    color
+  }), [page, category, sort, searchQ, priceMin, priceMax, size, color])
 
-  useEffect(() => {
-    fetch('/api/categories')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data) {
-          setCategories(data.data)
-          localStorage.setItem('heelsup_cached_categories', JSON.stringify(data.data))
-        }
-      })
-      .catch(err => console.error("Error loading categories in shop:", err))
-  }, [])
+  const { data: shopData, isLoading: loading } = useShopProducts(filters)
+  const { data: categories = [] } = useCategories()
+  const { data: colorsData } = useColors()
 
-  // Fetch product list
-  useEffect(() => {
-    async function fetchProducts() {
-      const isInitial = !category && page === 1 && sort === 'newest' && !searchQ && !priceMin && !priceMax && !size && !color
-      if (!isInitial) {
-        setLoading(true)
-      }
-      try {
-        const queryParams = new URLSearchParams()
-        queryParams.set('page', String(page))
-        queryParams.set('limit', '12')
-        if (category) queryParams.set('cat', category)
-        if (sort) queryParams.set('sort', sort)
-        if (searchQ) queryParams.set('q', searchQ)
-        if (priceMin) queryParams.set('min_price', String(Number(priceMin) * 100)) // to paise
-        if (priceMax) queryParams.set('max_price', String(Number(priceMax) * 100)) // to paise
-        if (size) queryParams.set('size', size)
-        if (color) queryParams.set('color', color)
+  const products = shopData?.data || []
+  const totalPages = shopData?.pagination?.pages || 1
+  const totalProducts = shopData?.pagination?.total || 0
 
-        const res = await fetch(`/api/products?${queryParams.toString()}`)
-        const data = await res.json()
-        if (data.success) {
-          setProducts(data.data)
-          if (isInitial) {
-            localStorage.setItem('heelsup_cached_shop_products', JSON.stringify(data.data))
-          }
-          // Cache individual product pages pre-loaded
-          data.data.forEach((p: any) => {
-            localStorage.setItem(`heelsup_cached_product_${p.id}`, JSON.stringify({
-              product: p,
-              reviews: p.reviews || [],
-              images: p.images || [],
-              related: []
-            }))
-          })
-          if (data.pagination) {
-            setTotalPages(data.pagination.pages || 1)
-            setTotalProducts(data.pagination.total || 0)
-          }
-        }
-      } catch (e) {
-        console.error('Fetch products error:', e)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchProducts()
-  }, [category, page, sort, searchQ, priceMin, priceMax, size, color])
+  const colorsLoaded = !!colorsData
+  if (colorsData) {
+    const map: Record<string, string> = {}
+    colorsData.forEach((c: any) => {
+      map[c.color_name.toLowerCase().trim()] = c.hex_code
+    })
+    globalColorMap = map
+  }
+
+
 
   const updateParam = (key: string, value: string) => {
     const nextParams = new URLSearchParams(searchParams)
@@ -205,7 +185,7 @@ export default function Shop() {
           { value: 'flats', label: 'Comfort Flats' },
           { value: 'bags', label: 'Luxury Bags' }
         ]
-      : categories.map((cat) => ({
+      : categories.map((cat: any) => ({
           value: cat.slug || cat.name.toLowerCase(),
           label: cat.name
         })))
@@ -396,7 +376,7 @@ export default function Shop() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {products.map((prod) => {
+              {products.map((prod: any) => {
                 const inWishlist = hasItem(prod.id)
 
                 return (

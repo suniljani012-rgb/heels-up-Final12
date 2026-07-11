@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import { Search, Plus, Trash2, Edit3, X, UploadCloud, ChevronLeft, ChevronRight, RefreshCw, Download, FileText, CheckCircle2, AlertTriangle, Box } from 'lucide-react';
 import HeicImage from '../../components/HeicImage';
 
@@ -27,11 +28,20 @@ interface Product {
   colors?: string[];
 }
 
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  image_url?: string;
+  sort_order: number;
+  active: boolean;
+}
+
 interface ProductsManagerProps {
   products: Product[];
-  categories: any[];
+  categories: Category[];
   token: string;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
   onRefresh: () => void;
 }
 
@@ -57,7 +67,8 @@ function parseCSVLine(line: string) {
   return result;
 }
 
-export default function ProductsManager({ products, categories, token, showToast, onRefresh }: ProductsManagerProps) {
+export default function ProductsManager({ products, categories, token, onRefresh }: ProductsManagerProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [page, setPage] = useState(0);

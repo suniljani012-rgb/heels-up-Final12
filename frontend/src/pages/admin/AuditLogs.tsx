@@ -1,14 +1,23 @@
 import { useState, useMemo } from 'react';
 import { Activity, Search, Filter, Download, RefreshCw } from 'lucide-react';
+import { useToastStore } from '../../store/useToastStore';
 
-interface AuditLogsProps {
-  logs: any[];
-  loading: boolean;
-  onRefresh: () => void;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
+export interface AuditLog {
+  id: number;
+  action: string;
+  admin_email?: string;
+  details: string;
+  created_at: string;
 }
 
-export default function AuditLogs({ logs, loading, onRefresh, showToast }: AuditLogsProps) {
+interface AuditLogsProps {
+  logs: AuditLog[];
+  loading: boolean;
+  onRefresh: () => void;
+}
+
+export default function AuditLogs({ logs, loading, onRefresh }: AuditLogsProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAction, setSelectedAction] = useState('');
   const [page, setPage] = useState(0);
@@ -43,8 +52,6 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
     return Array.from(set);
   }, [logs]);
 
-
-
   // Export to CSV
   const handleExportCsv = () => {
     if (filteredLogs.length === 0) return;
@@ -71,7 +78,7 @@ export default function AuditLogs({ logs, loading, onRefresh, showToast }: Audit
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in text-neutral-900">
       <div className="sticky top-0 bg-[#f5f5f4] z-10 -mt-6 pt-6 pb-4 space-y-4">
         <div>
           <h1 className="text-3xl font-light text-neutral-900 font-display italic">Audit Registry Logs</h1>

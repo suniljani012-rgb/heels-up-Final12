@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import {
   ShoppingCart, Search, Trash2, Plus, X, Printer, User, DollarSign,
   MessageCircle, CreditCard, Banknote, Smartphone, CheckCircle2, Package,
@@ -41,14 +42,14 @@ interface PosTerminalProps {
   products: Product[];
   categories: any[];
   coupons: any[];
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
   onOrderCreated: () => void;
 }
 
 type PaymentMethod = 'cash' | 'upi' | 'card' | 'whatsapp' | 'instagram';
 type SaleChannel = 'in-store' | 'whatsapp' | 'instagram' | 'phone';
 
-export default function PosTerminal({ products, categories, coupons, showToast, onOrderCreated }: PosTerminalProps) {
+export default function PosTerminal({ products, categories, coupons, onOrderCreated }: PosTerminalProps) {
+  const showToast = useToastStore((state) => state.showToast);
   // Cart/Billing list state
   const [cart, setCart] = useState<{ product: Product; size: string; color: string; qty: number; customPrice?: number }[]>([]);
 

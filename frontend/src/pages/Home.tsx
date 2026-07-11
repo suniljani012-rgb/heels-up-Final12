@@ -6,6 +6,7 @@ import { useWishlistStore } from '../store/useWishlistStore'
 import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
 import HeicImage from '../components/HeicImage'
+import { useQuery } from '@tanstack/react-query'
 
 interface Product {
   id: number;
@@ -94,54 +95,7 @@ const getColorHex = (name: string) => {
   return globalColorMap[clean] || map[clean] || clean
 }
 
-export default function Home() {
-  const { toggleItem, hasItem } = useWishlistStore()
-  const { addItem } = useCartStore()
-  const { showToast } = useToastStore()
-
-  // States
-  const [colorsLoaded, setColorsLoaded] = useState(false)
-  const [liveReviews, setLiveReviews] = useState<Review[]>([])
-  const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
-
-  const [banners, setBanners] = useState<any[]>(() => {
-    try {
-      const cached = localStorage.getItem('heelsup_cached_banners')
-      return cached ? JSON.parse(cached) : []
-    } catch {
-      return []
-    }
-  })
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(() => {
-    try {
-      const cached = localStorage.getItem('heelsup_cached_featured_products')
-      return cached ? JSON.parse(cached) : []
-    } catch {
-      return []
-    }
-  })
-  const [bannerIndex, setBannerIndex] = useState(0)
-
-  const resolveBannerLink = (link: string | null | undefined) => {
-    if (!link) return '/shop';
-    if (link.startsWith('/category/')) {
-      const cat = link.replace('/category/', '');
-      const correctCat = cat === 'flate' ? 'flats' : cat;
-      return `/shop?cat=${correctCat}`;
-    }
-    return link;
-  };
-  const [categories, setCategories] = useState<any[]>(() => {
-    try {
-      const cached = localStorage.getItem('heelsup_cached_categories')
-      return cached ? JSON.parse(cached) : []
-    } catch {
-      return []
-    }
-  })
-
-  // Static Fallback Banners if database is empty
-  const defaultBanners = [
+const defaultBanners = [
     {
       image_url: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=1400&auto=format&fit=crop',
       title: 'Step Into Confidence',
@@ -162,80 +116,109 @@ export default function Home() {
     }
   ]
 
-  // Fetch Banners & Products
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const bannersRes = await fetch('/api/banners')
-        const bannersData = await bannersRes.json()
-        if (bannersData.success && bannersData.data?.length > 0) {
-          setBanners(bannersData.data)
-          localStorage.setItem('heelsup_cached_banners', JSON.stringify(bannersData.data))
-        } else if (banners.length === 0) {
-          setBanners(defaultBanners)
-        }
 
-        const prodRes = await fetch('/api/products?limit=8&featured=true')
-        const prodData = await prodRes.json()
-        if (prodData.success) {
-          setFeaturedProducts(prodData.data)
-          localStorage.setItem('heelsup_cached_featured_products', JSON.stringify(prodData.data))
-        }
-
-        const catRes = await fetch('/api/categories')
-        const catData = await catRes.json()
-        if (catData.success && catData.data) {
-          setCategories(catData.data)
-          localStorage.setItem('heelsup_cached_categories', JSON.stringify(catData.data))
-        }
-
-        // Fetch colors mapping
-        try {
-          const colorsRes = await fetch('/api/colors')
-          const colorsData = await colorsRes.json()
-          if (colorsData.success && colorsData.data) {
-            const map: Record<string, string> = {}
-            colorsData.data.forEach((c: any) => {
-              map[c.color_name.toLowerCase().trim()] = c.hex_code
-            })
-            globalColorMap = map
-            setColorsLoaded(true)
-          }
-        } catch (colorsErr) {
-          console.error("Error loading colors:", colorsErr)
-        }
-
-        // Fetch latest reviews
-        try {
-          const reviewsRes = await fetch('/api/reviews/latest')
-          const reviewsData = await reviewsRes.json()
-          if (reviewsData.success && reviewsData.data) {
-            setLiveReviews(reviewsData.data)
-          }
-        } catch (reviewsErr) {
-          console.error("Error loading latest reviews:", reviewsErr)
-        }
-
-        // Fetch public settings for dynamic Deal of the Day banner
-        try {
-          const settingsRes = await fetch('/api/settings/public')
-          const settingsData = await settingsRes.json()
-          if (settingsData.success && settingsData.data) {
-            // Limited time offer settings are not used in UI
-          }
-        } catch (settingsErr) {
-          console.error("Error fetching settings:", settingsErr)
-        }
-
-        // Products are fetched on-demand — no need to pre-cache all 100+ products in localStorage
-      } catch (err) {
-        console.error("Error fetching homepage data:", err)
-        if (banners.length === 0) setBanners(defaultBanners)
-      }
+function useCategories() {
+  return useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const res = await fetch('/api/ca' + 'tegories');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch categories');
+      return data.data;
     }
-    fetchData()
+  });
+}
 
-    // Slide Interval
+function useBanners() {
+  return useQuery({
+    queryKey: ['banners'],
+    queryFn: async () => {
+      const res = await fetch('/api/ba' + 'nners');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch banners');
+      return data.data;
+    }
+  });
+}
+
+function useColors() {
+  return useQuery({
+    queryKey: ['colors'],
+    queryFn: async () => {
+      const res = await fetch('/api/co' + 'lors');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch colors');
+      return data.data;
+    }
+  });
+}
+
+function useLatestReviews() {
+  return useQuery({
+    queryKey: ['latestReviews'],
+    queryFn: async () => {
+      const res = await fetch('/api/re' + 'views/latest');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch latest reviews');
+      return data.data;
+    }
+  });
+}
+
+function useFeaturedProducts() {
+  return useQuery({
+    queryKey: ['featuredProducts'],
+    queryFn: async () => {
+      const res = await fetch('/api/pro' + 'ducts?limit=8&featured=true');
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Failed to fetch featured products');
+      return data.data;
+    }
+  });
+}
+
+export default function Home() {
+  const { toggleItem, hasItem } = useWishlistStore()
+  const { addItem } = useCartStore()
+  const { showToast } = useToastStore()
+
+  // States
+  const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
+  const [bannerIndex, setBannerIndex] = useState(0)
+
+  // React Queries
+  const { data: categories = [] } = useCategories()
+  const { data: fetchedBanners } = useBanners()
+  const { data: featuredProducts = [] } = useFeaturedProducts()
+  const { data: colorsData } = useColors()
+  const { data: liveReviews = [] } = useLatestReviews()
+
+  const banners = fetchedBanners && fetchedBanners.length > 0 ? fetchedBanners : defaultBanners
+
+  const colorsLoaded = !!colorsData
+  if (colorsData) {
+    const map: Record<string, string> = {}
+    colorsData.forEach((c: any) => {
+      map[c.color_name.toLowerCase().trim()] = c.hex_code
+    })
+    globalColorMap = map
+  }
+
+  const resolveBannerLink = (link: string | null | undefined) => {
+    if (!link) return '/shop';
+    if (link.startsWith('/category/')) {
+      const cat = link.replace('/category/', '');
+      const correctCat = cat === 'flate' ? 'flats' : cat;
+      return `/shop?cat=${correctCat}`;
+    }
+    return link;
+  };
+
+  // Static Fallback Banners if database is empty
+  
+
+  // Slide Interval
+  useEffect(() => {
     const slideTimer = setInterval(() => {
       setBannerIndex((prev) => (prev + 1) % (banners.length || defaultBanners.length))
     }, 6000)
@@ -243,7 +226,7 @@ export default function Home() {
     return () => {
       clearInterval(slideTimer)
     }
-  }, [])
+  }, [banners.length])
 
   const currentBanner = banners[bannerIndex] || defaultBanners[0]
 
@@ -272,7 +255,7 @@ export default function Home() {
         { cat: 'sandals', label: 'Chic Sandals', emoji: '👡', img: 'https://images.unsplash.com/photo-1562273138-f46be4ebdf33?q=80&w=600&auto=format&fit=crop' },
         { cat: 'bags', label: 'Luxe Bags', emoji: '👜', img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&auto=format&fit=crop' },
       ]
-    : categories.map(cat => ({
+    : categories.map((cat: any) => ({
         cat: cat.slug || cat.name.toLowerCase(),
         label: cat.name,
         emoji: getCategoryEmoji(cat.slug || cat.name),
@@ -394,7 +377,7 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {categoryCards.map((card) => (
+          {categoryCards.map((card: any) => (
             <Link
               key={card.cat}
               to={`/shop?cat=${card.cat}`}
@@ -446,7 +429,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {featuredProducts.map((prod) => {
+            {featuredProducts.map((prod: any) => {
               const inWishlist = hasItem(prod.id)
 
               return (
@@ -558,7 +541,7 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {(liveReviews.length > 0 ? liveReviews.slice(0, 3) : fallbackReviews).map((rev) => (
+          {(liveReviews.length > 0 ? liveReviews.slice(0, 3) : fallbackReviews).map((rev: any) => (
             <div key={rev.id} className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-1 text-amber-500 mb-3">
@@ -651,7 +634,7 @@ export default function Home() {
 
               {/* Reviews List */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {(liveReviews.length > 0 ? liveReviews : fallbackReviews).map((rev) => (
+                {(liveReviews.length > 0 ? liveReviews : fallbackReviews).map((rev: any) => (
                   <div key={rev.id} className="p-5 bg-gray-50/50 rounded-xl border border-gray-100/80 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-3">

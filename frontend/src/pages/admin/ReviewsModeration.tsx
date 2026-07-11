@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import { Star, MessageSquare, Check, Trash2, X, Filter } from 'lucide-react';
 
 interface Review {
@@ -16,10 +17,10 @@ interface Review {
 interface ReviewsModerationProps {
   reviews: Review[];
   onRefresh: () => void;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
 }
 
-export default function ReviewsModeration({ reviews, onRefresh, showToast }: ReviewsModerationProps) {
+export default function ReviewsModeration({ reviews, onRefresh }: ReviewsModerationProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [filterRating, setFilterRating] = useState<number>(0);
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved'>('all');
   const [searchQuery, setSearchQuery] = useState('');

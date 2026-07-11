@@ -1,12 +1,126 @@
 import React, { useState } from 'react';
-import { Wallet, ShoppingCart, Footprints, RotateCcw, AlertTriangle, ArrowUpRight, TrendingUp, Sparkles, RefreshCw } from 'lucide-react';
+import { Wallet, ShoppingCart, Footprints, RotateCcw, AlertTriangle, ArrowUpRight, TrendingUp, Sparkles } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
+export interface OrderItem {
+  id: number | string;
+  product_id?: number | null;
+  product_name: string;
+  size: string;
+  color?: string;
+  quantity: number;
+  price: number;
+  image?: string;
+}
+
+export interface Order {
+  id: number | string;
+  order_number: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string;
+  subtotal_amount: number;
+  shipping_amount: number;
+  discount_amount: number;
+  total_amount: number;
+  order_status: 'placed' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'Completed';
+  payment_status: string;
+  payment_method: string;
+  created_at: string;
+  tracking_number?: string;
+  tracking_url?: string;
+  courier_name?: string;
+  source: 'web' | 'pos' | 'whatsapp' | 'instagram';
+  items: OrderItem[];
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  notes?: string;
+  is_pos?: boolean;
+  razorpay_order_id?: string | null;
+  razorpay_payment_id?: string | null;
+  delivery_method?: string;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  sku: string;
+  category: string;
+  price: number; // in paise
+  original_price: number | null;
+  stock: number;
+  active: boolean;
+  featured: boolean;
+  is_new: boolean;
+  is_trending: boolean;
+  sizes: string[];
+  images: string[];
+  description?: string;
+  brand?: string;
+  tags?: string[];
+  show_mrp?: boolean;
+  meta_title?: string;
+  meta_desc?: string;
+  size_stock?: { size_label: string; stock: number; reserved?: number }[];
+  sold_count?: number;
+}
+
+export interface ReturnItem {
+  product_id: number;
+  product_name: string;
+  size: string;
+  color?: string;
+  quantity: number;
+  price: number;
+}
+
+export interface ReturnRequest {
+  id: number;
+  order_id: number;
+  order_number: string;
+  customer_name: string;
+  customer_phone: string;
+  customer_email?: string;
+  return_type: 'refund' | 'exchange';
+  reason: string;
+  items: ReturnItem[] | string;
+  status: 'pending' | 'approved' | 'received' | 'completed' | 'rejected';
+  action_notes?: string;
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+  description?: string;
+  images?: string;
+  refund_amount?: number;
+}
+
+export interface DailySale {
+  label: string;
+  revenue: number;
+}
+
+export interface CategorySale {
+  category: string;
+  value: number;
+}
+
+export interface DashboardData {
+  total_sales: number;
+  total_pos_sales: number;
+  orders_count: number;
+  pos_sales_count: number;
+  daily_sales?: DailySale[];
+  category_sales?: CategorySale[];
+}
+
 interface DashboardViewProps {
-  data: any;
-  products: any[];
-  returns: any[];
-  onTabChange: (tab: any) => void;
+  data: DashboardData | null;
+  products: Product[];
+  returns: ReturnRequest[];
+  onTabChange: (tab: 'dashboard' | 'products' | 'stock' | 'orders' | 'categories' | 'customers' | 'reviews' | 'coupons' | 'banners' | 'pages' | 'settings' | 'pos' | 'audits' | 'returns' | 'analysis' | 'staff') => void;
 }
 
 export default function DashboardView({ data, products, returns, onTabChange }: DashboardViewProps) {
@@ -19,7 +133,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
   };
 
   // 7-day daily revenue calculation helper for trend chart
-  const getDailyRevenueData = () => {
+  const getDailyRevenueData = (): DailySale[] => {
     if (!data?.daily_sales) {
       // Fallback dummy data for visualization matching gold theme
       return [
@@ -36,23 +150,10 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
   };
 
   const trendData = getDailyRevenueData();
-  const maxRevenue = Math.max(...trendData.map((d: any) => Math.max((d.revenue || 0) / 100, 2000)), 5000);
-  const yLabels = [0, 0.25, 0.5, 0.75, 1].map(pct => Math.round(pct * maxRevenue));
+  const maxRevenue = Math.max(...trendData.map((d: DailySale) => Math.max((d.revenue || 0) / 100, 2000)), 5000);
   
-  const chartPoints = trendData.map((d: any, idx: number) => {
-    const x = 50 + idx * 100;
-    const val = (d.revenue || 0) / 100;
-    const y = 220 - (val / maxRevenue) * 200;
-    return { x, y, label: d.label, val };
-  });
-
-  const linePath = chartPoints.map((p: any, idx: number) => `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-  const areaPath = chartPoints.length > 0
-    ? `${linePath} L ${chartPoints[chartPoints.length - 1].x} 220 L ${chartPoints[0].x} 220 Z`
-    : '';
-
   // Category share calculation
-  const getCategoryShareData = () => {
+  const getCategoryShareData = (): CategorySale[] => {
     if (!data?.category_sales) {
       return [
         { category: 'Oxford Jodhpur', value: 45 },
@@ -94,7 +195,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
               <Wallet className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-neutral-200/80/60 flex items-center justify-between text-[10px] text-neutral-500 font-mono">
+          <div className="mt-4 pt-3 border-t border-neutral-200/80 flex items-center justify-between text-[10px] text-neutral-500 font-mono">
             <span>Web: {formatCurrency(data?.total_sales || 0)}</span>
             <span className="text-neutral-600">|</span>
             <span>POS: {formatCurrency(data?.total_pos_sales || 0)}</span>
@@ -115,7 +216,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
               <ShoppingCart className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-neutral-200/80/60 flex items-center justify-between text-[10px] text-neutral-500 font-mono">
+          <div className="mt-4 pt-3 border-t border-neutral-200/80 flex items-center justify-between text-[10px] text-neutral-500 font-mono">
             <span>Web: {data?.orders_count || 0}</span>
             <span className="text-neutral-600">|</span>
             <span>POS: {data?.pos_sales_count || 0}</span>
@@ -136,7 +237,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
               <Footprints className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-neutral-200/80/60 flex items-center justify-between text-[10px] text-neutral-500 font-mono">
+          <div className="mt-4 pt-3 border-t border-neutral-200/80 flex items-center justify-between text-[10px] text-neutral-500 font-mono">
             <span>Active: {products.filter(p => p.active).length}</span>
             <span className="text-neutral-600">|</span>
             <span className="text-rose-500">Out: {products.filter(p => p.stock <= 0).length}</span>
@@ -157,7 +258,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
               <RotateCcw className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-neutral-200/80/60 flex items-center justify-between text-[10px] text-neutral-500 font-mono">
+          <div className="mt-4 pt-3 border-t border-neutral-200/80 flex items-center justify-between text-[10px] text-neutral-500 font-mono">
             <span>Requires Action</span>
             <button onClick={() => onTabChange('returns')} className="text-neutral-900 hover:underline flex items-center gap-0.5">
               Manage <ArrowUpRight className="w-3 h-3" />
@@ -172,7 +273,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
         <div className="lg:col-span-2 bg-white border border-neutral-200/80 rounded-3xl p-6 space-y-4">
           <div className="flex items-center justify-between border-b border-neutral-200/80 pb-3">
             <span className="text-xs font-bold uppercase tracking-widest text-neutral-900 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-neutral-900 animate-pulse" /> Revenue Trend (Last 7 Days)
+              <TrendingUp className="w-4 h-4 text-neutral-900" /> Revenue Trend (Last 7 Days)
             </span>
             <button
               onClick={() => setCollapsedSalesTrend(!collapsedSalesTrend)}
@@ -186,7 +287,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
             <div className="h-64 pt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
-                  data={trendData.map((d: any) => ({
+                  data={trendData.map((d: DailySale) => ({
                     name: d.label,
                     Revenue: (d.revenue || 0) / 100
                   }))}
@@ -268,7 +369,7 @@ export default function DashboardView({ data, products, returns, onTabChange }: 
                       dataKey="value"
                       nameKey="category"
                     >
-                      {catShare.map((entry: any, index: number) => {
+                      {catShare.map((entry: CategorySale, index: number) => {
                         const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#ef4444'];
                         return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />;
                       })}

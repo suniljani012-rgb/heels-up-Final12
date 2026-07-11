@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import { Search, Eye, X, Printer, Truck, DollarSign, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 interface OrderItem {
@@ -40,11 +41,11 @@ interface Order {
 interface OrdersManagerProps {
   orders: Order[];
   token: string;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
   onRefresh: () => void;
 }
 
-export default function OrdersManager({ orders, token, showToast, onRefresh }: OrdersManagerProps) {
+export default function OrdersManager({ orders, token, onRefresh }: OrdersManagerProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');

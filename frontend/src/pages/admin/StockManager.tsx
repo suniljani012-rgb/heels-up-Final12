@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import { Search, Save, Sliders, AlertTriangle } from 'lucide-react';
 
 interface Product {
@@ -14,11 +15,11 @@ interface Product {
 interface StockManagerProps {
   products: Product[];
   token: string;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
   onRefresh: () => void;
 }
 
-export default function StockManager({ products, token, showToast, onRefresh }: StockManagerProps) {
+export default function StockManager({ products, token, onRefresh }: StockManagerProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Track modified stocks in local state before saving: { [productId]: { [sizeLabel]: stock } }

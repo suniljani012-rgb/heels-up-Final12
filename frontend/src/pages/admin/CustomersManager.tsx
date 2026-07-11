@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import { Search, ChevronLeft, ChevronRight, UserMinus, UserCheck } from 'lucide-react';
 
 interface Customer {
@@ -16,10 +17,10 @@ interface Customer {
 interface CustomersManagerProps {
   customers: Customer[];
   onToggleBlock: (cust: Customer) => void;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
 }
 
-export default function CustomersManager({ customers, onToggleBlock, showToast }: CustomersManagerProps) {
+export default function CustomersManager({ customers, onToggleBlock }: CustomersManagerProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const itemsPerPage = 15;

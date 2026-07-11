@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import { Plus, Edit3, Trash2, X, Search } from 'lucide-react';
 
 interface Category {
@@ -14,11 +15,11 @@ interface Category {
 interface CategoriesManagerProps {
   categories: Category[];
   token: string;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
   onRefresh: () => void;
 }
 
-export default function CategoriesManager({ categories, token, showToast, onRefresh }: CategoriesManagerProps) {
+export default function CategoriesManager({ categories, token, onRefresh }: CategoriesManagerProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [searchQuery, setSearchQuery] = useState('');
   
   // Drawer state

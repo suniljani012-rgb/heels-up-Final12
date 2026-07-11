@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import { Save, Info, Key, Shield, HelpCircle } from 'lucide-react';
 
 interface Setting {
@@ -11,11 +12,11 @@ interface Setting {
 interface SettingsManagerProps {
   settings: Setting[];
   token: string;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
   onRefresh: () => void;
 }
 
-export default function SettingsManager({ settings, token, showToast, onRefresh }: SettingsManagerProps) {
+export default function SettingsManager({ settings, token, onRefresh }: SettingsManagerProps) {
+  const showToast = useToastStore((state) => state.showToast);
   // Local settings key-value map before saving
   const [localValues, setLocalValues] = useState<{ [key: string]: string }>({});
   const [saving, setSaving] = useState(false);

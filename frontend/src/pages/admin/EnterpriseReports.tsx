@@ -1,3 +1,4 @@
+import { useToastStore } from '../../store/useToastStore';
 import { useState, useMemo } from 'react';
 import { Download, RefreshCw, Activity, Info, Minus, X, Tag } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
@@ -5,10 +6,10 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 interface EnterpriseReportsProps {
   orders: any[];
   products: any[];
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
 }
 
-export default function EnterpriseReports({ orders, products, showToast }: EnterpriseReportsProps) {
+export default function EnterpriseReports({ orders, products }: EnterpriseReportsProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [reportType, setReportType] = useState<'sales' | 'inventory' | 'returns'>('sales');
   const [dateFrom, setDateFrom] = useState(() => {
     const d = new Date();

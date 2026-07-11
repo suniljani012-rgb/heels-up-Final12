@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useToastStore } from '../../store/useToastStore';
 import { Plus, Edit3, Trash2, X } from 'lucide-react';
 import HeicImage from '../../components/HeicImage';
 
@@ -15,11 +16,11 @@ interface Banner {
 interface BannersManagerProps {
   banners: Banner[];
   token: string;
-  showToast: (type: 'success' | 'error' | 'warning' | 'info', title: string, message: string) => void;
   onRefresh: () => void;
 }
 
-export default function BannersManager({ banners, token, showToast, onRefresh }: BannersManagerProps) {
+export default function BannersManager({ banners, token, onRefresh }: BannersManagerProps) {
+  const showToast = useToastStore((state) => state.showToast);
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
