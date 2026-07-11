@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS offline_sales (
   discount REAL NOT NULL DEFAULT 0,
   total REAL NOT NULL,
   payment_method TEXT NOT NULL DEFAULT 'Cash',
+  sales_channel TEXT DEFAULT 'POS',
   notes TEXT,
   created_by INTEGER,
   created_at TEXT NOT NULL,

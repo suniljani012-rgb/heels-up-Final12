@@ -92,6 +92,7 @@ CREATE TABLE IF NOT EXISTS orders (
   razorpay_payment_id TEXT,
   razorpay_signature TEXT,
   paid_at TEXT,
+  out_for_delivery_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
