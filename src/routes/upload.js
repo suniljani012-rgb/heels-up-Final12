@@ -129,22 +129,65 @@ export async function uploadRouter(request, env, ctx) {
                     ext = fileExt;
                 }
 
-                const key = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                // Temporary key to upload the raw file
+                const tempKey = `temp/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
                 const contentType = isHeicExt ? `image/${ext}` : (file.type || `image/${ext}`);
 
-                await bucket.put(key, buffer, {
+                await bucket.put(tempKey, buffer, {
                     httpMetadata: { contentType },
                 });
-                const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
 
-                // Pre-warm the Cloudflare edge cache for WebP and AVIF formats asynchronously (only in production)
+                let finalBuffer = buffer;
+                let finalExt = ext;
+                let finalContentType = contentType;
+                let converted = false;
+
                 const baseUrl = new URL(request.url).origin;
                 const isLocal = baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1') || baseUrl.includes('::1');
 
+                // Try to convert to AVIF using Cloudflare Image Resizing in production
+                if (!isLocal && env.R2_PUBLIC_URL) {
+                    try {
+                        const tempUrl = `${env.R2_PUBLIC_URL}/${tempKey}`;
+                        const resizeOptions = {
+                            cf: {
+                                image: {
+                                    format: 'avif',
+                                    quality: 85,
+                                }
+                            }
+                        };
+                        const optimizedRes = await fetch(tempUrl, resizeOptions);
+                        if (optimizedRes.ok) {
+                            finalBuffer = await optimizedRes.arrayBuffer();
+                            finalExt = 'avif';
+                            finalContentType = 'image/avif';
+                            converted = true;
+                        }
+                    } catch (resizeErr) {
+                        console.warn('Cloudflare Resizing during upload failed, falling back to original:', resizeErr);
+                    }
+                }
+
+                const finalKey = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${finalExt}`;
+                await bucket.put(finalKey, finalBuffer, {
+                    httpMetadata: { contentType: finalContentType },
+                });
+
+                // Asynchronously delete the temporary file from R2
+                if (ctx && typeof ctx.waitUntil === 'function') {
+                    ctx.waitUntil(bucket.delete(tempKey).catch(err => console.error('Delete temp file failed:', err)));
+                } else {
+                    await bucket.delete(tempKey);
+                }
+
+                const publicUrl = `${env.R2_PUBLIC_URL}/${finalKey}`;
+
+                // Pre-warm the Cloudflare edge cache for WebP and AVIF formats asynchronously (only in production)
                 if (!isLocal && ctx && typeof ctx.waitUntil === 'function') {
                     ctx.waitUntil((async () => {
                         try {
-                            const proxyUrl = `${baseUrl}/api/upload?key=${encodeURIComponent(key)}`;
+                            const proxyUrl = `${baseUrl}/api/upload?key=${encodeURIComponent(finalKey)}`;
                             
                             // Send request asserting WebP support
                             await fetch(proxyUrl, {
@@ -161,7 +204,7 @@ export async function uploadRouter(request, env, ctx) {
                     })());
                 }
 
-                return { url: publicUrl, key };
+                return { url: publicUrl, key: finalKey };
             }));
 
             return ok({
