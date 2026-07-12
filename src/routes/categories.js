@@ -9,10 +9,19 @@ export async function categoriesRouter(request, env) {
 
     if (path === '/' && method === 'GET') {
         try {
-            const isAdmin = request.headers.get('x-is-admin') === 'true' || url.searchParams.get('all') === 'true';
+            let isAdmin = false;
+            try {
+                const authHeader = request.headers.get('Authorization') || '';
+                if (authHeader.startsWith('Bearer ')) {
+                    const { verifyJWT } = await import('../utils/jwt.js');
+                    const payload = await verifyJWT(authHeader.slice(7), env.JWT_SECRET);
+                    isAdmin = payload && ['admin', 'staff', 'manager'].includes(payload.role);
+                }
+            } catch {}
+
             const cats = await env.DB.prepare(
                 `SELECT c.*, (SELECT COUNT(*) FROM products p WHERE (LOWER(p.category) = LOWER(c.name) OR LOWER(p.category) = LOWER(c.slug))` + (isAdmin ? '' : ' AND p.active = 1') + `) as product_count
-         FROM categories c` + (isAdmin ? '' : ' WHERE c.active = 1') + ` ORDER BY c.sort_order ASC`
+          FROM categories c` + (isAdmin ? '' : ' WHERE c.active = 1') + ` ORDER BY c.sort_order ASC`
             ).all();
             return list(cats.results);
         } catch (e) {

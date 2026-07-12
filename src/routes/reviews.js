@@ -97,7 +97,20 @@ export async function reviewsRouter(request, env) {
                 const body = await request.json();
                 if (body.status) status = body.status;
             } catch {}
+            
+            const review = await env.DB.prepare("SELECT product_id FROM product_reviews WHERE id = ?").bind(id).first();
             await env.DB.prepare("UPDATE product_reviews SET status = ? WHERE id = ?").bind(status, id).run();
+            
+            if (review && review.product_id) {
+                const prodId = review.product_id;
+                await env.DB.prepare(`
+                    UPDATE products SET 
+                        rating = (SELECT COALESCE(ROUND(AVG(rating), 1), 4.5) FROM product_reviews WHERE product_id = ? AND status = 'approved'),
+                        review_count = (SELECT COUNT(*) FROM product_reviews WHERE product_id = ? AND status = 'approved')
+                    WHERE id = ?
+                `).bind(prodId, prodId, prodId).run();
+            }
+            
             return ok(null, `Review status updated to ${status}`);
         } catch (e) {
             console.error('Approve review error:', e);
@@ -126,7 +139,19 @@ export async function reviewsRouter(request, env) {
         if (authError) return authError;
         const id = path.slice(1);
         try {
+            const review = await env.DB.prepare("SELECT product_id FROM product_reviews WHERE id = ?").bind(id).first();
             await env.DB.prepare('DELETE FROM product_reviews WHERE id = ?').bind(id).run();
+            
+            if (review && review.product_id) {
+                const prodId = review.product_id;
+                await env.DB.prepare(`
+                    UPDATE products SET 
+                        rating = (SELECT COALESCE(ROUND(AVG(rating), 1), 4.5) FROM product_reviews WHERE product_id = ? AND status = 'approved'),
+                        review_count = (SELECT COUNT(*) FROM product_reviews WHERE product_id = ? AND status = 'approved')
+                    WHERE id = ?
+                `).bind(prodId, prodId, prodId).run();
+            }
+            
             return ok(null, 'Review deleted');
         } catch (e) {
             console.error('Delete review error:', e);

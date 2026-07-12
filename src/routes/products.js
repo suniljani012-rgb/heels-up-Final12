@@ -391,8 +391,8 @@ export async function productsRouter(request, env) {
 
             const productsRes = await env.DB.prepare(
                 `SELECT p.*, c.id as category_id,
-                (SELECT ROUND(AVG(rating),1) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as avg_rating,
-                (SELECT COUNT(*) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as review_count
+                p.rating as avg_rating,
+                p.review_count as review_count
           FROM products p
           LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category)
           ${whereStr}
@@ -438,11 +438,11 @@ export async function productsRouter(request, env) {
 
             const product = await env.DB.prepare(
                 `SELECT p.*, c.id as category_id,
-                (SELECT ROUND(AVG(rating),1) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as avg_rating,
-                (SELECT COUNT(*) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as review_count
-         FROM products p
-         LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category)
-         WHERE p.id = ?` + (isAdmin ? '' : ' AND p.active = 1')
+                p.rating as avg_rating,
+                p.review_count as review_count
+          FROM products p
+          LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category)
+          WHERE p.id = ?` + (isAdmin ? '' : ' AND p.active = 1')
             ).bind(id).first();
             if (!product) return notFound('Product not found');
 

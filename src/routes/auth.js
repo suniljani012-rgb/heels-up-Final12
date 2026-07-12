@@ -410,8 +410,16 @@ export async function authRouter(request, env) {
             }
 
             mapped.permissions = await getUserPermissions(env, user);
+            const sid = crypto.randomUUID();
+            const expiresAt = new Date(Date.now() + tokenExpiry * 1000).toISOString();
+            try {
+                await env.DB.prepare(
+                    "INSERT INTO sessions (id, user_id, role, revoked, expires_at, created_at) VALUES (?, ?, ?, 0, ?, datetime('now'))"
+                ).bind(sid, mapped.id, mapped.role, expiresAt).run();
+            } catch (_) { /* ignore session write error */ }
+
             const token = await signJWT(
-                { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name, permissions: mapped.permissions },
+                { sid, id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name, permissions: mapped.permissions },
                 env.JWT_SECRET,
                 tokenExpiry
             );
@@ -465,8 +473,16 @@ export async function authRouter(request, env) {
             const timeoutHours = parseInt(await getSetting(env, 'session_timeout_hours', '8'));
             const tokenExpiry = (isNaN(timeoutHours) || timeoutHours < 1 ? 8 : timeoutHours) * 3600;
 
+            const sid = crypto.randomUUID();
+            const expiresAt = new Date(Date.now() + tokenExpiry * 1000).toISOString();
+            try {
+                await env.DB.prepare(
+                    "INSERT INTO sessions (id, user_id, role, revoked, expires_at, created_at) VALUES (?, ?, ?, 0, ?, datetime('now'))"
+                ).bind(sid, mapped.id, mapped.role, expiresAt).run();
+            } catch (_) { /* ignore session write error */ }
+
             const token = await signJWT(
-                { id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name, permissions: mapped.permissions },
+                { sid, id: mapped.id, email: mapped.email, role: mapped.role, name: mapped.name, permissions: mapped.permissions },
                 env.JWT_SECRET,
                 tokenExpiry
             );
@@ -509,6 +525,16 @@ export async function authRouter(request, env) {
             } catch (kvErr) {
                 console.warn('KV blacklist put failed:', kvErr);
             }
+
+            try {
+                const { verifyJWT } = await import('../utils/jwt.js');
+                const payload = await verifyJWT(token, env.JWT_SECRET);
+                if (payload && payload.sid) {
+                    await env.DB.prepare(
+                        "UPDATE sessions SET revoked = 1 WHERE id = ?"
+                    ).bind(payload.sid).run();
+                }
+            } catch (_) { /* ignore DB session revoke fail */ }
         }
         return ok(null, 'Logged out successfully');
     }

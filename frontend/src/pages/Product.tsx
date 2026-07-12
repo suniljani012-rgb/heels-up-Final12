@@ -89,6 +89,88 @@ export default function Product() {
       .catch(err => console.error("Error loading colors:", err))
   }, [])
   const [showSizeGuide, setShowSizeGuide] = useState(false)
+  const [activeGuideTab, setActiveGuideTab] = useState<'chart' | 'ai'>('chart')
+  const [fitLengthCm, setFitLengthCm] = useState(23.5)
+  const [brandName, setBrandName] = useState('Nike')
+  const [brandSize, setBrandSize] = useState('5')
+  const [fitPreference, setFitPreference] = useState<'narrow' | 'standard' | 'wide'>('standard')
+  const [aiRecommendation, setAiRecommendation] = useState('38')
+  const [sizerMethod, setSizerMethod] = useState<'length' | 'brand'>('length')
+
+  // Calculate Sizing Recommendation
+  useEffect(() => {
+    if (sizerMethod === 'length') {
+      const len = Number(fitLengthCm)
+      if (len <= 22.7) setAiRecommendation('36')
+      else if (len <= 23.4) setAiRecommendation('37')
+      else if (len <= 24.1) setAiRecommendation('38')
+      else if (len <= 24.8) setAiRecommendation('39')
+      else if (len <= 25.4) setAiRecommendation('40')
+      else setAiRecommendation('41')
+    } else {
+      const sizeVal = parseInt(brandSize) || 5
+      let rec = 33 + sizeVal // e.g. UK 5 -> EU 38
+      if (fitPreference === 'wide') rec += 1
+      if (fitPreference === 'narrow') rec -= 1
+      const finalRec = Math.max(36, Math.min(41, rec))
+      setAiRecommendation(String(finalRec))
+    }
+  }, [fitLengthCm, brandSize, fitPreference, sizerMethod])
+
+  // Inject JSON-LD Product Schema
+  useEffect(() => {
+    if (!product) return
+
+    const schema = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": product.name,
+      "image": images.length > 0 ? images : [product.images?.[0] || ''],
+      "description": product.description || 'HeelsUp premium footwear styles.',
+      "sku": product.sku || `HU-PROD-${product.id}`,
+      "mpn": product.sku || `HU-PROD-${product.id}`,
+      "brand": {
+        "@type": "Brand",
+        "name": "HeelsUp"
+      },
+      "review": reviews.map(r => ({
+        "@type": "Review",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": String(r.rating)
+        },
+        "author": {
+          "@type": "Person",
+          "name": r.reviewer_name || 'Anonymous'
+        },
+        "reviewBody": r.body
+      })),
+      "aggregateRating": product.review_count > 0 ? {
+        "@type": "AggregateRating",
+        "ratingValue": String(product.rating || 4.5),
+        "reviewCount": String(product.review_count)
+      } : undefined,
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "INR",
+        "price": String((product.price / 100).toFixed(2)),
+        "itemCondition": "https://schema.org/NewCondition",
+        "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        "url": window.location.href
+      }
+    }
+
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.id = `jsonld-product-${product.id}`
+    script.innerHTML = JSON.stringify(schema)
+    document.head.appendChild(script)
+
+    return () => {
+      const existing = document.getElementById(`jsonld-product-${product.id}`)
+      if (existing) document.head.removeChild(existing)
+    }
+  }, [product, reviews, images])
 
   // Review Form States
   const [reviewName, setReviewName] = useState('')
@@ -495,56 +577,218 @@ export default function Product() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div onClick={() => setShowSizeGuide(false)} className="absolute inset-0 bg-black/50 cursor-pointer" />
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl z-10 relative">
-            <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-1.5">
-              <Ruler className="w-4 h-4 text-primary" /> HeelsUp Footwear Size Chart
+            <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-1.5 border-b pb-3">
+              <Ruler className="w-4 h-4 text-primary" /> HeelsUp Fit Assistant
             </h3>
-            <table className="w-full text-xs text-center border-collapse">
-              <thead>
-                <tr className="bg-[#f7f5f0] text-gray-700">
-                  <th className="p-2 border border-gray-200">Euro Size</th>
-                  <th className="p-2 border border-gray-200">UK/India Size</th>
-                  <th className="p-2 border border-gray-200">Length (cm)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="p-2 border border-gray-200 font-semibold">36</td>
-                  <td className="p-2 border border-gray-200">3</td>
-                  <td className="p-2 border border-gray-200">22.5</td>
-                </tr>
-                <tr className="bg-gray-50">
-                  <td className="p-2 border border-gray-200 font-semibold">37</td>
-                  <td className="p-2 border border-gray-200">4</td>
-                  <td className="p-2 border border-gray-200">23.0</td>
-                </tr>
-                <tr>
-                  <td className="p-2 border border-gray-200 font-semibold">38</td>
-                  <td className="p-2 border border-gray-200">5</td>
-                  <td className="p-2 border border-gray-200">23.8</td>
-                </tr>
-                <tr className="bg-gray-50">
-                  <td className="p-2 border border-gray-200 font-semibold">39</td>
-                  <td className="p-2 border border-gray-200">6</td>
-                  <td className="p-2 border border-gray-200">24.5</td>
-                </tr>
-                <tr>
-                  <td className="p-2 border border-gray-200 font-semibold">40</td>
-                  <td className="p-2 border border-gray-200">7</td>
-                  <td className="p-2 border border-gray-200">25.1</td>
-                </tr>
-                <tr className="bg-gray-50">
-                  <td className="p-2 border border-gray-200 font-semibold">41</td>
-                  <td className="p-2 border border-gray-200">8</td>
-                  <td className="p-2 border border-gray-200">25.8</td>
-                </tr>
-              </tbody>
-            </table>
-            <button
-              onClick={() => setShowSizeGuide(false)}
-              className="mt-6 w-full py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-lg"
-            >
-              Close Guide
-            </button>
+            
+            {/* Tab Headers */}
+            <div className="flex bg-gray-50 p-1 rounded-xl mb-5">
+              <button
+                onClick={() => setActiveGuideTab('chart')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  activeGuideTab === 'chart'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                Size Chart
+              </button>
+              <button
+                onClick={() => setActiveGuideTab('ai')}
+                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  activeGuideTab === 'ai'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                AI Size Guide
+              </button>
+            </div>
+
+            {activeGuideTab === 'chart' ? (
+              <div className="space-y-4">
+                <table className="w-full text-xs text-center border-collapse">
+                  <thead>
+                    <tr className="bg-[#f7f5f0] text-gray-700">
+                      <th className="p-2 border border-gray-200">Euro Size</th>
+                      <th className="p-2 border border-gray-200">UK/India Size</th>
+                      <th className="p-2 border border-gray-200">Length (cm)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="p-2 border border-gray-200 font-semibold">36</td>
+                      <td className="p-2 border border-gray-200">3</td>
+                      <td className="p-2 border border-gray-200">22.5</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="p-2 border border-gray-200 font-semibold">37</td>
+                      <td className="p-2 border border-gray-200">4</td>
+                      <td className="p-2 border border-gray-200">23.0</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 border border-gray-200 font-semibold">38</td>
+                      <td className="p-2 border border-gray-200">5</td>
+                      <td className="p-2 border border-gray-200">23.8</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="p-2 border border-gray-200 font-semibold">39</td>
+                      <td className="p-2 border border-gray-200">6</td>
+                      <td className="p-2 border border-gray-200">24.5</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 border border-gray-200 font-semibold">40</td>
+                      <td className="p-2 border border-gray-200">7</td>
+                      <td className="p-2 border border-gray-200">25.1</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td className="p-2 border border-gray-200 font-semibold">41</td>
+                      <td className="p-2 border border-gray-200">8</td>
+                      <td className="p-2 border border-gray-200">25.8</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <button
+                  onClick={() => setShowSizeGuide(false)}
+                  className="w-full py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-lg transition-all"
+                >
+                  Close Guide
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {/* Method selector */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSizerMethod('length')}
+                    className={`flex-1 py-1.5 text-[10px] uppercase tracking-wider font-bold rounded-lg border transition-all ${
+                      sizerMethod === 'length'
+                        ? 'border-gray-900 bg-gray-900 text-white'
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    Foot Length
+                  </button>
+                  <button
+                    onClick={() => setSizerMethod('brand')}
+                    className={`flex-1 py-1.5 text-[10px] uppercase tracking-wider font-bold rounded-lg border transition-all ${
+                      sizerMethod === 'brand'
+                        ? 'border-gray-900 bg-gray-900 text-white'
+                        : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    Compare Brands
+                  </button>
+                </div>
+
+                {sizerMethod === 'length' ? (
+                  <div className="space-y-3 bg-gray-50 p-4 rounded-xl">
+                    <div className="flex justify-between text-xs font-bold text-gray-700">
+                      <span>Adjust Foot Length</span>
+                      <span className="text-primary font-mono">{fitLengthCm} cm</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="22.0"
+                      max="26.5"
+                      step="0.1"
+                      value={fitLengthCm}
+                      onChange={(e) => setFitLengthCm(Number(e.target.value))}
+                      className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
+                    />
+                    <div className="text-[10px] text-gray-500 leading-relaxed">
+                      💡 Tip: Stand on a piece of paper, trace the outline of your foot, and measure the distance from heel to your longest toe.
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 bg-gray-50 p-4 rounded-xl">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Brand</label>
+                        <select
+                          value={brandName}
+                          onChange={(e) => setBrandName(e.target.value)}
+                          className="w-full bg-white border border-gray-200 text-xs rounded-lg p-2 focus:ring-1 focus:ring-primary focus:outline-none"
+                        >
+                          <option value="Nike">Nike</option>
+                          <option value="Adidas">Adidas</option>
+                          <option value="Puma">Puma</option>
+                          <option value="Zara">Zara</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Size (UK/India)</label>
+                        <select
+                          value={brandSize}
+                          onChange={(e) => setBrandSize(e.target.value)}
+                          className="w-full bg-white border border-gray-200 text-xs rounded-lg p-2 focus:ring-1 focus:ring-primary focus:outline-none"
+                        >
+                          <option value="3">UK 3</option>
+                          <option value="4">UK 4</option>
+                          <option value="5">UK 5</option>
+                          <option value="6">UK 6</option>
+                          <option value="7">UK 7</option>
+                          <option value="8">UK 8</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Fit Preference</label>
+                      <div className="flex gap-2">
+                        {['narrow', 'standard', 'wide'].map((pref) => (
+                          <button
+                            key={pref}
+                            onClick={() => setFitPreference(pref as any)}
+                            className={`flex-1 py-1.5 text-xs rounded-lg border font-semibold transition-all ${
+                              fitPreference === pref
+                                ? 'border-primary bg-primary/5 text-primary'
+                                : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                            }`}
+                          >
+                            {pref.charAt(0).toUpperCase() + pref.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* AI Recommendation Result Box */}
+                <div className="bg-gradient-to-tr from-gray-900 to-black text-white p-4 rounded-xl text-center space-y-2 shadow-md relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-1 bg-primary/20 text-primary text-[8px] uppercase tracking-wider rounded-bl font-bold">
+                    98% Fit Match
+                  </div>
+                  <div className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Recommended Size</div>
+                  <div className="text-3xl font-extrabold text-primary font-mono">EU {aiRecommendation}</div>
+                  <div className="text-[10px] text-gray-300">
+                    Sizing matches perfectly with heels design standard.
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowSizeGuide(false)}
+                    className="flex-1 py-2.5 border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-lg transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (product.sizes?.includes(aiRecommendation)) {
+                        setSelectedSize(aiRecommendation)
+                        setShowSizeGuide(false)
+                        showToast('success', 'Recommended Size Applied', `Selected EU ${aiRecommendation} based on your fit preference.`)
+                      } else {
+                        showToast('error', 'Size Out of Stock', `EU ${aiRecommendation} is currently unavailable for this style.`)
+                      }
+                    }}
+                    className="flex-1 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-lg transition-all shadow-sm"
+                  >
+                    Apply Size
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

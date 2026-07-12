@@ -10,6 +10,18 @@ export async function authenticate(request, env) {
     const payload = await verifyJWT(token, env.JWT_SECRET);
     if (!payload) return { user: null, error: unauthorized('Invalid or expired token') };
 
+    // Check D1 sessions table to see if session is active/revoked
+    if (payload.sid) {
+        try {
+            const sessionRow = await env.DB.prepare(
+                "SELECT revoked FROM sessions WHERE id = ?"
+            ).bind(payload.sid).first();
+            if (sessionRow && sessionRow.revoked === 1) {
+                return { user: null, error: unauthorized('Session has been revoked. Please login again.') };
+            }
+        } catch (_) { /* D1 error — fail open */ }
+    }
+
     // Reject pending-OTP tokens from all normal routes
     // These tokens can ONLY be used at POST /api/auth/admin-verify-otp
     if (payload.otp_pending) {

@@ -262,6 +262,17 @@ export async function createOrderRecord(env, input) {
         });
     }
 
+    if (customerPhone && (input.paymentStatus === 'paid' || input.orderStatus === 'confirmed' || input.orderStatus === 'placed')) {
+        import('../utils/whatsapp.js').then(({ sendOrderPlacedNotification }) => {
+            sendOrderPlacedNotification(env, {
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                order_number: orderNumber,
+                total_amount: Math.round(totalAmount * 100)
+            }).catch(e => console.error('Failed to send order WhatsApp:', e));
+        });
+    }
+
     if (orderId && (input.paymentStatus === 'paid' || input.orderStatus === 'confirmed' || input.orderStatus === 'placed')) {
         sendOrderStatusEmail(env, orderId, 'placed').catch(err => {
             console.error('Failed to send placement email:', err);
@@ -749,6 +760,9 @@ export async function ordersRouter(request, env) {
 
                 if (status === 'shipped') {
                     smsText = `Dear ${updated.customer_name}, your HeelsUp order #${updated.order_number} has been shipped via ${cName}. Tracking Number: ${tNum}. Track here: ${tUrl}. Thank you for shopping with us!`;
+                    import('../utils/whatsapp.js').then(({ sendOrderShippedNotification }) => {
+                        sendOrderShippedNotification(env, updated, tNum).catch(e => console.error('Failed to send shipped WhatsApp:', e));
+                    });
                 } else if (status === 'delivered') {
                     smsText = `Dear ${updated.customer_name}, your HeelsUp order #${updated.order_number} has been successfully delivered. We hope you love your new footwear! Rate your style here: https://heelsup.in/reviews.`;
                 } else if (status === 'cancelled') {
@@ -981,6 +995,12 @@ export async function ordersRouter(request, env) {
                         order.customer_phone, 
                         `Dear ${order.customer_name}, your HeelsUp order #${order.order_number} has been shipped via Delhivery. Tracking Number: ${result.waybill}. Track here: ${result.tracking_url}`
                     );
+                    try {
+                        const { sendOrderShippedNotification } = await import('../utils/whatsapp.js');
+                        await sendOrderShippedNotification(env, order, result.waybill);
+                    } catch (waErr) {
+                        console.error('[Delhivery] Failed to send dispatch WhatsApp:', waErr);
+                    }
                 }
             } catch (smsErr) {
                 console.error('[Delhivery] Failed to send dispatch SMS:', smsErr);

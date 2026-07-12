@@ -247,5 +247,64 @@ export default {
       headers.set('Content-Security-Policy', "default-src 'self' https://*.razorpay.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https://media.heelsup.in https://*.unsplash.com https://*.razorpay.com; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; frame-src https://*.razorpay.com; connect-src 'self' https://*.heelsup.workers.dev https://api.razorpay.com;");
     }
     return new Response(assetRes.body, { status: assetRes.status, headers });
+  },
+
+  async scheduled(event, env, ctx) {
+    console.log('[Cron] Triggered cart recovery scheduled task...');
+    ctx.waitUntil((async () => {
+      try {
+        const twoHoursAgo = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
+        const oneDayAgo = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+        
+        const inactiveCarts = await env.DB.prepare(`
+          SELECT c.id, c.user_id, c.items_json, u.email, u.first_name
+          FROM carts c
+          JOIN users u ON c.user_id = u.id
+          WHERE c.updated_at <= ? AND c.updated_at >= ?
+            AND c.items_json != '[]'
+        `).bind(twoHoursAgo, oneDayAgo).all();
+
+        if (inactiveCarts.results && inactiveCarts.results.length > 0) {
+          console.log(`[Cron] Found ${inactiveCarts.results.length} abandoned carts to process.`);
+          for (const cart of inactiveCarts.results) {
+            const items = JSON.parse(cart.items_json || '[]');
+            if (items.length === 0) continue;
+
+            const name = cart.first_name || 'there';
+            const email = cart.email;
+            const itemsList = items.map(item => `<li>${item.name || 'Shoe'} (Size: ${item.size || 'Default'}, Qty: ${item.qty})</li>`).join('');
+            const resendApiKey = env.RESEND_API_KEY;
+
+            if (resendApiKey) {
+              const emailHtml = `
+                <h2>Hi ${name},</h2>
+                <p>You left some beautiful heels in your cart! They are waiting for you.</p>
+                <ul>${itemsList}</ul>
+                <p>Use coupon code <b>COMEBACK5</b> for an extra 5% off on your checkout!</p>
+                <p><a href="https://heelsup.in/cart" style="background:#000;color:#fff;padding:10px 20px;text-decoration:none;border-radius:4px;">Return to Cart</a></p>
+                <p>Best regards,<br/>HeelsUp Support</p>
+              `;
+
+              await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${resendApiKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  from: 'HeelsUp Store <noreply@heelsup.in>',
+                  to: [email],
+                  subject: 'You left something in your HeelsUp cart!',
+                  html: emailHtml
+                })
+              });
+              console.log(`[Cron] Sent recovery email to ${email}`);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[Cron] Cart recovery task failed:', err);
+      }
+    })());
   }
 };
