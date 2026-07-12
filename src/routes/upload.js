@@ -3,11 +3,10 @@ import { requireAdmin, requireAuth } from '../middleware/auth.js';
 import { ok, error, serverError, notFound } from '../utils/response.js';
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = [
-    'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
-    'image/heic', 'image/heif', 'application/octet-stream'
+const ALLOWED_EXTENSIONS = [
+    'jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'svg', 
+    'tiff', 'tif', 'bmp', 'jfif', 'avif', 'ico', 'apng', 'raw'
 ];
-const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif'];
 
 export async function uploadRouter(request, env, ctx) {
     const url = new URL(request.url);
@@ -106,13 +105,12 @@ export async function uploadRouter(request, env, ctx) {
                 const fileExt = fileName.split('.').pop().toLowerCase();
                 const isHeicExt = ['heic', 'heif'].includes(fileExt);
 
-                let isAllowed = ALLOWED_TYPES.includes(file.type) || ALLOWED_EXTENSIONS.includes(fileExt);
-                if (file.type === 'application/octet-stream' && !isHeicExt && !ALLOWED_EXTENSIONS.includes(fileExt)) {
-                    isAllowed = false;
-                }
+                const isImageMime = file.type && file.type.startsWith('image/');
+                const isOctetStream = file.type === 'application/octet-stream';
+                const isAllowed = isImageMime || ALLOWED_EXTENSIONS.includes(fileExt) || isOctetStream;
 
-                if (!isAllowed && !isHeicExt) {
-                    throw new Error('Only JPEG, PNG, WebP, GIF, HEIC, HEIF allowed');
+                if (!isAllowed) {
+                    throw new Error('Only image files are allowed');
                 }
 
                 const buffer = await file.arrayBuffer();
@@ -120,7 +118,17 @@ export async function uploadRouter(request, env, ctx) {
                     throw new Error('File too large. Max 10MB');
                 }
 
-                const ext = isHeicExt ? fileExt : (ALLOWED_EXTENSIONS.includes(fileExt) ? fileExt : (file.type.split('/')[1] || 'jpeg'));
+                let ext = 'jpeg';
+                if (ALLOWED_EXTENSIONS.includes(fileExt)) {
+                    ext = fileExt;
+                } else if (file.type && file.type.startsWith('image/')) {
+                    const parts = file.type.split('/');
+                    const sub = parts[1] || '';
+                    ext = sub.split('+')[0] || 'jpeg';
+                } else if (isHeicExt) {
+                    ext = fileExt;
+                }
+
                 const key = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
                 const contentType = isHeicExt ? `image/${ext}` : (file.type || `image/${ext}`);
 
