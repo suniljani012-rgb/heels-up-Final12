@@ -113,7 +113,7 @@ export default {
         // banners, categories, coupons, staff, settings, inventory, notifications,
         // shipping, blogs, collections, pages, taxes, returns, analytics, upload, pos
         if (path.startsWith('/api/admin/')) {
-          response = await adminRouter(request, env);
+          response = await adminRouter(request, env, ctx);
         }
         else if (path.startsWith('/api/payments/razorpay/')) {
           const rewritten = rewriteAdminPath(request, '/api/payments/razorpay', '/api/payment');
@@ -141,7 +141,7 @@ export default {
         else if (path.startsWith('/api/categories')) response = await categoriesRouter(request, env);
         else if (path.startsWith('/api/coupons')) response = await couponsRouter(request, env);
         else if (path.startsWith('/api/reviews')) response = await reviewsRouter(request, env);
-        else if (path.startsWith('/api/upload')) response = await uploadRouter(request, env);
+        else if (path.startsWith('/api/upload')) response = await uploadRouter(request, env, ctx);
         else if (path.startsWith('/api/payment')) response = await paymentRouter(request, env);
         else if (path.startsWith('/api/pos')) response = await posRouter(request, env);
         else if (path.startsWith('/api/analytics')) response = await analyticsRouter(request, env);

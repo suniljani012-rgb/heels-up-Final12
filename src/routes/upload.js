@@ -8,7 +8,7 @@ const ALLOWED_TYPES = [
     'image/heic', 'image/heif', 'application/octet-stream'
 ];
 
-export async function uploadRouter(request, env) {
+export async function uploadRouter(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname.replace('/api/upload', '') || '/';
     const method = request.method;
@@ -112,6 +112,29 @@ export async function uploadRouter(request, env) {
                 httpMetadata: { contentType },
             });
             const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+
+            // Pre-warm the Cloudflare edge cache for WebP and AVIF formats asynchronously
+            if (ctx && typeof ctx.waitUntil === 'function') {
+                ctx.waitUntil((async () => {
+                    try {
+                        const baseUrl = new URL(request.url).origin;
+                        const proxyUrl = `${baseUrl}/api/upload?key=${encodeURIComponent(key)}`;
+                        
+                        // Send request asserting WebP support
+                        await fetch(proxyUrl, {
+                            headers: { 'Accept': 'image/webp', 'User-Agent': 'Cloudflare-Cache-Warmer' }
+                        });
+                        
+                        // Send request asserting AVIF support
+                        await fetch(proxyUrl, {
+                            headers: { 'Accept': 'image/avif', 'User-Agent': 'Cloudflare-Cache-Warmer' }
+                        });
+                    } catch (warmerErr) {
+                        console.warn('Cache pre-warming failed:', warmerErr);
+                    }
+                })());
+            }
+
             return ok({ url: publicUrl, key }, 'File uploaded');
         } catch (e) {
             console.error('Upload error:', e);

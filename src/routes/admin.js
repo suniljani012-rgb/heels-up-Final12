@@ -49,7 +49,7 @@ function rewritePath(request, newPathname) {
 }
 
 // ── Main admin router ─────────────────────────────────────────
-export async function adminRouter(request, env) {
+export async function adminRouter(request, env, ctx) {
     // Global auth gate — ALL /api/admin/* routes require admin role
     const { user: adminUser, error: authError } = await requireAdmin(request, env);
     if (authError) return authError;
@@ -222,7 +222,7 @@ export async function adminRouter(request, env) {
 
     // ── /api/admin/upload/* ──────────────────────────────────── (ADDED)
     if (path.startsWith('/api/admin/upload')) {
-        return uploadRouter(request, env);
+        return uploadRouter(request, env, ctx);
     }
 
     // ── /api/admin/pos/* ─────────────────────────────────────── (ADDED)
