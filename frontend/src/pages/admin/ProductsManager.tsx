@@ -219,11 +219,18 @@ export default function ProductsManager({ products, categories, token, onRefresh
     setUploadingImages(true);
     try {
       const formData = new FormData();
+      let heic2anyLib: any = null;
+      const hasHeic = Array.from(e.target.files).some(
+        file => file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic'
+      );
+      if (hasHeic) {
+        heic2anyLib = (await import('heic2any')).default;
+      }
+
       for (let i = 0; i < e.target.files.length; i++) {
         const file = e.target.files[i];
-        if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
-          const heic2any = (await import('heic2any')).default;
-          const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+        if (heic2anyLib && (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic')) {
+          const converted = await heic2anyLib({ blob: file, toType: 'image/jpeg', quality: 0.8 });
           const blob = Array.isArray(converted) ? converted[0] : converted;
           formData.append('files', new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' }));
         } else {

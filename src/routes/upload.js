@@ -98,11 +98,10 @@ export async function uploadRouter(request, env, ctx) {
                 return error('No files provided', 400);
             }
 
-            const results = [];
             const bucket = env.MEDIA || env.BUCKET;
             if (!bucket) return error('R2 bucket binding (MEDIA) not found', 500);
 
-            for (const file of files) {
+            const results = await Promise.all(files.map(async (file) => {
                 const fileName = file.name || '';
                 const fileExt = fileName.split('.').pop().toLowerCase();
                 const isHeicExt = ['heic', 'heif'].includes(fileExt);
@@ -113,11 +112,13 @@ export async function uploadRouter(request, env, ctx) {
                 }
 
                 if (!isAllowed && !isHeicExt) {
-                    return error('Only JPEG, PNG, WebP, GIF, HEIC, HEIF allowed', 400);
+                    throw new Error('Only JPEG, PNG, WebP, GIF, HEIC, HEIF allowed');
                 }
 
                 const buffer = await file.arrayBuffer();
-                if (buffer.byteLength > MAX_SIZE) return error('File too large. Max 10MB', 400);
+                if (buffer.byteLength > MAX_SIZE) {
+                    throw new Error('File too large. Max 10MB');
+                }
 
                 const ext = isHeicExt ? fileExt : (ALLOWED_EXTENSIONS.includes(fileExt) ? fileExt : (file.type.split('/')[1] || 'jpeg'));
                 const key = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -128,11 +129,13 @@ export async function uploadRouter(request, env, ctx) {
                 });
                 const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
 
-                // Pre-warm the Cloudflare edge cache for WebP and AVIF formats asynchronously
-                if (ctx && typeof ctx.waitUntil === 'function') {
+                // Pre-warm the Cloudflare edge cache for WebP and AVIF formats asynchronously (only in production)
+                const baseUrl = new URL(request.url).origin;
+                const isLocal = baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1') || baseUrl.includes('::1');
+
+                if (!isLocal && ctx && typeof ctx.waitUntil === 'function') {
                     ctx.waitUntil((async () => {
                         try {
-                            const baseUrl = new URL(request.url).origin;
                             const proxyUrl = `${baseUrl}/api/upload?key=${encodeURIComponent(key)}`;
                             
                             // Send request asserting WebP support
@@ -150,8 +153,8 @@ export async function uploadRouter(request, env, ctx) {
                     })());
                 }
 
-                results.push({ url: publicUrl, key });
-            }
+                return { url: publicUrl, key };
+            }));
 
             return ok({
                 url: results[0].url,
@@ -161,7 +164,7 @@ export async function uploadRouter(request, env, ctx) {
             }, 'File(s) uploaded');
         } catch (e) {
             console.error('Upload error:', e);
-            return serverError('Upload failed');
+            return error(e.message || 'Upload failed', 400);
         }
     }
 
