@@ -4,9 +4,10 @@ import { ok, error, serverError, notFound } from '../utils/response.js';
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = [
-    'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+    'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
     'image/heic', 'image/heif', 'application/octet-stream'
 ];
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif'];
 
 export async function uploadRouter(request, env, ctx) {
     const url = new URL(request.url);
@@ -85,10 +86,10 @@ export async function uploadRouter(request, env, ctx) {
         if (authError) return authError;
         try {
             const formData = await request.formData();
-            let files = formData.getAll('files');
+            let files = formData.getAll('files').filter(f => f && typeof f !== 'string');
             if (!files || files.length === 0) {
                 const singleFile = formData.get('file');
-                if (singleFile) {
+                if (singleFile && typeof singleFile !== 'string') {
                     files = [singleFile];
                 }
             }
@@ -106,8 +107,8 @@ export async function uploadRouter(request, env, ctx) {
                 const fileExt = fileName.split('.').pop().toLowerCase();
                 const isHeicExt = ['heic', 'heif'].includes(fileExt);
 
-                let isAllowed = ALLOWED_TYPES.includes(file.type);
-                if (file.type === 'application/octet-stream' && !isHeicExt) {
+                let isAllowed = ALLOWED_TYPES.includes(file.type) || ALLOWED_EXTENSIONS.includes(fileExt);
+                if (file.type === 'application/octet-stream' && !isHeicExt && !ALLOWED_EXTENSIONS.includes(fileExt)) {
                     isAllowed = false;
                 }
 
@@ -118,9 +119,9 @@ export async function uploadRouter(request, env, ctx) {
                 const buffer = await file.arrayBuffer();
                 if (buffer.byteLength > MAX_SIZE) return error('File too large. Max 10MB', 400);
 
-                const ext = isHeicExt ? fileExt : (file.type.split('/')[1] || 'jpeg');
+                const ext = isHeicExt ? fileExt : (ALLOWED_EXTENSIONS.includes(fileExt) ? fileExt : (file.type.split('/')[1] || 'jpeg'));
                 const key = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-                const contentType = isHeicExt ? `image/${ext}` : file.type;
+                const contentType = isHeicExt ? `image/${ext}` : (file.type || `image/${ext}`);
 
                 await bucket.put(key, buffer, {
                     httpMetadata: { contentType },

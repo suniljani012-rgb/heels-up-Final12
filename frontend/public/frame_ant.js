@@ -83,14 +83,21 @@
   // Overriding global fetch for zero-latency retrieval
   const originalFetch = window.fetch;
   window.fetch = async function(input, init) {
-    let url = typeof input === 'string' ? input : input.url;
+    let url = typeof input === 'string' ? input : (input && input.url) || '';
     
     // Sanitize input query
-    url = sanitizeQuery(url);
-    if (typeof input === 'string') {
-      input = url;
-    } else {
-      input = new Request(url, input);
+    const sanitizedUrl = sanitizeQuery(url);
+    if (sanitizedUrl !== url) {
+      if (typeof input === 'string') {
+        input = sanitizedUrl;
+      } else {
+        try {
+          input = new Request(sanitizedUrl, input);
+        } catch (e) {
+          // Fallback if Request constructor fails
+        }
+      }
+      url = sanitizedUrl;
     }
 
     const path = new URL(url, window.location.origin).pathname;
