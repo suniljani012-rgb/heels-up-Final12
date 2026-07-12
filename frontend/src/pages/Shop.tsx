@@ -7,6 +7,7 @@ import { useToastStore } from '../store/useToastStore'
 import HeicImage from '../components/HeicImage'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { formatSizeToIndian } from '../utils/sizeHelper'
 
 interface Product {
   id: number;
@@ -273,7 +274,7 @@ export default function Shop() {
                         : 'border-gray-200 text-gray-700 hover:border-gray-400 bg-white'
                     }`}
                   >
-                    UK {sz}
+                    {formatSizeToIndian(sz)}
                   </button>
                 )
               })}

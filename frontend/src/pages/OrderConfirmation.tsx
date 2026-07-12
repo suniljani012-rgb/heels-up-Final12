@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { CheckCircle, ShoppingBag, ArrowRight, Loader2, MapPin, CreditCard, Calendar } from 'lucide-react'
 import HeicImage from '../components/HeicImage'
+import { formatSizeToIndian } from '../utils/sizeHelper'
 
 interface OrderItem {
   product_id: number;
@@ -120,7 +121,7 @@ export default function OrderConfirmation() {
                         <div>
                           <span className="text-xs font-semibold text-gray-800 block leading-tight">{item.product_name}</span>
                           <span className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-1 block">
-                            Size {item.size || 'Default'} &middot; Qty {item.quantity}
+                            Size {formatSizeToIndian(item.size)} &middot; Qty {item.quantity}
                           </span>
                         </div>
                       </div>

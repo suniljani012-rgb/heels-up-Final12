@@ -6,6 +6,7 @@ import { useWishlistStore } from '../store/useWishlistStore'
 import { useToastStore } from '../store/useToastStore'
 import { useAuthStore } from '../store/useAuthStore'
 import HeicImage from '../components/HeicImage'
+import { formatSizeToIndian } from '../utils/sizeHelper'
 
 interface ProductDetail {
   id: number;
@@ -276,7 +277,7 @@ export default function Product() {
       category: product.category,
       qty: qty
     })
-    showToast('success', 'Added to Bag 🛍️', `${product.name} (Size ${selectedSize}) has been added.`)
+    showToast('success', 'Added to Bag 🛍️', `${product.name} (Size ${formatSizeToIndian(selectedSize)}) has been added.`)
   }
 
 
@@ -434,7 +435,7 @@ export default function Product() {
                           : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                       }`}
                     >
-                      <span>{size}</span>
+                      <span>{formatSizeToIndian(size)}</span>
                       {!sizeOutOfStock && sizeStock <= 2 && (
                         <span className={`text-[7px] font-bold ${selectedSize === size ? 'text-white' : 'text-[#d4456b]'}`}>
                           {sizeStock} left

@@ -5,6 +5,7 @@ import { useCartStore } from '../store/useCartStore'
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
 import HeicImage from '../components/HeicImage'
+import { formatSizeToIndian } from '../utils/sizeHelper'
 
 declare global {
   interface Window {
@@ -464,7 +465,7 @@ export default function Checkout() {
                   <div className="flex-1">
                     <h4 className="text-xs font-bold text-gray-900 line-clamp-1">{item.name}</h4>
                     <p className="text-[9px] text-gray-500 capitalize">
-                      Qty: {item.qty} &middot; Color: {item.color} &middot; Size: {item.size}
+                      Qty: {item.qty} &middot; Color: {item.color} &middot; Size: {formatSizeToIndian(item.size)}
                     </p>
                   </div>
                   <span className="text-xs font-semibold text-gray-900">

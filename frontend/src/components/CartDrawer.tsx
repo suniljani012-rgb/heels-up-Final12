@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '../store/useCartStore'
 import { useUIStore } from '../store/useUIStore'
 import HeicImage from './HeicImage'
+import { formatSizeToIndian } from '../utils/sizeHelper'
 
 export default function CartDrawer() {
   const { items, updateQty, removeItem, getCartSubtotal } = useCartStore()
@@ -109,7 +110,7 @@ export default function CartDrawer() {
                           </span>
                         </div>
                         <p className="text-[10px] text-gray-500 mt-1 capitalize">
-                          {item.category} &middot; {item.color} &middot; Size {item.size}
+                          {item.category} &middot; {item.color} &middot; Size {formatSizeToIndian(item.size)}
                         </p>
                       </div>
 

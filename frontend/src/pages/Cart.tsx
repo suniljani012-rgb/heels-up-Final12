@@ -6,6 +6,7 @@ import { useWishlistStore } from '../store/useWishlistStore'
 import { useToastStore } from '../store/useToastStore'
 import { useAuthStore } from '../store/useAuthStore'
 import HeicImage from '../components/HeicImage'
+import { formatSizeToIndian } from '../utils/sizeHelper'
 
 export default function Cart() {
   const { items, updateQty, removeItem, getCartSubtotal, clearCart } = useCartStore()
@@ -136,7 +137,7 @@ export default function Cart() {
                             )}
                           </div>
                           <p className="text-[10px] text-gray-500 mt-1 capitalize">
-                            {item.category} &middot; Color: {item.color} &middot; Size: {item.size}
+                            {item.category} &middot; Color: {item.color} &middot; Size: {formatSizeToIndian(item.size)}
                           </p>
                         </div>
                         <span className="text-sm font-bold text-gray-900 mt-2 sm:mt-0 self-center sm:self-start">

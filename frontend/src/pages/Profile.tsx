@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { formatSizeToIndian } from '../utils/sizeHelper'
 import { LogOut, Package, Mail, User, Shield, MapPin, Key, Plus, Trash2, Edit3, Loader2, Check, X, Phone, Printer } from 'lucide-react'
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
@@ -296,7 +297,7 @@ export default function Profile() {
       <div style="margin-bottom: 6px; border-bottom: 1px dashed #eee; padding-bottom: 4px;">
         <div style="font-weight: bold; font-size: 11px;">${item.product_name}</div>
         <div style="display: flex; justify-content: space-between; font-size: 10px; color: #444; margin-top: 2px;">
-          <span>Size: ${item.size} &middot; Qty: ${item.quantity} &middot; @ ₹${(item.price / 100).toFixed(0)}</span>
+          <span>Size: \${formatSizeToIndian(item.size)} &middot; Qty: \${item.quantity} &middot; @ ₹\${(item.price / 100).toFixed(0)}</span>
           <span style="font-weight: bold; color: #000;">₹${((item.price * item.quantity) / 100).toFixed(0)}</span>
         </div>
       </div>
@@ -1130,7 +1131,7 @@ export default function Profile() {
                               <div className="flex-1 min-w-0">
                                 <h4 className="text-xs font-semibold text-gray-800 truncate">{item.name}</h4>
                                 <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
-                                  Qty: {item.qty} &middot; Color: {item.color || 'Default'} &middot; Size: {item.size}
+                                  Qty: {item.qty} &middot; Color: {item.color || 'Default'} &middot; Size: {formatSizeToIndian(item.size)}
                                 </p>
                               </div>
                             </div>
@@ -1494,7 +1495,7 @@ export default function Profile() {
                         <div className="flex-1 min-w-0">
                           <h5 className="font-semibold text-gray-800 truncate">{item.name}</h5>
                           <p className="text-[9px] text-gray-400 uppercase font-bold tracking-wider mt-0.5">
-                            Qty: {item.qty} &middot; Size: {item.size} &middot; Color: {item.color || 'Default'}
+                            Qty: {item.qty} &middot; Size: {formatSizeToIndian(item.size)} &middot; Color: {item.color || 'Default'}
                           </p>
                         </div>
                         <div className="font-mono text-gray-900 font-bold">
@@ -1573,7 +1574,7 @@ export default function Profile() {
                 >
                   {selectedOrderForExchange.items?.map((item: any, idx: number) => (
                     <option key={idx} value={idx}>
-                      {item.name} (Size: {item.size}, Color: {item.color || 'Default'}) - ₹{(item.price / 100).toLocaleString('en-IN')}
+                      {item.name} (Size: {formatSizeToIndian(item.size)}, Color: {item.color || 'Default'}) - ₹{(item.price / 100).toLocaleString('en-IN')}
                     </option>
                   ))}
                 </select>
