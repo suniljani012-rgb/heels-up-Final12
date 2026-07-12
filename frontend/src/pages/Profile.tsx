@@ -219,9 +219,50 @@ export default function Profile() {
     }
     
     setSubmittingExchange(true)
+    const convertToWebP = (file: File): Promise<File> => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              canvas.toBlob((blob) => {
+                if (blob) {
+                  const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                    type: 'image/webp'
+                  });
+                  resolve(newFile);
+                } else {
+                  resolve(file);
+                }
+              }, 'image/webp', 0.85);
+            } else {
+              resolve(file);
+            }
+          };
+          img.onerror = () => resolve(file);
+          img.src = event.target?.result as string;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+      });
+    };
+
     try {
       const uploadedUrls: string[] = []
-      for (const file of filesToUpload) {
+      for (let file of filesToUpload) {
+        const isGif = file.name.toLowerCase().endsWith('.gif') || file.type === 'image/gif';
+        const isWebp = file.name.toLowerCase().endsWith('.webp') || file.type === 'image/webp';
+        const isAvif = file.name.toLowerCase().endsWith('.avif') || file.type === 'image/avif';
+        if (!isGif && !isWebp && !isAvif) {
+          file = await convertToWebP(file);
+        }
+
         const formData = new FormData()
         formData.append('file', file)
         const uploadRes = await fetch('/api/upload', {

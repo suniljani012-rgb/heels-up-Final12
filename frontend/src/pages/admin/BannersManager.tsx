@@ -63,19 +63,59 @@ export default function BannersManager({ banners, token, onRefresh }: BannersMan
     if (!e.target.files || e.target.files.length === 0) return;
     setUploadingImage(true);
 
+    const convertToWebP = (file: File): Promise<File> => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              canvas.toBlob((blob) => {
+                if (blob) {
+                  const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                    type: 'image/webp'
+                  });
+                  resolve(newFile);
+                } else {
+                  resolve(file);
+                }
+              }, 'image/webp', 0.85);
+            } else {
+              resolve(file);
+            }
+          };
+          img.onerror = () => resolve(file);
+          img.src = event.target?.result as string;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+      });
+    };
+
     try {
       const formData = new FormData();
-      const file = e.target.files[0];
+      let file = e.target.files[0];
       
       // HEIC support
       if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
         const heic2any = (await import('heic2any')).default;
         const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
         const blob = Array.isArray(converted) ? converted[0] : converted;
-        formData.append('files', new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' }));
-      } else {
-        formData.append('files', file);
+        file = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
       }
+
+      const isGif = file.name.toLowerCase().endsWith('.gif') || file.type === 'image/gif';
+      const isWebp = file.name.toLowerCase().endsWith('.webp') || file.type === 'image/webp';
+      const isAvif = file.name.toLowerCase().endsWith('.avif') || file.type === 'image/avif';
+      if (!isGif && !isWebp && !isAvif) {
+        file = await convertToWebP(file);
+      }
+      formData.append('files', file);
 
       const res = await fetch('/api/admin/upload', {
         method: 'POST',

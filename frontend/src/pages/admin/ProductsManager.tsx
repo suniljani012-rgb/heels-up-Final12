@@ -217,6 +217,41 @@ export default function ProductsManager({ products, categories, token, onRefresh
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     setUploadingImages(true);
+
+    const convertToWebP = (file: File): Promise<File> => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0);
+              canvas.toBlob((blob) => {
+                if (blob) {
+                  const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                    type: 'image/webp'
+                  });
+                  resolve(newFile);
+                } else {
+                  resolve(file);
+                }
+              }, 'image/webp', 0.85);
+            } else {
+              resolve(file);
+            }
+          };
+          img.onerror = () => resolve(file);
+          img.src = event.target?.result as string;
+        };
+        reader.onerror = () => resolve(file);
+        reader.readAsDataURL(file);
+      });
+    };
+
     try {
       const formData = new FormData();
       let heic2anyLib: any = null;
@@ -228,14 +263,20 @@ export default function ProductsManager({ products, categories, token, onRefresh
       }
 
       for (let i = 0; i < e.target.files.length; i++) {
-        const file = e.target.files[i];
+        let file = e.target.files[i];
         if (heic2anyLib && (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic')) {
           const converted = await heic2anyLib({ blob: file, toType: 'image/jpeg', quality: 0.8 });
           const blob = Array.isArray(converted) ? converted[0] : converted;
-          formData.append('files', new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' }));
-        } else {
-          formData.append('files', file);
+          file = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
         }
+
+        const isGif = file.name.toLowerCase().endsWith('.gif') || file.type === 'image/gif';
+        const isWebp = file.name.toLowerCase().endsWith('.webp') || file.type === 'image/webp';
+        const isAvif = file.name.toLowerCase().endsWith('.avif') || file.type === 'image/avif';
+        if (!isGif && !isWebp && !isAvif) {
+          file = await convertToWebP(file);
+        }
+        formData.append('files', file);
       }
       const res = await fetch('/api/admin/upload', {
         method: 'POST',
