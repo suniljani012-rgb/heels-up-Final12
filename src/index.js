@@ -242,7 +242,7 @@ export default {
     headers.set('X-XSS-Protection', '1; mode=block');
 
     if (url.pathname.endsWith('.html') || !url.pathname.includes('.')) {
-      headers.set('Content-Security-Policy', "default-src 'self' https://*.razorpay.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https://media.heelsup.in https://*.unsplash.com https://*.razorpay.com; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com; frame-src https://*.razorpay.com; connect-src 'self' https://*.heelsup.workers.dev https://api.razorpay.com;");
+      headers.set('Content-Security-Policy', "default-src 'self' https://*.razorpay.com https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; img-src 'self' data: https://media.heelsup.in https://*.unsplash.com https://*.razorpay.com; script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://cdn.jsdelivr.net; frame-src https://*.razorpay.com; connect-src 'self' https://*.heelsup.workers.dev https://api.razorpay.com;");
     }
     return new Response(assetRes.body, { status: assetRes.status, headers });
   },

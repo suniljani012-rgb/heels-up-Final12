@@ -10,7 +10,12 @@ const ALLOWED_TYPES = [
 
 export async function uploadRouter(request, env, ctx) {
     const url = new URL(request.url);
-    const path = url.pathname.replace('/api/upload', '') || '/';
+    let path = url.pathname;
+    if (path.startsWith('/api/admin/upload')) {
+        path = path.replace('/api/admin/upload', '') || '/';
+    } else {
+        path = path.replace('/api/upload', '') || '/';
+    }
     const method = request.method;
 
     // GET /api/upload — serve file from R2
@@ -80,62 +85,79 @@ export async function uploadRouter(request, env, ctx) {
         if (authError) return authError;
         try {
             const formData = await request.formData();
-            const file = formData.get('file');
-            if (!file) return error('No file provided');
-
-            const fileName = file.name || '';
-            const fileExt = fileName.split('.').pop().toLowerCase();
-            const isHeicExt = ['heic', 'heif'].includes(fileExt);
-
-            let isAllowed = ALLOWED_TYPES.includes(file.type);
-            if (file.type === 'application/octet-stream' && !isHeicExt) {
-                isAllowed = false;
+            let files = formData.getAll('files');
+            if (!files || files.length === 0) {
+                const singleFile = formData.get('file');
+                if (singleFile) {
+                    files = [singleFile];
+                }
             }
 
-            if (!isAllowed && !isHeicExt) {
-                return error('Only JPEG, PNG, WebP, GIF, HEIC, HEIF allowed');
+            if (!files || files.length === 0) {
+                return error('No files provided', 400);
             }
 
-            const buffer = await file.arrayBuffer();
-            if (buffer.byteLength > MAX_SIZE) return error('File too large. Max 10MB');
-
-            const ext = isHeicExt ? fileExt : (file.type.split('/')[1] || 'jpeg');
-            const key = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
+            const results = [];
             const bucket = env.MEDIA || env.BUCKET;
             if (!bucket) return error('R2 bucket binding (MEDIA) not found', 500);
 
-            // Map content type for HEIC correctly
-            const contentType = isHeicExt ? `image/${ext}` : file.type;
+            for (const file of files) {
+                const fileName = file.name || '';
+                const fileExt = fileName.split('.').pop().toLowerCase();
+                const isHeicExt = ['heic', 'heif'].includes(fileExt);
 
-            await bucket.put(key, buffer, {
-                httpMetadata: { contentType },
-            });
-            const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+                let isAllowed = ALLOWED_TYPES.includes(file.type);
+                if (file.type === 'application/octet-stream' && !isHeicExt) {
+                    isAllowed = false;
+                }
 
-            // Pre-warm the Cloudflare edge cache for WebP and AVIF formats asynchronously
-            if (ctx && typeof ctx.waitUntil === 'function') {
-                ctx.waitUntil((async () => {
-                    try {
-                        const baseUrl = new URL(request.url).origin;
-                        const proxyUrl = `${baseUrl}/api/upload?key=${encodeURIComponent(key)}`;
-                        
-                        // Send request asserting WebP support
-                        await fetch(proxyUrl, {
-                            headers: { 'Accept': 'image/webp', 'User-Agent': 'Cloudflare-Cache-Warmer' }
-                        });
-                        
-                        // Send request asserting AVIF support
-                        await fetch(proxyUrl, {
-                            headers: { 'Accept': 'image/avif', 'User-Agent': 'Cloudflare-Cache-Warmer' }
-                        });
-                    } catch (warmerErr) {
-                        console.warn('Cache pre-warming failed:', warmerErr);
-                    }
-                })());
+                if (!isAllowed && !isHeicExt) {
+                    return error('Only JPEG, PNG, WebP, GIF, HEIC, HEIF allowed', 400);
+                }
+
+                const buffer = await file.arrayBuffer();
+                if (buffer.byteLength > MAX_SIZE) return error('File too large. Max 10MB', 400);
+
+                const ext = isHeicExt ? fileExt : (file.type.split('/')[1] || 'jpeg');
+                const key = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+                const contentType = isHeicExt ? `image/${ext}` : file.type;
+
+                await bucket.put(key, buffer, {
+                    httpMetadata: { contentType },
+                });
+                const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+
+                // Pre-warm the Cloudflare edge cache for WebP and AVIF formats asynchronously
+                if (ctx && typeof ctx.waitUntil === 'function') {
+                    ctx.waitUntil((async () => {
+                        try {
+                            const baseUrl = new URL(request.url).origin;
+                            const proxyUrl = `${baseUrl}/api/upload?key=${encodeURIComponent(key)}`;
+                            
+                            // Send request asserting WebP support
+                            await fetch(proxyUrl, {
+                                headers: { 'Accept': 'image/webp', 'User-Agent': 'Cloudflare-Cache-Warmer' }
+                            });
+                            
+                            // Send request asserting AVIF support
+                            await fetch(proxyUrl, {
+                                headers: { 'Accept': 'image/avif', 'User-Agent': 'Cloudflare-Cache-Warmer' }
+                            });
+                        } catch (warmerErr) {
+                            console.warn('Cache pre-warming failed:', warmerErr);
+                        }
+                    })());
+                }
+
+                results.push({ url: publicUrl, key });
             }
 
-            return ok({ url: publicUrl, key }, 'File uploaded');
+            return ok({
+                url: results[0].url,
+                key: results[0].key,
+                urls: results.map(r => r.url),
+                keys: results.map(r => r.key)
+            }, 'File(s) uploaded');
         } catch (e) {
             console.error('Upload error:', e);
             return serverError('Upload failed');
