@@ -207,7 +207,18 @@ export async function posRouter(request, env) {
                 } catch (_) { /* log non-critical */ }
             }
 
-            return created({ bill_number: saleNumber, sale_id: saleId, total }, 'POS sale recorded');
+            return new Response(JSON.stringify({
+                success: true,
+                message: 'POS sale recorded',
+                order: {
+                    order_number: saleNumber,
+                    id: saleId,
+                    total_amount: total
+                }
+            }), {
+                status: 201,
+                headers: { 'Content-Type': 'application/json' }
+            });
         } catch (e) {
             console.error('POS sale error:', e);
             return serverError('Failed to record sale');

@@ -29,6 +29,7 @@ export async function handleReceipts(request, env, path, method) {
         if (!order) return notFound('Order not found');
 
         // Customer can only access own orders
+        if (user.role === 'customer' && order.user_id !== user.id) {
             return forbidden('Forbidden');
         }
 

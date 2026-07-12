@@ -35,6 +35,20 @@ export async function paymentRouter(request, env) {
 
     if (!isValid) return err('Invalid payment signature', 400);
 
+    // Concurrency protection: Check if order already processed in database
+    const existingOrder = await env.DB.prepare(
+      "SELECT id, order_number FROM orders WHERE razorpay_order_id = ?"
+    ).bind(razorpay_order_id).first();
+
+    if (existingOrder) {
+      return ok({
+        success: true,
+        order_number: existingOrder.order_number,
+        order_id: existingOrder.id,
+        message: 'Payment successful! Order placed.',
+      });
+    }
+
     // Get pending order details from KV
     const pendingStr = await kvGet(env, `pending_order:${razorpay_order_id}`);
     if (!pendingStr) {

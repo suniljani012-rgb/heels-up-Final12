@@ -57,6 +57,23 @@ export async function adminRouter(request, env) {
     const url = new URL(request.url);
     const path = url.pathname; // e.g. /api/admin/reviews
 
+    // ── /api/admin/audit-logs ─────────────────────────────────────
+    if (path.startsWith('/api/admin/audit-logs')) {
+        try {
+            const logs = await env.DB.prepare(`
+                SELECT a.id, a.action, a.details, a.created_at, u.email as admin_email
+                FROM audit_log a
+                LEFT JOIN users u ON a.user_id = u.id
+                ORDER BY a.id DESC
+                LIMIT 500
+            `).all();
+            return ok(logs.results || []);
+        } catch (e) {
+            console.error('Fetch audit logs error:', e);
+            return serverError('Failed to fetch audit logs');
+        }
+    }
+
     // ── /api/admin/dashboard ─────────────────────────────────────
     // Returns dashboard KPIs in the shape the admin frontend expects
     if (path.startsWith('/api/admin/dashboard')) {

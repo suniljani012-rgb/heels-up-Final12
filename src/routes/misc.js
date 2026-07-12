@@ -128,12 +128,30 @@ export async function inventoryRouter(request, env) {
                 const stock = Math.max(0, parseInt(u.stock || 0));
                 if (!id) continue;
 
-                const prod = await env.DB.prepare("SELECT id, name, stock FROM products WHERE id=?").bind(id).first();
+                 const prod = await env.DB.prepare("SELECT id, name, stock, sizes_json FROM products WHERE id=?").bind(id).first();
                 if (!prod) continue;
 
                 const diff = stock - (prod.stock || 0);
 
                 await env.DB.prepare("UPDATE products SET stock=?, updated_at=? WHERE id=?").bind(stock, now, id).run();
+
+                // Sync to size-specific stock table
+                try {
+                    const sizes = JSON.parse(prod.sizes_json || '[]');
+                    if (sizes.length > 0) {
+                        const perSize = Math.floor(stock / sizes.length);
+                        const remainder = stock % sizes.length;
+                        
+                        for (let i = 0; i < sizes.length; i++) {
+                            const sizeVal = perSize + (i === 0 ? remainder : 0);
+                            await env.DB.prepare(
+                                `INSERT INTO product_size_stock (product_id, size_label, stock, updated_at)
+                                 VALUES (?, ?, ?, datetime('now'))
+                                 ON CONFLICT(product_id, size_label) DO UPDATE SET stock = excluded.stock, updated_at = datetime('now')`
+                            ).bind(id, String(sizes[i]), sizeVal).run();
+                        }
+                    }
+                } catch (_) { /* non-critical sync fail */ }
 
                 await env.DB.prepare(
                     "INSERT INTO inventory_log (product_id, product_name, change_type, quantity_before, quantity_change, quantity_after, reason, created_at) VALUES (?,?,'adjustment',?,?,?,?,?)"

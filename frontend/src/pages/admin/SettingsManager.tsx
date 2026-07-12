@@ -38,29 +38,24 @@ export default function SettingsManager({ settings, token, onRefresh }: Settings
     setSaving(true);
 
     try {
-      const keysToUpdate = Object.keys(localValues);
-      
-      // Call PUT /api/admin/settings for each key or in batch
-      // Let's call them in parallel or sequentially. Sequentially is safer, parallel is faster.
-      await Promise.all(
-        keysToUpdate.map(async (key) => {
-          const val = localValues[key];
-          await fetch(`/api/admin/settings/${key}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ value: val })
-          });
-        })
-      );
+      const res = await fetch(`/api/admin/settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(localValues)
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to save settings');
+      }
 
       showToast('success', 'Settings Saved', 'System configurations updated in database.');
       setLocalValues({});
       onRefresh();
-    } catch {
-      showToast('error', 'Sync Failure', 'Failed to update settings parameters.');
+    } catch (err: any) {
+      showToast('error', 'Sync Failure', err.message || 'Failed to update settings parameters.');
     } finally {
       setSaving(false);
     }

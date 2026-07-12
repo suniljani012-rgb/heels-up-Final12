@@ -392,8 +392,8 @@ export async function authRouter(request, env) {
                 const now = nowIso();
                 try {
                     await env.DB.prepare(
-                        "INSERT OR IGNORE INTO admin_audit_logs (admin_id, action, details, created_at) VALUES (?, 'admin_login', 'Login successful', ?)"
-                    ).bind(mapped.id, now).run();
+                        "INSERT INTO audit_log (user_id, action, entity, entity_id, details, created_at) VALUES (?, 'admin_login', 'users', ?, 'Login successful', ?)"
+                    ).bind(mapped.id, mapped.id, now).run();
                 } catch (_) { /* audit log insert error */ }
             }
 
@@ -474,8 +474,8 @@ export async function authRouter(request, env) {
             // Log successful admin login to audit log
             try {
                 await env.DB.prepare(
-                    "INSERT OR IGNORE INTO admin_audit_logs (admin_id, action, details, created_at) VALUES (?, 'admin_login', '2FA login successful', ?)"
-                ).bind(mapped.id, now).run();
+                    "INSERT INTO audit_log (user_id, action, entity, entity_id, details, created_at) VALUES (?, 'admin_login', 'users', ?, '2FA login successful', ?)"
+                ).bind(mapped.id, mapped.id, now).run();
             } catch (_) { /* audit log insert error */ }
 
             return ok({ token, user: mapped, expiresIn: tokenExpiry }, 'Login successful');
