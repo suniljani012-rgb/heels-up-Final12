@@ -6,7 +6,7 @@ function isValidEuSize(size) {
     const s = String(size).trim();
     const num = parseFloat(s);
     if (isNaN(num)) return false;
-    if (num < 35 || num > 45) return false;
+    if (num < 3 || num > 45) return false;
     if (!/^\d+(\.\d+)?$/.test(s)) return false;
     return true;
 }
@@ -569,7 +569,7 @@ export async function productsRouter(request, env) {
             }
             if (!sizeStockArray.length) return error('size_stock required (array or object)', 400);
             if (sizeStockArray.some(s => !isValidEuSize(s.size_label))) {
-                return error('Invalid size label. Must be a numeric EU shoe size between 35 and 45.', 400);
+                return error('Invalid size label. Must be a numeric size between 3 and 45.', 400);
             }
 
             const prod = await env.DB.prepare('SELECT name, stock FROM products WHERE id = ?').bind(id).first();
@@ -707,7 +707,7 @@ export async function productsRouter(request, env) {
 
             // Size Validation
             if (sizes && sizes.some(s => !isValidEuSize(s))) {
-                return error('Invalid size label. Must be a numeric EU shoe size between 35 and 45.', 400);
+                return error('Invalid size label. Must be a numeric size between 3 and 45.', 400);
             }
             if (size_stock && size_stock.some(s => !isValidEuSize(s.size_label))) {
                 return error('Invalid size label in size stock.', 400);
@@ -783,7 +783,7 @@ export async function productsRouter(request, env) {
 
             // Size Validation
             if (sizes && sizes.some(s => !isValidEuSize(s))) {
-                return error('Invalid size label. Must be a numeric EU shoe size between 35 and 45.', 400);
+                return error('Invalid size label. Must be a numeric size between 3 and 45.', 400);
             }
             if (size_stock && size_stock.some(s => !isValidEuSize(s.size_label))) {
                 return error('Invalid size label in size stock.', 400);
