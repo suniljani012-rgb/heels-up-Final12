@@ -24,7 +24,7 @@ import { blogsPublicRouter } from './routes/blogs.js';
 import { pagesPublicRouter } from './routes/pages.js';
 import { adminRouter } from './routes/admin.js';
 import { announcementsRouter } from './routes/announcements.js';
-import { colorsRouter } from './routes/colors.js';
+
 import { addressesRouter } from './routes/addresses.js';
 import { returnsCustomerRouter } from './routes/returns.js';
 import { json } from './utils/response.js';
@@ -61,7 +61,7 @@ export default {
       const isCacheable = method === "GET" && !pathNormalized.startsWith("/api/admin") && (
         pathNormalized === "/api/banners" ||
         pathNormalized === "/api/categories" ||
-        pathNormalized === "/api/colors" ||
+
         pathNormalized === "/api/settings" ||
         pathNormalized === "/api/settings/public" ||
         pathNormalized === "/api/products" ||
@@ -131,7 +131,7 @@ export default {
         }
         else if (path.startsWith('/api/auth')) response = await authRouter(request, env);
         else if (path.startsWith('/api/products')) response = await productsRouter(request, env);
-        else if (path.startsWith('/api/colors')) response = await colorsRouter(request, env);
+
         else if (path.startsWith('/api/addresses')) response = await addressesRouter(request, env);
         else if (path.startsWith('/api/returns')) response = await returnsCustomerRouter(request, env);
         else if (path.startsWith('/api/orders')) response = await ordersRouter(request, env);
@@ -202,9 +202,7 @@ export default {
         try {
           const cache = caches.default;
           const pathsToInvalidate = [];
-          if (pathNormalized.startsWith("/api/colors") || pathNormalized.startsWith("/api/admin/colors")) {
-            pathsToInvalidate.push(new URL("/api/colors", url.origin).toString());
-          }
+
           if (pathNormalized.startsWith("/api/products") || pathNormalized.startsWith("/api/admin/products")) {
             pathsToInvalidate.push(new URL("/api/products", url.origin).toString());
             const match = pathNormalized.match(/^\/api\/(admin\/)?products\/(\d+)/);

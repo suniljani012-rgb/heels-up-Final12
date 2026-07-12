@@ -24,21 +24,7 @@ interface ProductDetail {
   colors?: string[];
 }
 
-let globalColorMap: Record<string, string> = {}
 
-const getColorHex = (name: string) => {
-  const clean = name.toLowerCase().trim()
-  return globalColorMap[clean] || clean
-}
-
-const extractColorFromName = (name: string) => {
-  if (!name) return 'Default'
-  const parts = name.split(' - ')
-  if (parts.length > 1) {
-    return parts[parts.length - 1].trim()
-  }
-  return 'Default'
-}
 
 interface Review {
   id: number;
@@ -66,28 +52,14 @@ export default function Product() {
   const [images, setImages] = useState<string[]>([])
   const [related, setRelated] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [colorsLoaded, setColorsLoaded] = useState(false)
+
 
   const [activeImage, setActiveImage] = useState('')
   const [selectedSize, setSelectedSize] = useState('')
   const [selectedColor, setSelectedColor] = useState('Default')
   const [qty, setQty] = useState(1)
 
-  useEffect(() => {
-    fetch('/api/colors')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.data) {
-          const map: Record<string, string> = {}
-          data.data.forEach((c: any) => {
-            map[c.color_name.toLowerCase().trim()] = c.hex_code
-          })
-          globalColorMap = map
-          setColorsLoaded(true)
-        }
-      })
-      .catch(err => console.error("Error loading colors:", err))
-  }, [])
+
   const [showSizeGuide, setShowSizeGuide] = useState(false)
   const [activeGuideTab, setActiveGuideTab] = useState<'chart' | 'ai'>('chart')
   const [fitLengthCm, setFitLengthCm] = useState(23.5)
@@ -194,7 +166,7 @@ export default function Product() {
         setImages(parsed.images || [])
         if (parsed.images?.length > 0) setActiveImage(parsed.images[0])
         if (parsed.product.sizes?.length > 0) setSelectedSize(parsed.product.sizes[0])
-        if (parsed.product.colors?.length > 0) setSelectedColor(extractColorFromName(parsed.product.name))
+
         setRelated(parsed.related || [])
         setLoading(false)
         hasCached = true
@@ -231,9 +203,7 @@ export default function Product() {
           if (detail.sizes?.length > 0 && (!selectedSize || !hasCached)) {
             setSelectedSize(detail.sizes[0])
           }
-          if (detail.colors?.length > 0 && (!selectedColor || !hasCached)) {
-            setSelectedColor(extractColorFromName(detail.name))
-          }
+
 
           // Fetch related products
           const relatedRes = await fetch(`/api/products?limit=4&cat=${detail.category}`)
@@ -309,13 +279,7 @@ export default function Product() {
     showToast('success', 'Added to Bag 🛍️', `${product.name} (Size ${selectedSize}) has been added.`)
   }
 
-  const handleColorChange = (color: string) => {
-    setSelectedColor(color)
-    if (product && (product as any).color_to_id && (product as any).color_to_id[color]) {
-      const targetId = (product as any).color_to_id[color]
-      navigate(`/product?id=${targetId}`)
-    }
-  }
+
 
   const handleWishlistClick = async () => {
     if (!token) {
@@ -375,7 +339,7 @@ export default function Product() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-8 mt-12 min-h-screen relative select-none" data-colors-loaded={colorsLoaded}>
+    <div className="max-w-7xl mx-auto px-6 md:px-8 mt-12 min-h-screen relative select-none">
       {/* Product Detail Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Left: Image Gallery */}
@@ -436,31 +400,7 @@ export default function Product() {
             {/* MRP Cross-out and percentage removed as per requirements */}
           </div>
 
-          {/* Color Picker */}
-          {product.colors && product.colors.length > 0 && (
-            <div className="space-y-3">
-              <span className="text-xs font-semibold text-gray-900 block">Select Color: <span className="text-gray-500 font-normal">{selectedColor}</span></span>
-              <div className="flex items-center gap-2.5">
-                {product.colors.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => handleColorChange(color)}
-                    className={`h-9 px-4 text-xs font-bold rounded-lg border transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                      selectedColor === color
-                        ? 'border-primary bg-primary text-white shadow-sm'
-                        : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    <span
-                      className="w-3.5 h-3.5 rounded-full border border-black/10"
-                      style={{ backgroundColor: getColorHex(color) }}
-                    />
-                    <span>{color}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+
 
           {/* Size picker */}
           {product.sizes?.length > 0 && (
@@ -922,19 +862,7 @@ export default function Product() {
                 <div>
                   <h4 className="text-xs font-semibold text-gray-800 line-clamp-1">{prod.name}</h4>
 
-                  {/* Related Color Options */}
-                  {prod.colors && prod.colors.length > 0 && (
-                    <div className="flex items-center gap-1 mt-0.5 mb-0.5">
-                      {prod.colors.map((colorName: string) => (
-                        <span
-                          key={colorName}
-                          title={colorName}
-                          className="w-2.5 h-2.5 rounded-full border border-gray-200 shadow-sm"
-                          style={{ backgroundColor: getColorHex(colorName) }}
-                        />
-                      ))}
-                    </div>
-                  )}
+
 
                   <span className="text-xs font-bold text-gray-900 mt-1 block">
                     ₹{(prod.price / 100).toLocaleString('en-IN')}

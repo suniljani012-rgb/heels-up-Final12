@@ -43,26 +43,7 @@ const getInitials = (name: string) => {
 
 
 
-let globalColorMap: Record<string, string> = {}
 
-const getColorHex = (name: string) => {
-  const clean = name.toLowerCase().trim()
-  const map: Record<string, string> = {
-    black: '#1a1a1a',
-    cream: '#f9f1e3',
-    white: '#ffffff',
-    cherry: '#7a1b32',
-    brown: '#8b5a2b',
-    nude: '#e3bc9a',
-    beige: '#f5f5dc',
-    tan: '#b08d57',
-    gold: '#d4af37',
-    silver: '#c0c0c0',
-    grey: '#808080',
-    pink: '#ffb6c1'
-  }
-  return globalColorMap[clean] || map[clean] || clean
-}
 
 
 
@@ -91,17 +72,7 @@ function useBanners() {
   });
 }
 
-function useColors() {
-  return useQuery({
-    queryKey: ['colors'],
-    queryFn: async () => {
-      const res = await fetch('/api/co' + 'lors');
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Failed to fetch colors');
-      return data.data;
-    }
-  });
-}
+
 
 function useLatestReviews() {
   return useQuery({
@@ -140,19 +111,9 @@ export default function Home() {
   const { data: categories = [] } = useCategories()
   const { data: fetchedBanners } = useBanners()
   const { data: featuredProducts = [] } = useFeaturedProducts()
-  const { data: colorsData } = useColors()
   const { data: liveReviews = [] } = useLatestReviews()
 
   const banners = fetchedBanners || []
-
-  const colorsLoaded = !!colorsData
-  if (colorsData) {
-    const map: Record<string, string> = {}
-    colorsData.forEach((c: any) => {
-      map[c.color_name.toLowerCase().trim()] = c.hex_code
-    })
-    globalColorMap = map
-  }
 
   const resolveBannerLink = (link: string | null | undefined) => {
     if (!link) return '/shop';
@@ -230,7 +191,7 @@ export default function Home() {
   }
 
   return (
-    <div className="w-full" data-colors-loaded={colorsLoaded}>
+    <div className="w-full">
       {/* Hero Carousel */}
       {banners.length > 0 && (
         <section className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden bg-gray-100 select-none">
@@ -422,19 +383,7 @@ export default function Home() {
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest capitalize">{prod.category}</span>
                     <h3 className="text-xs font-semibold text-gray-800 line-clamp-1">{prod.name}</h3>
 
-                    {/* Color Options */}
-                    {prod.colors && prod.colors.length > 0 && (
-                      <div className="flex items-center gap-1.5 mt-0.5 mb-0.5">
-                        {prod.colors.map((colorName: string) => (
-                          <span
-                            key={colorName}
-                            title={colorName}
-                            className="w-3 h-3 rounded-full border border-gray-200 shadow-sm"
-                            style={{ backgroundColor: getColorHex(colorName) }}
-                          />
-                        ))}
-                      </div>
-                    )}
+
                     
                     {/* Stars */}
                     <div className="flex items-center gap-1 text-amber-500">

@@ -23,7 +23,6 @@
     '/api/settings',
     '/api/orders/my',
     '/api/addresses',
-    '/api/colors',
     '/api/auth/profile'
   ];
 

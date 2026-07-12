@@ -22,12 +22,7 @@ interface Product {
   colors?: string[];
 }
 
-let globalColorMap: Record<string, string> = {}
 
-const getColorHex = (name: string) => {
-  const clean = name.toLowerCase().trim()
-  return globalColorMap[clean] || clean
-}
 
 
 function useCategories() {
@@ -42,17 +37,7 @@ function useCategories() {
   });
 }
 
-function useColors() {
-  return useQuery({
-    queryKey: ['colors'],
-    queryFn: async () => {
-      const res = await fetch('/api/co' + 'lors');
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Failed to fetch colors');
-      return data.data;
-    }
-  });
-}
+
 
 function useShopProducts(filters: any) {
   const queryClient = useQueryClient();
@@ -68,7 +53,7 @@ function useShopProducts(filters: any) {
       if (filters.priceMin) queryParams.set('min_price', String(Number(filters.priceMin) * 100));
       if (filters.priceMax) queryParams.set('max_price', String(Number(filters.priceMax) * 100));
       if (filters.size) queryParams.set('size', filters.size);
-      if (filters.color) queryParams.set('color', filters.color);
+
 
       const res = await fetch('/api/pro' + 'ducts?' + queryParams.toString());
       const data = await res.json();
@@ -115,26 +100,15 @@ export default function Shop() {
     searchQ,
     priceMin,
     priceMax,
-    size,
-    color
-  }), [page, category, sort, searchQ, priceMin, priceMax, size, color])
+    size
+  }), [page, category, sort, searchQ, priceMin, priceMax, size])
 
   const { data: shopData, isLoading: loading } = useShopProducts(filters)
   const { data: categories = [] } = useCategories()
-  const { data: colorsData } = useColors()
 
   const products = shopData?.data || []
   const totalPages = shopData?.pagination?.pages || 1
   const totalProducts = shopData?.pagination?.total || 0
-
-  const colorsLoaded = !!colorsData
-  if (colorsData) {
-    const map: Record<string, string> = {}
-    colorsData.forEach((c: any) => {
-      map[c.color_name.toLowerCase().trim()] = c.hex_code
-    })
-    globalColorMap = map
-  }
 
 
 
@@ -200,7 +174,7 @@ export default function Shop() {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-6 md:px-8 mt-12 min-h-screen" data-colors-loaded={colorsLoaded}>
+    <div className="max-w-7xl mx-auto px-6 md:px-8 mt-12 min-h-screen">
       {/* Title */}
       <div className="border-b border-gray-100 pb-6 mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -306,31 +280,7 @@ export default function Shop() {
             </div>
           </div>
 
-          {/* Filter by Color */}
-          <div className="border border-gray-100 rounded-xl p-6 bg-white shadow-sm">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 mb-4">Filter by Color</h3>
-            <div className="flex flex-wrap gap-2">
-              {Object.keys(globalColorMap).map((colorName) => {
-                const hex = globalColorMap[colorName]
-                const isSelected = color.toLowerCase() === colorName
-                return (
-                  <button
-                    key={colorName}
-                    onClick={() => updateParam('color', isSelected ? '' : colorName)}
-                    title={colorName.charAt(0).toUpperCase() + colorName.slice(1)}
-                    className={`w-7 h-7 rounded-full border transition-all relative flex items-center justify-center cursor-pointer ${
-                      isSelected ? 'border-primary ring-2 ring-primary/30 scale-110' : 'border-gray-200 hover:border-gray-400'
-                    }`}
-                    style={{ backgroundColor: hex }}
-                  >
-                    {isSelected && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+
         </div>
 
         {/* Products Grid Section */}
@@ -423,19 +373,7 @@ export default function Shop() {
                       <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest capitalize">{prod.category}</span>
                       <h3 className="text-xs font-semibold text-gray-800 line-clamp-1">{prod.name}</h3>
 
-                      {/* Color Options */}
-                      {prod.colors && prod.colors.length > 0 && (
-                        <div className="flex items-center gap-1.5 mt-0.5 mb-0.5">
-                          {prod.colors.map((colorName: string) => (
-                            <span
-                              key={colorName}
-                              title={colorName}
-                              className="w-3 h-3 rounded-full border border-gray-200 shadow-sm"
-                              style={{ backgroundColor: getColorHex(colorName) }}
-                            />
-                          ))}
-                        </div>
-                      )}
+
                       
                       {/* Stars */}
                       <div className="flex items-center gap-1 text-amber-500">

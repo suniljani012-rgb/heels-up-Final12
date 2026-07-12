@@ -24,17 +24,7 @@ export function useBanners() {
   });
 }
 
-export function useColors() {
-  return useQuery({
-    queryKey: ['colors'],
-    queryFn: async () => {
-      const res = await fetch('/api/colors');
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Failed to fetch colors');
-      return data.data;
-    }
-  });
-}
+
 
 export function useLatestReviews() {
   return useQuery({
@@ -68,7 +58,6 @@ export function useShopProducts(filters: {
   priceMin: string;
   priceMax: string;
   size: string;
-  color: string;
 }) {
   const queryClient = useQueryClient();
   return useQuery({
@@ -83,7 +72,6 @@ export function useShopProducts(filters: {
       if (filters.priceMin) queryParams.set('min_price', String(Number(filters.priceMin) * 100)); // to paise
       if (filters.priceMax) queryParams.set('max_price', String(Number(filters.priceMax) * 100)); // to paise
       if (filters.size) queryParams.set('size', filters.size);
-      if (filters.color) queryParams.set('color', filters.color);
 
       const res = await fetch(`/api/products?${queryParams.toString()}`);
       const data = await res.json();
