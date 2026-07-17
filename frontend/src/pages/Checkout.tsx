@@ -114,12 +114,30 @@ export default function Checkout() {
   const subtotalRupees = subtotalPaise / 100
   const baseSubtotalRupees = items.reduce((sum, item) => sum + (item.price / 100) * item.qty, 0)
   const isFree = baseSubtotalRupees >= 1599
-  const totalShippingFee = isFree ? 0 : (deliveryFee * items.reduce((sum, item) => sum + item.qty, 0))
   
-  // Shipping charge shown on checkout is 0 because it's built into item prices
-  const shippingCharge = 0
+  // Under ₹1599, add ₹49 flat delivery charge at checkout
+  const shippingCharge = isFree ? 0 : 49
   const discountRupees = discountVal / 100
-  const totalRupees = Math.max(0, subtotalRupees - discountRupees)
+  
+  // Calculate total before rounding
+  const rawTotalRupees = Math.max(0, subtotalRupees + shippingCharge - discountRupees)
+  
+  // Round the final total to end in 49 or 99
+  const roundRupeesValue = (val: number): number => {
+    if (val <= 0) return 0;
+    const ceilVal = Math.ceil(val)
+    const hundreds = Math.floor(ceilVal / 100)
+    const remainder = ceilVal % 100
+    if (remainder <= 49) {
+      return hundreds * 100 + 49
+    } else {
+      return hundreds * 100 + 99
+    }
+  }
+  const totalRupees = roundRupeesValue(rawTotalRupees)
+  
+  // Back-calculate the delivery fee to pass to the backend so the database is balanced and validated correctly
+  const totalShippingFee = Math.max(0, totalRupees - baseSubtotalRupees + discountRupees)
 
   // Live pincode delivery check
   useEffect(() => {
@@ -570,8 +588,8 @@ export default function Checkout() {
                   Delivery Charges
                   {checkingDelivery && <span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin inline-block" />}
                 </span>
-                <span className="text-emerald-700 font-bold">
-                  🚚 FREE
+                <span className={shippingCharge === 0 ? 'text-emerald-700 font-bold' : 'text-gray-900 font-semibold'}>
+                  {shippingCharge === 0 ? '🚚 FREE' : `₹${shippingCharge}`}
                   {pincode.length === 6 && deliveryCity && (
                     <span className="text-[10px] text-gray-400 ml-1">({deliveryDays} days)</span>
                   )}

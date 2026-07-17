@@ -34,10 +34,23 @@ export default function Cart() {
 
   const subtotalPaise = getCartSubtotal()
   const subtotalRupees = subtotalPaise / 100
-  const freeShippingThreshold = 1599
-  const shippingCharge = subtotalRupees >= freeShippingThreshold || subtotalRupees === 0 ? 0 : 49 // ₹49 min shipping (zone-based at checkout)
+  const baseSubtotalRupees = items.reduce((sum, item) => sum + (item.price / 100) * item.qty, 0)
+  const isFree = baseSubtotalRupees >= 1599
+  const shippingCharge = isFree || subtotalRupees === 0 ? 0 : 49
   
-  const finalTotalPaise = Math.max(0, subtotalPaise - discountVal + (shippingCharge * 100))
+  const rawTotalRupees = Math.max(0, subtotalRupees + shippingCharge - (discountVal / 100))
+  const roundRupeesValue = (val: number): number => {
+    if (val <= 0) return 0;
+    const ceilVal = Math.ceil(val)
+    const hundreds = Math.floor(ceilVal / 100)
+    const remainder = ceilVal % 100
+    if (remainder <= 49) {
+      return hundreds * 100 + 49
+    } else {
+      return hundreds * 100 + 99
+    }
+  }
+  const finalTotalRupees = roundRupeesValue(rawTotalRupees)
 
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -263,8 +276,8 @@ export default function Cart() {
                 )}
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span className="font-semibold text-emerald-700 font-bold">
-                    FREE
+                  <span className={shippingCharge === 0 ? 'text-emerald-700 font-bold' : 'text-gray-900 font-semibold'}>
+                    {shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}
                   </span>
                 </div>
               </div>
@@ -272,13 +285,13 @@ export default function Cart() {
               {/* Free Shipping Meter */}
               {shippingCharge > 0 && (
                 <div className="text-[10px] text-gray-500 leading-relaxed bg-[#f0ede5] p-3 rounded-lg border border-gray-200/40">
-                  Add <span className="font-bold text-gray-900">₹{(freeShippingThreshold - subtotalRupees).toFixed(0)}</span> more to qualify for <span className="text-[#8c6033] font-bold">FREE Shipping!</span>
+                  Add <span className="font-bold text-gray-900">₹{(1599 - baseSubtotalRupees).toFixed(0)}</span> more to qualify for <span className="text-[#8c6033] font-bold">FREE Shipping!</span>
                 </div>
               )}
 
               <div className="border-t border-gray-200 pt-4 flex justify-between text-sm font-semibold text-gray-900">
                 <span>Grand Total</span>
-                <span>₹{(finalTotalPaise / 100).toLocaleString('en-IN')}</span>
+                <span>₹{finalTotalRupees.toLocaleString('en-IN')}</span>
               </div>
 
               <button

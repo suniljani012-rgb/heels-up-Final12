@@ -16,9 +16,10 @@ export default function CartDrawer() {
 
   const subtotalPaise = getCartSubtotal()
   const subtotalRupees = subtotalPaise / 100
+  const baseSubtotalRupees = items.reduce((sum, item) => sum + (item.price / 100) * item.qty, 0)
   const freeShippingThreshold = 1599
-  const progressPercent = Math.min(100, (subtotalRupees / freeShippingThreshold) * 100)
-  const remainingForFree = Math.max(0, freeShippingThreshold - subtotalRupees)
+  const progressPercent = Math.min(100, (baseSubtotalRupees / freeShippingThreshold) * 100)
+  const remainingForFree = Math.max(0, freeShippingThreshold - baseSubtotalRupees)
 
   const handleCheckoutClick = () => {
     setCartOpen(false)

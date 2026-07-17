@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { roundToProfessionalPrice } from '../utils/priceHelper'
 
 export interface CartItem {
   id: number;
@@ -134,12 +135,14 @@ export const useCartStore = create<CartState>((set, get) => {
     getCartSubtotal: () => {
       const baseSubtotal = get().items.reduce((sum, item) => sum + item.price * item.qty, 0);
       if (baseSubtotal >= 159900 || baseSubtotal === 0) {
-        return baseSubtotal;
+        return get().items.reduce((sum, item) => {
+          return sum + roundToProfessionalPrice(item.price) * item.qty;
+        }, 0);
       }
       return get().items.reduce((sum, item) => {
         const itemBasePrice = item.price;
         const displayedItemPrice = itemBasePrice >= 159900 ? itemBasePrice : itemBasePrice + (get().shippingFeeRupees * 100);
-        return sum + displayedItemPrice * item.qty;
+        return sum + roundToProfessionalPrice(displayedItemPrice) * item.qty;
       }, 0);
     },
     getCartTotal: () => {
