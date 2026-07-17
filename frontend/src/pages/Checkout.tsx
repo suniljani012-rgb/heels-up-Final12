@@ -653,7 +653,7 @@ export default function Checkout() {
             </div>
 
             {paymentMethod === 'cod' && (
-              <div className="bg-emerald-50/50 border border-emerald-200/60 rounded-xl p-4 space-y-3.5 select-none">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3.5 select-none shadow-sm">
                 <div className="flex gap-2">
                   <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                   <div className="space-y-1">
@@ -665,18 +665,18 @@ export default function Checkout() {
                   </div>
                 </div>
                 
-                <div className="border-t border-emerald-200/40 pt-2.5 space-y-1.5 text-[10px] font-medium text-emerald-900">
-                  <div className="flex justify-between">
+                <div className="border-t border-emerald-200/50 pt-2.5 space-y-1.5 text-[10px] font-medium text-emerald-900">
+                  <div className="flex justify-between px-2">
                     <span>Order Total:</span>
                     <span className="font-bold">₹{totalRupees.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between text-emerald-800 font-semibold bg-emerald-500/5 px-1.5 py-1 rounded border border-emerald-500/10">
+                  <div className="flex justify-between text-emerald-950 font-bold bg-emerald-500/10 px-2 py-1.5 rounded-lg border border-emerald-500/20">
                     <span>Pay Online (Advance):</span>
-                    <span className="font-bold">₹{Math.round(totalRupees * 0.10).toLocaleString('en-IN')}</span>
+                    <span>₹{Math.round(totalRupees * 0.10).toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between text-gray-700">
+                  <div className="flex justify-between text-gray-800 font-semibold px-2 py-0.5">
                     <span>Remaining COD to pay Courier:</span>
-                    <span className="font-bold">₹{(totalRupees - Math.round(totalRupees * 0.10)).toLocaleString('en-IN')}</span>
+                    <span>₹{(totalRupees - Math.round(totalRupees * 0.10)).toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>
