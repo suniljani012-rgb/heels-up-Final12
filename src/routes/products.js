@@ -608,9 +608,9 @@ export async function productsRouter(request, env) {
             const results = [];
             // 1. Validation Pass
             for (const item of products) {
-                const { name, sku, price, mrp, sizes, size_stock } = item;
-                if (!name || !sku || !price) {
-                    return error('Name, SKU and price are required for all products', 400);
+                const { name, price, mrp, sizes, size_stock } = item;
+                if (!name || !price) {
+                    return error('Name and price are required for all products', 400);
                 }
                 const parsedPrice = parseFloat(price);
                 if (isNaN(parsedPrice) || parsedPrice < 0) {
@@ -637,21 +637,24 @@ export async function productsRouter(request, env) {
                 }
             }
 
-            // 2. Execution Pass (with duplicate SKU skipping)
+            // 2. Execution Pass (with duplicate & blank SKU skipping)
             const seenSkus = new Set();
             for (const item of products) {
                 const { name, sku, category, description, price, mrp, stock, sizes, images, brand, tags, is_new, is_trending, is_featured, size_stock } = item;
                 
-                const cleanSku = String(sku).trim();
+                const cleanSku = sku ? String(sku).trim().toUpperCase() : '';
+                if (cleanSku === '' || cleanSku === 'NULL' || cleanSku === 'UNDEFINED') {
+                    continue; // Skip blank/null/undefined SKUs
+                }
                 if (seenSkus.has(cleanSku)) {
-                    continue; // Skip duplicate SKU in same payload
+                    continue; // Skip duplicate SKUs in the same batch
                 }
                 seenSkus.add(cleanSku);
 
                 try {
-                    const existing = await env.DB.prepare('SELECT id FROM products WHERE sku = ?').bind(cleanSku).first();
+                    const existing = await env.DB.prepare('SELECT id FROM products WHERE UPPER(sku) = ?').bind(cleanSku).first();
                     if (existing) {
-                        continue; // Skip duplicate SKU in database
+                        continue; // Skip duplicate SKUs already in the database
                     }
 
                     const result = await env.DB.prepare(
@@ -703,7 +706,15 @@ export async function productsRouter(request, env) {
         try {
             const body = await request.json();
             const { name, sku, category, description, price, mrp, stock, sizes, images, brand, tags, is_new, is_trending, is_featured, meta_title, meta_desc, size_stock } = body;
-            if (!name || !sku || !price) return error('Name, SKU and price are required');
+            const cleanSku = sku ? String(sku).trim().toUpperCase() : '';
+            if (!name || !cleanSku || !price) return error('Name, SKU and price are required');
+            if (cleanSku === 'NULL' || cleanSku === 'UNDEFINED') return error('Invalid SKU', 400);
+
+            // Check database for uniqueness
+            const existing = await env.DB.prepare('SELECT id FROM products WHERE UPPER(sku) = ?').bind(cleanSku).first();
+            if (existing) {
+                return error('Product with this SKU already exists', 409);
+            }
 
             // Size Validation
             if (sizes && sizes.some(s => !isValidEuSize(s))) {
@@ -738,7 +749,7 @@ export async function productsRouter(request, env) {
                 `INSERT INTO products (name, sku, category, description, price, original_price, stock, active, featured, is_new, is_trending, show_mrp, sizes_json, images_json, brand, tags, meta_title, meta_description, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *`
             ).bind(
-                name, sku, category || null, description || null,
+                name, cleanSku, category || null, description || null,
                 parsedPrice, mrp ? parseFloat(mrp) : null,
                 parseInt(stock || 0), is_featured ? 1 : 0, is_new ? 1 : 0, is_trending ? 1 : 0,
                 body.show_mrp !== false ? 1 : 0,
