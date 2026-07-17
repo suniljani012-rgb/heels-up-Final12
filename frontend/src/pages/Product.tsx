@@ -611,11 +611,6 @@ export default function Product() {
             ) : editingPincode || !deliveryPincode ? (
               // Pincode input
               <div className="space-y-2">
-                {deliveryInfo && (
-                  <p className="text-[10px] text-amber-700 font-medium bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
-                    📍 Showing max estimate (₹{deliveryInfo.feeRupees}). Enter pincode for exact price.
-                  </p>
-                )}
                 <div className="flex gap-2">
                   <input
                     type="text"
