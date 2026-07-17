@@ -74,7 +74,7 @@ const getProxyUrl = (urlStr: string): string => {
 
 export default function HeicImage({
   src,
-  fallback = 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=600&auto=format&fit=crop',
+  fallback = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
   className = '',
   loading = 'eager',
   fetchpriority = 'high',
@@ -82,9 +82,11 @@ export default function HeicImage({
   style,
   ...props
 }: HeicImageProps) {
+  const [renderedSrc, setRenderedSrc] = useState<string>('');
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const objectUrlRef = useRef<string | null>(null);
 
   // Inject shimmer CSS once
   useEffect(() => { injectShimmer(); }, []);
@@ -97,7 +99,68 @@ export default function HeicImage({
     }
   }, []);
 
-  const displaySrc = errored || !src ? fallback : getProxyUrl(src);
+  useEffect(() => {
+    let active = true;
+
+    const loadAndProcess = async () => {
+      if (!src) {
+        setRenderedSrc(fallback);
+        return;
+      }
+      const proxyUrl = getProxyUrl(src);
+      // Check if this is a HEIC/HEIF image key or URL
+      const isHeic = proxyUrl.toLowerCase().includes('.heic') || proxyUrl.toLowerCase().includes('.heif') || (proxyUrl.toLowerCase().includes('key=') && (proxyUrl.toLowerCase().endsWith('%2fheic') || proxyUrl.toLowerCase().endsWith('%2fheif') || proxyUrl.toLowerCase().includes('.heic') || proxyUrl.toLowerCase().includes('.heif')));
+
+      if (isHeic) {
+        try {
+          const res = await fetch(proxyUrl);
+          if (!res.ok) throw new Error('Fetch failed');
+          const blob = await res.blob();
+
+          if (!active) return;
+
+          const heic2anyModule = await import('heic2any');
+          const heic2any = heic2anyModule.default;
+
+          const converted = await heic2any({ blob, toType: 'image/jpeg', quality: 0.95 });
+          const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
+
+          if (!active) return;
+
+          const localUrl = URL.createObjectURL(jpegBlob);
+
+          if (objectUrlRef.current) {
+            URL.revokeObjectURL(objectUrlRef.current);
+          }
+          objectUrlRef.current = localUrl;
+          setRenderedSrc(localUrl);
+          setLoaded(true);
+        } catch (err) {
+          console.error('[HeicImage] Client-side HEIC conversion failed:', err);
+          if (active) {
+            setRenderedSrc(fallback);
+            setErrored(true);
+          }
+        }
+      } else {
+        setRenderedSrc(proxyUrl);
+        // Reset loaded state for new standard sources to trigger load check correctly
+        setErrored(false);
+      }
+    };
+
+    loadAndProcess();
+
+    return () => {
+      active = false;
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+    };
+  }, [src, fallback]);
+
+  const displaySrc = errored || !src ? fallback : renderedSrc;
 
   return (
     <img
