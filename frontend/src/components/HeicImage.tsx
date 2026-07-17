@@ -49,6 +49,15 @@ const getProxyUrl = (urlStr: string): string => {
   }
   try {
     const parsed = new URL(urlStr);
+    
+    // If it is already an /api/upload URL, extract the actual key parameter directly
+    if (parsed.pathname.includes('/api/upload')) {
+      const queryKey = parsed.searchParams.get('key');
+      if (queryKey) {
+        return `/api/upload?key=${encodeURIComponent(queryKey)}`;
+      }
+    }
+    
     if (
       parsed.hostname.includes('r2.dev') ||
       parsed.hostname.includes('heelsup.in') ||
@@ -65,7 +74,7 @@ const getProxyUrl = (urlStr: string): string => {
 
 export default function HeicImage({
   src,
-  fallback = 'assets/placeholder.jpg',
+  fallback = 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=600&auto=format&fit=crop',
   className = '',
   loading = 'eager',
   fetchpriority = 'high',
