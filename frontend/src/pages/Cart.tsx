@@ -263,8 +263,8 @@ export default function Cart() {
                 )}
                 <div className="flex justify-between">
                   <span>Shipping</span>
-                  <span className="font-semibold text-gray-900">
-                    {shippingCharge === 0 ? <span className="text-emerald-700 font-bold">FREE</span> : `₹${shippingCharge}`}
+                  <span className="font-semibold text-emerald-700 font-bold">
+                    FREE
                   </span>
                 </div>
               </div>

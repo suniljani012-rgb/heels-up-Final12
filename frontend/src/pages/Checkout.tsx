@@ -112,10 +112,14 @@ export default function Checkout() {
   // Calculations
   const subtotalPaise = getCartSubtotal()
   const subtotalRupees = subtotalPaise / 100
-  const freeShippingThreshold = 1599
-  const shippingCharge = subtotalRupees >= freeShippingThreshold ? 0 : deliveryFee
+  const baseSubtotalRupees = items.reduce((sum, item) => sum + (item.price / 100) * item.qty, 0)
+  const isFree = baseSubtotalRupees >= 1599
+  const totalShippingFee = isFree ? 0 : (deliveryFee * items.reduce((sum, item) => sum + item.qty, 0))
+  
+  // Shipping charge shown on checkout is 0 because it's built into item prices
+  const shippingCharge = 0
   const discountRupees = discountVal / 100
-  const totalRupees = Math.max(0, subtotalRupees + shippingCharge - discountRupees)
+  const totalRupees = Math.max(0, subtotalRupees - discountRupees)
 
   // Live pincode delivery check
   useEffect(() => {
@@ -225,7 +229,7 @@ export default function Checkout() {
           country: 'India'
         },
         deliveryMethod: 'Standard',
-        deliveryFee: shippingCharge,
+        deliveryFee: totalShippingFee,
         paymentMethod: paymentMethod === 'cod' ? 'COD' : null,
         notes,
         couponCode: appliedCoupon,
@@ -566,8 +570,8 @@ export default function Checkout() {
                   Delivery Charges
                   {checkingDelivery && <span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin inline-block" />}
                 </span>
-                <span className={shippingCharge === 0 ? 'text-emerald-700 font-bold' : ''}>
-                  {shippingCharge === 0 ? '🚚 FREE' : `₹${shippingCharge}`}
+                <span className="text-emerald-700 font-bold">
+                  🚚 FREE (Included)
                   {pincode.length === 6 && deliveryCity && (
                     <span className="text-[10px] text-gray-400 ml-1">({deliveryDays} days)</span>
                   )}

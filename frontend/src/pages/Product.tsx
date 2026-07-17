@@ -638,13 +638,8 @@ export default function Product() {
                 ) : (
                   <p className="text-[10px] text-gray-500 font-medium">📍 Pincode: {deliveryPincode}</p>
                 )}
-                <p className={`text-xs font-bold flex items-center gap-1.5 ${
-                  deliveryInfo.isFree ? 'text-emerald-700' : 'text-gray-900'
-                }`}>
-                  🚚 {deliveryInfo.isFree
-                    ? 'FREE Delivery'
-                    : `Delivery ₹${deliveryInfo.feeRupees}`
-                  }
+                <p className="text-xs font-bold flex items-center gap-1.5 text-emerald-700">
+                  🚚 FREE Delivery
                   <span className="text-[10px] font-normal text-gray-500">· Arrives in {deliveryInfo.estimatedDays} days</span>
                 </p>
                 <div className="flex items-center gap-3">
@@ -655,11 +650,6 @@ export default function Product() {
                   ) : (
                     <span className="text-[10px] font-bold text-rose-600 flex items-center gap-1">
                       ❌ COD Not Available — Pay Online
-                    </span>
-                  )}
-                  {!deliveryInfo.isFree && (
-                    <span className="text-[10px] text-gray-400">
-                      FREE above ₹1,599
                     </span>
                   )}
                 </div>

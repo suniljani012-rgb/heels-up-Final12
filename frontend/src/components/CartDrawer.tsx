@@ -155,7 +155,7 @@ export default function CartDrawer() {
                   <span>₹{subtotalRupees.toLocaleString('en-IN')}</span>
                 </div>
                 <p className="text-[10px] text-gray-500 mb-4 text-center leading-relaxed">
-                  Shipping and taxes calculated at checkout.
+                  Taxes and shipping included.
                 </p>
                 <button
                   onClick={handleCheckoutClick}
