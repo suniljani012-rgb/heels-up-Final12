@@ -638,6 +638,10 @@ export async function productsRouter(request, env) {
             }
 
             // 2. Execution Pass (with duplicate & blank SKU skipping)
+            // Fetch all existing SKUs in a single query for O(1) lightning-fast memory check
+            const dbSkuRows = await env.DB.prepare('SELECT UPPER(sku) as sku FROM products WHERE sku IS NOT NULL').all();
+            const dbSkus = new Set((dbSkuRows.results || []).map(r => r.sku));
+            
             const seenSkus = new Set();
             for (const item of products) {
                 const { name, sku, category, description, price, mrp, stock, sizes, images, brand, tags, is_new, is_trending, is_featured, size_stock } = item;
@@ -651,11 +655,11 @@ export async function productsRouter(request, env) {
                 }
                 seenSkus.add(cleanSku);
 
+                if (dbSkus.has(cleanSku)) {
+                    continue; // Skip duplicate SKUs already in the database
+                }
+
                 try {
-                    const existing = await env.DB.prepare('SELECT id FROM products WHERE UPPER(sku) = ?').bind(cleanSku).first();
-                    if (existing) {
-                        continue; // Skip duplicate SKUs already in the database
-                    }
 
                     const result = await env.DB.prepare(
                         `INSERT INTO products (name, sku, category, description, price, original_price, stock, active, featured, is_new, is_trending, show_mrp, sizes_json, images_json, brand, tags, created_at, updated_at)
