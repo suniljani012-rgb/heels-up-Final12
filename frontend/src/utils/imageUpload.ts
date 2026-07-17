@@ -1,12 +1,9 @@
 // frontend/src/utils/imageUpload.ts
 // Ultra-fast parallel image conversion pipeline to standard PNG.
-// - Converts ALL image formats (HEIC, JPEG, WebP, AVIF, TIFF, BMP, GIF) to PNG.
-// - No exceptions (GIF is also flattened/converted to PNG).
-// - Converts all images to PNG on upload to ensure 100% browser compatibility.
-// - Static import of heic2any prevents Vite dynamic loading hangs.
+// - Converts standard formats (JPEG, WebP, AVIF, TIFF, BMP, GIF) to PNG on the frontend.
+// - HEIC/HEIF is uploaded RAW to the server, where the server converts it to PNG using Cloudflare Image Resizing.
+// - This completely avoids client-side hangs from heic2any on Windows/Chrome.
 // - Supports precise byte-level upload progress and file-by-file conversion progress.
-
-import heic2any from 'heic2any';
 
 const MAX_WIDTH = 1200;        // cap at 1200px wide — enough for full-bleed e-commerce
 const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB raw-input limit (before conversion)
@@ -64,22 +61,10 @@ function blobToImg(blob: Blob): Promise<HTMLImageElement> {
 export async function prepareImageFile(file: File): Promise<File> {
   const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
 
-  // HEIC / HEIF: Decode using statically imported heic2any, then convert to standard PNG
+  // HEIC / HEIF: Do NOT attempt client-side decoding (it hangs on Windows/Chrome).
+  // The server will convert it to PNG during the upload request.
   if (ext === 'heic' || ext === 'heif' || file.type === 'image/heic' || file.type === 'image/heif') {
-    try {
-      const raw = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.95 });
-      const jpegBlob: Blob = Array.isArray(raw) ? raw[0] : raw;
-      const img = await blobToImg(jpegBlob);
-      return await canvasToPNG(img, file.name);
-    } catch (err) {
-      console.warn('HEIC static decode failed, trying direct canvas decode:', err);
-      try {
-        const img = await blobToImg(file);
-        return await canvasToPNG(img, file.name);
-      } catch {
-        return file; // fallback if decoding completely fails
-      }
-    }
+    return file;
   }
 
   // All other formats (JPEG, PNG, WebP, AVIF, TIFF, BMP, GIF, …) → resize + PNG
@@ -164,7 +149,6 @@ export async function prepareAndUpload(
         onProgress?.('converting', convertedCount, total);
         return ready;
       } catch (err) {
-        // Safe progression even if a single file conversion throws an error
         convertedCount++;
         onProgress?.('converting', convertedCount, total);
         return file;

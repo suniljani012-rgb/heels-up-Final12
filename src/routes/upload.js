@@ -128,31 +128,70 @@ export async function uploadRouter(request, env, ctx) {
                     throw new Error('Only image files are allowed');
                 }
 
-                const buffer = await file.arrayBuffer();
+                let buffer = await file.arrayBuffer();
                 if (buffer.byteLength > MAX_SIZE) {
-                    throw new Error('File too large. Max 10MB');
+                    throw new Error('File too large. Max 50MB');
                 }
 
-                let ext = 'jpeg';
-                if (ALLOWED_EXTENSIONS.includes(fileExt)) {
-                    ext = fileExt;
-                } else if (file.type && file.type.startsWith('image/')) {
-                    const parts = file.type.split('/');
-                    const sub = parts[1] || '';
-                    ext = sub.split('+')[0] || 'jpeg';
-                } else if (isHeicExt) {
-                    ext = fileExt;
+                // If it is HEIC, convert to PNG. Otherwise keep original or convert
+                const isHeic = isHeicExt || ext === 'heic' || ext === 'heif';
+                const finalExt = isHeic ? 'png' : (ALLOWED_EXTENSIONS.includes(fileExt) ? fileExt : 'png');
+                const contentType = isHeic ? 'image/png' : (file.type || 'image/png');
+                const finalKey = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${finalExt}`;
+
+                if (isHeic && env.R2_PUBLIC_URL) {
+                    // 1. Put raw HEIC temporarily
+                    const tempKey = `temp/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+                    await bucket.put(tempKey, buffer, {
+                        httpMetadata: { contentType: `image/${fileExt}` }
+                    });
+
+                    // 2. Fetch PNG from Cloudflare Image Resizing
+                    const publicTempUrl = `${env.R2_PUBLIC_URL}/${tempKey}`;
+                    try {
+                        const convertRes = await fetch(publicTempUrl, {
+                            cf: {
+                                image: {
+                                    format: 'png',
+                                    quality: 90
+                                }
+                            }
+                        });
+                        if (convertRes.ok) {
+                            const convertedBuffer = await convertRes.arrayBuffer();
+                            // 3. Save converted PNG
+                            await bucket.put(finalKey, convertedBuffer, {
+                                httpMetadata: { contentType: 'image/png' }
+                            });
+                            // 4. Delete temp file in background
+                            ctx.waitUntil(bucket.delete(tempKey));
+                            buffer = convertedBuffer;
+                        } else {
+                            // Fallback if CF Resizing fails: save raw HEIC as .heic
+                            const fallbackKey = finalKey.replace('.png', `.${fileExt}`);
+                            await bucket.put(fallbackKey, buffer, {
+                                httpMetadata: { contentType: `image/${fileExt}` }
+                            });
+                            ctx.waitUntil(bucket.delete(tempKey));
+                            return { url: `${env.R2_PUBLIC_URL}/${fallbackKey}`, key: fallbackKey };
+                        }
+                    } catch (fetchErr) {
+                        console.error('Server HEIC to PNG conversion error:', fetchErr);
+                        const fallbackKey = finalKey.replace('.png', `.${fileExt}`);
+                        await bucket.put(fallbackKey, buffer, {
+                            httpMetadata: { contentType: `image/${fileExt}` }
+                        });
+                        ctx.waitUntil(bucket.delete(tempKey));
+                        return { url: `${env.R2_PUBLIC_URL}/${fallbackKey}`, key: fallbackKey };
+                    }
+                } else {
+                    // Regular uploads
+                    await bucket.put(finalKey, buffer, {
+                        httpMetadata: { contentType },
+                    });
                 }
-
-                const contentType = isHeicExt ? `image/${ext}` : (file.type || `image/${ext}`);
-                const finalKey = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-                await bucket.put(finalKey, buffer, {
-                    httpMetadata: { contentType },
-                });
 
                 const publicUrl = `${env.R2_PUBLIC_URL}/${finalKey}`;
-
                 return { url: publicUrl, key: finalKey };
             }));
 
