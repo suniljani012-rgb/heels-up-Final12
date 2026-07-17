@@ -571,7 +571,7 @@ export default function Checkout() {
                   {checkingDelivery && <span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin inline-block" />}
                 </span>
                 <span className="text-emerald-700 font-bold">
-                  🚚 FREE (Included)
+                  🚚 FREE
                   {pincode.length === 6 && deliveryCity && (
                     <span className="text-[10px] text-gray-400 ml-1">({deliveryDays} days)</span>
                   )}
