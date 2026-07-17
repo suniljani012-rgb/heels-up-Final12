@@ -48,6 +48,10 @@ export default {
           await env.DB.prepare("UPDATE settings SET value = '1599' WHERE key = 'shipping_free_above'").run();
           await env.DB.prepare("UPDATE settings SET value = '159900' WHERE key = 'free_shipping_above'").run();
           await env.DB.prepare("UPDATE announcements SET text = '🚚 FREE Shipping on orders above ₹1599' WHERE text LIKE '%above %999%' OR text LIKE '%above %799%'").run();
+          
+          // Dynamically add columns to track COD advance/outstanding payments if they don't exist yet
+          await env.DB.prepare("ALTER TABLE orders ADD COLUMN cod_advance_paid INTEGER DEFAULT 0").run().catch(() => {});
+          await env.DB.prepare("ALTER TABLE orders ADD COLUMN cod_outstanding_amount INTEGER DEFAULT 0").run().catch(() => {});
         } catch (err) {
           console.warn('DB settings auto-update failed:', err);
         }

@@ -220,6 +220,12 @@ export async function createOrderRecord(env, input) {
     const shippingAmount = subtotalAmount >= freeShipAbove ? 0 : shipCharge;
     const discountAmount = Number(input.discountAmount || 0);
         const totalAmount = Math.max(0, Number((subtotalAmount + shippingAmount - discountAmount).toFixed(2)));
+    const totalAmountPaise = Math.round(totalAmount * 100);
+    
+    const isCod = input.paymentMethod === 'COD';
+    const codAdvancePaid = isCod ? Math.round(totalAmount * 0.10) * 100 : 0;
+    const codOutstandingAmount = isCod ? totalAmountPaise - codAdvancePaid : 0;
+
     const orderNumber = input.orderNumber || await generateOrderNumber(env);
     const createdAt = new Date().toISOString();
     const source = String(input.source || "online");
@@ -230,14 +236,14 @@ export async function createOrderRecord(env, input) {
             address_line1, address_line2, city, state, pincode, country,
             delivery_method, source, order_status, payment_status, payment_method,
             subtotal_amount, discount_amount, shipping_amount, total_amount, coupon_code,
-            notes, created_at, updated_at
-         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            notes, cod_advance_paid, cod_outstanding_amount, created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
         orderNumber, input.userId || null, customerName, customerEmail, customerPhone,
         finalAddressLine1, addressLine2 || null, finalCity, finalState, finalPincode, country,
         input.deliveryMethod || 'Standard', source, input.orderStatus || 'placed', input.paymentStatus || 'pending', input.paymentMethod || null,
-        Math.round(subtotalAmount * 100), Math.round(discountAmount * 100), Math.round(shippingAmount * 100), Math.round(totalAmount * 100), input.couponCode || null,
-        String(input.notes || "").trim(), createdAt, createdAt
+        Math.round(subtotalAmount * 100), Math.round(discountAmount * 100), Math.round(shippingAmount * 100), totalAmountPaise, input.couponCode || null,
+        String(input.notes || "").trim(), codAdvancePaid, codOutstandingAmount, createdAt, createdAt
     ).run();
 
     const orderId = result.meta?.last_row_id;
