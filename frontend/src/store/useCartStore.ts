@@ -161,7 +161,7 @@ export const useCartStore = create<CartState>((set, get) => {
         const data = await res.json();
         if (data.success && data.data) {
           const items = data.data.map((item: any) => {
-            let img = 'assets/placeholder.jpg';
+            let img: string | undefined = undefined;
             if (item.images_json) {
               try {
                 const imgs = JSON.parse(item.images_json);

@@ -368,7 +368,7 @@ export default function Product() {
       originalPrice: product.original_price,
       color: selectedColor,
       size: selectedSize || '38',
-      img: activeImage || 'assets/placeholder.jpg',
+      img: activeImage || '',
       category: product.category,
       qty: qty
     })
@@ -459,7 +459,7 @@ export default function Product() {
 
           {/* Main Image */}
           <div className="flex-1 rounded-xl overflow-hidden bg-white border border-gray-100 aspect-square order-1 md:order-2 relative shadow-sm flex items-center justify-center p-4">
-            <HeicImage src={activeImage || 'assets/placeholder.jpg'} alt={product.name} className="max-w-full max-h-full object-contain" loading="eager" fetchpriority="high" />
+            <HeicImage src={activeImage || undefined} alt={product.name} className="max-w-full max-h-full object-contain" loading="eager" fetchpriority="high" />
           </div>
         </div>
 
@@ -1031,7 +1031,7 @@ export default function Product() {
               >
                 <div className="relative rounded-xl overflow-hidden bg-gray-50 aspect-square shadow-sm">
                   <HeicImage
-                    src={prod.images?.[0] || 'assets/placeholder.jpg'}
+                    src={prod.images?.[0] || undefined}
                     alt={prod.name}
                     className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
                     loading="eager"

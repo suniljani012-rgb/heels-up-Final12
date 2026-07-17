@@ -107,7 +107,8 @@ export default function OrderConfirmation() {
               <div className="divide-y divide-gray-100">
                 {order.items?.map((item, index) => {
                   const skuPrefix = item.sku ? item.sku.split('-')[0] : '';
-                  const imgUrl = item.image || (skuPrefix ? `https://media.heelsup.in/products/HEELS/${skuPrefix}.webp` : '/placeholder.jpg');
+                  const imgUrl = item.image || undefined;
+
                   return (
                     <div key={index} className="py-3 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3">

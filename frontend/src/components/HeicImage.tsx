@@ -1,81 +1,71 @@
 // frontend/src/components/HeicImage.tsx
 // Simple, reliable image component.
-// - R2 / workers.dev URLs: proxied through /api/upload (CF Image Resizing handles HEIC → WebP)
-// - External URLs (Unsplash, CDN, etc.): used directly
-// - No opacity/shimmer tricks that can cause blank images
+// RULE: Only shows the image that is in the database. No fallbacks. No placeholders. No proxy images.
+// - R2 / heelsup.in / workers.dev URLs: proxied through /api/upload for CORS + HEIC conversion
+// - All other URLs (direct CDN, Unsplash, etc.): used directly as-is
+// - If src is undefined/null/empty → renders nothing
 import React from 'react'
 
 interface HeicImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
-  fallback?: string;
   loading?: 'lazy' | 'eager';
   fetchpriority?: 'high' | 'low' | 'auto';
 }
 
 /**
- * Decide whether a URL needs to be proxied through /api/upload.
- * Only proxy R2 / workers.dev / heelsup.in URLs so that:
- *  - HEIC files get converted by Cloudflare Image Resizing
- *  - CORS headers are added
- * External URLs (Unsplash, other CDNs) are used as-is.
+ * Returns the URL to actually load in the <img> tag.
+ * R2/our-domain URLs are proxied through /api/upload so:
+ *   1. CORS headers are added
+ *   2. HEIC files get converted by Cloudflare Image Resizing → WebP/JPEG
+ * Everything else is used as-is.
  */
-function getDisplayUrl(urlStr: string | undefined): string | undefined {
-  if (!urlStr) return undefined;
+function getDisplayUrl(src: string | undefined): string | undefined {
+  if (!src || !src.trim()) return undefined;
 
-  // Relative URLs, blob: and data: — use as-is
-  if (urlStr.startsWith('/') || urlStr.startsWith('data:') || urlStr.startsWith('blob:')) {
-    return urlStr;
+  // Relative, blob: or data: — use as-is
+  if (src.startsWith('/') || src.startsWith('data:') || src.startsWith('blob:')) {
+    return src;
   }
 
   try {
-    const parsed = new URL(urlStr);
+    const parsed = new URL(src);
     const host = parsed.hostname;
 
-    // Already a same-origin /api/upload proxy URL — rebuild cleanly
+    // Already a proxied /api/upload URL — rebuild cleanly
     if (parsed.pathname.includes('/api/upload')) {
       const queryKey = parsed.searchParams.get('key');
       if (queryKey) return `/api/upload?key=${encodeURIComponent(queryKey)}`;
     }
 
-    // Only proxy our own R2 / worker URLs
-    const isOurUrl =
+    // Only proxy our own R2 / Worker / CDN URLs
+    if (
       host.includes('heelsup.in') ||
       host.includes('workers.dev') ||
-      host.includes('r2.dev');
-
-    if (isOurUrl) {
+      host.includes('r2.dev')
+    ) {
       const key = decodeURIComponent(parsed.pathname.substring(1));
       return `/api/upload?key=${encodeURIComponent(key)}`;
     }
-
-    // All other URLs (Unsplash, CDN, etc.) — use directly
-    return urlStr;
   } catch {
-    return urlStr;
+    // not a valid URL — return as-is
   }
+
+  // All other URLs (Unsplash, other CDNs, etc.) — direct
+  return src;
 }
 
 export default function HeicImage({
   src,
-  fallback,
   className = '',
   loading = 'lazy',
   fetchpriority,
   alt = '',
   style,
-  onError,
   ...props
 }: HeicImageProps) {
-  const displaySrc = getDisplayUrl(src) ?? getDisplayUrl(fallback);
+  const displaySrc = getDisplayUrl(src);
 
-  const handleError: React.ReactEventHandler<HTMLImageElement> = (e) => {
-    // If main src fails and we have a fallback, switch to it
-    if (fallback && (e.target as HTMLImageElement).src !== getDisplayUrl(fallback)) {
-      (e.target as HTMLImageElement).src = getDisplayUrl(fallback) ?? '';
-    }
-    onError?.(e);
-  };
-
+  // No image in database → render nothing
   if (!displaySrc) return null;
 
   return (
@@ -88,7 +78,6 @@ export default function HeicImage({
       decoding="async"
       // @ts-ignore — fetchpriority is valid HTML but TS lib types lag behind
       fetchpriority={fetchpriority}
-      onError={handleError}
       {...props}
     />
   );

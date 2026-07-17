@@ -148,7 +148,7 @@ export default function Shop() {
       originalPrice: prod.original_price,
       color: 'Default',
       size: '38',
-      img: prod.images?.[0] || 'assets/placeholder.jpg',
+      img: prod.images?.[0] || '',
       category: prod.category
     })
     showToast('success', 'Added to Bag 🛍️', `${prod.name} (Size 38) added to your shopping bag.`)
@@ -342,7 +342,7 @@ export default function Shop() {
                     {/* Image container */}
                     <div className="relative rounded-xl overflow-hidden bg-gray-50 aspect-square shadow-sm">
                       <HeicImage
-                        src={prod.images?.[0] || 'assets/placeholder.jpg'}
+                        src={prod.images?.[0] || undefined}
                         alt={prod.name}
                         className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
                         loading="eager"

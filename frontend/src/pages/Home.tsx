@@ -152,20 +152,11 @@ export default function Home() {
     return '✨'
   }
 
-  const getCategoryFallbackImage = (slug: string) => {
-    const s = slug.toLowerCase()
-    if (s.includes('heel')) return 'https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=600&auto=format&fit=crop'
-    if (s.includes('flat')) return 'https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=600&auto=format&fit=crop'
-    if (s.includes('sandal')) return 'https://images.unsplash.com/photo-1562273138-f46be4ebdf33?q=80&w=600&auto=format&fit=crop'
-    if (s.includes('bag')) return 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?q=80&w=600&auto=format&fit=crop'
-    return 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?q=80&w=600&auto=format&fit=crop'
-  }
-
   const categoryCards = categories.map((cat: any) => ({
       cat: cat.slug || cat.name.toLowerCase(),
       label: cat.name,
       emoji: getCategoryEmoji(cat.slug || cat.name),
-      img: cat.image_url || getCategoryFallbackImage(cat.slug || cat.name)
+      img: cat.image_url || undefined
   }))
 
   const handleWishlistToggle = async (e: any, prodId: number, name: string) => {
@@ -187,7 +178,7 @@ export default function Home() {
       originalPrice: prod.original_price,
       color: 'Default',
       size: '38', // Standard default size
-      img: prod.images?.[0] || 'assets/placeholder.jpg',
+      img: prod.images?.[0] || '',
       category: prod.category
     })
     showToast('success', 'Added to Bag 🛍️', `${prod.name} (Size 38) added to your shopping bag.`)
@@ -355,7 +346,7 @@ export default function Home() {
                   {/* Image container */}
                   <div className="relative rounded-xl overflow-hidden bg-gray-50 aspect-square shadow-sm">
                     <HeicImage
-                      src={prod.images?.[0] || 'assets/placeholder.jpg'}
+                      src={prod.images?.[0] || undefined}
                       alt={prod.name}
                       className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
                       loading="eager"

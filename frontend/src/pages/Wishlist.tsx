@@ -63,7 +63,7 @@ export default function Wishlist() {
       originalPrice: prod.original_price,
       color: 'Default',
       size: '38',
-      img: prod.images?.[0] || 'assets/placeholder.jpg',
+      img: prod.images?.[0] || '',
       category: prod.category
     })
     // Remove from wishlist

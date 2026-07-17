@@ -101,7 +101,7 @@ export default function CartDrawer() {
                 items.map((item) => (
                   <div key={`${item.id}-${item.color}-${item.size}`} className="flex gap-4 p-3 border border-gray-100 rounded-xl bg-white hover:shadow-sm transition-shadow">
                     <HeicImage
-                      src={item.img || '/assets/placeholder.jpg'}
+                      src={item.img || undefined}
                       alt={item.name}
                       className="w-20 h-20 object-cover bg-gray-50 rounded-lg flex-shrink-0"
                     />
