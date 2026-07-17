@@ -35,8 +35,11 @@ export async function uploadRouter(request, env, ctx) {
             // HEIC ALWAYS needs conversion — browsers cannot render raw HEIC.
             // All other formats: only use CF Resizing if browser supports modern formats.
             const needsCfResizing = isHeic || supportsWebp || supportsAvif;
+            const ua = request.headers.get('user-agent') || '';
+            const via = request.headers.get('via') || '';
+            const isImageResizingService = ua.includes('Cloudflare-Image-Resizing') || via.includes('image-resizing');
 
-            if (env.R2_PUBLIC_URL && needsCfResizing) {
+            if (env.R2_PUBLIC_URL && needsCfResizing && !isImageResizingService) {
                 const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
                 // For HEIC: force jpeg as safe fallback if browser doesn't support webp/avif
                 const targetFormat = supportsAvif ? 'avif' : (supportsWebp ? 'webp' : 'jpeg');
@@ -146,10 +149,10 @@ export async function uploadRouter(request, env, ctx) {
                         httpMetadata: { contentType: `image/${fileExt}` }
                     });
 
-                    // 2. Fetch PNG from Cloudflare Image Resizing
-                    const publicTempUrl = `${env.R2_PUBLIC_URL}/${tempKey}`;
+                    // 2. Fetch PNG from Cloudflare Image Resizing using same-origin proxy (avoids DNS/R2 propagation delay)
+                    const proxyTempUrl = `${url.origin}/api/upload?key=${encodeURIComponent(tempKey)}`;
                     try {
-                        const convertRes = await fetch(publicTempUrl, {
+                        const convertRes = await fetch(proxyTempUrl, {
                             cf: {
                                 image: {
                                     format: 'png',
