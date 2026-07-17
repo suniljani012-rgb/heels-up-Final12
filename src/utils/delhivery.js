@@ -248,7 +248,7 @@ export async function createDelhiveryShipment(env, order, items) {
                     phone: order.customer_phone,
                     order: order.order_number,
                     payment_mode: order.payment_method?.toLowerCase() === 'cod' ? 'COD' : 'Prepaid',
-                    cod_amount: order.payment_method?.toLowerCase() === 'cod' ? (Number(order.total_amount || 0) / 100) : 0,
+                    cod_amount: order.payment_method?.toLowerCase() === 'cod' ? ( (Number(order.total_amount || 0) / 100) - Math.round((Number(order.total_amount || 0) / 100) * 0.10) ) : 0,
                     package_desc: itemNames.slice(0, 100),
                     total_weight: 0.5 * totalQty, // Standardized 0.5kg per shoe package
                     weight: 0.5 * totalQty,

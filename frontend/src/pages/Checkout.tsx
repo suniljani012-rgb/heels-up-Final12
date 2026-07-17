@@ -652,6 +652,36 @@ export default function Checkout() {
               </div>
             </div>
 
+            {paymentMethod === 'cod' && (
+              <div className="bg-amber-50/50 border border-amber-200/60 rounded-xl p-4 space-y-3.5 select-none">
+                <div className="flex gap-2">
+                  <span className="text-base">⚠️</span>
+                  <div className="space-y-1">
+                    <h4 className="text-[11px] font-bold text-amber-900 uppercase tracking-wider">COD Policy Notice</h4>
+                    <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
+                      COD orders require a <strong>10% advance payment</strong> online to verify shipment and prevent returns. 
+                      Please note that this 10% advance is <strong>non-refundable</strong> if you cancel the order after it is shipped.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="border-t border-amber-200/40 pt-2.5 space-y-1.5 text-[10px] font-medium text-amber-900">
+                  <div className="flex justify-between">
+                    <span>Order Total:</span>
+                    <span className="font-bold">₹{totalRupees.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-emerald-800 font-semibold bg-emerald-500/5 px-1.5 py-1 rounded border border-emerald-500/10">
+                    <span>Pay Online (10% Advance):</span>
+                    <span className="font-bold">₹{Math.round(totalRupees * 0.10).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Remaining COD to pay Courier:</span>
+                    <span className="font-bold">₹{(totalRupees - Math.round(totalRupees * 0.10)).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <button
               type="submit"
               form="checkout-form"
@@ -662,9 +692,13 @@ export default function Checkout() {
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" /> Processing Payment...
                 </>
+              ) : paymentMethod === 'cod' ? (
+                <>
+                  <ShieldCheck className="w-4 h-4" /> Pay ₹{Math.round(totalRupees * 0.10).toLocaleString('en-IN')} Advance & Place COD
+                </>
               ) : (
                 <>
-                  <ShieldCheck className="w-4 h-4" /> Place Order & Pay Securely
+                  <ShieldCheck className="w-4 h-4" /> Pay ₹{totalRupees.toLocaleString('en-IN')} & Place Order
                 </>
               )}
             </button>

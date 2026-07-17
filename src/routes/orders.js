@@ -400,11 +400,15 @@ export async function ordersRouter(request, env) {
             }
 
             // Call Razorpay API
+            const isCod = body.paymentMethod === 'COD';
+            const codAdvanceRupees = Math.round(totalAmount * 0.10);
+            const chargeAmountPaise = isCod ? codAdvanceRupees * 100 : amountPaise;
+
             const basicAuth = btoa(`${rzpKeyId}:${rzpKeySecret}`);
             const rzpRes = await fetch("https://api.razorpay.com/v1/orders", {
                 method: "POST",
                 headers: { Authorization: `Basic ${basicAuth}`, "content-type": "application/json" },
-                body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt: String(orderNumber) })
+                body: JSON.stringify({ amount: chargeAmountPaise, currency: "INR", receipt: String(orderNumber) })
             });
             if (!rzpRes.ok) {
                 const t = await rzpRes.text();
@@ -423,7 +427,7 @@ export async function ordersRouter(request, env) {
                 items: itemsValidated,
                 deliveryMethod: body.deliveryMethod || "standard",
                 notes: body.notes || "",
-                paymentMethod: "RAZORPAY",
+                paymentMethod: isCod ? "COD" : "RAZORPAY",
                 couponCode: couponCode || null,
                 discountAmount,
                 subtotalAmount,
@@ -438,7 +442,7 @@ export async function ordersRouter(request, env) {
                 order: {
                     id: null,
                     orderNumber: orderNumber,
-                    amount: totalAmount,
+                    amount: isCod ? codAdvanceRupees : totalAmount,
                     discount: discountAmount
                 },
                 razorpayOrder: rzpOrder
