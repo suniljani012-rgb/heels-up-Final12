@@ -56,8 +56,8 @@ export default {
           // Clean up legacy products with default 4.5 rating but 0 reviews
           await env.DB.prepare("UPDATE products SET rating = 0 WHERE review_count = 0 OR review_count IS NULL").run().catch(() => {});
 
-          // Hide mock products from storefront by setting active = 0
-          await env.DB.prepare("UPDATE products SET active = 0 WHERE sku LIKE 'HU-%'").run().catch(() => {});
+          // Ensure mock products are active on the storefront
+          await env.DB.prepare("UPDATE products SET active = 1 WHERE sku LIKE 'HU-%'").run().catch(() => {});
 
 
         } catch (err) {

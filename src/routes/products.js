@@ -332,7 +332,7 @@ export async function productsRouter(request, env) {
                     isAdmin = payload && ['admin', 'staff', 'manager'].includes(payload.role);
                 }
             } catch {}
-            let where = isAdmin ? [] : ['p.active = 1'];
+            let where = isAdmin ? [] : ['p.active = 1', 'c.id IS NOT NULL'];
             let binds = [];
 
             if (cat) {
@@ -386,7 +386,7 @@ export async function productsRouter(request, env) {
             const whereStr = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
             const countResult = await env.DB.prepare(
-                `SELECT COUNT(*) as total FROM products p ${whereStr}`
+                `SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category) ${whereStr}`
             ).bind(...binds).first();
 
             const productsRes = await env.DB.prepare(
