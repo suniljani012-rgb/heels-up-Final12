@@ -52,6 +52,9 @@ export default {
           // Dynamically add columns to track COD advance/outstanding payments if they don't exist yet
           await env.DB.prepare("ALTER TABLE orders ADD COLUMN cod_advance_paid INTEGER DEFAULT 0").run().catch(() => {});
           await env.DB.prepare("ALTER TABLE orders ADD COLUMN cod_outstanding_amount INTEGER DEFAULT 0").run().catch(() => {});
+          
+          // Clean up legacy products with default 4.5 rating but 0 reviews
+          await env.DB.prepare("UPDATE products SET rating = 0 WHERE review_count = 0 OR review_count IS NULL").run().catch(() => {});
         } catch (err) {
           console.warn('DB settings auto-update failed:', err);
         }

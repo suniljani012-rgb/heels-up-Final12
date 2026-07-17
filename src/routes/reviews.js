@@ -105,7 +105,7 @@ export async function reviewsRouter(request, env) {
                 const prodId = review.product_id;
                 await env.DB.prepare(`
                     UPDATE products SET 
-                        rating = (SELECT COALESCE(ROUND(AVG(rating), 1), 4.5) FROM product_reviews WHERE product_id = ? AND status = 'approved'),
+                        rating = (SELECT COALESCE(ROUND(AVG(rating), 1), 0) FROM product_reviews WHERE product_id = ? AND status = 'approved'),
                         review_count = (SELECT COUNT(*) FROM product_reviews WHERE product_id = ? AND status = 'approved')
                     WHERE id = ?
                 `).bind(prodId, prodId, prodId).run();
@@ -146,7 +146,7 @@ export async function reviewsRouter(request, env) {
                 const prodId = review.product_id;
                 await env.DB.prepare(`
                     UPDATE products SET 
-                        rating = (SELECT COALESCE(ROUND(AVG(rating), 1), 4.5) FROM product_reviews WHERE product_id = ? AND status = 'approved'),
+                        rating = (SELECT COALESCE(ROUND(AVG(rating), 1), 0) FROM product_reviews WHERE product_id = ? AND status = 'approved'),
                         review_count = (SELECT COUNT(*) FROM product_reviews WHERE product_id = ? AND status = 'approved')
                     WHERE id = ?
                 `).bind(prodId, prodId, prodId).run();

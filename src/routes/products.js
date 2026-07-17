@@ -74,7 +74,7 @@ function mapProduct(p, sizeStock = [], colors = []) {
     is_featured: !!p.featured,
     is_new: !!p.is_new,
     is_trending: !!p.is_trending,
-    rating: Number(p.rating || 4.5),
+    rating: Number(p.rating || 0),
     review_count: Number(p.review_count || 0),
     sold_count: Number(p.sold_count || 0),
     sales: Number(p.sold_count || 0),

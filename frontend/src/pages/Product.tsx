@@ -473,20 +473,6 @@ export default function Product() {
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SKU: {product.sku}</p>
           </div>
 
-          {/* Stars */}
-          <div className="flex items-center gap-1.5 border-b border-gray-100 pb-4">
-            <div className="flex items-center text-amber-500">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-4 h-4 ${
-                    i < Math.round(product.rating) ? 'fill-amber-500' : 'text-gray-200'
-                  }`}
-                />
-              ))}
-            </div>
-            <span className="text-xs font-bold text-gray-600 mt-0.5">{product.rating} &middot; {product.review_count} reviews</span>
-          </div>
 
           {/* Price */}
           <div className="flex items-baseline gap-3">
@@ -903,6 +889,32 @@ export default function Product() {
         <h3 className="text-lg font-semibold text-gray-900 font-display italic mb-8 flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary" /> Customer Reviews
         </h3>
+
+        {product.review_count > 0 && (
+          <div className="flex items-center gap-5 bg-white border border-gray-200/60 rounded-xl p-5 shadow-sm max-w-sm mb-10 select-none">
+            <div className="text-center border-r border-gray-100 pr-6">
+              <span className="text-3xl font-extrabold text-gray-950 font-display italic">
+                {product.rating}
+              </span>
+              <span className="text-[10px] text-gray-400 block mt-0.5">out of 5</span>
+            </div>
+            <div>
+              <div className="flex items-center text-amber-500 gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-4 h-4 ${
+                      i < Math.round(product.rating) ? 'fill-amber-500' : 'text-gray-200'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-xs text-gray-500 font-bold block mt-1.5">
+                Based on {product.review_count} customer {product.review_count === 1 ? 'review' : 'reviews'}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Reviews list */}

@@ -395,10 +395,12 @@ export default function Home() {
 
                     
                     {/* Stars */}
-                    <div className="flex items-center gap-1 text-amber-500">
-                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                      <span className="text-[10px] font-bold text-gray-600 mt-0.5">{prod.rating || 4.5}</span>
-                    </div>
+                    {prod.rating > 0 && (
+                      <div className="flex items-center gap-1 text-amber-500">
+                        <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                        <span className="text-[10px] font-bold text-gray-600 mt-0.5">{prod.rating}</span>
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs font-bold text-gray-900">
