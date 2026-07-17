@@ -68,50 +68,8 @@ export function convertToWebP(file: File, quality = WEBP_QUALITY): Promise<File>
  * - Everything else (JPG, PNG, TIFF, BMP, RAW, etc.) → canvas → WebP
  */
 export async function prepareImageFile(file: File): Promise<File> {
-  const name = file.name.toLowerCase();
-  const mime = file.type;
-
-  // HEIC or HEIF — must use heic2any first (canvas can't decode HEIC natively)
-  const isHeic =
-    name.endsWith('.heic') ||
-    name.endsWith('.heif') ||
-    mime === 'image/heic' ||
-    mime === 'image/heif';
-
-  if (isHeic) {
-    try {
-      const heic2anyModule = await import('heic2any');
-      const heic2any = heic2anyModule.default;
-      const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
-      const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
-      const jpegFile = new File([jpegBlob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), {
-        type: 'image/jpeg',
-      });
-      // Now convert that JPEG → WebP
-      return convertToWebP(jpegFile);
-    } catch (err) {
-      console.warn('[imageUpload] heic2any failed, uploading original:', err);
-      return file; // fallback: upload original
-    }
-  }
-
-  // GIF — preserve animation
-  if (name.endsWith('.gif') || mime === 'image/gif') {
-    return file;
-  }
-
-  // Already optimal formats
-  if (
-    name.endsWith('.webp') ||
-    name.endsWith('.avif') ||
-    mime === 'image/webp' ||
-    mime === 'image/avif'
-  ) {
-    return file;
-  }
-
-  // Everything else → WebP via canvas
-  return convertToWebP(file);
+  // Return original file as-is, bypassing client-side compression/conversion.
+  return file;
 }
 
 /**
