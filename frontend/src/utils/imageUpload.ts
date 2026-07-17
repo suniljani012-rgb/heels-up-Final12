@@ -1,9 +1,8 @@
 // frontend/src/utils/imageUpload.ts
 // Ultra-fast parallel image conversion pipeline.
-// - ALL images are converted to WebP before upload (max 1200px, Q0.82)
-// - HEIC/HEIF → heic2any (JPEG blob) → canvas → WebP
-// - GIF → kept as-is (animation must be preserved)
-// - WebP/AVIF → canvas re-encode for max resize savings
+// - HEIC/HEIF → uploaded RAW as-is (Cloudflare Image Resizing converts at display time)
+// - GIF → kept as-is (animations must be preserved)
+// - All other raster formats (JPEG, PNG, TIFF, BMP, AVIF…) → canvas → WebP (max 1200px, Q0.82)
 // - All conversions run in PARALLEL via Promise.all — not sequential
 
 const WEBP_QUALITY = 0.82;
@@ -69,13 +68,12 @@ export async function prepareImageFile(file: File): Promise<File> {
   // GIF: keep as-is (animations must survive)
   if (ext === 'gif' || file.type === 'image/gif') return file;
 
-  // HEIC / HEIF: decode with heic2any first, then canvas-encode to WebP
+  // HEIC / HEIF: upload raw — NO client-side conversion.
+  // heic2any is a pure-JS decoder and takes 5+ min per file.
+  // Cloudflare Image Resizing on GET /api/upload converts HEIC → WebP/JPEG
+  // at display time using hardware acceleration (milliseconds).
   if (ext === 'heic' || ext === 'heif' || file.type === 'image/heic' || file.type === 'image/heif') {
-    const { default: heic2any } = await import('heic2any');
-    const raw = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.95 });
-    const jpegBlob: Blob = Array.isArray(raw) ? raw[0] : raw;
-    const img = await blobToImg(jpegBlob);
-    return canvasToWebP(img, file.name, WEBP_QUALITY);
+    return file;
   }
 
   // All other raster formats (JPEG, PNG, WebP, AVIF, TIFF, BMP, …) → resize + WebP
