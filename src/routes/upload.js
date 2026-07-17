@@ -30,14 +30,16 @@ export async function uploadRouter(request, env, ctx) {
             const accept = request.headers.get('accept') || '';
             const supportsWebp = accept.includes('image/webp');
             const supportsAvif = accept.includes('image/avif');
+            const isHeic = key.toLowerCase().endsWith('.heic') || key.toLowerCase().endsWith('.heif');
 
-            // If the environment has R2_PUBLIC_URL and accepts modern formats, we can use Cloudflare Image Resizing via fetch
-            if (env.R2_PUBLIC_URL && (supportsWebp || supportsAvif)) {
+            // If the environment has R2_PUBLIC_URL and accepts modern formats (or the file is HEIC which must be converted to be renderable)
+            if (env.R2_PUBLIC_URL && (supportsWebp || supportsAvif || isHeic)) {
                 const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+                const targetFormat = supportsAvif ? 'avif' : (supportsWebp ? 'webp' : 'jpeg');
                 const resizeOptions = {
                     cf: {
                         image: {
-                            format: supportsAvif ? 'avif' : 'webp',
+                            format: targetFormat,
                             quality: 85,
                         }
                     }
