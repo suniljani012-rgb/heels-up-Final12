@@ -57,8 +57,8 @@ function getDisplayUrl(src: string | undefined): string | undefined {
 export default function HeicImage({
   src,
   className = '',
-  loading = 'lazy',
-  fetchpriority,
+  loading = 'eager',
+  fetchpriority = 'high',
   alt = '',
   style,
   ...props
@@ -75,7 +75,7 @@ export default function HeicImage({
       className={className}
       style={style}
       loading={loading}
-      decoding="async"
+      decoding="sync"
       // @ts-ignore — fetchpriority is valid HTML but TS lib types lag behind
       fetchpriority={fetchpriority}
       {...props}
