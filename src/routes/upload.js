@@ -2,9 +2,9 @@
 import { requireAdmin, requireAuth } from '../middleware/auth.js';
 import { ok, error, serverError, notFound } from '../utils/response.js';
 
-const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_SIZE = 10 * 1024 * 1024; // 10MB raw input (client converts to WebP first; raw HEIC can be large)
 const ALLOWED_EXTENSIONS = [
-    'jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'svg', 
+    'jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'svg',
     'tiff', 'tif', 'bmp', 'jfif', 'avif', 'ico', 'apng', 'raw'
 ];
 
@@ -103,7 +103,7 @@ export async function uploadRouter(request, env, ctx) {
             const results = await Promise.all(files.map(async (file) => {
                 const fileName = file.name || '';
                 const fileExt = fileName.split('.').pop().toLowerCase();
-                const isHeicExt = ['heic', 'heif'].includes(fileExt);
+                const isHeicExt = ['heic', 'heif'].includes(fileExt); // includes HEIF variant
 
                 const isImageMime = file.type && file.type.startsWith('image/');
                 const isOctetStream = file.type === 'application/octet-stream';
@@ -145,27 +145,52 @@ export async function uploadRouter(request, env, ctx) {
                 const baseUrl = new URL(request.url).origin;
                 const isLocal = baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1') || baseUrl.includes('::1');
 
-                // Try to convert to AVIF using Cloudflare Image Resizing in production
+                // Convert to WebP (or AVIF if supported) using Cloudflare Image Resizing in production
                 if (!isLocal && env.R2_PUBLIC_URL) {
+                    const tempUrl = `${env.R2_PUBLIC_URL}/${tempKey}`;
+
+                    // Try AVIF first (best compression)
                     try {
-                        const tempUrl = `${env.R2_PUBLIC_URL}/${tempKey}`;
-                        const resizeOptions = {
+                        const avifRes = await fetch(tempUrl, {
                             cf: {
                                 image: {
                                     format: 'avif',
-                                    quality: 85,
+                                    quality: 80,
+                                    width: 1200, // cap max dimension for web
                                 }
                             }
-                        };
-                        const optimizedRes = await fetch(tempUrl, resizeOptions);
-                        if (optimizedRes.ok) {
-                            finalBuffer = await optimizedRes.arrayBuffer();
+                        });
+                        if (avifRes.ok) {
+                            finalBuffer = await avifRes.arrayBuffer();
                             finalExt = 'avif';
                             finalContentType = 'image/avif';
                             converted = true;
                         }
-                    } catch (resizeErr) {
-                        console.warn('Cloudflare Resizing during upload failed, falling back to original:', resizeErr);
+                    } catch (avifErr) {
+                        console.warn('AVIF conversion failed, trying WebP:', avifErr);
+                    }
+
+                    // Fallback: WebP (universally supported)
+                    if (!converted) {
+                        try {
+                            const webpRes = await fetch(tempUrl, {
+                                cf: {
+                                    image: {
+                                        format: 'webp',
+                                        quality: 82,
+                                        width: 1200,
+                                    }
+                                }
+                            });
+                            if (webpRes.ok) {
+                                finalBuffer = await webpRes.arrayBuffer();
+                                finalExt = 'webp';
+                                finalContentType = 'image/webp';
+                                converted = true;
+                            }
+                        } catch (webpErr) {
+                            console.warn('WebP conversion also failed, storing original:', webpErr);
+                        }
                     }
                 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
+import { prepareAndUpload } from '../../utils/imageUpload';
 import { useToastStore } from '../../store/useToastStore';
 import { Search, Plus, Trash2, Edit3, X, UploadCloud, ChevronLeft, ChevronRight, RefreshCw, Download, FileText, CheckCircle2, AlertTriangle, Box } from 'lucide-react';
 import HeicImage from '../../components/HeicImage';
@@ -111,6 +112,7 @@ export default function ProductsManager({ products, categories, token, onRefresh
 
   const [tagInput, setTagInput] = useState('');
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
 
   // Helper to extract color from name
   const extractColor = (name: string) => {
@@ -213,87 +215,32 @@ export default function ProductsManager({ products, categories, token, onRefresh
     setSizeStockValues(prev => ({ ...prev, [sizeLabel]: Math.max(0, val) }));
   };
 
-  // HEIC conversion and image upload
+  // Image upload — all formats converted to WebP via shared utility
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     setUploadingImages(true);
-
-    const convertToWebP = (file: File): Promise<File> => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(img, 0, 0);
-              canvas.toBlob((blob) => {
-                if (blob) {
-                  const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
-                    type: 'image/webp'
-                  });
-                  resolve(newFile);
-                } else {
-                  resolve(file);
-                }
-              }, 'image/webp', 0.85);
-            } else {
-              resolve(file);
-            }
-          };
-          img.onerror = () => resolve(file);
-          img.src = event.target?.result as string;
-        };
-        reader.onerror = () => resolve(file);
-        reader.readAsDataURL(file);
-      });
-    };
-
+    setUploadStatus('Preparing...');
     try {
-      const formData = new FormData();
-      let heic2anyLib: any = null;
-      const hasHeic = Array.from(e.target.files).some(
-        file => file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic'
+      const result = await prepareAndUpload(
+        e.target.files,
+        token,
+        (step, current, total) => {
+          if (step === 'converting') {
+            setUploadStatus(total > 1 ? `Converting ${current + 1}/${total}...` : 'Converting to WebP...');
+          } else {
+            setUploadStatus('Uploading...');
+          }
+        }
       );
-      if (hasHeic) {
-        heic2anyLib = (await import('heic2any')).default;
-      }
-
-      for (let i = 0; i < e.target.files.length; i++) {
-        let file = e.target.files[i];
-        if (heic2anyLib && (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic')) {
-          const converted = await heic2anyLib({ blob: file, toType: 'image/jpeg', quality: 0.8 });
-          const blob = Array.isArray(converted) ? converted[0] : converted;
-          file = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
-        }
-
-        const isGif = file.name.toLowerCase().endsWith('.gif') || file.type === 'image/gif';
-        const isWebp = file.name.toLowerCase().endsWith('.webp') || file.type === 'image/webp';
-        const isAvif = file.name.toLowerCase().endsWith('.avif') || file.type === 'image/avif';
-        if (!isGif && !isWebp && !isAvif) {
-          file = await convertToWebP(file);
-        }
-        formData.append('files', file);
-      }
-      const res = await fetch('/api/admin/upload', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setProdImages(prev => [...prev, ...data.data.urls]);
-        showToast('success', 'Images Uploaded', `${data.data.urls.length} images uploaded successfully.`);
-      } else {
-        showToast('error', 'Upload Error', data.error || 'Upload failed.');
-      }
-    } catch {
-      showToast('error', 'Upload Failed', 'Image upload pipeline error.');
+      setProdImages(prev => [...prev, ...result.urls]);
+      showToast('success', 'Images Uploaded', `${result.urls.length} image(s) uploaded successfully.`);
+    } catch (err: any) {
+      showToast('error', 'Upload Failed', err?.message || 'Image upload pipeline error.');
     } finally {
       setUploadingImages(false);
+      setUploadStatus('');
+      // Reset input so the same file can be re-selected if needed
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -777,11 +724,21 @@ export default function ProductsManager({ products, categories, token, onRefresh
                       </div>
                     ))}
                     <label className="aspect-square bg-neutral-50 hover:bg-neutral-100 border border-dashed border-neutral-300 rounded-xl flex flex-col items-center justify-center cursor-pointer text-neutral-400 hover:text-neutral-700 transition-colors">
-                      <input type="file" multiple accept="image/*,.heic" onChange={handleFileUpload} className="hidden" />
-                      {uploadingImages ? <RefreshCw className="w-5 h-5 animate-spin" /> : <><UploadCloud className="w-5 h-5 mb-1" /><span className="text-[9px] font-bold font-mono">Upload</span></>}
+                      <input type="file" multiple accept="image/*,.heic,.heif" onChange={handleFileUpload} className="hidden" disabled={uploadingImages} />
+                      {uploadingImages ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 animate-spin mb-1" />
+                          <span className="text-[8px] font-bold font-mono text-center px-1 leading-tight">{uploadStatus || 'Working...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud className="w-5 h-5 mb-1" />
+                          <span className="text-[9px] font-bold font-mono">Upload</span>
+                        </>
+                      )}
                     </label>
                   </div>
-                  <p className="text-[9px] text-neutral-400">Supports JPG, PNG, WEBP, HEIC. First image is the cover photo.</p>
+                  <p className="text-[9px] text-neutral-400">Supports JPG, PNG, WEBP, AVIF, HEIC, HEIF, TIFF, BMP + more. First image is the cover photo.</p>
                 </div>
               )}
 

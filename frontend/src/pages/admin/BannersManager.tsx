@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { prepareAndUpload } from '../../utils/imageUpload';
 import { useToastStore } from '../../store/useToastStore';
 import { Plus, Edit3, Trash2, X } from 'lucide-react';
 import HeicImage from '../../components/HeicImage';
@@ -33,6 +34,7 @@ export default function BannersManager({ banners, token, onRefresh }: BannersMan
   const [active, setActive] = useState(true);
   const [sortOrder, setSortOrder] = useState('0');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('');
 
   // Open add
   const handleOpenAdd = () => {
@@ -58,81 +60,27 @@ export default function BannersManager({ banners, token, onRefresh }: BannersMan
     setDrawerOpen(true);
   };
 
-  // File Upload Helper
+  // File Upload Helper — all formats converted to WebP via shared utility
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     setUploadingImage(true);
-
-    const convertToWebP = (file: File): Promise<File> => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(img, 0, 0);
-              canvas.toBlob((blob) => {
-                if (blob) {
-                  const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
-                    type: 'image/webp'
-                  });
-                  resolve(newFile);
-                } else {
-                  resolve(file);
-                }
-              }, 'image/webp', 0.85);
-            } else {
-              resolve(file);
-            }
-          };
-          img.onerror = () => resolve(file);
-          img.src = event.target?.result as string;
-        };
-        reader.onerror = () => resolve(file);
-        reader.readAsDataURL(file);
-      });
-    };
-
+    setUploadStatus('Preparing...');
     try {
-      const formData = new FormData();
-      let file = e.target.files[0];
-      
-      // HEIC support
-      if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
-        const heic2any = (await import('heic2any')).default;
-        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
-        const blob = Array.isArray(converted) ? converted[0] : converted;
-        file = new File([blob], file.name.replace(/\.heic$/i, '.jpg'), { type: 'image/jpeg' });
-      }
-
-      const isGif = file.name.toLowerCase().endsWith('.gif') || file.type === 'image/gif';
-      const isWebp = file.name.toLowerCase().endsWith('.webp') || file.type === 'image/webp';
-      const isAvif = file.name.toLowerCase().endsWith('.avif') || file.type === 'image/avif';
-      if (!isGif && !isWebp && !isAvif) {
-        file = await convertToWebP(file);
-      }
-      formData.append('files', file);
-
-      const res = await fetch('/api/admin/upload', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData
-      });
-      const data = await res.json();
-      if (data.success && data.data) {
-        setImageUrl(data.data.urls[0]);
-        showToast('success', 'Banner Processed', 'Image uploaded successfully.');
-      } else {
-        showToast('error', 'Upload Error', data.error || 'Server rejected file upload.');
-      }
-    } catch {
-      showToast('error', 'Upload Failed', 'Failure occurred during image upload pipeline.');
+      const result = await prepareAndUpload(
+        e.target.files,
+        token,
+        (step) => {
+          setUploadStatus(step === 'converting' ? 'Converting to WebP...' : 'Uploading...');
+        }
+      );
+      setImageUrl(result.urls[0]);
+      showToast('success', 'Banner Uploaded', 'Image uploaded successfully.');
+    } catch (err: any) {
+      showToast('error', 'Upload Failed', err?.message || 'Failure occurred during image upload.');
     } finally {
       setUploadingImage(false);
+      setUploadStatus('');
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -356,17 +304,18 @@ export default function BannersManager({ banners, token, onRefresh }: BannersMan
                       className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none font-mono"
                     />
                     <label className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-[10px] font-mono font-bold uppercase rounded-xl cursor-pointer shrink-0">
-                      Upload
+                      {uploadingImage ? 'Processing...' : 'Upload'}
                       <input
                         type="file"
-                        accept="image/*,.heic"
+                        accept="image/*,.heic,.heif"
                         onChange={handleImageUpload}
                         className="hidden"
+                        disabled={uploadingImage}
                       />
                     </label>
                   </div>
                   {uploadingImage && (
-                    <span className="text-[10px] font-mono text-neutral-900 italic">Uploading file, converting HEIC...</span>
+                    <span className="text-[10px] font-mono text-neutral-600 italic">{uploadStatus || 'Processing...'}</span>
                   )}
                 </div>
 

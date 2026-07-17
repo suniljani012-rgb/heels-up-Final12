@@ -210,6 +210,8 @@ export default function Home() {
                   src={currentBanner?.image_url}
                   alt={currentBanner?.title || ''}
                   className="w-full h-full object-cover"
+                  loading="eager"
+                  fetchpriority="high"
                 />
                 <div className="absolute inset-0 bg-black/30" />
               </div>
@@ -294,6 +296,7 @@ export default function Home() {
                     src={card.img}
                     alt={card.label}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    loading="lazy"
                   />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white/98 via-white/70 to-transparent h-2/3 z-10" />
@@ -336,7 +339,7 @@ export default function Home() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {featuredProducts.map((prod: any) => {
+            {featuredProducts.map((prod: any, idx: number) => {
               const inWishlist = hasItem(prod.id)
 
               return (
@@ -351,6 +354,8 @@ export default function Home() {
                       src={prod.images?.[0] || 'assets/placeholder.jpg'}
                       alt={prod.name}
                       className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
+                      loading={idx < 4 ? 'eager' : 'lazy'}
+                      fetchpriority={idx < 2 ? 'high' : undefined}
                     />
                     
                     {/* Badges */}

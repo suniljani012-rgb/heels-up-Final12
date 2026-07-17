@@ -1,120 +1,115 @@
-import React, { useState, useEffect } from 'react'
+// frontend/src/components/HeicImage.tsx
+// Optimised image component.
+// - No client-side HEIC conversion (server converts all uploads to WebP/AVIF already).
+// - Proxies R2/CDN URLs through /api/upload for CORS-safe delivery.
+// - Supports loading="lazy"|"eager", decoding="async", fetchpriority="high"|"low".
+// - Shows shimmer skeleton while loading (no blank/invisible flash).
+// - Smooth fade-in on load.
+import React, { useState, useEffect, useRef } from 'react'
+
+// Inject shimmer keyframe once into document head
+let shimmerInjected = false;
+function injectShimmer() {
+  if (shimmerInjected || typeof document === 'undefined') return;
+  shimmerInjected = true;
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes _img_shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+    img._img_loading {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: _img_shimmer 1.4s ease-in-out infinite;
+    }
+    img._img_loaded {
+      background: transparent !important;
+      animation: none !important;
+      transition: opacity 0.25s ease;
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 interface HeicImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
   fallback?: string;
+  /** "eager" + fetchpriority="high" for above-fold / LCP images */
+  loading?: 'lazy' | 'eager';
+  fetchpriority?: 'high' | 'low' | 'auto';
 }
 
-// Global cache for converted HEIC image URLs
-const heicCache = new Map<string, string>();
-
-// Helper function to resolve/proxy R2 urls to same-origin to avoid CORS and domain issues
-const getProxyUrl = (urlStr: string) => {
+// Proxy R2/CDN URLs through the same-origin /api/upload endpoint
+// to avoid CORS issues and to let Cloudflare Image Resizing serve WebP/AVIF.
+const getProxyUrl = (urlStr: string): string => {
   if (!urlStr) return '';
   if (urlStr.startsWith('/') || urlStr.startsWith('data:') || urlStr.startsWith('blob:')) {
     return urlStr;
   }
   try {
     const parsed = new URL(urlStr);
-    if (parsed.hostname.includes('r2.dev') || parsed.hostname.includes('heelsup.in')) {
-      const key = parsed.pathname.substring(1); // Remove leading slash
+    if (
+      parsed.hostname.includes('r2.dev') ||
+      parsed.hostname.includes('heelsup.in') ||
+      parsed.hostname.includes('cloudflare')
+    ) {
+      const key = parsed.pathname.substring(1);
       return `/api/upload?key=${encodeURIComponent(decodeURIComponent(key))}`;
     }
-  } catch (e) {
-    console.error('Failed to parse URL for proxy:', urlStr, e);
+  } catch {
+    // not a valid absolute URL — return as-is
   }
   return urlStr;
 };
 
-export default function HeicImage({ src, fallback = 'assets/placeholder.jpg', className, ...props }: HeicImageProps) {
-  const [displaySrc, setDisplaySrc] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+export default function HeicImage({
+  src,
+  fallback = 'assets/placeholder.jpg',
+  className = '',
+  loading = 'lazy',
+  fetchpriority,
+  alt = '',
+  style,
+  ...props
+}: HeicImageProps) {
+  const [loaded, setLoaded] = useState(false);
+  const [errored, setErrored] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
 
+  // Inject shimmer CSS once
+  useEffect(() => { injectShimmer(); }, []);
+
+  // If the image is already cached by the browser (complete before React mounts),
+  // skip the shimmer immediately so there's no flash on navigation.
   useEffect(() => {
-    if (!src) {
-      setDisplaySrc(fallback);
-      return;
+    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
+      setLoaded(true);
     }
+  }, []);
 
-    const proxyUrl = getProxyUrl(src);
-
-    // Support both HEIC and HEIF formats case-insensitively
-    const isHeic = proxyUrl.toLowerCase().includes('.heic') || proxyUrl.toLowerCase().includes('.heif');
-    if (!isHeic) {
-      setDisplaySrc(proxyUrl);
-      return;
-    }
-
-    // Serve from cache if already converted
-    if (heicCache.has(src)) {
-      setDisplaySrc(heicCache.get(src)!);
-      return;
-    }
-
-    let active = true;
-    const convertHeic = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error('Failed to fetch image');
-        const blob = await response.blob();
-        
-        // Dynamically load heic2any so it does not bloat initial bundle size
-        const heic2anyModule = await import('heic2any');
-        const heic2any = heic2anyModule.default;
-        
-        const conversionResult = await heic2any({
-          blob,
-          toType: 'image/jpeg',
-          quality: 0.8
-        });
-
-        const singleBlob = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
-        const objectUrl = URL.createObjectURL(singleBlob);
-        
-        heicCache.set(src, objectUrl);
-        if (active) {
-          setDisplaySrc(objectUrl);
-        }
-      } catch (err) {
-        console.error('HEIC conversion failed for:', src, err);
-        if (active) {
-          setDisplaySrc(fallback);
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    };
-
-    convertHeic();
-
-    return () => {
-      active = false;
-      // Clean up object URL if component unmounts before cache is used elsewhere
-    };
-  }, [src, fallback]);
-
-  if (loading) {
-    return (
-      <div className={`relative bg-gray-50 flex items-center justify-center ${className}`}>
-        {/* Sleek premium spinner */}
-        <div className="w-5 h-5 border-2 border-[#C9A96E] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const displaySrc = errored || !src ? fallback : getProxyUrl(src);
 
   return (
     <img
+      ref={imgRef}
       src={displaySrc}
-      className={className}
-      {...props}
-      onError={() => {
-        if (displaySrc !== fallback) {
-          setDisplaySrc(fallback);
-        }
+      alt={alt}
+      className={`${className} ${loaded ? '_img_loaded' : '_img_loading'}`}
+      loading={loading}
+      decoding="async"
+      // @ts-ignore — fetchpriority is valid HTML but TS lib types lag behind
+      fetchpriority={fetchpriority}
+      style={{
+        opacity: loaded ? 1 : 0.01, // near-zero keeps layout intact; shimmer shows via bg
+        ...style,
       }}
+      onLoad={() => setLoaded(true)}
+      onError={() => {
+        setErrored(true);
+        setLoaded(true); // show fallback instantly, no retry loop
+      }}
+      {...props}
     />
   );
 }

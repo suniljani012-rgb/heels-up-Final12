@@ -327,7 +327,7 @@ export default function Shop() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-              {products.map((prod: any) => {
+              {products.map((prod: any, idx: number) => {
                 const inWishlist = hasItem(prod.id)
 
                 return (
@@ -342,6 +342,8 @@ export default function Shop() {
                         src={prod.images?.[0] || 'assets/placeholder.jpg'}
                         alt={prod.name}
                         className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
+                        loading={idx < 6 ? 'eager' : 'lazy'}
+                        fetchpriority={idx < 3 ? 'high' : undefined}
                       />
                       
                       {/* Badges */}
