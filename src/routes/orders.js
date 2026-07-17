@@ -215,7 +215,7 @@ export async function createOrderRecord(env, input) {
     if (!items.length) return { ok: false, error: "No valid order items" };
 
     const subtotalAmount = Number(items.reduce((s, i) => s + i.lineTotal, 0).toFixed(2));
-    const freeShipAbove = Number(await getSetting(env, "shipping_free_above", "799")) || 799;
+    const freeShipAbove = Number(await getSetting(env, "shipping_free_above", "1599")) || 1599;
     const shipCharge = Number(await getSetting(env, "shipping_standard_charge", "49")) || 49;
     const shippingAmount = subtotalAmount >= freeShipAbove ? 0 : shipCharge;
     const discountAmount = Number(input.discountAmount || 0);
@@ -350,7 +350,7 @@ export async function ordersRouter(request, env) {
                 }
             }
 
-            const freeShipAbove = Number(await getSetting(env, "shipping_free_above", "799")) || 799;
+            const freeShipAbove = Number(await getSetting(env, "shipping_free_above", "1599")) || 1599;
             const shipCharge = Number(await getSetting(env, "shipping_standard_charge", "49")) || 49;
             const shippingAmount = subtotalAmount >= freeShipAbove ? 0 : shipCharge;
                         const totalAmount = Math.max(0, Number((subtotalAmount + shippingAmount - discountAmount).toFixed(2)));

@@ -70,6 +70,17 @@ export default function Product() {
   const [aiRecommendation, setAiRecommendation] = useState('38')
   const [sizerMethod, setSizerMethod] = useState<'length' | 'brand'>('length')
 
+  // Delivery Estimate State
+  const [deliveryPincode, setDeliveryPincode] = useState('')
+  const [editingPincode, setEditingPincode] = useState(false)
+  const [deliveryLoading, setDeliveryLoading] = useState(false)
+  const [deliveryInfo, setDeliveryInfo] = useState<{
+    feePaise: number; feeRupees: number; isFree: boolean;
+    cod: boolean; zone: string; estimatedDays: string;
+    city: string; state: string; serviceable: boolean;
+  } | null>(null)
+  const [pincodeInput, setPincodeInput] = useState('')
+
   // Calculate Sizing Recommendation
   useEffect(() => {
     if (sizerMethod === 'length') {
@@ -89,6 +100,87 @@ export default function Product() {
       setAiRecommendation(String(finalRec))
     }
   }, [fitLengthCm, brandSize, fitPreference, sizerMethod])
+
+  // ─── Delivery Estimate Logic ──────────────────────────────────────────────
+  const fetchDelivery = async (pin: string, totalPaise = 0) => {
+    if (!/^\d{6}$/.test(pin)) return
+    setDeliveryLoading(true)
+    try {
+      const res = await fetch(`/api/shipping/estimate?pincode=${pin}&total=${totalPaise}`)
+      const data = await res.json()
+      if (data.success && data.data) {
+        const d = data.data
+        setDeliveryInfo({
+          feePaise: d.fee_paise,
+          feeRupees: d.fee_rupees,
+          isFree: d.is_free,
+          cod: d.cod_available,
+          zone: d.zone,
+          estimatedDays: d.estimated_days,
+          city: d.city,
+          state: d.state,
+          serviceable: d.serviceable,
+        })
+        setDeliveryPincode(pin)
+        setEditingPincode(false)
+        // Cache for this session
+        try { sessionStorage.setItem('hu_delivery_pin', pin) } catch {}
+      }
+    } catch {
+      // silently fail — delivery estimate is non-critical
+    } finally {
+      setDeliveryLoading(false)
+    }
+  }
+
+  // On mount: try cached pincode → then geolocation
+  useEffect(() => {
+    const cached = (() => { try { return sessionStorage.getItem('hu_delivery_pin') } catch { return null } })()
+    if (cached && /^\d{6}$/.test(cached)) {
+      fetchDelivery(cached)
+      return
+    }
+    // Request location silently (non-blocking)
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          try {
+            // Reverse geocode using a free API to get pincode
+            const { latitude, longitude } = pos.coords
+            const geo = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+              { headers: { 'User-Agent': 'HeelsUp/1.0' } }
+            )
+            const geoData = await geo.json()
+            const pin = geoData?.address?.postcode?.replace(/\s/g, '').slice(0, 6)
+            if (pin && /^\d{6}$/.test(pin)) {
+              fetchDelivery(pin)
+            } else {
+              // No pincode from location — show max estimate
+              setDeliveryInfo({
+                feePaise: 12900, feeRupees: 129, isFree: false,
+                cod: true, zone: 'E', estimatedDays: '6-8', city: '', state: '', serviceable: true
+              })
+              setEditingPincode(true)
+            }
+          } catch {
+            setEditingPincode(true)
+          }
+        },
+        () => {
+          // Location denied — show max estimate + ask for pincode
+          setDeliveryInfo({
+            feePaise: 12900, feeRupees: 129, isFree: false,
+            cod: true, zone: 'E', estimatedDays: '6-8', city: '', state: '', serviceable: true
+          })
+          setEditingPincode(true)
+        },
+        { timeout: 5000, maximumAge: 300000 }
+      )
+    } else {
+      setEditingPincode(true)
+    }
+  }, [])
 
   // Inject JSON-LD Product Schema
   useEffect(() => {
@@ -493,10 +585,94 @@ export default function Product() {
             </button>
           </div>
 
+          {/* Delivery Estimate Widget */}
+          <div className="bg-[#f7f5f0] border border-gray-100 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500 flex items-center gap-1.5">
+                <Truck className="w-3.5 h-3.5 text-primary" /> Delivery Estimate
+              </span>
+              {deliveryPincode && !editingPincode && (
+                <button
+                  onClick={() => { setEditingPincode(true); setPincodeInput(deliveryPincode) }}
+                  className="text-[10px] text-primary font-bold hover:underline"
+                >Change</button>
+              )}
+            </div>
+
+            {deliveryLoading ? (
+              // Shimmer while loading
+              <div className="space-y-2 animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
+              </div>
+            ) : editingPincode || !deliveryPincode ? (
+              // Pincode input
+              <div className="space-y-2">
+                {deliveryInfo && (
+                  <p className="text-[10px] text-amber-700 font-medium bg-amber-50 border border-amber-100 rounded-lg px-2.5 py-1.5">
+                    📍 Showing max estimate (₹{deliveryInfo.feeRupees}). Enter pincode for exact price.
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    placeholder="Enter delivery pincode"
+                    value={pincodeInput}
+                    onChange={(e) => setPincodeInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    onKeyDown={(e) => e.key === 'Enter' && pincodeInput.length === 6 && fetchDelivery(pincodeInput)}
+                    className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-primary bg-white"
+                  />
+                  <button
+                    onClick={() => fetchDelivery(pincodeInput)}
+                    disabled={pincodeInput.length !== 6}
+                    className="px-3 py-2 bg-gray-900 text-white text-xs font-bold rounded-lg disabled:opacity-40 hover:bg-black transition-colors"
+                  >Check</button>
+                </div>
+              </div>
+            ) : deliveryInfo ? (
+              // Delivery info card
+              <div className="space-y-1.5">
+                {deliveryInfo.city || deliveryInfo.state ? (
+                  <p className="text-[10px] text-gray-500 font-medium">
+                    📍 {[deliveryInfo.city, deliveryInfo.state].filter(Boolean).join(', ')} — {deliveryPincode}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-gray-500 font-medium">📍 Pincode: {deliveryPincode}</p>
+                )}
+                <p className={`text-xs font-bold flex items-center gap-1.5 ${
+                  deliveryInfo.isFree ? 'text-emerald-700' : 'text-gray-900'
+                }`}>
+                  🚚 {deliveryInfo.isFree
+                    ? 'FREE Delivery'
+                    : `Delivery ₹${deliveryInfo.feeRupees}`
+                  }
+                  <span className="text-[10px] font-normal text-gray-500">· Arrives in {deliveryInfo.estimatedDays} days</span>
+                </p>
+                <div className="flex items-center gap-3">
+                  {deliveryInfo.cod ? (
+                    <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                      ✅ COD Available
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-rose-600 flex items-center gap-1">
+                      ❌ COD Not Available — Pay Online
+                    </span>
+                  )}
+                  {!deliveryInfo.isFree && (
+                    <span className="text-[10px] text-gray-400">
+                      FREE above ₹1,599
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
           {/* Guarantees */}
           <div className="grid grid-cols-2 gap-4 text-[10px] text-gray-500 font-medium pt-4 bg-[#fcfbf9] border border-gray-100 rounded-xl p-4">
             <div className="flex items-center gap-2">
-              <Truck className="w-4 h-4 text-primary" /> Free Shipping above ₹799
+              <Truck className="w-4 h-4 text-primary" /> Free Shipping above ₹1,599
             </div>
             <div className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4 text-primary" /> 7-Day Easy Exchange Only

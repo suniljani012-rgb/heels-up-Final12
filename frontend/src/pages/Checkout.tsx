@@ -55,6 +55,15 @@ export default function Checkout() {
   const [notes, setNotes] = useState('')
   const [processing, setProcessing] = useState(false)
 
+  // Payment method: 'prepaid' or 'cod'
+  const [paymentMethod, setPaymentMethod] = useState<'prepaid' | 'cod'>('prepaid')
+  // Delivery fee (dynamic based on pincode)
+  const [deliveryFee, setDeliveryFee] = useState(49) // ₹49 default
+  const [deliveryCod, setDeliveryCod] = useState(true)
+  const [deliveryDays, setDeliveryDays] = useState('3-7')
+  const [deliveryCity, setDeliveryCity] = useState('')
+  const [checkingDelivery, setCheckingDelivery] = useState(false)
+
   interface SavedAddress {
     id: number;
     label: string;
@@ -100,10 +109,36 @@ export default function Checkout() {
   // Calculations
   const subtotalPaise = getCartSubtotal()
   const subtotalRupees = subtotalPaise / 100
-  const freeShippingThreshold = 799
-  const shippingCharge = subtotalRupees >= freeShippingThreshold ? 0 : 49 // ₹49 standard shipping
+  const freeShippingThreshold = 1599
+  const shippingCharge = subtotalRupees >= freeShippingThreshold ? 0 : deliveryFee
   const discountRupees = discountVal / 100
   const totalRupees = Math.max(0, subtotalRupees + shippingCharge - discountRupees)
+
+  // Live pincode delivery check
+  useEffect(() => {
+    if (!pincode || !/^\d{6}$/.test(pincode)) return
+    const timer = setTimeout(async () => {
+      setCheckingDelivery(true)
+      try {
+        const res = await fetch(`/api/shipping/estimate?pincode=${pincode}&total=${subtotalPaise}`)
+        const data = await res.json()
+        if (data.success && data.data) {
+          const d = data.data
+          setDeliveryFee(d.is_free ? 0 : d.fee_rupees)
+          setDeliveryCod(d.cod_available)
+          setDeliveryDays(d.estimated_days)
+          setDeliveryCity([d.city, d.state].filter(Boolean).join(', '))
+          // If COD not available, switch to prepaid
+          if (!d.cod_available) setPaymentMethod('prepaid')
+        }
+      } catch {
+        // silently fail
+      } finally {
+        setCheckingDelivery(false)
+      }
+    }, 600) // 600ms debounce
+    return () => clearTimeout(timer)
+  }, [pincode, subtotalPaise])
 
   const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -187,6 +222,8 @@ export default function Checkout() {
           country: 'India'
         },
         deliveryMethod: 'Standard',
+        deliveryFee: shippingCharge,
+        paymentMethod: paymentMethod === 'cod' ? 'COD' : null,
         notes,
         couponCode: appliedCoupon,
         discountAmount: discountRupees
@@ -521,13 +558,72 @@ export default function Checkout() {
                   <span>-₹{discountRupees.toLocaleString('en-IN')}</span>
                 </div>
               )}
-              <div className="flex justify-between">
-                <span>Shipping Fees</span>
-                <span>{shippingCharge === 0 ? 'FREE' : `₹${shippingCharge}`}</span>
+              <div className="flex justify-between items-center">
+                <span className="flex items-center gap-1">
+                  Delivery Charges
+                  {checkingDelivery && <span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin inline-block" />}
+                </span>
+                <span className={shippingCharge === 0 ? 'text-emerald-700 font-bold' : ''}>
+                  {shippingCharge === 0 ? '🚚 FREE' : `₹${shippingCharge}`}
+                  {pincode.length === 6 && deliveryCity && (
+                    <span className="text-[10px] text-gray-400 ml-1">({deliveryDays} days)</span>
+                  )}
+                </span>
               </div>
               <div className="border-t border-gray-200 pt-3 flex justify-between font-bold text-sm text-gray-900">
                 <span>Total Amount</span>
                 <span>₹{totalRupees.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            {/* Payment Method Selector */}
+            <div className="border border-gray-200 rounded-xl overflow-hidden">
+              <div className="bg-gray-50 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                Payment Method
+              </div>
+              <div className="divide-y divide-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('prepaid')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                    paymentMethod === 'prepaid' ? 'bg-primary/5 border-l-2 border-primary' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    paymentMethod === 'prepaid' ? 'border-primary' : 'border-gray-300'
+                  }`}>
+                    {paymentMethod === 'prepaid' && <span className="w-2 h-2 rounded-full bg-primary" />}
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-gray-900">💳 Pay Online</p>
+                    <p className="text-[10px] text-gray-500">UPI, Cards, Net Banking via Razorpay</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => deliveryCod && setPaymentMethod('cod')}
+                  disabled={!deliveryCod}
+                  className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                    !deliveryCod ? 'opacity-40 cursor-not-allowed bg-gray-50' :
+                    paymentMethod === 'cod' ? 'bg-primary/5 border-l-2 border-primary' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    paymentMethod === 'cod' ? 'border-primary' : 'border-gray-300'
+                  }`}>
+                    {paymentMethod === 'cod' && <span className="w-2 h-2 rounded-full bg-primary" />}
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-gray-900">💵 Cash on Delivery</p>
+                    <p className="text-[10px] text-gray-500">
+                      {deliveryCod
+                        ? (pincode.length === 6 ? `Available for ${pincode}` : 'Enter pincode to confirm')
+                        : 'COD not available for this pincode'
+                      }
+                    </p>
+                  </div>
+                </button>
               </div>
             </div>
 

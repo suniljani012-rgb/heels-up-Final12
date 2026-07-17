@@ -6,9 +6,38 @@
 import { adminGuard } from '../middleware/adminAuth.js';
 import { query, queryOne, run, now } from '../utils/db.js';
 import { ok, error } from '../utils/response.js';
-import { checkPincodeServiceability, trackDelhiveryShipment } from '../utils/delhivery.js';
+import { checkPincodeServiceability, trackDelhiveryShipment, getDeliveryEstimate } from '../utils/delhivery.js';
 
 export async function handleShipping(request, env, path, method) {
+
+    // ── GET /api/shipping/estimate — delivery estimate for a pincode ──────────
+    if (method === 'GET' && path === '/api/shipping/estimate') {
+        const url = new URL(request.url);
+        const pincode = url.searchParams.get('pincode') || '';
+        const total = parseInt(url.searchParams.get('total') || '0'); // in paise
+
+        if (!pincode || !/^\d{6}$/.test(pincode)) {
+            return error('Invalid pincode — must be 6 digits');
+        }
+
+        const estimate = await getDeliveryEstimate(env, pincode, total);
+
+        return ok({
+            pincode,
+            serviceable: estimate.serviceable,
+            cod_available: estimate.cod,
+            prepaid_available: estimate.prepaid,
+            fee_paise: estimate.feePaise,
+            fee_rupees: estimate.feeRupees,
+            is_free: estimate.isFree,
+            zone: estimate.zone,
+            estimated_days: estimate.estimatedDays,
+            city: estimate.city,
+            state: estimate.state,
+            free_above_paise: estimate.freeAbovePaise,
+            free_above_rupees: estimate.freeAboveRupees,
+        });
+    }
 
     // ── GET /api/shipping/rates — calculate shipping for cart ──────
     if (method === 'GET' && path === '/api/shipping/rates') {
@@ -16,8 +45,8 @@ export async function handleShipping(request, env, path, method) {
         const pincode = url.searchParams.get('pincode') || '';
         const total = parseInt(url.searchParams.get('total') || '0'); // in paise
 
-        // Free shipping above ₹999 (99900 paise)
-        const freeThreshold = 99900;
+        // Free shipping above ₹1599 (159900 paise)
+        const freeThreshold = 159900;
         const isFree = total >= freeThreshold;
 
         const rates = [

@@ -418,7 +418,7 @@ export default function Home() {
             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Happy Customers</span>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-3xl font-light text-gray-900 font-display italic">999+</span>
+            <span className="text-3xl font-light text-gray-900 font-display italic">₹1599+</span>
             <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Free Shipping Limit</span>
           </div>
           <div className="flex flex-col gap-1">
