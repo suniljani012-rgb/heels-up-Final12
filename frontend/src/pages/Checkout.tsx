@@ -653,19 +653,19 @@ export default function Checkout() {
             </div>
 
             {paymentMethod === 'cod' && (
-              <div className="bg-amber-50/50 border border-amber-200/60 rounded-xl p-4 space-y-3.5 select-none">
+              <div className="bg-emerald-50/50 border border-emerald-200/60 rounded-xl p-4 space-y-3.5 select-none">
                 <div className="flex gap-2">
-                  <span className="text-base">⚠️</span>
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <h4 className="text-[11px] font-bold text-amber-900 uppercase tracking-wider">COD Policy Notice</h4>
-                    <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
+                    <h4 className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider">COD Checkout Policy</h4>
+                    <p className="text-[10px] text-emerald-800 leading-relaxed font-medium">
                       COD orders require a <strong>partial advance payment</strong> online to verify shipment and prevent returns. 
                       Please note that this advance is <strong>non-refundable</strong> if you cancel the order after it is shipped.
                     </p>
                   </div>
                 </div>
                 
-                <div className="border-t border-amber-200/40 pt-2.5 space-y-1.5 text-[10px] font-medium text-amber-900">
+                <div className="border-t border-emerald-200/40 pt-2.5 space-y-1.5 text-[10px] font-medium text-emerald-900">
                   <div className="flex justify-between">
                     <span>Order Total:</span>
                     <span className="font-bold">₹{totalRupees.toLocaleString('en-IN')}</span>
