@@ -625,16 +625,6 @@ export async function productsRouter(request, env) {
                 if (size_stock && size_stock.some(s => !isValidEuSize(s.size_label))) {
                     return error('Invalid size label in size_stock list', 400);
                 }
-                const reqColor = item.color || extractColor(item.name);
-                if (reqColor && reqColor !== 'Default' && reqColor !== 'Nude/Default') {
-                    const cleanColorName = String(reqColor).trim().toLowerCase();
-                    const colorRow = await env.DB.prepare(
-                        'SELECT hex_code FROM color_hex_mappings WHERE color_name = ?'
-                    ).bind(cleanColorName).first();
-                    if (!colorRow) {
-                        return error(`Color mapping not found for colorway: "${reqColor}"`, 400);
-                    }
-                }
             }
 
             // 2. Execution Pass (with duplicate & blank SKU skipping)
@@ -737,17 +727,7 @@ export async function productsRouter(request, env) {
                 return error('MRP must be a valid positive number', 400);
             }
 
-            // Colorway validation
-            const reqColor = body.color || extractColor(body.name);
-            if (reqColor && reqColor !== 'Default' && reqColor !== 'Nude/Default') {
-                const cleanColorName = String(reqColor).trim().toLowerCase();
-                const colorRow = await env.DB.prepare(
-                    'SELECT hex_code FROM color_hex_mappings WHERE color_name = ?'
-                ).bind(cleanColorName).first();
-                if (!colorRow) {
-                    return error(`Color mapping not found for colorway: "${reqColor}"`, 400);
-                }
-            }
+
 
             const result = await env.DB.prepare(
                 `INSERT INTO products (name, sku, category, description, price, original_price, stock, active, featured, is_new, is_trending, show_mrp, sizes_json, images_json, brand, tags, meta_title, meta_description, created_at, updated_at)
@@ -813,17 +793,7 @@ export async function productsRouter(request, env) {
                 return error('MRP must be a valid positive number', 400);
             }
 
-            // Colorway validation
-            const reqColor = body.color || extractColor(body.name);
-            if (reqColor && reqColor !== 'Default' && reqColor !== 'Nude/Default') {
-                const cleanColorName = String(reqColor).trim().toLowerCase();
-                const colorRow = await env.DB.prepare(
-                    'SELECT hex_code FROM color_hex_mappings WHERE color_name = ?'
-                ).bind(cleanColorName).first();
-                if (!colorRow) {
-                    return error(`Color mapping not found for colorway: "${reqColor}"`, 400);
-                }
-            }
+
 
             await env.DB.prepare(
                 `UPDATE products SET name=?, category=?, description=?, price=?, original_price=?,
