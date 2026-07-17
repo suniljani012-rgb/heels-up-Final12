@@ -341,7 +341,7 @@ export async function ordersRouter(request, env) {
             let couponCode = String(body.couponCode || "").trim().toUpperCase();
             const subtotalAmount = Number(items.reduce((s, i) => s + (Number(i.price || 0) * Math.max(1, i.qty || i.quantity || 1)), 0).toFixed(2));
             if (couponCode) {
-                const coupon = await env.DB.prepare("SELECT * FROM coupons WHERE code=? AND active = 1").bind(couponCode).first();
+                const coupon = await env.DB.prepare("SELECT * FROM coupons WHERE code=? AND active = 1 AND (expires_at IS NULL OR expires_at >= datetime('now'))").bind(couponCode).first();
                 if (coupon && subtotalAmount >= coupon.min_order) {
                     const isPercent = coupon.type === "percent" || coupon.type === "percentage";
                     let disc = isPercent ? Math.round(subtotalAmount * (coupon.value / 100)) : coupon.value;

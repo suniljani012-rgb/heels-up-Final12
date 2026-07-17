@@ -65,8 +65,8 @@ export default function CouponsManager({ coupons, token, onRefresh }: CouponsMan
     setCode(c.code);
     setType(c.type);
     setValue((c.value).toString());
-    setMinOrder((c.min_order / 100).toString()); // assuming stored in paise
-    setMaxDiscount(c.max_discount ? (c.max_discount / 100).toString() : '');
+    setMinOrder(c.min_order.toString());
+    setMaxDiscount(c.max_discount ? c.max_discount.toString() : '');
     setMaxUses(c.max_uses ? c.max_uses.toString() : '');
     setActive(c.active);
     setExpiresAt(c.expires_at ? c.expires_at.split(' ')[0] : '');
@@ -86,8 +86,8 @@ export default function CouponsManager({ coupons, token, onRefresh }: CouponsMan
       code: code.trim().toUpperCase(),
       type,
       value: parseFloat(value),
-      min_order: Math.round(parseFloat(minOrder || '0') * 100), // convert to paise
-      max_discount: maxDiscount ? Math.round(parseFloat(maxDiscount) * 100) : null,
+      min_order: parseFloat(minOrder || '0'),
+      max_discount: maxDiscount ? parseFloat(maxDiscount) : null,
       max_uses: maxUses ? parseInt(maxUses) : null,
       active,
       expires_at: expiresAt ? expiresAt + ' 23:59:59' : null,
@@ -194,7 +194,7 @@ export default function CouponsManager({ coupons, token, onRefresh }: CouponsMan
                   <td className="p-4 font-mono font-bold text-neutral-900">
                     {c.type === 'percentage' ? `${c.value}%` : `₹${c.value}`}
                   </td>
-                  <td className="p-4 font-mono text-neutral-500">₹{(c.min_order / 100).toFixed(0)}</td>
+                  <td className="p-4 font-mono text-neutral-500">₹{c.min_order.toFixed(0)}</td>
                   <td className="p-4 font-mono text-neutral-500">{c.used_count} / {c.max_uses || '∞'}</td>
                   <td className="p-4 font-mono text-neutral-500">{c.expires_at ? c.expires_at.split(' ')[0] : 'Never'}</td>
                   <td className="p-4">
