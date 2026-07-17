@@ -1,82 +1,91 @@
 // frontend/src/utils/imageUpload.ts
-// Shared image upload utility — converts ANY image format to WebP before upload.
-// HEIC/HEIF → heic2any (JPEG) → canvas → WebP
-// All other raster formats → canvas → WebP
-// GIF/WebP/AVIF → uploaded as-is (no re-encode needed)
+// Ultra-fast parallel image conversion pipeline.
+// - ALL images are converted to WebP before upload (max 1200px, Q0.82)
+// - HEIC/HEIF → heic2any (JPEG blob) → canvas → WebP
+// - GIF → kept as-is (animation must be preserved)
+// - WebP/AVIF → canvas re-encode for max resize savings
+// - All conversions run in PARALLEL via Promise.all — not sequential
 
-const WEBP_QUALITY = 0.85;
-const MAX_WIDTH = 1200;   // cap product images at 1200px wide — more than enough for web
-const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB hard limit
+const WEBP_QUALITY = 0.82;
+const MAX_WIDTH = 1200;        // cap at 1200px wide — enough for full-bleed e-commerce
+const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB raw-input limit (before conversion)
 
-/**
- * Resize + convert a raster file to WebP via canvas.
- * Preserves aspect ratio. If image is smaller than MAX_WIDTH, no scaling is done.
- */
-export function convertToWebP(file: File, quality = WEBP_QUALITY): Promise<File> {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        // Calculate dimensions with max-width cap
-        let { width, height } = img;
-        if (width > MAX_WIDTH) {
-          height = Math.round((height * MAX_WIDTH) / width);
-          width = MAX_WIDTH;
+// ---------------------------------------------------------------------------
+// Low-level: draw a loaded <img> onto a canvas and export as WebP File
+// ---------------------------------------------------------------------------
+function canvasToWebP(img: HTMLImageElement, originalName: string, quality: number): Promise<File> {
+  return new Promise((resolve, reject) => {
+    let { width, height } = img;
+    if (width > MAX_WIDTH) {
+      height = Math.round((height * MAX_WIDTH) / width);
+      width = MAX_WIDTH;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { reject(new Error('No canvas context')); return; }
+
+    // White fill for transparent images (PNG/AVIF with alpha)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
+
+    const baseName = originalName.replace(/\.[^/.]+$/, '');
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          resolve(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
+        } else {
+          reject(new Error('canvas.toBlob returned null'));
         }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(file);
-          return;
-        }
-
-        // White background for transparency (e.g., PNG with alpha)
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const baseName = file.name.replace(/\.[^/.]+$/, '');
-              resolve(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
-            } else {
-              resolve(file);
-            }
-          },
-          'image/webp',
-          quality
-        );
-      };
-      img.onerror = () => resolve(file);
-      img.src = event.target?.result as string;
-    };
-    reader.onerror = () => resolve(file);
-    reader.readAsDataURL(file);
+      },
+      'image/webp',
+      quality
+    );
   });
 }
 
-/**
- * Prepare a single image file for upload:
- * - HEIC/HEIF → heic2any (JPEG blob) → canvas → WebP
- * - GIF → kept as-is (animation must be preserved)
- * - WebP/AVIF → kept as-is (already optimal)
- * - Everything else (JPG, PNG, TIFF, BMP, RAW, etc.) → canvas → WebP
- */
-export async function prepareImageFile(file: File): Promise<File> {
-  // Return original file as-is, bypassing client-side compression/conversion.
-  return file;
+// ---------------------------------------------------------------------------
+// Low-level: load a Blob/File into an <img> element
+// ---------------------------------------------------------------------------
+function blobToImg(blob: Blob): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Image decode failed')); };
+    img.src = url;
+  });
 }
 
-/**
- * Upload multiple prepared image files to the server.
- * Calls /api/admin/upload with Authorization header.
- * Returns array of public URLs.
- */
+// ---------------------------------------------------------------------------
+// Convert ONE file → WebP File (parallel-safe, no shared state)
+// ---------------------------------------------------------------------------
+export async function prepareImageFile(file: File): Promise<File> {
+  const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+
+  // GIF: keep as-is (animations must survive)
+  if (ext === 'gif' || file.type === 'image/gif') return file;
+
+  // HEIC / HEIF: decode with heic2any first, then canvas-encode to WebP
+  if (ext === 'heic' || ext === 'heif' || file.type === 'image/heic' || file.type === 'image/heif') {
+    const { default: heic2any } = await import('heic2any');
+    const raw = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.95 });
+    const jpegBlob: Blob = Array.isArray(raw) ? raw[0] : raw;
+    const img = await blobToImg(jpegBlob);
+    return canvasToWebP(img, file.name, WEBP_QUALITY);
+  }
+
+  // All other raster formats (JPEG, PNG, WebP, AVIF, TIFF, BMP, …) → resize + WebP
+  const img = await blobToImg(file);
+  return canvasToWebP(img, file.name, WEBP_QUALITY);
+}
+
+// ---------------------------------------------------------------------------
+// Upload prepared files to /api/admin/upload
+// ---------------------------------------------------------------------------
 export async function uploadImages(
   files: File[],
   token: string,
@@ -86,6 +95,8 @@ export async function uploadImages(
   for (const file of files) {
     formData.append('files', file);
   }
+
+  onProgress?.(0, files.length);
 
   const res = await fetch('/api/admin/upload', {
     method: 'POST',
@@ -103,13 +114,13 @@ export async function uploadImages(
     throw new Error(data.error || 'Upload failed');
   }
 
+  onProgress?.(files.length, files.length);
   return { urls: data.data.urls, keys: data.data.keys };
 }
 
-/**
- * Full pipeline: prepare (convert to WebP) + upload.
- * Shows progress via onProgress callback.
- */
+// ---------------------------------------------------------------------------
+// Full pipeline: PARALLEL convert → upload
+// ---------------------------------------------------------------------------
 export async function prepareAndUpload(
   rawFiles: FileList | File[],
   token: string,
@@ -120,25 +131,27 @@ export async function prepareAndUpload(
 
   onProgress?.('converting', 0, total);
 
-  // Convert files sequentially (canvas is synchronous per file)
-  const prepared: File[] = [];
-  for (let i = 0; i < fileArray.length; i++) {
-    onProgress?.('converting', i, total);
-    const ready = await prepareImageFile(fileArray[i]);
-    prepared.push(ready);
-  }
+  // ✅ ALL conversions run in parallel — not sequential
+  const prepared = await Promise.all(
+    fileArray.map((file) => prepareImageFile(file))
+  );
+
   onProgress?.('converting', total, total);
 
-  // Size guard: reject any file that is still > 5MB after conversion
+  // Size guard: reject any file that is still > 10MB after conversion
   for (const f of prepared) {
-    if (f.size > MAX_FILE_BYTES) {
+    if (f.size > 10 * 1024 * 1024) {
       throw new Error(
-        `"${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)} MB after conversion. Maximum allowed size is 5 MB. Please use a smaller image.`
+        `"${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)} MB after conversion. Please use a smaller image.`
       );
     }
   }
 
+  onProgress?.('uploading', 0, total);
+  const result = await uploadImages(prepared, token, (current, tot) =>
+    onProgress?.('uploading', current, tot)
+  );
   onProgress?.('uploading', total, total);
 
-  return uploadImages(prepared, token, onProgress ? (current, total) => onProgress('uploading', current, total) : undefined);
+  return result;
 }

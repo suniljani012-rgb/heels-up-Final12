@@ -2,7 +2,7 @@
 import { requireAdmin, requireAuth } from '../middleware/auth.js';
 import { ok, error, serverError, notFound } from '../utils/response.js';
 
-const MAX_SIZE = 10 * 1024 * 1024; // 10MB raw input (client converts to WebP first; raw HEIC can be large)
+const MAX_SIZE = 50 * 1024 * 1024; // 50MB raw input cap (client converts all images to WebP before upload)
 const ALLOWED_EXTENSIONS = [
     'jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'svg',
     'tiff', 'tif', 'bmp', 'jfif', 'avif', 'ico', 'apng', 'raw'
