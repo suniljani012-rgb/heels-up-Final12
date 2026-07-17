@@ -39,7 +39,9 @@ export async function uploadRouter(request, env, ctx) {
             const via = request.headers.get('via') || '';
             const isImageResizingService = ua.includes('Cloudflare-Image-Resizing') || via.includes('image-resizing');
 
-            if (env.R2_PUBLIC_URL && needsCfResizing && !isImageResizingService) {
+            const isLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+
+            if (env.R2_PUBLIC_URL && needsCfResizing && !isImageResizingService && !isLocal) {
                 const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
                 // For HEIC: force jpeg as safe fallback if browser doesn't support webp/avif
                 const targetFormat = supportsAvif ? 'avif' : (supportsWebp ? 'webp' : 'jpeg');
@@ -81,7 +83,11 @@ export async function uploadRouter(request, env, ctx) {
 
             // Override content-type for HEIC so browsers don't show blank
             if (isHeic) {
-                headers.set('Content-Type', 'image/jpeg');
+                if (isImageResizingService) {
+                    headers.set('Content-Type', key.toLowerCase().endsWith('.heif') ? 'image/heif' : 'image/heic');
+                } else {
+                    headers.set('Content-Type', 'image/jpeg'); // browser fallback
+                }
             }
 
             const origin = request.headers.get('Origin') || '';
@@ -118,6 +124,8 @@ export async function uploadRouter(request, env, ctx) {
             const bucket = env.MEDIA || env.BUCKET;
             if (!bucket) return error('R2 bucket binding (MEDIA) not found', 500);
 
+            const isLocal = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+
             const results = await Promise.all(files.map(async (file) => {
                 const fileName = file.name || '';
                 const fileExt = fileName.split('.').pop().toLowerCase();
@@ -136,13 +144,16 @@ export async function uploadRouter(request, env, ctx) {
                     throw new Error('File too large. Max 50MB');
                 }
 
-                // If it is HEIC, convert to PNG. Otherwise keep original or convert
-                const isHeic = isHeicExt || fileExt === 'heic' || fileExt === 'heif';
-                const finalExt = isHeic ? 'png' : (ALLOWED_EXTENSIONS.includes(fileExt) ? fileExt : 'png');
-                const contentType = isHeic ? 'image/png' : (file.type || 'image/png');
+                // If it is HEIC and CF Image Resizing is available, convert to PNG.
+                const isHeic = isHeicExt || file.type === 'image/heic' || file.type === 'image/heif';
+                const canConvert = isHeic && env.R2_PUBLIC_URL && !isLocal;
+
+                // If conversion is possible, output as PNG. Otherwise keep original format.
+                const finalExt = canConvert ? 'png' : (ALLOWED_EXTENSIONS.includes(fileExt) ? fileExt : 'png');
+                const contentType = canConvert ? 'image/png' : (isHeic ? 'image/heic' : (file.type || 'image/png'));
                 const finalKey = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${finalExt}`;
 
-                if (isHeic && env.R2_PUBLIC_URL) {
+                if (canConvert) {
                     // 1. Put raw HEIC temporarily
                     const tempKey = `temp/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
                     await bucket.put(tempKey, buffer, {
@@ -160,6 +171,7 @@ export async function uploadRouter(request, env, ctx) {
                                 }
                             }
                         });
+
                         if (convertRes.ok) {
                             const convertedBuffer = await convertRes.arrayBuffer();
                             // 3. Save converted PNG
@@ -188,7 +200,7 @@ export async function uploadRouter(request, env, ctx) {
                         return { url: `${env.R2_PUBLIC_URL}/${fallbackKey}`, key: fallbackKey };
                     }
                 } else {
-                    // Regular uploads
+                    // Regular uploads or HEIC files that cannot be converted on the server (like local dev)
                     await bucket.put(finalKey, buffer, {
                         httpMetadata: { contentType },
                     });

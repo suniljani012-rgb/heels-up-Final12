@@ -48,6 +48,43 @@ const getInitials = (name: string) => {
 
 
 
+// Local caching helpers for SWR (stale-while-revalidate) rendering.
+// Loads data instantly from localStorage, refetches in background.
+function getLocalCache(key: string, fallback: any) {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const item = window.localStorage.getItem(`heelsup_cache_${key}`);
+    return item ? JSON.parse(item) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function setLocalCache(key: string, data: any) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(`heelsup_cache_${key}`, JSON.stringify(data));
+  } catch {}
+}
+
+const DEFAULT_CATEGORIES = [
+  { id: 1, name: 'Heels', slug: 'heels', image_url: '' },
+  { id: 2, name: 'Flats', slug: 'flats', image_url: '' },
+  { id: 3, name: 'Sandals', slug: 'sandals', image_url: '' }
+];
+
+const DEFAULT_BANNERS = [
+  {
+    id: 1,
+    title: 'Exclusive Heels Collection',
+    subtitle: 'Step out in pure luxury and absolute comfort.',
+    image_url: '',
+    link: '/shop?category=heels',
+    active: 1,
+    sort_order: 1
+  }
+];
+
 function useCategories() {
   return useQuery({
     queryKey: ['categories'],
@@ -55,8 +92,11 @@ function useCategories() {
       const res = await fetch('/api/ca' + 'tegories');
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to fetch categories');
+      setLocalCache('categories', data.data);
       return data.data;
-    }
+    },
+    initialData: () => getLocalCache('categories', DEFAULT_CATEGORIES),
+    staleTime: 1000 * 60 * 5, // 5 minutes stale limit
   });
 }
 
@@ -67,12 +107,13 @@ function useBanners() {
       const res = await fetch('/api/ba' + 'nners');
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to fetch banners');
+      setLocalCache('banners', data.data);
       return data.data;
-    }
+    },
+    initialData: () => getLocalCache('banners', DEFAULT_BANNERS),
+    staleTime: 1000 * 60 * 5,
   });
 }
-
-
 
 function useLatestReviews() {
   return useQuery({
@@ -93,8 +134,11 @@ function useFeaturedProducts() {
       const res = await fetch('/api/pro' + 'ducts?limit=8&featured=true');
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to fetch featured products');
+      setLocalCache('featuredProducts', data.data);
       return data.data;
-    }
+    },
+    initialData: () => getLocalCache('featuredProducts', []),
+    staleTime: 1000 * 60 * 5,
   });
 }
 

@@ -1,32 +1,31 @@
-# HeelsUp Boutique Storefront & API Enhancements Plan
+# HeelsUp Image Upload & Preloading Optimization Plan
 
 ## Objective
-Implement missing storefront features, backend reviews API, security mitigations, and performance optimizations. Ensure all E2E tests pass.
-
-## Strategy
-Use the **Project Pattern**:
-1. **Explore**: Identify codebase files and structure (Completed by Explorer).
-2. **Decompose & Implement**: Split the work into 7 milestones and dispatch to specialized Workers.
-3. **Verification**: Run E2E tests and Forensic Auditor to ensure correctness and zero integrity issues.
+Fix the admin product gallery broken image previews, implement robust HEIC to PNG image conversion at the edge, and optimize storefront loading speed to make data appear preloaded instantly (0.01ms) using edge-injected preloading.
 
 ## Milestones
-- **Milestone 1: Database Migration & Settings Constraint Fix**
-  - Add missing columns `brand`, `sales_channel`, and `out_for_delivery_at`.
-  - Fix settings table `updated_at` NOT NULL constraint failure in backend settings API.
-  - Verify baseline tests pass.
-- **Milestone 2: Global Search, Filtering, and Sorting**
-  - Implement navbar search bar in `Header.tsx` and redirection.
-  - Enable filters (Size, Color, Price) and sort (Rating, Price, Newest) on Shop page UI and backend `products.js`.
-- **Milestone 3: Product Reviews API & Detail Page UI**
-  - Implement GET/POST `/api/products/:id/reviews` backend endpoints.
-  - Add reviews list, stars, and submission form to Product detail page using new endpoints.
-- **Milestone 4: Visual Order Tracking Timeline**
-  - Implement step-by-step timeline stepper (Placed -> Shipped -> Out for Delivery -> Delivered) on `OrderTracking.tsx` and `Profile.tsx` views.
-- **Milestone 5: Input Sanitization & Stock Validation**
-  - Sanitize all client-side parameters to prevent SQL injection.
-  - Ensure strict stock level validations during checkout.
-- **Milestone 6: Performance Optimization via frame_ant.js**
-  - Leverage `frame_ant.js` preloading caches for products, shop filters, and profile logs to ensure preloaded sub-0.02ms cache hit loads.
-- **Milestone 7: Integration, Verification & Forensic Audit**
-  - Run full E2E test suite (100% pass).
-  - Verify clean status via Forensic Auditor.
+
+### Milestone 1: Fix Admin Product Gallery Previews and Upload Route (Backend & Frontend)
+- **Problem**: Image uploads fail due to a ReferenceError (`ext is not defined`) in `src/routes/upload.js` when uploading non-HEIC images, leading to broken previews. Additionally, path-based URL serving is not supported.
+- **Fix**:
+  - Fix the ReferenceError in `src/routes/upload.js` by replacing `ext` with `fileExt`.
+  - Add support for path-based keys in GET `/api/upload` (e.g. `/api/upload/products/filename.png`) in addition to `?key=...`.
+  - Ensure that custom domains like `media.heelsup.in` are correctly supported.
+
+### Milestone 2: Convert HEIC Images to PNG
+- **Problem**: HEIC images are uploaded raw and must be converted to PNG at the edge so that all browsers can render them.
+- **Fix**:
+  - Ensure the HEIC conversion block in `src/routes/upload.js` correctly uses Cloudflare Image Resizing via a path-based proxy URL (which is more reliable than query strings).
+  - Add a robust fallback for environments without Cloudflare Image Resizing (like local development).
+
+### Milestone 3: Instant 0.01ms Website Preloading
+- **Problem**: Storefront data has latency on initial load due to React Query roundtrips.
+- **Fix**:
+  - In `src/index.js`, intercept requests for `index.html` (including root `/` and SPA route fallbacks).
+  - Fetch categories, banners, and featured products at the edge and inject them as a script tag defining `window.__PRELOADED_DATA__`.
+  - Update `public/frame_ant.js` and `frontend/public/frame_ant.js` to immediately return preloaded JSON from `window.__PRELOADED_DATA__` for matching GET fetch requests.
+
+### Milestone 4: Verification & Forensic Audit
+- **Verify**: Add E2E tests for image uploads (including HEIC to PNG conversion) and preloading cache hits.
+- **Run**: Execute `npm run test:e2e` to ensure all tests pass.
+- **Audit**: Run the Forensic Auditor to verify integrity.

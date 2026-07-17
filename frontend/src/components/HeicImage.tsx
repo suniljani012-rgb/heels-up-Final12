@@ -1,8 +1,7 @@
 // frontend/src/components/HeicImage.tsx
 // Simple, reliable image component.
-// RULE: Only shows the image that is in the database. No fallbacks. No placeholders. No proxy images.
-// - R2 / heelsup.in / workers.dev URLs: proxied through /api/upload for CORS + HEIC conversion
-// - All other URLs (direct CDN, Unsplash, etc.): used directly as-is
+// - In production: serves original URLs directly from database (no proxy, 100% original quality).
+// - In local dev (localhost): proxies R2 URLs to /api/upload to load from the local miniflare R2 bucket.
 // - If src is undefined/null/empty → renders nothing
 import React from 'react'
 
@@ -14,10 +13,8 @@ interface HeicImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 
 /**
  * Returns the URL to actually load in the <img> tag.
- * R2/our-domain URLs are proxied through /api/upload so:
- *   1. CORS headers are added
- *   2. HEIC files get converted by Cloudflare Image Resizing → WebP/JPEG
- * Everything else is used as-is.
+ * - Production: always returns original URL directly (no proxy).
+ * - Localhost: proxies R2/Worker URLs so miniflare can serve local files.
  */
 function getDisplayUrl(src: string | undefined): string | undefined {
   if (!src || !src.trim()) return undefined;
@@ -27,30 +24,35 @@ function getDisplayUrl(src: string | undefined): string | undefined {
     return src;
   }
 
-  try {
-    const parsed = new URL(src);
-    const host = parsed.hostname;
+  const isLocalhost = typeof window !== 'undefined' && 
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-    // Already a proxied /api/upload URL — rebuild cleanly
-    if (parsed.pathname.includes('/api/upload')) {
-      const queryKey = parsed.searchParams.get('key');
-      if (queryKey) return `/api/upload?key=${encodeURIComponent(queryKey)}`;
-    }
+  if (isLocalhost) {
+    try {
+      const parsed = new URL(src);
+      const host = parsed.hostname;
 
-    // Only proxy our own R2 / Worker / CDN URLs
-    if (
-      host.includes('heelsup.in') ||
-      host.includes('workers.dev') ||
-      host.includes('r2.dev')
-    ) {
-      const key = decodeURIComponent(parsed.pathname.substring(1));
-      return `/api/upload?key=${encodeURIComponent(key)}`;
+      // Already a proxied /api/upload URL — rebuild cleanly
+      if (parsed.pathname.includes('/api/upload')) {
+        const queryKey = parsed.searchParams.get('key');
+        if (queryKey) return `/api/upload?key=${encodeURIComponent(queryKey)}`;
+      }
+
+      // Only proxy our own R2 / Worker / CDN URLs in local development
+      if (
+        host.includes('heelsup.in') ||
+        host.includes('workers.dev') ||
+        host.includes('r2.dev')
+      ) {
+        const key = decodeURIComponent(parsed.pathname.substring(1));
+        return `/api/upload?key=${encodeURIComponent(key)}`;
+      }
+    } catch {
+      // not a valid URL — return as-is
     }
-  } catch {
-    // not a valid URL — return as-is
   }
 
-  // All other URLs (Unsplash, other CDNs, etc.) — direct
+  // All other cases / Production: use original URL directly
   return src;
 }
 

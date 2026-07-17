@@ -24,7 +24,12 @@ HeelsUp is structured as a full-stack Cloudflare App:
 | 4 | POS Terminal Redesign & Channels | Run D1 migration for offline_sales, update POS backend checkout route, and POS checkout UI with channel selector | M1 | DONE |
 | 5 | Settings & Visual Contrast Alignment | Refactor SettingsManager.tsx PUT API to batch PUT, fix all bg-neutral-900 contrast issues | M2, M3, M4 | DONE |
 | 6 | Storefront Enhancements | Implement search, filters, reviews, order tracking timeline, cache performance | M1-M5 | DONE |
-| 7 | Verification & Forensic Audit | Fix 15 failing tests and add storefront E2E tests | M1-M6 | IN_PROGRESS (Conv: 0b5970b1-72ff-4b27-a2a9-8d605ec46277) |
+| 7 | Verification & Forensic Audit | Fix 15 failing tests and add storefront E2E tests | M1-M6 | DONE |
+| 8.1 | Fix Admin Product Gallery Previews | Fix the ReferenceError in upload.js, path-based keys support, and admin previews | None | PLANNED |
+| 8.2 | Convert HEIC Images to PNG | HEIC conversion using proxy URL at the edge with fallback | M8.1 | PLANNED |
+| 8.3 | Storefront Preloading | Edge HTML preloaded data injection and frame_ant.js cache hit mapping | None | PLANNED |
+| 8.4 | Verification & Audit | E2E test runs and Forensic Auditor checks | M8.1, M8.2, M8.3 | PLANNED |
+
 
 ## Interface Contracts
 ### POS Checkout API (`POST /api/pos/sale`)
