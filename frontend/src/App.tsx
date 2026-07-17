@@ -23,17 +23,22 @@ import NotFound from './pages/NotFound'
 
 const Admin = lazy(() => import('./pages/Admin'))
 
+import { useCartStore } from './store/useCartStore'
+
 const queryClient = new QueryClient()
 
 function AppContent() {
   const location = useLocation()
   const isAdmin = location.pathname.startsWith('/admin')
+  const detectLocation = useCartStore(state => state.detectLocation)
 
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual'
     }
-  }, [])
+    // Website kholte hi location ki details aur price dynamically loads
+    detectLocation();
+  }, [detectLocation])
 
   useEffect(() => {
     window.scrollTo(0, 0)

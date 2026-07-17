@@ -25,7 +25,7 @@ export async function shippingAdminRouter(request, env) {
                 "SELECT value FROM settings WHERE key = 'shipping_settings'"
             ).first();
             const defaults = {
-                free_shipping_threshold: 99900, // ₹999 in paise
+                free_shipping_threshold: 159900, // ₹1599 in paise
                 standard_rate: 4900,            // ₹49
                 express_rate: 9900,             // ₹99
                 processing_days: 1,

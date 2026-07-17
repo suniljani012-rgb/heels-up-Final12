@@ -145,7 +145,7 @@ export async function handleShipping(request, env, path, method) {
 
         const result = await run(env.DB,
             'INSERT INTO shipping_zones (name, states, base_rate, free_above, created_at) VALUES (?,?,?,?,?)',
-            [name, JSON.stringify(states), base_rate || 4900, free_above || 99900, now()]
+            [name, JSON.stringify(states), base_rate || 4900, free_above || 159900, now()]
         );
 
         return ok({ id: result.meta.last_row_id, message: 'Shipping zone created' }, 201);

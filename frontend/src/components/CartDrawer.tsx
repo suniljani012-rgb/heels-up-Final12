@@ -6,10 +6,13 @@ import { useUIStore } from '../store/useUIStore'
 import HeicImage from './HeicImage'
 import { formatSizeToIndian } from '../utils/sizeHelper'
 
+import { useDisplayPrice } from '../utils/priceHelper'
+
 export default function CartDrawer() {
   const { items, updateQty, removeItem, getCartSubtotal } = useCartStore()
   const { cartOpen, setCartOpen } = useUIStore()
   const navigate = useNavigate()
+  const { getDisplayPrice } = useDisplayPrice()
 
   const subtotalPaise = getCartSubtotal()
   const subtotalRupees = subtotalPaise / 100
@@ -106,7 +109,7 @@ export default function CartDrawer() {
                         <div className="flex justify-between items-start gap-1">
                           <h4 className="text-xs font-bold text-gray-900 leading-tight line-clamp-1">{item.name}</h4>
                           <span className="text-xs font-bold text-gray-900 flex-shrink-0">
-                            ₹{((item.price * item.qty) / 100).toLocaleString('en-IN')}
+                             ₹{((getDisplayPrice(item.price) * item.qty) / 100).toLocaleString('en-IN')}
                           </span>
                         </div>
                         <p className="text-[10px] text-gray-500 mt-1 capitalize">

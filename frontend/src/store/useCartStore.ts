@@ -24,6 +24,18 @@ interface CartState {
   getCartTotal: () => number; // in paise
   fetchCartFromBackend: () => Promise<void>;
   syncCart: () => Promise<void>;
+
+  // Geolocation & Dynamic Shipping States
+  detectedPincode: string;
+  shippingFeeRupees: number;
+  deliveryCod: boolean;
+  deliveryDays: string;
+  deliveryCity: string;
+  locationStatus: 'loading' | 'granted' | 'denied' | 'unknown';
+  setDetectedPincode: (pin: string) => void;
+  setShippingFeeRupees: (fee: number) => void;
+  fetchDeliveryEstimate: (pin: string) => Promise<void>;
+  detectLocation: () => void;
 }
 
 const syncCartToBackend = async (items: CartItem[]) => {
@@ -120,7 +132,15 @@ export const useCartStore = create<CartState>((set, get) => {
       return get().items.reduce((sum, item) => sum + item.qty, 0);
     },
     getCartSubtotal: () => {
-      return get().items.reduce((sum, item) => sum + item.price * item.qty, 0);
+      const baseSubtotal = get().items.reduce((sum, item) => sum + item.price * item.qty, 0);
+      if (baseSubtotal >= 159900 || baseSubtotal === 0) {
+        return baseSubtotal;
+      }
+      return get().items.reduce((sum, item) => {
+        const itemBasePrice = item.price;
+        const displayedItemPrice = itemBasePrice >= 159900 ? itemBasePrice : itemBasePrice + (get().shippingFeeRupees * 100);
+        return sum + displayedItemPrice * item.qty;
+      }, 0);
     },
     getCartTotal: () => {
       return get().getCartSubtotal();
@@ -163,6 +183,76 @@ export const useCartStore = create<CartState>((set, get) => {
         }
       } catch (err) {
         console.error('Failed to fetch cart from backend:', err);
+      }
+    },
+
+    // Geolocation & Dynamic Shipping States
+    detectedPincode: localStorage.getItem('hu_delivery_pin') || '',
+    shippingFeeRupees: Number(localStorage.getItem('hu_shipping_fee') || '129'), // default max is ₹129
+    deliveryCod: true,
+    deliveryDays: '3-7',
+    deliveryCity: '',
+    locationStatus: 'unknown',
+    setDetectedPincode: (pin: string) => set({ detectedPincode: pin }),
+    setShippingFeeRupees: (fee: number) => set({ shippingFeeRupees: fee }),
+    fetchDeliveryEstimate: async (pin: string) => {
+      if (!/^\d{6}$/.test(pin)) return;
+      try {
+        const res = await fetch(`/api/shipping/estimate?pincode=${pin}&total=0`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          const d = data.data;
+          set({
+            detectedPincode: pin,
+            shippingFeeRupees: d.fee_rupees,
+            deliveryCod: d.cod_available,
+            deliveryDays: d.estimated_days,
+            deliveryCity: [d.city, d.state].filter(Boolean).join(', '),
+          });
+          localStorage.setItem('hu_delivery_pin', pin);
+          localStorage.setItem('hu_shipping_fee', String(d.fee_rupees));
+        }
+      } catch (err) {
+        console.error('Failed to fetch estimate:', err);
+      }
+    },
+    detectLocation: () => {
+      const cachedPin = localStorage.getItem('hu_delivery_pin');
+      if (cachedPin && /^\d{6}$/.test(cachedPin)) {
+        get().fetchDeliveryEstimate(cachedPin);
+        set({ locationStatus: 'granted' });
+        return;
+      }
+
+      if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
+        set({ locationStatus: 'loading' });
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            try {
+              const { latitude, longitude } = pos.coords;
+              const geo = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+                { headers: { 'User-Agent': 'HeelsUp/1.0' } }
+              );
+              const geoData = await geo.json();
+              const pin = geoData?.address?.postcode?.replace(/\s/g, '').slice(0, 6);
+              if (pin && /^\d{6}$/.test(pin)) {
+                set({ locationStatus: 'granted' });
+                get().fetchDeliveryEstimate(pin);
+              } else {
+                set({ locationStatus: 'denied', shippingFeeRupees: 129 });
+              }
+            } catch {
+              set({ locationStatus: 'denied', shippingFeeRupees: 129 });
+            }
+          },
+          () => {
+            set({ locationStatus: 'denied', shippingFeeRupees: 129 });
+          },
+          { timeout: 5000, maximumAge: 300000 }
+        );
+      } else {
+        set({ locationStatus: 'denied', shippingFeeRupees: 129 });
       }
     }
   };

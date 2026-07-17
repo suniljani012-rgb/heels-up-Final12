@@ -8,12 +8,15 @@ import { useAuthStore } from '../store/useAuthStore'
 import HeicImage from '../components/HeicImage'
 import { formatSizeToIndian } from '../utils/sizeHelper'
 
+import { useDisplayPrice } from '../utils/priceHelper'
+
 export default function Cart() {
   const { items, updateQty, removeItem, getCartSubtotal, clearCart } = useCartStore()
   const { toggleItem, hasItem } = useWishlistStore()
   const { showToast } = useToastStore()
   const navigate = useNavigate()
   const { token } = useAuthStore()
+  const { getDisplayPrice } = useDisplayPrice()
 
   const handleMoveToWishlist = async (id: number, name: string, color: string, size: string) => {
     if (!hasItem(id)) {
@@ -141,7 +144,7 @@ export default function Cart() {
                           </p>
                         </div>
                         <span className="text-sm font-bold text-gray-900 mt-2 sm:mt-0 self-center sm:self-start">
-                          ₹{((item.price * item.qty) / 100).toLocaleString('en-IN')}
+                          ₹{((getDisplayPrice(item.price) * item.qty) / 100).toLocaleString('en-IN')}
                         </span>
                       </div>
                     </div>

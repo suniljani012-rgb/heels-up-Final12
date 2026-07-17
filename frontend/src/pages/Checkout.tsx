@@ -13,12 +13,15 @@ declare global {
   }
 }
 
+import { useDisplayPrice } from '../utils/priceHelper'
+
 export default function Checkout() {
   const { items, getCartSubtotal, clearCart } = useCartStore()
   const { user, token } = useAuthStore()
   const { showToast } = useToastStore()
   const location = useLocation()
   const navigate = useNavigate()
+  const { getDisplayPrice } = useDisplayPrice()
 
   useEffect(() => {
     if (!token || !user) {
@@ -506,7 +509,7 @@ export default function Checkout() {
                     </p>
                   </div>
                   <span className="text-xs font-semibold text-gray-900">
-                    ₹{((item.price * item.qty) / 100).toLocaleString('en-IN')}
+                    ₹{((getDisplayPrice(item.price) * item.qty) / 100).toLocaleString('en-IN')}
                   </span>
                 </div>
               ))}

@@ -98,10 +98,13 @@ function useFeaturedProducts() {
   });
 }
 
+import { useDisplayPrice } from '../utils/priceHelper'
+
 export default function Home() {
   const { toggleItem, hasItem } = useWishlistStore()
   const { addItem } = useCartStore()
   const { showToast } = useToastStore()
+  const { getDisplayPrice } = useDisplayPrice()
 
   // States
   const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
@@ -296,7 +299,8 @@ export default function Home() {
                     src={card.img}
                     alt={card.label}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    loading="lazy"
+                    loading="eager"
+                    fetchpriority="high"
                   />
                 </div>
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white/98 via-white/70 to-transparent h-2/3 z-10" />
@@ -354,8 +358,8 @@ export default function Home() {
                       src={prod.images?.[0] || 'assets/placeholder.jpg'}
                       alt={prod.name}
                       className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
-                      loading={idx < 4 ? 'eager' : 'lazy'}
-                      fetchpriority={idx < 2 ? 'high' : undefined}
+                      loading="eager"
+                      fetchpriority="high"
                     />
                     
                     {/* Badges */}
@@ -398,7 +402,7 @@ export default function Home() {
 
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs font-bold text-gray-900">
-                        ₹{(prod.price / 100).toLocaleString('en-IN')}
+                        ₹{(getDisplayPrice(prod.price) / 100).toLocaleString('en-IN')}
                       </span>
 
                     </div>

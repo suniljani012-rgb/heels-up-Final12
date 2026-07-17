@@ -67,8 +67,8 @@ export default function HeicImage({
   src,
   fallback = 'assets/placeholder.jpg',
   className = '',
-  loading = 'lazy',
-  fetchpriority,
+  loading = 'eager',
+  fetchpriority = 'high',
   alt = '',
   style,
   ...props

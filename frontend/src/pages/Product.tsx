@@ -37,6 +37,8 @@ interface Review {
   merchant_reply?: string;
 }
 
+import { useDisplayPrice } from '../utils/priceHelper'
+
 export default function Product() {
   const [searchParams] = useSearchParams()
   const productId = searchParams.get('id') || ''
@@ -46,6 +48,7 @@ export default function Product() {
   const { showToast } = useToastStore()
   const { token } = useAuthStore()
   const navigate = useNavigate()
+  const { getDisplayPrice } = useDisplayPrice()
 
   // Dynamic States
   const [product, setProduct] = useState<ProductDetail | null>(null)
@@ -448,7 +451,7 @@ export default function Product() {
                     activeImage === imgUrl ? 'border-primary ring-1 ring-primary' : 'border-gray-200'
                   }`}
                 >
-                  <HeicImage src={imgUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                  <HeicImage src={imgUrl} alt="" className="w-full h-full object-cover" loading="eager" fetchpriority="high" />
                 </button>
               ))}
             </div>
@@ -488,7 +491,7 @@ export default function Product() {
           {/* Price */}
           <div className="flex items-baseline gap-3">
             <span className="text-2xl font-bold text-gray-950">
-              ₹{(product.price / 100).toLocaleString('en-IN')}
+              ₹{(getDisplayPrice(product.price) / 100).toLocaleString('en-IN')}
             </span>
             {/* MRP Cross-out and percentage removed as per requirements */}
           </div>
@@ -1034,7 +1037,8 @@ export default function Product() {
                     src={prod.images?.[0] || 'assets/placeholder.jpg'}
                     alt={prod.name}
                     className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
-                    loading="lazy"
+                    loading="eager"
+                    fetchpriority="high"
                   />
                 </div>
                 <div>
@@ -1043,7 +1047,7 @@ export default function Product() {
 
 
                   <span className="text-xs font-bold text-gray-900 mt-1 block">
-                    ₹{(prod.price / 100).toLocaleString('en-IN')}
+                    ₹{(getDisplayPrice(prod.price) / 100).toLocaleString('en-IN')}
                   </span>
                 </div>
               </Link>

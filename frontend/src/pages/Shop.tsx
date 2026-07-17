@@ -75,11 +75,14 @@ function useShopProducts(filters: any) {
   });
 }
 
+import { useDisplayPrice } from '../utils/priceHelper'
+
 export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams()
   const { toggleItem, hasItem } = useWishlistStore()
   const { addItem } = useCartStore()
   const { showToast } = useToastStore()
+  const { getDisplayPrice } = useDisplayPrice()
 
   // URL Params mapping
   const category = searchParams.get('cat') || ''
@@ -342,8 +345,8 @@ export default function Shop() {
                         src={prod.images?.[0] || 'assets/placeholder.jpg'}
                         alt={prod.name}
                         className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
-                        loading={idx < 6 ? 'eager' : 'lazy'}
-                        fetchpriority={idx < 3 ? 'high' : undefined}
+                        loading="eager"
+                        fetchpriority="high"
                       />
                       
                       {/* Badges */}
@@ -386,7 +389,7 @@ export default function Shop() {
 
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs font-bold text-gray-900">
-                          ₹{(prod.price / 100).toLocaleString('en-IN')}
+                          ₹{(getDisplayPrice(prod.price) / 100).toLocaleString('en-IN')}
                         </span>
 
                       </div>
