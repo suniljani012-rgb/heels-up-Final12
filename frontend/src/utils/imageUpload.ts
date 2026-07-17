@@ -182,5 +182,5 @@ export async function prepareAndUpload(
 
   onProgress?.('uploading', total, total);
 
-  return uploadImages(prepared, token, onProgress);
+  return uploadImages(prepared, token, onProgress ? (current, total) => onProgress('uploading', current, total) : undefined);
 }
