@@ -26,15 +26,19 @@ export async function uploadRouter(request, env, ctx) {
             const bucket = env.MEDIA || env.BUCKET;
             if (!bucket) return error('R2 bucket binding not found', 500);
 
-            // Determine if we should optimize format based on client browser support
+            // Determine browser format support and whether file is HEIC
             const accept = request.headers.get('accept') || '';
             const supportsWebp = accept.includes('image/webp');
             const supportsAvif = accept.includes('image/avif');
             const isHeic = key.toLowerCase().endsWith('.heic') || key.toLowerCase().endsWith('.heif');
 
-            // If the environment has R2_PUBLIC_URL and accepts modern formats (or the file is HEIC which must be converted to be renderable)
-            if (env.R2_PUBLIC_URL && (supportsWebp || supportsAvif || isHeic)) {
+            // HEIC ALWAYS needs conversion — browsers cannot render raw HEIC.
+            // All other formats: only use CF Resizing if browser supports modern formats.
+            const needsCfResizing = isHeic || supportsWebp || supportsAvif;
+
+            if (env.R2_PUBLIC_URL && needsCfResizing) {
                 const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+                // For HEIC: force jpeg as safe fallback if browser doesn't support webp/avif
                 const targetFormat = supportsAvif ? 'avif' : (supportsWebp ? 'webp' : 'jpeg');
                 const resizeOptions = {
                     cf: {
@@ -44,14 +48,14 @@ export async function uploadRouter(request, env, ctx) {
                         }
                     }
                 };
-                
+
                 try {
                     const optimizedRes = await fetch(publicUrl, resizeOptions);
                     if (optimizedRes.ok) {
                         const headers = new Headers(optimizedRes.headers);
                         const origin = request.headers.get('Origin') || '';
                         const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];
-                        headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
+                        headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : '*');
                         headers.set('Cache-Control', 'public, max-age=31536000, immutable');
                         return new Response(optimizedRes.body, {
                             status: optimizedRes.status,
@@ -63,15 +67,23 @@ export async function uploadRouter(request, env, ctx) {
                 }
             }
 
-            // Fallback: direct serve from R2 (not optimized, but 100% reliable)
+            // Fallback: direct serve from R2
+            // For HEIC files in local dev (no CF), serve with image/jpeg header
+            // so the browser at least attempts to decode it.
             const object = await bucket.get(key);
             if (!object) return notFound('File not found');
 
             const headers = new Headers();
             object.writeHttpMetadata(headers);
+
+            // Override content-type for HEIC so browsers don't show blank
+            if (isHeic) {
+                headers.set('Content-Type', 'image/jpeg');
+            }
+
             const origin = request.headers.get('Origin') || '';
             const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];
-            headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : allowedOrigins[0]);
+            headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : '*');
             headers.set('Cache-Control', 'public, max-age=31536000, immutable');
 
             return new Response(object.body, { headers });
@@ -80,6 +92,7 @@ export async function uploadRouter(request, env, ctx) {
             return serverError('Failed to serve file');
         }
     }
+
 
     // POST /api/upload — upload image to R2
     if (path === '/' && method === 'POST') {

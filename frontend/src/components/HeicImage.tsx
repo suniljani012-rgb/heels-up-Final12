@@ -1,10 +1,11 @@
 // frontend/src/components/HeicImage.tsx
 // Optimised image component.
-// - No client-side HEIC conversion (server converts all uploads to WebP/AVIF already).
-// - Proxies R2/CDN URLs through /api/upload for CORS-safe delivery.
+// - All HEIC/HEIF display conversion handled server-side via Cloudflare Image Resizing.
+// - Proxies R2/CDN URLs through /api/upload for CORS-safe delivery + auto format conversion.
 // - Supports loading="lazy"|"eager", decoding="async", fetchpriority="high"|"low".
 // - Shows shimmer skeleton while loading (no blank/invisible flash).
 // - Smooth fade-in on load.
+// - NO client-side heic2any conversion (too slow).
 import React, { useState, useEffect, useRef } from 'react'
 
 // Inject shimmer keyframe once into document head
@@ -40,8 +41,9 @@ interface HeicImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fetchpriority?: 'high' | 'low' | 'auto';
 }
 
-// Proxy R2/CDN URLs through the same-origin /api/upload endpoint
-// to avoid CORS issues and to let Cloudflare Image Resizing serve WebP/AVIF.
+// Proxy R2/CDN URLs through the same-origin /api/upload endpoint.
+// The backend GET /api/upload already runs Cloudflare Image Resizing which
+// auto-converts HEIC → WebP/AVIF/JPEG based on browser Accept headers.
 const getProxyUrl = (urlStr: string): string => {
   if (!urlStr) return '';
   if (urlStr.startsWith('/') || urlStr.startsWith('data:') || urlStr.startsWith('blob:')) {
@@ -49,22 +51,24 @@ const getProxyUrl = (urlStr: string): string => {
   }
   try {
     const parsed = new URL(urlStr);
-    
-    // If it is already an /api/upload URL, extract the actual key parameter directly
+
+    // Already a same-origin /api/upload proxy URL — re-use key param directly
     if (parsed.pathname.includes('/api/upload')) {
       const queryKey = parsed.searchParams.get('key');
       if (queryKey) {
         return `/api/upload?key=${encodeURIComponent(queryKey)}`;
       }
     }
-    
+
+    // R2 / CDN / workers.dev URLs — extract the storage key and proxy through backend
     if (
       parsed.hostname.includes('r2.dev') ||
       parsed.hostname.includes('heelsup.in') ||
-      parsed.hostname.includes('cloudflare')
+      parsed.hostname.includes('cloudflare') ||
+      parsed.hostname.includes('workers.dev')
     ) {
-      const key = parsed.pathname.substring(1);
-      return `/api/upload?key=${encodeURIComponent(decodeURIComponent(key))}`;
+      const key = decodeURIComponent(parsed.pathname.substring(1));
+      return `/api/upload?key=${encodeURIComponent(key)}`;
     }
   } catch {
     // not a valid absolute URL — return as-is
@@ -74,7 +78,7 @@ const getProxyUrl = (urlStr: string): string => {
 
 export default function HeicImage({
   src,
-  fallback = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>',
+  fallback = '',
   className = '',
   loading = 'eager',
   fetchpriority = 'high',
@@ -82,85 +86,27 @@ export default function HeicImage({
   style,
   ...props
 }: HeicImageProps) {
-  const [renderedSrc, setRenderedSrc] = useState<string>('');
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
-  const objectUrlRef = useRef<string | null>(null);
 
   // Inject shimmer CSS once
   useEffect(() => { injectShimmer(); }, []);
 
-  // If the image is already cached by the browser (complete before React mounts),
-  // skip the shimmer immediately so there's no flash on navigation.
+  // If the image is already cached by browser before React mounts, skip shimmer flash
   useEffect(() => {
     if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
       setLoaded(true);
     }
   }, []);
 
+  // Reset loaded/errored state when src changes
   useEffect(() => {
-    let active = true;
+    setLoaded(false);
+    setErrored(false);
+  }, [src]);
 
-    const loadAndProcess = async () => {
-      if (!src) {
-        setRenderedSrc(fallback);
-        return;
-      }
-      const proxyUrl = getProxyUrl(src);
-      // Check if this is a HEIC/HEIF image key or URL
-      const isHeic = proxyUrl.toLowerCase().includes('.heic') || proxyUrl.toLowerCase().includes('.heif') || (proxyUrl.toLowerCase().includes('key=') && (proxyUrl.toLowerCase().endsWith('%2fheic') || proxyUrl.toLowerCase().endsWith('%2fheif') || proxyUrl.toLowerCase().includes('.heic') || proxyUrl.toLowerCase().includes('.heif')));
-
-      if (isHeic) {
-        try {
-          const res = await fetch(proxyUrl);
-          if (!res.ok) throw new Error('Fetch failed');
-          const blob = await res.blob();
-
-          if (!active) return;
-
-          const heic2anyModule = await import('heic2any');
-          const heic2any = heic2anyModule.default;
-
-          const converted = await heic2any({ blob, toType: 'image/jpeg', quality: 0.95 });
-          const jpegBlob = Array.isArray(converted) ? converted[0] : converted;
-
-          if (!active) return;
-
-          const localUrl = URL.createObjectURL(jpegBlob);
-
-          if (objectUrlRef.current) {
-            URL.revokeObjectURL(objectUrlRef.current);
-          }
-          objectUrlRef.current = localUrl;
-          setRenderedSrc(localUrl);
-          setLoaded(true);
-        } catch (err) {
-          console.error('[HeicImage] Client-side HEIC conversion failed:', err);
-          if (active) {
-            setRenderedSrc(fallback);
-            setErrored(true);
-          }
-        }
-      } else {
-        setRenderedSrc(proxyUrl);
-        // Reset loaded state for new standard sources to trigger load check correctly
-        setErrored(false);
-      }
-    };
-
-    loadAndProcess();
-
-    return () => {
-      active = false;
-      if (objectUrlRef.current) {
-        URL.revokeObjectURL(objectUrlRef.current);
-        objectUrlRef.current = null;
-      }
-    };
-  }, [src, fallback]);
-
-  const displaySrc = errored || !src ? fallback : renderedSrc;
+  const displaySrc = errored || !src ? fallback : getProxyUrl(src);
 
   return (
     <img
@@ -173,13 +119,13 @@ export default function HeicImage({
       // @ts-ignore — fetchpriority is valid HTML but TS lib types lag behind
       fetchpriority={fetchpriority}
       style={{
-        opacity: loaded ? 1 : 0.01, // near-zero keeps layout intact; shimmer shows via bg
+        opacity: loaded ? 1 : 0.01, // near-zero keeps layout; shimmer shows via bg
         ...style,
       }}
       onLoad={() => setLoaded(true)}
       onError={() => {
         setErrored(true);
-        setLoaded(true); // show fallback instantly, no retry loop
+        setLoaded(true); // show fallback instantly
       }}
       {...props}
     />
