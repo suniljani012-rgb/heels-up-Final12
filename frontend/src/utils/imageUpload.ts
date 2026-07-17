@@ -1,18 +1,17 @@
 // frontend/src/utils/imageUpload.ts
-// Ultra-fast parallel image conversion pipeline.
-// - HEIC/HEIF → uploaded RAW as-is (Cloudflare Image Resizing converts at display time)
+// Ultra-fast parallel image conversion pipeline to standard PNG.
+// - HEIC/HEIF → heic2any (JPEG blob) → canvas → PNG
 // - GIF → kept as-is (animations must be preserved)
-// - All other raster formats (JPEG, PNG, TIFF, BMP, AVIF…) → canvas → WebP (max 1200px, Q0.82)
-// - All conversions run in PARALLEL via Promise.all — not sequential
+// - All other formats (JPEG, WebP, AVIF, TIFF, BMP…) → canvas → PNG (max 1200px)
+// - Converts all images to PNG on upload to ensure 100% browser compatibility and no blank screens.
 
-const WEBP_QUALITY = 0.82;
 const MAX_WIDTH = 1200;        // cap at 1200px wide — enough for full-bleed e-commerce
 const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB raw-input limit (before conversion)
 
 // ---------------------------------------------------------------------------
-// Low-level: draw a loaded <img> onto a canvas and export as WebP File
+// Low-level: draw a loaded <img> onto a canvas and export as PNG File
 // ---------------------------------------------------------------------------
-function canvasToWebP(img: HTMLImageElement, originalName: string, quality: number): Promise<File> {
+function canvasToPNG(img: HTMLImageElement, originalName: string): Promise<File> {
   return new Promise((resolve, reject) => {
     let { width, height } = img;
     if (width > MAX_WIDTH) {
@@ -26,22 +25,19 @@ function canvasToWebP(img: HTMLImageElement, originalName: string, quality: numb
     const ctx = canvas.getContext('2d');
     if (!ctx) { reject(new Error('No canvas context')); return; }
 
-    // White fill for transparent images (PNG/AVIF with alpha)
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, width, height);
+    // PNG supports transparency, so we don't need a white background fill
     ctx.drawImage(img, 0, 0, width, height);
 
     const baseName = originalName.replace(/\.[^/.]+$/, '');
     canvas.toBlob(
       (blob) => {
         if (blob) {
-          resolve(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
+          resolve(new File([blob], `${baseName}.png`, { type: 'image/png' }));
         } else {
           reject(new Error('canvas.toBlob returned null'));
         }
       },
-      'image/webp',
-      quality
+      'image/png'
     );
   });
 }
@@ -60,7 +56,7 @@ function blobToImg(blob: Blob): Promise<HTMLImageElement> {
 }
 
 // ---------------------------------------------------------------------------
-// Convert ONE file → WebP File (parallel-safe, no shared state)
+// Convert ONE file → PNG File (parallel-safe, no shared state)
 // ---------------------------------------------------------------------------
 export async function prepareImageFile(file: File): Promise<File> {
   const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
@@ -68,23 +64,29 @@ export async function prepareImageFile(file: File): Promise<File> {
   // GIF: keep as-is (animations must survive)
   if (ext === 'gif' || file.type === 'image/gif') return file;
 
-  // HEIC / HEIF: try canvas conversion (fast — browser decodes HEIC blob natively on macOS/iOS).
-  // If browser cannot decode it (Windows Chrome without HEIC codec), falls through to raw upload.
-  // Raw HEIC is then served converted by Cloudflare Image Resizing on GET /api/upload.
+  // HEIC / HEIF: Decode using heic2any, then convert to standard PNG
   if (ext === 'heic' || ext === 'heif' || file.type === 'image/heic' || file.type === 'image/heif') {
     try {
-      const img = await blobToImg(file);
-      return await canvasToWebP(img, file.name, WEBP_QUALITY);
-    } catch {
-      // Browser cannot decode HEIC natively — upload raw, server converts on serve
-      return file;
+      const { default: heic2any } = await import('heic2any');
+      const raw = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.95 });
+      const jpegBlob: Blob = Array.isArray(raw) ? raw[0] : raw;
+      const img = await blobToImg(jpegBlob);
+      return await canvasToPNG(img, file.name);
+    } catch (err) {
+      console.warn('HEIC dynamic decode failed, trying direct canvas decode:', err);
+      try {
+        const img = await blobToImg(file);
+        return await canvasToPNG(img, file.name);
+      } catch {
+        return file; // fallback if decoding completely fails
+      }
     }
   }
 
-  // All other raster formats (JPEG, PNG, WebP, AVIF, TIFF, BMP, …) → resize + WebP
+  // All other raster formats (JPEG, PNG, WebP, AVIF, TIFF, BMP, …) → resize + PNG
   try {
     const img = await blobToImg(file);
-    return await canvasToWebP(img, file.name, WEBP_QUALITY);
+    return await canvasToPNG(img, file.name);
   } catch {
     return file; // fallback: upload as-is if canvas fails
   }
@@ -145,9 +147,9 @@ export async function prepareAndUpload(
 
   onProgress?.('converting', total, total);
 
-  // Size guard: reject any file that is still > 10MB after conversion
+  // Size guard: reject any file that is still > 15MB after conversion (PNGs can be slightly larger)
   for (const f of prepared) {
-    if (f.size > 10 * 1024 * 1024) {
+    if (f.size > 15 * 1024 * 1024) {
       throw new Error(
         `"${f.name}" is ${(f.size / 1024 / 1024).toFixed(1)} MB after conversion. Please use a smaller image.`
       );
