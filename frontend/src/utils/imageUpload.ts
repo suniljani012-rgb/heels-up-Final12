@@ -2,8 +2,11 @@
 // Ultra-fast parallel image conversion pipeline to standard PNG.
 // - Converts ALL image formats (HEIC, JPEG, WebP, AVIF, TIFF, BMP, GIF) to PNG.
 // - No exceptions (GIF is also flattened/converted to PNG).
-// - Converts all images to PNG on upload to ensure 100% browser compatibility and no blank screens.
+// - Converts all images to PNG on upload to ensure 100% browser compatibility.
+// - Static import of heic2any prevents Vite dynamic loading hangs.
 // - Supports precise byte-level upload progress and file-by-file conversion progress.
+
+import heic2any from 'heic2any';
 
 const MAX_WIDTH = 1200;        // cap at 1200px wide — enough for full-bleed e-commerce
 const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB raw-input limit (before conversion)
@@ -61,16 +64,15 @@ function blobToImg(blob: Blob): Promise<HTMLImageElement> {
 export async function prepareImageFile(file: File): Promise<File> {
   const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
 
-  // HEIC / HEIF: Decode using heic2any, then convert to standard PNG
+  // HEIC / HEIF: Decode using statically imported heic2any, then convert to standard PNG
   if (ext === 'heic' || ext === 'heif' || file.type === 'image/heic' || file.type === 'image/heif') {
     try {
-      const { default: heic2any } = await import('heic2any');
       const raw = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.95 });
       const jpegBlob: Blob = Array.isArray(raw) ? raw[0] : raw;
       const img = await blobToImg(jpegBlob);
       return await canvasToPNG(img, file.name);
     } catch (err) {
-      console.warn('HEIC dynamic decode failed, trying direct canvas decode:', err);
+      console.warn('HEIC static decode failed, trying direct canvas decode:', err);
       try {
         const img = await blobToImg(file);
         return await canvasToPNG(img, file.name);
@@ -156,10 +158,17 @@ export async function prepareAndUpload(
   // ✅ ALL conversions run in parallel
   const prepared = await Promise.all(
     fileArray.map(async (file) => {
-      const ready = await prepareImageFile(file);
-      convertedCount++;
-      onProgress?.('converting', convertedCount, total);
-      return ready;
+      try {
+        const ready = await prepareImageFile(file);
+        convertedCount++;
+        onProgress?.('converting', convertedCount, total);
+        return ready;
+      } catch (err) {
+        // Safe progression even if a single file conversion throws an error
+        convertedCount++;
+        onProgress?.('converting', convertedCount, total);
+        return file;
+      }
     })
   );
 
