@@ -226,9 +226,11 @@ export default function ProductsManager({ products, categories, token, onRefresh
         token,
         (step, current, total) => {
           if (step === 'converting') {
-            setUploadStatus(total > 1 ? `Converting ${current + 1}/${total}...` : 'Converting to WebP...');
-          } else {
-            setUploadStatus('Uploading...');
+            const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+            setUploadStatus(`Converting to PNG... ${pct}%`);
+          } else if (step === 'uploading') {
+            const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+            setUploadStatus(`Uploading... ${pct}%`);
           }
         }
       );

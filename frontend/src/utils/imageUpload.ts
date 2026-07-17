@@ -1,9 +1,9 @@
 // frontend/src/utils/imageUpload.ts
 // Ultra-fast parallel image conversion pipeline to standard PNG.
-// - HEIC/HEIF → heic2any (JPEG blob) → canvas → PNG
-// - GIF → kept as-is (animations must be preserved)
-// - All other formats (JPEG, WebP, AVIF, TIFF, BMP…) → canvas → PNG (max 1200px)
+// - Converts ALL image formats (HEIC, JPEG, WebP, AVIF, TIFF, BMP, GIF) to PNG.
+// - No exceptions (GIF is also flattened/converted to PNG).
 // - Converts all images to PNG on upload to ensure 100% browser compatibility and no blank screens.
+// - Supports precise byte-level upload progress and file-by-file conversion progress.
 
 const MAX_WIDTH = 1200;        // cap at 1200px wide — enough for full-bleed e-commerce
 const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB raw-input limit (before conversion)
@@ -25,7 +25,7 @@ function canvasToPNG(img: HTMLImageElement, originalName: string): Promise<File>
     const ctx = canvas.getContext('2d');
     if (!ctx) { reject(new Error('No canvas context')); return; }
 
-    // PNG supports transparency, so we don't need a white background fill
+    // PNG supports transparency, so we just draw the image directly
     ctx.drawImage(img, 0, 0, width, height);
 
     const baseName = originalName.replace(/\.[^/.]+$/, '');
@@ -61,9 +61,6 @@ function blobToImg(blob: Blob): Promise<HTMLImageElement> {
 export async function prepareImageFile(file: File): Promise<File> {
   const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
 
-  // GIF: keep as-is (animations must survive)
-  if (ext === 'gif' || file.type === 'image/gif') return file;
-
   // HEIC / HEIF: Decode using heic2any, then convert to standard PNG
   if (ext === 'heic' || ext === 'heif' || file.type === 'image/heic' || file.type === 'image/heif') {
     try {
@@ -83,7 +80,7 @@ export async function prepareImageFile(file: File): Promise<File> {
     }
   }
 
-  // All other raster formats (JPEG, PNG, WebP, AVIF, TIFF, BMP, …) → resize + PNG
+  // All other formats (JPEG, PNG, WebP, AVIF, TIFF, BMP, GIF, …) → resize + PNG
   try {
     const img = await blobToImg(file);
     return await canvasToPNG(img, file.name);
@@ -93,38 +90,53 @@ export async function prepareImageFile(file: File): Promise<File> {
 }
 
 // ---------------------------------------------------------------------------
-// Upload prepared files to /api/admin/upload
+// Upload prepared files to /api/admin/upload using XMLHttpRequest for progress tracking
 // ---------------------------------------------------------------------------
-export async function uploadImages(
+export function uploadImages(
   files: File[],
   token: string,
-  onProgress?: (uploaded: number, total: number) => void
+  onProgress?: (uploadedBytes: number, totalBytes: number) => void
 ): Promise<{ urls: string[]; keys: string[] }> {
-  const formData = new FormData();
-  for (const file of files) {
-    formData.append('files', file);
-  }
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData();
+    for (const file of files) {
+      formData.append('files', file);
+    }
 
-  onProgress?.(0, files.length);
+    if (onProgress && xhr.upload) {
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          onProgress(event.loaded, event.total);
+        }
+      });
+    }
 
-  const res = await fetch('/api/admin/upload', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (data.success && data.data) {
+            resolve({ urls: data.data.urls, keys: data.data.keys });
+          } else {
+            reject(new Error(data.error || 'Upload failed'));
+          }
+        } catch {
+          reject(new Error('Invalid response received from server.'));
+        }
+      } else {
+        reject(new Error(`Upload failed: ${xhr.statusText || xhr.status}`));
+      }
+    });
+
+    xhr.addEventListener('error', () => {
+      reject(new Error('Network error occurred during image upload.'));
+    });
+
+    xhr.open('POST', '/api/admin/upload');
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.send(formData);
   });
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Upload failed: ${res.status}`);
-  }
-
-  const data = await res.json();
-  if (!data.success || !data.data) {
-    throw new Error(data.error || 'Upload failed');
-  }
-
-  onProgress?.(files.length, files.length);
-  return { urls: data.data.urls, keys: data.data.keys };
 }
 
 // ---------------------------------------------------------------------------
@@ -140,9 +152,15 @@ export async function prepareAndUpload(
 
   onProgress?.('converting', 0, total);
 
-  // ✅ ALL conversions run in parallel — not sequential
+  let convertedCount = 0;
+  // ✅ ALL conversions run in parallel
   const prepared = await Promise.all(
-    fileArray.map((file) => prepareImageFile(file))
+    fileArray.map(async (file) => {
+      const ready = await prepareImageFile(file);
+      convertedCount++;
+      onProgress?.('converting', convertedCount, total);
+      return ready;
+    })
   );
 
   onProgress?.('converting', total, total);
@@ -156,11 +174,11 @@ export async function prepareAndUpload(
     }
   }
 
-  onProgress?.('uploading', 0, total);
-  const result = await uploadImages(prepared, token, (current, tot) =>
-    onProgress?.('uploading', current, tot)
-  );
-  onProgress?.('uploading', total, total);
+  onProgress?.('uploading', 0, 100);
+  const result = await uploadImages(prepared, token, (uploaded, totalBytes) => {
+    onProgress?.('uploading', uploaded, totalBytes);
+  });
+  onProgress?.('uploading', 100, 100);
 
   return result;
 }

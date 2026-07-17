@@ -69,8 +69,14 @@ export default function BannersManager({ banners, token, onRefresh }: BannersMan
       const result = await prepareAndUpload(
         e.target.files,
         token,
-        (step) => {
-          setUploadStatus(step === 'converting' ? 'Converting to WebP...' : 'Uploading...');
+        (step, current, total) => {
+          if (step === 'converting') {
+            const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+            setUploadStatus(`Converting to PNG... ${pct}%`);
+          } else if (step === 'uploading') {
+            const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+            setUploadStatus(`Uploading... ${pct}%`);
+          }
         }
       );
       setImageUrl(result.urls[0]);
