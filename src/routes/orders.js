@@ -219,7 +219,18 @@ export async function createOrderRecord(env, input) {
     const shipCharge = Number(await getSetting(env, "shipping_standard_charge", "49")) || 49;
     const shippingAmount = subtotalAmount >= freeShipAbove ? 0 : shipCharge;
     const discountAmount = Number(input.discountAmount || 0);
-        const totalAmount = Math.max(0, Number((subtotalAmount + shippingAmount - discountAmount).toFixed(2)));
+    const rawTotal = Math.max(0, Number((subtotalAmount + shippingAmount - discountAmount).toFixed(2)));
+    let totalAmount = 0;
+    if (rawTotal > 0) {
+        const ceilVal = Math.ceil(rawTotal);
+        const hundreds = Math.floor(ceilVal / 100);
+        const remainder = ceilVal % 100;
+        if (remainder <= 49) {
+            totalAmount = hundreds * 100 + 49;
+        } else {
+            totalAmount = hundreds * 100 + 99;
+        }
+    }
     const totalAmountPaise = Math.round(totalAmount * 100);
     
     const isCod = input.paymentMethod === 'COD';
@@ -359,7 +370,18 @@ export async function ordersRouter(request, env) {
             const freeShipAbove = Number(await getSetting(env, "shipping_free_above", "1599")) || 1599;
             const shipCharge = Number(await getSetting(env, "shipping_standard_charge", "49")) || 49;
             const shippingAmount = subtotalAmount >= freeShipAbove ? 0 : shipCharge;
-                        const totalAmount = Math.max(0, Number((subtotalAmount + shippingAmount - discountAmount).toFixed(2)));
+            const rawTotal = Math.max(0, Number((subtotalAmount + shippingAmount - discountAmount).toFixed(2)));
+            let totalAmount = 0;
+            if (rawTotal > 0) {
+                const ceilVal = Math.ceil(rawTotal);
+                const hundreds = Math.floor(ceilVal / 100);
+                const remainder = ceilVal % 100;
+                if (remainder <= 49) {
+                    totalAmount = hundreds * 100 + 49;
+                } else {
+                    totalAmount = hundreds * 100 + 99;
+                }
+            }
 
             const orderNumber = await generateOrderNumber(env);
 

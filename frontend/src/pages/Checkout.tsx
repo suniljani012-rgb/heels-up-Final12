@@ -230,7 +230,7 @@ export default function Checkout() {
           name: item.name,
           sku: item.id.toString(), // SKU matching id or code
           qty: item.qty,
-          price: item.price / 100, // Rupees to API
+          price: getDisplayPrice(item.price) / 100, // Rupees to API
           size: item.size,
           color: item.color,
           img: item.img
@@ -659,8 +659,8 @@ export default function Checkout() {
                   <div className="space-y-1">
                     <h4 className="text-[11px] font-bold text-amber-900 uppercase tracking-wider">COD Policy Notice</h4>
                     <p className="text-[10px] text-amber-800 leading-relaxed font-medium">
-                      COD orders require a <strong>10% advance payment</strong> online to verify shipment and prevent returns. 
-                      Please note that this 10% advance is <strong>non-refundable</strong> if you cancel the order after it is shipped.
+                      COD orders require a <strong>partial advance payment</strong> online to verify shipment and prevent returns. 
+                      Please note that this advance is <strong>non-refundable</strong> if you cancel the order after it is shipped.
                     </p>
                   </div>
                 </div>
@@ -671,7 +671,7 @@ export default function Checkout() {
                     <span className="font-bold">₹{totalRupees.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-emerald-800 font-semibold bg-emerald-500/5 px-1.5 py-1 rounded border border-emerald-500/10">
-                    <span>Pay Online (10% Advance):</span>
+                    <span>Pay Online (Advance):</span>
                     <span className="font-bold">₹{Math.round(totalRupees * 0.10).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex justify-between text-gray-700">

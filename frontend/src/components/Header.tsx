@@ -169,9 +169,9 @@ export default function Header() {
           </ul>
 
           {/* Action Icons */}
-          <div className="flex items-center gap-4 text-gray-700">
+          <div className="flex items-center gap-2 sm:gap-4 text-gray-700">
             {/* Search */}
-            <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+            <form onSubmit={handleSearchSubmit} className="hidden md:flex relative items-center">
               <input
                 type="text"
                 placeholder="Search..."
@@ -269,7 +269,26 @@ export default function Header() {
             </button>
           </div>
 
-          <nav className="mt-8 flex flex-col gap-6 text-sm font-semibold tracking-wider uppercase text-gray-800">
+          {/* Mobile Search */}
+          <form onSubmit={handleSearchSubmit} className="mt-6 relative flex items-center">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full py-2 pl-4 pr-10 text-xs border border-gray-200 rounded-full focus:outline-none focus:border-[#d4456b] focus:ring-1 focus:ring-[#d4456b]"
+            />
+            <button
+              type="submit"
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute right-3 text-gray-400 hover:text-gray-900 transition-colors"
+              title="Search"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          </form>
+
+          <nav className="mt-6 flex flex-col gap-6 text-sm font-semibold tracking-wider uppercase text-gray-800">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
