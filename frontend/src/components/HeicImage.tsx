@@ -1,12 +1,9 @@
 // frontend/src/components/HeicImage.tsx
-// Optimised image component.
-// - All HEIC/HEIF display conversion handled server-side via Cloudflare Image Resizing.
-// - Proxies R2/CDN URLs through /api/upload for CORS-safe delivery + auto format conversion.
-// - Supports loading="lazy"|"eager", decoding="async", fetchpriority="high"|"low".
-// - Shows shimmer skeleton while loading (no blank/invisible flash).
+// Simple, reliable optimised image component.
+// - Proxies R2/CDN URLs through /api/upload (CF Image Resizing handles HEIC → WebP).
+// - Shows shimmer skeleton while loading.
 // - Smooth fade-in on load.
-// - NO client-side heic2any conversion (too slow).
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 
 // Inject shimmer keyframe once into document head
 let shimmerInjected = false;
@@ -19,15 +16,15 @@ function injectShimmer() {
       0%   { background-position: -200% 0; }
       100% { background-position:  200% 0; }
     }
-    img._img_loading {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: _img_shimmer 1.4s ease-in-out infinite;
+    ._img_loading {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%) !important;
+      background-size: 200% 100% !important;
+      animation: _img_shimmer 1.4s ease-in-out infinite !important;
     }
-    img._img_loaded {
+    ._img_loaded {
       background: transparent !important;
       animation: none !important;
-      transition: opacity 0.25s ease;
+      transition: opacity 0.3s ease;
     }
   `;
   document.head.appendChild(style);
@@ -36,31 +33,28 @@ function injectShimmer() {
 interface HeicImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
   fallback?: string;
-  /** "eager" + fetchpriority="high" for above-fold / LCP images */
   loading?: 'lazy' | 'eager';
   fetchpriority?: 'high' | 'low' | 'auto';
 }
 
-// Proxy R2/CDN URLs through the same-origin /api/upload endpoint.
-// The backend GET /api/upload already runs Cloudflare Image Resizing which
-// auto-converts HEIC → WebP/AVIF/JPEG based on browser Accept headers.
-const getProxyUrl = (urlStr: string): string => {
+// Proxy R2/CDN/workers.dev URLs through same-origin /api/upload endpoint.
+// CF Image Resizing on the backend converts HEIC/HEIF → WebP/JPEG automatically.
+function getProxyUrl(urlStr: string): string {
   if (!urlStr) return '';
+  // Already relative or blob/data — use as-is
   if (urlStr.startsWith('/') || urlStr.startsWith('data:') || urlStr.startsWith('blob:')) {
     return urlStr;
   }
   try {
     const parsed = new URL(urlStr);
 
-    // Already a same-origin /api/upload proxy URL — re-use key param directly
+    // Already a proxied /api/upload URL — extract key and rebuild cleanly
     if (parsed.pathname.includes('/api/upload')) {
       const queryKey = parsed.searchParams.get('key');
-      if (queryKey) {
-        return `/api/upload?key=${encodeURIComponent(queryKey)}`;
-      }
+      if (queryKey) return `/api/upload?key=${encodeURIComponent(queryKey)}`;
     }
 
-    // R2 / CDN / workers.dev URLs — extract the storage key and proxy through backend
+    // R2, CDN, workers.dev — proxy through backend
     if (
       parsed.hostname.includes('r2.dev') ||
       parsed.hostname.includes('heelsup.in') ||
@@ -71,61 +65,77 @@ const getProxyUrl = (urlStr: string): string => {
       return `/api/upload?key=${encodeURIComponent(key)}`;
     }
   } catch {
-    // not a valid absolute URL — return as-is
+    // not a valid URL — use as-is
   }
   return urlStr;
-};
+}
 
 export default function HeicImage({
   src,
   fallback = '',
   className = '',
-  loading = 'eager',
-  fetchpriority = 'high',
+  loading = 'lazy',
+  fetchpriority,
   alt = '',
   style,
   ...props
 }: HeicImageProps) {
+  // Use a counter-key trick: when src changes, increment key to force img remount.
+  // This guarantees onLoad fires fresh for every new src (even cached images).
+  const [imgKey, setImgKey] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const prevSrcRef = useRef<string | undefined>(undefined);
 
-  // Inject shimmer CSS once
   useEffect(() => { injectShimmer(); }, []);
 
-  // If the image is already cached by browser before React mounts, skip shimmer flash
-  useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
-      setLoaded(true);
-    }
+  // When src changes → reset state and remount img
+  if (src !== prevSrcRef.current) {
+    prevSrcRef.current = src;
+    // These are synchronous during render — safe in React for derived state
+  }
+
+  const handleSrcChange = useCallback(() => {
+    setLoaded(false);
+    setErrored(false);
+    setImgKey(k => k + 1);
   }, []);
 
-  // Reset loaded/errored state when src changes
+  // Trigger remount when src changes
+  const srcRef = useRef(src);
+  if (srcRef.current !== src) {
+    srcRef.current = src;
+    // Can't call setState during render — use layout effect instead
+  }
   useEffect(() => {
     setLoaded(false);
     setErrored(false);
+    setImgKey(k => k + 1);
   }, [src]);
 
-  const displaySrc = errored || !src ? fallback : getProxyUrl(src);
+  const displaySrc = errored || !src ? (fallback || undefined) : getProxyUrl(src);
 
   return (
     <img
-      ref={imgRef}
+      key={imgKey}
       src={displaySrc}
       alt={alt}
       className={`${className} ${loaded ? '_img_loaded' : '_img_loading'}`}
       loading={loading}
       decoding="async"
-      // @ts-ignore — fetchpriority is valid HTML but TS lib types lag behind
+      // @ts-ignore
       fetchpriority={fetchpriority}
       style={{
-        opacity: loaded ? 1 : 0.01, // near-zero keeps layout; shimmer shows via bg
+        opacity: loaded ? 1 : 0,
         ...style,
       }}
-      onLoad={() => setLoaded(true)}
+      onLoad={() => {
+        setLoaded(true);
+        setErrored(false);
+      }}
       onError={() => {
         setErrored(true);
-        setLoaded(true); // show fallback instantly
+        setLoaded(true);
       }}
       {...props}
     />

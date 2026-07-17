@@ -68,17 +68,26 @@ export async function prepareImageFile(file: File): Promise<File> {
   // GIF: keep as-is (animations must survive)
   if (ext === 'gif' || file.type === 'image/gif') return file;
 
-  // HEIC / HEIF: upload raw — NO client-side conversion.
-  // heic2any is a pure-JS decoder and takes 5+ min per file.
-  // Cloudflare Image Resizing on GET /api/upload converts HEIC → WebP/JPEG
-  // at display time using hardware acceleration (milliseconds).
+  // HEIC / HEIF: try canvas conversion (fast — browser decodes HEIC blob natively on macOS/iOS).
+  // If browser cannot decode it (Windows Chrome without HEIC codec), falls through to raw upload.
+  // Raw HEIC is then served converted by Cloudflare Image Resizing on GET /api/upload.
   if (ext === 'heic' || ext === 'heif' || file.type === 'image/heic' || file.type === 'image/heif') {
-    return file;
+    try {
+      const img = await blobToImg(file);
+      return await canvasToWebP(img, file.name, WEBP_QUALITY);
+    } catch {
+      // Browser cannot decode HEIC natively — upload raw, server converts on serve
+      return file;
+    }
   }
 
   // All other raster formats (JPEG, PNG, WebP, AVIF, TIFF, BMP, …) → resize + WebP
-  const img = await blobToImg(file);
-  return canvasToWebP(img, file.name, WEBP_QUALITY);
+  try {
+    const img = await blobToImg(file);
+    return await canvasToWebP(img, file.name, WEBP_QUALITY);
+  } catch {
+    return file; // fallback: upload as-is if canvas fails
+  }
 }
 
 // ---------------------------------------------------------------------------
