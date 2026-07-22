@@ -51,16 +51,24 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bg-gray-950 text-gray-400 text-xs border-t border-gray-900 mt-20 pt-16 pb-8 select-none">
-      <div className="max-w-7xl mx-auto px-6 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-gray-900 pb-12">
+    // ── Warm charcoal footer — no blue at all ──
+    // bg: #1c1917 (warm stone-950, zero blue tint)
+    // text: warm gray-400 (#a8a29e)
+    // borders: #292524 (stone-800)
+    <footer className="text-xs border-t mt-20 pt-16 pb-8 select-none"
+      style={{ backgroundColor: '#1c1917', color: '#a8a29e', borderColor: '#292524' }}>
+
+      <div className="max-w-7xl mx-auto px-6 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-12 pb-12"
+        style={{ borderBottom: '1px solid #292524' }}>
+
         {/* Brand & Newsletter */}
         <div className="flex flex-col gap-6">
           {logoFailed ? (
-            <span className="text-lg font-light tracking-widest text-white font-display italic select-none">
-              Heels<span className="font-semibold text-primary">Up</span>
+            <span className="text-lg font-light tracking-widest font-display italic select-none" style={{ color: '#fafaf9' }}>
+              Heels<span className="font-semibold" style={{ color: '#c9a96e' }}>Up</span>
             </span>
           ) : (
-            <div className="bg-white p-2.5 rounded-xl inline-block w-fit shadow-md border border-gray-100/10">
+            <div className="p-2.5 rounded-xl inline-block w-fit shadow-md" style={{ backgroundColor: '#fff', border: '1px solid rgba(255,255,255,0.08)' }}>
               <img
                 src="/logo.png"
                 alt="HeelsUp Logo"
@@ -69,8 +77,8 @@ export default function Footer() {
               />
             </div>
           )}
-          <p className="leading-relaxed text-gray-500">
-            India's premier online store for luxury ladies heels, flats, sandals, wedges & bags. 22.1K+ happy customers.
+          <p className="leading-relaxed" style={{ color: '#78716c' }}>
+            India's premier online store for luxury ladies heels, flats, sandals, wedges &amp; bags. 22.1K+ happy customers.
           </p>
           <form onSubmit={handleSubscribe} className="flex gap-2 max-w-sm">
             <input
@@ -79,12 +87,18 @@ export default function Footer() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={submitting}
-              className="flex-1 bg-gray-900 border border-gray-800 rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-primary disabled:opacity-50 transition-colors"
+              className="flex-1 rounded-lg px-4 py-2 focus:outline-none transition-colors disabled:opacity-50"
+              style={{
+                backgroundColor: '#292524',
+                border: '1px solid #3c3836',
+                color: '#fafaf9',
+              }}
             />
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 bg-primary hover:bg-[#b17e3f] text-white font-semibold rounded-lg transition-colors uppercase tracking-wider text-[10px] disabled:opacity-50"
+              className="px-4 font-semibold rounded-lg transition-colors uppercase tracking-wider text-[10px] disabled:opacity-50"
+              style={{ backgroundColor: '#c9a96e', color: '#fff' }}
             >
               Join
             </button>
@@ -93,19 +107,23 @@ export default function Footer() {
 
         {/* Collections */}
         <div className="flex flex-col gap-4">
-          <h4 className="text-[10px] font-bold uppercase tracking-widest text-white">Collections</h4>
+          <h4 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#fafaf9' }}>Collections</h4>
           <ul className="space-y-2.5">
             {categories.length === 0 ? (
               <>
-                <li><Link to="/shop?cat=heels" className="hover:text-white transition-colors">Premium Heels</Link></li>
-                <li><Link to="/shop?cat=flats" className="hover:text-white transition-colors">Comfort Flats</Link></li>
-                <li><Link to="/shop?cat=sandals" className="hover:text-white transition-colors">Chic Sandals</Link></li>
-                <li><Link to="/shop?cat=bags" className="hover:text-white transition-colors">Luxury Handbags</Link></li>
+                <li><Link to="/shop?cat=heels" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>Premium Heels</Link></li>
+                <li><Link to="/shop?cat=flats" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>Flat Sandals</Link></li>
+                <li><Link to="/shop?cat=wedges" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>Wedges</Link></li>
+                <li><Link to="/shop?cat=bags" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>Bags & Accessories</Link></li>
               </>
             ) : (
-              categories.map((cat) => (
+              categories.map((cat: any) => (
                 <li key={cat.id}>
-                  <Link to={`/shop?cat=${cat.slug || cat.name.toLowerCase()}`} className="hover:text-white transition-colors">
+                  <Link
+                    to={`/shop?cat=${encodeURIComponent(cat.slug || cat.name)}`}
+                    className="transition-colors hover:opacity-80 capitalize"
+                    style={{ color: '#a8a29e' }}
+                  >
                     {cat.name}
                   </Link>
                 </li>
@@ -116,72 +134,77 @@ export default function Footer() {
 
         {/* Support */}
         <div className="flex flex-col gap-4">
-          <h4 className="text-[10px] font-bold uppercase tracking-widest text-white">Support & Info</h4>
+          <h4 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#fafaf9' }}>Support &amp; Info</h4>
           <ul className="space-y-2.5">
-            <li><Link to="/shipping-info" className="hover:text-white transition-colors">Shipping & Delivery</Link></li>
-            <li><Link to="/returns" className="hover:text-white transition-colors">Exchange & Returns</Link></li>
-            <li><Link to="/size-guide" className="hover:text-white transition-colors">Size Guide</Link></li>
-            <li><Link to="/faq" className="hover:text-white transition-colors">FAQs</Link></li>
-            <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-            <li><Link to="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link></li>
+            <li><Link to="/shipping-info" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>Shipping &amp; Delivery</Link></li>
+            <li><Link to="/returns" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>Exchange &amp; Returns</Link></li>
+            <li><Link to="/size-guide" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>Size Guide</Link></li>
+            <li><Link to="/faq" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>FAQs</Link></li>
+            <li><Link to="/privacy" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>Privacy Policy</Link></li>
+            <li><Link to="/terms" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>Terms &amp; Conditions</Link></li>
           </ul>
         </div>
 
         {/* Contact info */}
         <div className="flex flex-col gap-4">
-          <h4 className="text-[10px] font-bold uppercase tracking-widest text-white">Get in Touch</h4>
-          <ul className="space-y-3.5 text-gray-500">
+          <h4 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#fafaf9' }}>Get in Touch</h4>
+          <ul className="space-y-3.5" style={{ color: '#78716c' }}>
             <li className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+              <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: '#c9a96e' }} />
               <a
                 href="https://maps.app.goo.gl/7Vu3wkdbBczbQw8aA"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-white transition-colors"
+                className="transition-colors hover:opacity-80"
+                style={{ color: '#a8a29e' }}
               >
                 Jodhpur, Rajasthan, India
               </a>
             </li>
             <li className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-primary flex-shrink-0" />
-              <a href="tel:+917891470935" className="hover:text-white transition-colors">+91 78914 70935</a>
+              <Phone className="w-4 h-4 flex-shrink-0" style={{ color: '#c9a96e' }} />
+              <a href="tel:+917891470935" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>+91 78914 70935</a>
             </li>
             <li className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-primary flex-shrink-0" />
-              <a href="mailto:support@heelsup.in" className="hover:text-white transition-colors">support@heelsup.in</a>
+              <Mail className="w-4 h-4 flex-shrink-0" style={{ color: '#c9a96e' }} />
+              <a href="mailto:support@heelsup.in" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>support@heelsup.in</a>
             </li>
             <li className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-primary flex-shrink-0 fill-primary" viewBox="0 0 448 512">
-                <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7 .9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
+              <svg className="w-4 h-4 flex-shrink-0" style={{ color: '#c9a96e', fill: '#c9a96e' }} viewBox="0 0 448 512">
+                <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
               </svg>
-              <a href="https://wa.me/917891470935?text=Hello%20HeelsUp!%20I%20am%20exploring%20your%20collection%20and%20need%20some%20assistance." target="_blank" rel="noreferrer" className="hover:text-white transition-colors">WhatsApp Chat</a>
+              <a href="https://wa.me/917891470935?text=Hello%20HeelsUp!%20I%20am%20exploring%20your%20collection%20and%20need%20some%20assistance." target="_blank" rel="noreferrer" className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>
+                WhatsApp Chat
+              </a>
             </li>
           </ul>
         </div>
       </div>
 
       {/* Footer Bottom */}
-      <div className="max-w-7xl mx-auto px-6 md:px-8 mt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-        <p className="text-[10px] text-gray-600 font-medium">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 mt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p className="text-[10px] font-medium" style={{ color: '#57534e' }}>
           &copy; {new Date().getFullYear()} HeelsUp. All Rights Reserved. Made in Jodhpur.
         </p>
 
         {/* Social Icons & Cards */}
         <div className="flex items-center gap-6">
-          {/* Social */}
-          <div className="flex items-center gap-4 text-gray-600">
-            <a href="https://www.instagram.com/heel_s_up" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">
+          {/* Instagram */}
+          <div className="flex items-center gap-4" style={{ color: '#57534e' }}>
+            <a href="https://www.instagram.com/heel_s_up" target="_blank" rel="noreferrer"
+              className="transition-colors hover:opacity-80" style={{ color: '#a8a29e' }}>
               <i className="fa-brands fa-instagram text-base"></i>
             </a>
           </div>
 
-          {/* Cards */}
-          <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-md p-1 px-2 select-none">
-            <span className="text-[9px] uppercase tracking-wider text-gray-500 font-bold mr-1">Secured Payments</span>
-            <i className="fa-brands fa-cc-visa text-gray-400 hover:text-white text-sm transition-colors" />
-            <i className="fa-brands fa-cc-mastercard text-gray-400 hover:text-white text-sm transition-colors" />
-            <i className="fa-brands fa-google-pay text-gray-400 hover:text-white text-base transition-colors" />
-            <span className="text-[9px] text-emerald-500 font-extrabold uppercase">UPI</span>
+          {/* Payment Cards */}
+          <div className="flex items-center gap-2 rounded-md p-1 px-2"
+            style={{ backgroundColor: '#292524', border: '1px solid #3c3836' }}>
+            <span className="text-[9px] uppercase tracking-wider font-bold mr-1" style={{ color: '#57534e' }}>Secured Payments</span>
+            <i className="fa-brands fa-cc-visa text-sm transition-colors" style={{ color: '#a8a29e' }} />
+            <i className="fa-brands fa-cc-mastercard text-sm transition-colors" style={{ color: '#a8a29e' }} />
+            <i className="fa-brands fa-google-pay text-base transition-colors" style={{ color: '#a8a29e' }} />
+            <span className="text-[9px] font-extrabold uppercase" style={{ color: '#4ade80' }}>UPI</span>
           </div>
         </div>
       </div>
