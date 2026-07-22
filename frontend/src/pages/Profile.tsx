@@ -5,6 +5,7 @@ import { LogOut, Package, Mail, User, Shield, MapPin, Key, Plus, Trash2, Edit3, 
 import { useAuthStore } from '../store/useAuthStore'
 import { useToastStore } from '../store/useToastStore'
 import HeicImage from '../components/HeicImage'
+import { isHeicFile, convertHeicToWebp } from '../utils/imageUpload'
 
 interface Order {
   id: number;
@@ -256,6 +257,13 @@ export default function Profile() {
     try {
       const uploadedUrls: string[] = []
       for (let file of filesToUpload) {
+        if (isHeicFile(file)) {
+          try {
+            file = await convertHeicToWebp(file);
+          } catch (err) {
+            console.error('HEIC conversion failed:', err);
+          }
+        }
         const isGif = file.name.toLowerCase().endsWith('.gif') || file.type === 'image/gif';
         const isWebp = file.name.toLowerCase().endsWith('.webp') || file.type === 'image/webp';
         const isAvif = file.name.toLowerCase().endsWith('.avif') || file.type === 'image/avif';

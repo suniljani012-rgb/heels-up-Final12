@@ -5,27 +5,38 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import CartDrawer from './components/CartDrawer'
 import ToastContainer from './components/ToastContainer'
+import { BannerSkeleton, ProductGridSkeleton, ProductDetailSkeleton } from './components/Skeletons'
 
 import Home from './pages/Home'
-import Shop from './pages/Shop'
-import Product from './pages/Product'
-import Cart from './pages/Cart'
-import Checkout from './pages/Checkout'
-import Wishlist from './pages/Wishlist'
-import Profile from './pages/Profile'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import ForgotPassword from './pages/ForgotPassword'
-import OrderConfirmation from './pages/OrderConfirmation'
-import OrderTracking from './pages/OrderTracking'
-import DynamicPage from './pages/DynamicPage'
-import NotFound from './pages/NotFound'
-
+const Shop = lazy(() => import('./pages/Shop'))
+const Product = lazy(() => import('./pages/Product'))
+const Cart = lazy(() => import('./pages/Cart'))
+const Checkout = lazy(() => import('./pages/Checkout'))
+const Wishlist = lazy(() => import('./pages/Wishlist'))
+const Profile = lazy(() => import('./pages/Profile'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'))
+const OrderTracking = lazy(() => import('./pages/OrderTracking'))
+const DynamicPage = lazy(() => import('./pages/DynamicPage'))
+const NotFound = lazy(() => import('./pages/NotFound'))
 const Admin = lazy(() => import('./pages/Admin'))
 
 import { useCartStore } from './store/useCartStore'
 
-const queryClient = new QueryClient()
+// Optimized QueryClient configuration with smart caching and exponential backoff retry logic
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 2 * 60 * 1000, // 2 minutes default stale time
+      gcTime: 10 * 60 * 1000,   // 10 minutes garbage collection time
+      refetchOnWindowFocus: false, // Prevent intrusive tab focus refetches
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+  },
+})
 
 function AppContent() {
   const location = useLocation()
@@ -38,6 +49,35 @@ function AppContent() {
     }
     // Website kholte hi location ki details aur price dynamically loads
     detectLocation();
+
+    // Prefetch essential global data in parallel on app launch
+    queryClient.prefetchQuery({
+      queryKey: ['categories'],
+      queryFn: async () => {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        return data.success ? data.data : [];
+      },
+      staleTime: 10 * 60 * 1000,
+    });
+    queryClient.prefetchQuery({
+      queryKey: ['banners'],
+      queryFn: async () => {
+        const res = await fetch('/api/banners');
+        const data = await res.json();
+        return data.success ? data.data : [];
+      },
+      staleTime: 10 * 60 * 1000,
+    });
+    queryClient.prefetchQuery({
+      queryKey: ['featuredProducts'],
+      queryFn: async () => {
+        const res = await fetch('/api/products?limit=8&featured=true');
+        const data = await res.json();
+        return data.success ? data.data : [];
+      },
+      staleTime: 5 * 60 * 1000,
+    });
   }, [detectLocation])
 
   useEffect(() => {
@@ -59,89 +99,95 @@ function AppContent() {
     <div className={isAdmin ? "w-full" : "flex flex-col min-h-screen bg-[#fcfbf9] text-[#1a1816]"}>
       {!isAdmin && <Header />}
       <main className={isAdmin ? "" : "flex-grow"}>
-        <Routes>
-          {/* Main storefront routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/index.html" element={<Home />} />
-          
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/shop.html" element={<Shop />} />
-          
-          <Route path="/product" element={<Product />} />
-          <Route path="/product.html" element={<Product />} />
-          
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/cart.html" element={<Cart />} />
-          
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/checkout.html" element={<Checkout />} />
-          
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/wishlist.html" element={<Wishlist />} />
-          
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile.html" element={<Profile />} />
-          
-          <Route path="/login" element={<Login />} />
-          <Route path="/login.html" element={<Login />} />
-          
-          <Route path="/register" element={<Register />} />
-          <Route path="/register.html" element={<Register />} />
-          
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/forgot-password.html" element={<ForgotPassword />} />
-          
-          <Route path="/order-confirmation" element={<OrderConfirmation />} />
-          <Route path="/order-tracking" element={<OrderTracking />} />
-          <Route path="/order-tracking.html" element={<OrderTracking />} />
-          
-          {/* Dynamic content & policy pages */}
-          <Route path="/privacy" element={<DynamicPage />} />
-          <Route path="/privacy.html" element={<DynamicPage />} />
-          <Route path="/terms" element={<DynamicPage />} />
-          <Route path="/terms.html" element={<DynamicPage />} />
-          <Route path="/returns" element={<DynamicPage />} />
-          <Route path="/returns.html" element={<DynamicPage />} />
-          <Route path="/shipping-info" element={<DynamicPage />} />
-          <Route path="/shipping-info.html" element={<DynamicPage />} />
-          <Route path="/faq" element={<DynamicPage />} />
-          <Route path="/faq.html" element={<DynamicPage />} />
-          <Route path="/about" element={<DynamicPage />} />
-          <Route path="/about.html" element={<DynamicPage />} />
-          <Route path="/size-guide" element={<DynamicPage />} />
-          <Route path="/size-guide.html" element={<DynamicPage />} />
+        <Suspense fallback={
+          <div className="max-w-7xl mx-auto px-6 py-12">
+            <ProductGridSkeleton count={8} />
+          </div>
+        }>
+          <Routes>
+            {/* Main storefront routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/index.html" element={<Home />} />
+            
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/shop.html" element={<Shop />} />
+            
+            <Route path="/product" element={<Product />} />
+            <Route path="/product.html" element={<Product />} />
+            
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/cart.html" element={<Cart />} />
+            
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout.html" element={<Checkout />} />
+            
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/wishlist.html" element={<Wishlist />} />
+            
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile.html" element={<Profile />} />
+            
+            <Route path="/login" element={<Login />} />
+            <Route path="/login.html" element={<Login />} />
+            
+            <Route path="/register" element={<Register />} />
+            <Route path="/register.html" element={<Register />} />
+            
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/forgot-password.html" element={<ForgotPassword />} />
+            
+            <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            <Route path="/order-tracking" element={<OrderTracking />} />
+            <Route path="/order-tracking.html" element={<OrderTracking />} />
+            
+            {/* Dynamic content & policy pages */}
+            <Route path="/privacy" element={<DynamicPage />} />
+            <Route path="/privacy.html" element={<DynamicPage />} />
+            <Route path="/terms" element={<DynamicPage />} />
+            <Route path="/terms.html" element={<DynamicPage />} />
+            <Route path="/returns" element={<DynamicPage />} />
+            <Route path="/returns.html" element={<DynamicPage />} />
+            <Route path="/shipping-info" element={<DynamicPage />} />
+            <Route path="/shipping-info.html" element={<DynamicPage />} />
+            <Route path="/faq" element={<DynamicPage />} />
+            <Route path="/faq.html" element={<DynamicPage />} />
+            <Route path="/about" element={<DynamicPage />} />
+            <Route path="/about.html" element={<DynamicPage />} />
+            <Route path="/size-guide" element={<DynamicPage />} />
+            <Route path="/size-guide.html" element={<DynamicPage />} />
 
-          {/* Admin Portal routes */}
-          <Route
-            path="/admin"
-            element={
-              <Suspense fallback={
-                <div className="flex flex-col items-center justify-center min-h-[50vh] select-none">
-                  <div className="w-6 h-6 border-2 border-[#C9A96E] border-t-transparent rounded-full animate-spin" />
-                  <p className="text-[10px] text-gray-400 mt-4 tracking-widest uppercase">Initializing Admin Console...</p>
-                </div>
-              }>
-                <Admin />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/admin.html"
-            element={
-              <Suspense fallback={
-                <div className="flex flex-col items-center justify-center min-h-[50vh] select-none">
-                  <div className="w-6 h-6 border-2 border-[#C9A96E] border-t-transparent rounded-full animate-spin" />
-                  <p className="text-[10px] text-gray-400 mt-4 tracking-widest uppercase">Initializing Admin Console...</p>
-                </div>
-              }>
-                <Admin />
-              </Suspense>
-            }
-          />
-          
-          {/* Fallback route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* Admin Portal routes */}
+            <Route
+              path="/admin"
+              element={
+                <Suspense fallback={
+                  <div className="flex flex-col items-center justify-center min-h-[50vh] select-none">
+                    <div className="w-6 h-6 border-2 border-[#C9A96E] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-[10px] text-gray-400 mt-4 tracking-widest uppercase">Initializing Admin Console...</p>
+                  </div>
+                }>
+                  <Admin />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/admin.html"
+              element={
+                <Suspense fallback={
+                  <div className="flex flex-col items-center justify-center min-h-[50vh] select-none">
+                    <div className="w-6 h-6 border-2 border-[#C9A96E] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-[10px] text-gray-400 mt-4 tracking-widest uppercase">Initializing Admin Console...</p>
+                  </div>
+                }>
+                  <Admin />
+                </Suspense>
+              }
+            />
+            
+            {/* Fallback route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </main>
       {!isAdmin && <Footer />}
       

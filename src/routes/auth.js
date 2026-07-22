@@ -502,8 +502,8 @@ export async function authRouter(request, env) {
     }
 
 
-    // GET /api/auth/me
-    if (path === '/me' && method === 'GET') {
+    // GET /api/auth/me or GET /api/auth/profile
+    if ((path === '/me' || path === '/profile') && method === 'GET') {
         const { user, error: authError } = await requireAuth(request, env);
         if (authError) return authError;
 

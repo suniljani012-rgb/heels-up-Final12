@@ -10,8 +10,19 @@ export async function bannersRouter(request, env) {
     // GET /api/banners
     if (path === '/' && method === 'GET') {
         try {
+            if (env.KV) {
+                try {
+                    const cached = await env.KV.get('cache:banners', 'json');
+                    if (cached) return list(cached);
+                } catch (err) {}
+            }
             const sql = 'SELECT * FROM banners WHERE active = 1 ORDER BY sort_order ASC, id DESC';
             const banners = await env.DB.prepare(sql).all();
+            if (env.KV && banners.results) {
+                try {
+                    await env.KV.put('cache:banners', JSON.stringify(banners.results), { expirationTtl: 300 });
+                } catch (err) {}
+            }
             return list(banners.results);
         } catch (e) { return serverError('Failed to fetch banners'); }
     }
@@ -35,6 +46,7 @@ export async function bannersRouter(request, env) {
             const result = await env.DB.prepare(
                 'INSERT INTO banners (title, subtitle, image_url, link, sort_order, active, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime(\'now\')) RETURNING *'
             ).bind(title || '', subtitle || '', image_url, bannerLink, sort_order || 0, active !== undefined ? (active ? 1 : 0) : 1).first();
+            if (env.KV) await env.KV.delete('cache:banners');
             return created(result, 'Banner created');
         } catch (e) { return serverError('Failed to create banner'); }
     }
@@ -51,6 +63,7 @@ export async function bannersRouter(request, env) {
             await env.DB.prepare(
                 'UPDATE banners SET title=?, subtitle=?, image_url=?, link=?, active=?, sort_order=? WHERE id=?'
             ).bind(b.title || '', b.subtitle || '', b.image_url, bannerLink, activeVal ? 1 : 0, b.sort_order || 0, id).run();
+            if (env.KV) await env.KV.delete('cache:banners');
             return ok(null, 'Banner updated');
         } catch (e) { return serverError('Failed to update banner'); }
     }
@@ -60,6 +73,7 @@ export async function bannersRouter(request, env) {
         const { user, error: authError } = await requireAdmin(request, env);
         if (authError) return authError;
         await env.DB.prepare('DELETE FROM banners WHERE id = ?').bind(path.slice(1)).run();
+        if (env.KV) await env.KV.delete('cache:banners');
         return ok(null, 'Banner deleted');
     }
 

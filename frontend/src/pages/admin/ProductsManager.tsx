@@ -225,12 +225,14 @@ export default function ProductsManager({ products, categories, token, onRefresh
         e.target.files,
         token,
         (step, current, total) => {
-          if (step === 'converting') {
+          if (step.startsWith('converting') || step.startsWith('preparing')) {
             const pct = total > 0 ? Math.round((current / total) * 100) : 0;
-            setUploadStatus(`Converting to PNG... ${pct}%`);
+            setUploadStatus(`Converting HEIC/Image to WebP... ${pct}%`);
           } else if (step === 'uploading') {
             const pct = total > 0 ? Math.round((current / total) * 100) : 0;
-            setUploadStatus(`Uploading... ${pct}%`);
+            setUploadStatus(`Uploading to R2... ${pct}%`);
+          } else {
+            setUploadStatus(step);
           }
         }
       );
