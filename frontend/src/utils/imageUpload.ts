@@ -1,10 +1,10 @@
 // frontend/src/utils/imageUpload.ts
-// Ultra-fast image conversion pipeline with automatic HEIC/HEIF client-side support.
-// - Automatically converts iPhone HEIC/HEIF images to WebP/JPEG before upload.
-// - Scales all images (JPEG, PNG, WebP, HEIC, etc.) to max 1200px width for optimal WebP compression (~100-200KB).
-// - Multi-tier fallbacks ensure no HEIC upload ever fails.
+// Ultra-fast image pipeline: compress every image to under 100KB before upload.
+// PNG/JPG/WebP → compressed WebP ~30-80KB → R2 CDN → instant load
+// HEIC/HEIF → convert → compress → R2 CDN
 
-const MAX_WIDTH = 1200; // Cap at 1200px wide for optimal e-commerce performance
+const MAX_WIDTH = 900;          // 900px max — product thumbnails don't need more
+const TARGET_KB = 100;          // Target: each image under 100KB
 const MAX_FILE_BYTES = 50 * 1024 * 1024; // 50 MB raw-input safety limit
 
 /**
@@ -94,7 +94,8 @@ export async function convertHeicToWebp(file: File): Promise<File> {
 }
 
 /**
- * Low-level: draw loaded image onto HTML Canvas and export as WebP File
+ * Compress image: resize to MAX_WIDTH, then adaptively compress WebP
+ * until output is under TARGET_KB (or minimum quality floor is reached).
  */
 function canvasToWebP(img: HTMLImageElement, originalName: string): Promise<File> {
   return new Promise((resolve, reject) => {
@@ -108,27 +109,36 @@ function canvasToWebP(img: HTMLImageElement, originalName: string): Promise<File
     canvas.width = width;
     canvas.height = height;
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      reject(new Error('Could not get 2D canvas context'));
-      return;
-    }
-
+    if (!ctx) { reject(new Error('Could not get 2D canvas context')); return; }
     ctx.drawImage(img, 0, 0, width, height);
 
     const baseName = originalName.replace(/\.[^/.]+$/, '');
     const cleanName = baseName.startsWith('product-') ? baseName : `product-${baseName}-${Date.now()}`;
+    const fileName = `${cleanName}.webp`;
 
-    canvas.toBlob(
-      (blob) => {
-        if (blob) {
-          resolve(new File([blob], `${cleanName}.webp`, { type: 'image/webp' }));
-        } else {
-          reject(new Error('Canvas image compression failed'));
-        }
-      },
-      'image/webp',
-      0.85
-    );
+    // Adaptive quality: start at 0.78, step down until under TARGET_KB
+    const qualitySteps = [0.78, 0.68, 0.58, 0.45];
+    let stepIndex = 0;
+
+    function tryQuality(q: number) {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { reject(new Error('Canvas image compression failed')); return; }
+          const kb = blob.size / 1024;
+          // Accept if under target, or we've exhausted quality steps
+          if (kb <= TARGET_KB || stepIndex >= qualitySteps.length - 1) {
+            resolve(new File([blob], fileName, { type: 'image/webp' }));
+          } else {
+            stepIndex++;
+            tryQuality(qualitySteps[stepIndex]);
+          }
+        },
+        'image/webp',
+        q
+      );
+    }
+
+    tryQuality(qualitySteps[stepIndex]);
   });
 }
 

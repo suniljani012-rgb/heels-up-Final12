@@ -18,7 +18,11 @@ export async function uploadRouter(request, env, ctx) {
     }
     const method = request.method;
 
-    // GET /api/upload — serve file from R2
+    // GET /api/upload?key=xxx&w=400&q=75 — serve file from R2, with optional on-the-fly compression
+    // ?w  = target width in pixels (e.g. 400 for grid thumbnails, 900 for product detail)
+    // ?q  = quality 1-100 (e.g. 75 for thumbnails, 85 for detail)
+    // Without w/q: non-HEIC → 301 redirect to CDN (zero Worker overhead)
+    //              HEIC     → CF Image Resizing for format conversion
     if (method === 'GET') {
         try {
             let key = url.searchParams.get('key');
@@ -29,22 +33,72 @@ export async function uploadRouter(request, env, ctx) {
             const bucket = env.MEDIA || env.BUCKET;
             if (!bucket) return error('R2 bucket binding not found', 500);
 
-            // Determine if file is HEIC (only HEIC needs CF Image Resizing for format conversion)
             const isHeic = key.toLowerCase().endsWith('.heic') || key.toLowerCase().endsWith('.heif');
 
-            // ─── FAST PATH: Non-HEIC images → redirect directly to R2 CDN ───
-            // Skip Worker proxy entirely — browser fetches from CDN edge directly.
-            // This is the biggest speed win: no Worker roundtrip, no CF Image Resizing overhead.
-            if (env.R2_PUBLIC_URL && !isHeic) {
-                const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
-                // 301 redirect → browser caches the redirect itself, subsequent loads go direct to CDN
-                return Response.redirect(publicUrl, 301);
+            // Parse optional resize params
+            const wParam = url.searchParams.get('w');
+            const qParam = url.searchParams.get('q');
+            const targetWidth  = wParam ? parseInt(wParam, 10) : null;
+            const targetQuality = qParam ? Math.min(100, Math.max(1, parseInt(qParam, 10))) : 75;
+            const wantsResize  = !!targetWidth; // only resize when ?w= is present
+
+            // ─── RESIZE PATH: ?w= present → compress via CF Image Resizing ───
+            // Returns WebP/AVIF compressed to targetWidth and targetQuality.
+            // Response is cached immutably (browser + CDN edge cache).
+            if (wantsResize && env.R2_PUBLIC_URL) {
+                const ua = request.headers.get('user-agent') || '';
+                const via = request.headers.get('via') || '';
+                const isResizingLoop = ua.includes('Cloudflare-Image-Resizing') || via.includes('image-resizing');
+
+                if (!isResizingLoop) {
+                    const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+                    const accept = request.headers.get('accept') || '';
+                    const supportsAvif = accept.includes('image/avif');
+                    const supportsWebp = accept.includes('image/webp');
+                    const targetFormat = supportsAvif ? 'avif' : (supportsWebp ? 'webp' : 'jpeg');
+
+                    try {
+                        const resized = await fetch(publicUrl, {
+                            cf: {
+                                image: {
+                                    width: targetWidth,
+                                    quality: targetQuality,
+                                    format: targetFormat,
+                                    fit: 'scale-down', // never upscale, only shrink
+                                }
+                            }
+                        });
+
+                        if (resized.ok) {
+                            const headers = new Headers();
+                            const ct = resized.headers.get('content-type');
+                            headers.set('Content-Type', ct || `image/${targetFormat}`);
+                            headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+                            headers.set('Vary', 'Accept'); // correct caching per Accept header
+                            const origin = request.headers.get('Origin') || '';
+                            const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];
+                            headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : '*');
+                            return new Response(resized.body, { status: 200, headers });
+                        }
+                    } catch (resizeErr) {
+                        // CF Image Resizing not available (free plan or not enabled) — fall through to direct CDN
+                        console.warn('CF Image Resizing unavailable, falling back to direct CDN:', resizeErr.message);
+                    }
+                }
+
+                // Fallback: redirect to CDN without resize (still better than 500 error)
+                return Response.redirect(`${env.R2_PUBLIC_URL}/${key}`, 302);
             }
 
-            // ─── HEIC PATH: HEIC/HEIF → must convert via CF Image Resizing ───
-            const ua = request.headers.get('user-agent') || '';
-            const via = request.headers.get('via') || '';
-            const isImageResizingService = ua.includes('Cloudflare-Image-Resizing') || via.includes('image-resizing');
+            // ─── FAST PATH: Non-HEIC, no resize → 301 redirect to R2 CDN (zero Worker overhead) ───
+            if (env.R2_PUBLIC_URL && !isHeic) {
+                return Response.redirect(`${env.R2_PUBLIC_URL}/${key}`, 301);
+            }
+
+            // ─── HEIC PATH: HEIC/HEIF → convert via CF Image Resizing ───
+            const ua2 = request.headers.get('user-agent') || '';
+            const via2 = request.headers.get('via') || '';
+            const isImageResizingService = ua2.includes('Cloudflare-Image-Resizing') || via2.includes('image-resizing');
 
             if (env.R2_PUBLIC_URL && isHeic && !isImageResizingService) {
                 const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
@@ -52,55 +106,33 @@ export async function uploadRouter(request, env, ctx) {
                 const supportsAvif = accept.includes('image/avif');
                 const supportsWebp = accept.includes('image/webp');
                 const targetFormat = supportsAvif ? 'avif' : (supportsWebp ? 'webp' : 'jpeg');
-                const resizeOptions = {
-                    cf: {
-                        image: {
-                            format: targetFormat,
-                            quality: 85,
-                        }
-                    }
-                };
-
                 try {
-                    const optimizedRes = await fetch(publicUrl, resizeOptions);
+                    const optimizedRes = await fetch(publicUrl, {
+                        cf: { image: { format: targetFormat, quality: 85 } }
+                    });
                     if (optimizedRes.ok) {
                         const headers = new Headers();
-                        if (optimizedRes.headers.has('content-type')) {
-                            headers.set('Content-Type', optimizedRes.headers.get('content-type'));
-                        }
-                        if (optimizedRes.headers.has('last-modified')) {
-                            headers.set('Last-Modified', optimizedRes.headers.get('last-modified'));
-                        }
-                        if (optimizedRes.headers.has('etag')) {
-                            headers.set('ETag', optimizedRes.headers.get('etag'));
-                        }
+                        if (optimizedRes.headers.has('content-type')) headers.set('Content-Type', optimizedRes.headers.get('content-type'));
+                        if (optimizedRes.headers.has('last-modified')) headers.set('Last-Modified', optimizedRes.headers.get('last-modified'));
+                        if (optimizedRes.headers.has('etag')) headers.set('ETag', optimizedRes.headers.get('etag'));
                         const origin = request.headers.get('Origin') || '';
                         const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];
                         headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : '*');
                         headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-                        return new Response(optimizedRes.body, {
-                            status: optimizedRes.status,
-                            headers
-                        });
+                        return new Response(optimizedRes.body, { status: optimizedRes.status, headers });
                     }
                 } catch (fetchErr) {
                     console.warn('HEIC CF Image Resizing failed, falling back to direct R2:', fetchErr);
                 }
             }
 
-            // Fallback: direct serve from R2
-            // For HEIC files in local dev (no CF), serve with image/jpeg header
-            // so the browser at least attempts to decode it.
+            // Last resort: serve raw from R2 bucket
             const object = await bucket.get(key);
             if (!object) return notFound('File not found');
 
             const headers = new Headers();
             object.writeHttpMetadata(headers);
-
-            // Override content-type for HEIC so browsers don't show blank
-            if (isHeic) {
-                headers.set('Content-Type', 'image/jpeg');
-            }
+            if (isHeic) headers.set('Content-Type', 'image/jpeg');
 
             const origin = request.headers.get('Origin') || '';
             const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];

@@ -1,102 +1,86 @@
 // frontend/src/components/HeicImage.tsx
-// Simple, reliable image component.
-// - In production: serves original URLs directly from database (no proxy, 100% original quality).
-// - Non-HEIC images: direct R2 CDN (301 redirect, browser caches at CDN edge).
-// - HEIC: via /api/upload worker proxy for format conversion.
+// On-the-fly image compression via Cloudflare Image Resizing.
+// - ALL images (PNG/JPG/WebP) are served through /api/upload?key=...&w=400&q=75
+// - Worker uses CF Image Resizing to compress: 400px thumb ~20-50KB, 900px full ~80-150KB
+// - Result cached immutably — second load is instant from browser cache
+// - HEIC/HEIF: also converted to WebP automatically
 // - If src is undefined/null/empty → renders nothing
 import React from 'react'
+
+/** Thumbnail (product grid): 400px wide, quality 75 — fast, small (~20-50KB) */
+const THUMB = { w: 400, q: 75 } as const;
+/** Full size (product detail page, zoomed view): 900px wide, quality 85 (~80-150KB) */
+const FULL  = { w: 900, q: 85 } as const;
 
 interface HeicImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
   loading?: 'lazy' | 'eager';
   fetchpriority?: 'high' | 'low' | 'auto';
-  /** Pass the index in product grid (0-based). First 4 images get eager+high priority, rest lazy+low */
+  /** 'thumb' (default) = 400px/q75  |  'full' = 900px/q85 */
+  size?: 'thumb' | 'full';
+  /** Index in product grid (0-based). First 4 get eager+high priority, rest lazy+low */
   index?: number;
 }
 
+const R2_CDN = 'https://media.heelsup.in';
+
 /**
- * Returns the URL to actually load in the <img> tag.
- * - Production: always returns original URL directly (no proxy).
- * - Localhost: proxies R2/Worker URLs so miniflare can serve local files.
+ * Extracts the R2 key from any of our image URL formats:
+ *   https://media.heelsup.in/products/xxx.jpg  → products/xxx.jpg
+ *   /api/upload?key=products/xxx.jpg            → products/xxx.jpg
+ *   /api/upload/products/xxx.jpg                → products/xxx.jpg
+ *   https://x.workers.dev/api/upload?key=xxx    → xxx
  */
-function getDisplayUrl(src: string | undefined): string | undefined {
+function extractKey(src: string): string | null {
+  try {
+    // /api/upload?key= or full URL with ?key=
+    const parsed = new URL(src, 'https://x.invalid');
+    const key = parsed.searchParams.get('key');
+    if (key) return decodeURIComponent(key);
+
+    const pathname = parsed.pathname;
+
+    // /api/admin/upload/products/xxx or /api/upload/products/xxx
+    for (const prefix of ['/api/admin/upload/', '/api/upload/']) {
+      if (pathname.startsWith(prefix)) {
+        const k = pathname.slice(prefix.length);
+        if (k) return decodeURIComponent(k);
+      }
+    }
+
+    // https://media.heelsup.in/products/xxx.jpg
+    if (parsed.hostname === 'media.heelsup.in' || src.startsWith(R2_CDN)) {
+      const k = pathname.startsWith('/') ? pathname.slice(1) : pathname;
+      if (k) return decodeURIComponent(k);
+    }
+  } catch {}
+  return null;
+}
+
+/**
+ * Builds the URL to pass to <img src>.
+ * - If key can be extracted → route through Worker with resize params
+ * - data:/blob: → as-is
+ * - Relative static path (e.g. /assets/logo.png) → as-is
+ * - Unknown external URL → as-is (no resize)
+ */
+function buildImageUrl(src: string | undefined, size: 'thumb' | 'full'): string | undefined {
   if (!src || !src.trim()) return undefined;
 
-  // blob: or data: — use as-is
-  if (src.startsWith('data:') || src.startsWith('blob:')) {
-    return src;
+  // data: or blob: — never proxy
+  if (src.startsWith('data:') || src.startsWith('blob:')) return src;
+
+  // Static relative path (logo, banner, etc.) — never proxy
+  if (src.startsWith('/') && !src.startsWith('/api/')) return src;
+
+  // Try to extract R2 key
+  const key = extractKey(src);
+  if (key) {
+    const { w, q } = size === 'full' ? FULL : THUMB;
+    return `/api/upload?key=${encodeURIComponent(key)}&w=${w}&q=${q}`;
   }
 
-  // Handle path-based relative proxy URLs (e.g. /api/upload/products/file.png or /api/admin/upload/products/file.png)
-  if (src.startsWith('/api/upload/') || src.startsWith('/api/admin/upload/')) {
-    const rawKey = src.startsWith('/api/admin/upload/')
-      ? src.slice('/api/admin/upload/'.length)
-      : src.slice('/api/upload/'.length);
-    const cleanKey = rawKey.split('?')[0].split('#')[0];
-    if (cleanKey) {
-      return `/api/upload?key=${encodeURIComponent(cleanKey)}`;
-    }
-  }
-
-  // Relative static asset URLs (e.g. /assets/logo.png) — use as-is
-  if (src.startsWith('/')) {
-    return src;
-  }
-
-  const isLocalhost = typeof window !== 'undefined' && 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  const isStaging = typeof window !== 'undefined' && 
-    (window.location.hostname.endsWith('.workers.dev') || window.location.hostname.endsWith('.pages.dev'));
-
-  if (isLocalhost || isStaging) {
-    try {
-      const parsed = new URL(src);
-      const host = parsed.hostname;
-
-      // Handle path-based proxy URLs with hostname (e.g. https://domain/api/upload/products/file.png)
-      if (parsed.pathname.includes('/api/admin/upload/') || parsed.pathname.includes('/api/upload/')) {
-        const queryKey = parsed.searchParams.get('key');
-        if (queryKey) return `/api/upload?key=${encodeURIComponent(queryKey)}`;
-
-        let rawKey = parsed.pathname;
-        if (rawKey.includes('/api/admin/upload/')) {
-          rawKey = rawKey.split('/api/admin/upload/')[1];
-        } else if (rawKey.includes('/api/upload/')) {
-          rawKey = rawKey.split('/api/upload/')[1];
-        }
-        if (rawKey) {
-          return `/api/upload?key=${encodeURIComponent(decodeURIComponent(rawKey))}`;
-        }
-      }
-
-      // Already a proxied /api/upload URL with query parameter
-      if (parsed.pathname.includes('/api/upload')) {
-        const queryKey = parsed.searchParams.get('key');
-        if (queryKey) return `/api/upload?key=${encodeURIComponent(queryKey)}`;
-      }
-
-      // Only proxy our own R2 / Worker / CDN URLs
-      if (
-        host.includes('heelsup.in') ||
-        host.includes('workers.dev') ||
-        host.includes('r2.dev')
-      ) {
-        let key = parsed.pathname.substring(1);
-        if (key.startsWith('api/admin/upload/')) {
-          key = key.slice('api/admin/upload/'.length);
-        } else if (key.startsWith('api/upload/')) {
-          key = key.slice('api/upload/'.length);
-        }
-        key = decodeURIComponent(key);
-        return `/api/upload?key=${encodeURIComponent(key)}`;
-      }
-    } catch {
-      // not a valid URL — return as-is
-    }
-  }
-
-  // All other cases / Production: use original URL directly
+  // Unknown URL (external CDN, etc.) — return as-is
   return src;
 }
 
@@ -107,20 +91,21 @@ export default function HeicImage({
   fetchpriority,
   alt = '',
   style,
+  size = 'thumb',
   index,
   ...props
 }: HeicImageProps) {
-  const displaySrc = getDisplayUrl(src);
+  const displaySrc = buildImageUrl(src, size);
 
-  // No image in database → render nothing
+  // No image → render nothing
   if (!displaySrc) return null;
 
-  // Auto-determine priority based on position in grid
-  // First 4 images (above the fold on mobile) = eager + high priority (LCP candidates)
-  // Rest = lazy + low priority (saves bandwidth, speeds up initial render)
-  const aboveFold = index !== undefined ? index < 4 : true;
-  const resolvedLoading = loading ?? (aboveFold ? 'eager' : 'lazy');
-  const resolvedPriority = fetchpriority ?? (aboveFold ? 'high' : 'low');
+  // Auto-determine priority from position in grid
+  // First 4 images (above the fold on mobile) → eager + high priority (LCP)
+  // Rest → lazy + low (saves bandwidth, speeds up initial page render)
+  const aboveFold = index !== undefined ? index < 4 : (size === 'full');
+  const resolvedLoading   = loading   ?? (aboveFold ? 'eager' : 'lazy');
+  const resolvedPriority  = fetchpriority ?? (aboveFold ? 'high' : 'low');
 
   return (
     <img
@@ -128,7 +113,7 @@ export default function HeicImage({
       alt={alt}
       className={className}
       style={{
-        backgroundColor: '#f5f5f5', // placeholder color prevents layout shift before image loads
+        backgroundColor: '#f0ede8', // warm placeholder — prevents layout shift before image loads
         ...style,
       }}
       loading={resolvedLoading}
