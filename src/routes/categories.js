@@ -19,10 +19,28 @@ export async function categoriesRouter(request, env) {
                 }
             } catch {}
 
+            if (!isAdmin && env.KV) {
+                try {
+                    const cached = await env.KV.get('cache:categories', 'json');
+                    if (cached) return list(cached);
+                } catch (err) {
+                    console.warn('KV get failed for categories:', err);
+                }
+            }
+
             const cats = await env.DB.prepare(
                 `SELECT c.*, (SELECT COUNT(*) FROM products p WHERE (LOWER(p.category) = LOWER(c.name) OR LOWER(p.category) = LOWER(c.slug))` + (isAdmin ? '' : ' AND p.active = 1') + `) as product_count
           FROM categories c` + (isAdmin ? '' : ' WHERE c.active = 1') + ` ORDER BY c.sort_order ASC`
             ).all();
+
+            if (!isAdmin && env.KV && cats.results) {
+                try {
+                    await env.KV.put('cache:categories', JSON.stringify(cats.results), { expirationTtl: 300 });
+                } catch (err) {
+                    console.warn('KV put failed for categories:', err);
+                }
+            }
+
             return list(cats.results);
         } catch (e) {
             console.error('Failed to fetch categories:', e);
@@ -39,6 +57,7 @@ export async function categoriesRouter(request, env) {
             const result = await env.DB.prepare(
                 "INSERT INTO categories (name, slug, description, image_url, sort_order, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now')) RETURNING *"
             ).bind(name, slug.toLowerCase(), description || null, image_url || null, sort_order || 0, active !== undefined ? (active ? 1 : 0) : 1).first();
+            if (env.KV) await env.KV.delete('cache:categories');
             return created(result, 'Category created');
         } catch (e) {
             if (e.message?.includes('UNIQUE')) return error('Slug already exists', 409);
@@ -55,6 +74,7 @@ export async function categoriesRouter(request, env) {
         await env.DB.prepare(
             "UPDATE categories SET name=?, slug=?, description=?, image_url=?, sort_order=?, active=?, updated_at=datetime('now') WHERE id=?"
         ).bind(name, slug, description, image_url, sort_order, activeVal ? 1 : 0, id).run();
+        if (env.KV) await env.KV.delete('cache:categories');
         return ok(null, 'Category updated');
     }
 
@@ -63,6 +83,7 @@ export async function categoriesRouter(request, env) {
         if (authError) return authError;
         const id = path.slice(1);
         await env.DB.prepare('DELETE FROM categories WHERE id = ?').bind(id).run();
+        if (env.KV) await env.KV.delete('cache:categories');
         return ok(null, 'Category deleted');
     }
 

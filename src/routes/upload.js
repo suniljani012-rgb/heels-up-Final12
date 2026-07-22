@@ -19,9 +19,12 @@ export async function uploadRouter(request, env, ctx) {
     const method = request.method;
 
     // GET /api/upload — serve file from R2
-    if ((path === '/' || path === '') && method === 'GET') {
+    if (method === 'GET') {
         try {
-            const key = url.searchParams.get('key');
+            let key = url.searchParams.get('key');
+            if (!key && path && path !== '/') {
+                key = path.startsWith('/') ? path.slice(1) : path;
+            }
             if (!key) return error('key required');
             const bucket = env.MEDIA || env.BUCKET;
             if (!bucket) return error('R2 bucket binding not found', 500);
@@ -55,7 +58,16 @@ export async function uploadRouter(request, env, ctx) {
                 try {
                     const optimizedRes = await fetch(publicUrl, resizeOptions);
                     if (optimizedRes.ok) {
-                        const headers = new Headers(optimizedRes.headers);
+                        const headers = new Headers();
+                        if (optimizedRes.headers.has('content-type')) {
+                            headers.set('Content-Type', optimizedRes.headers.get('content-type'));
+                        }
+                        if (optimizedRes.headers.has('last-modified')) {
+                            headers.set('Last-Modified', optimizedRes.headers.get('last-modified'));
+                        }
+                        if (optimizedRes.headers.has('etag')) {
+                            headers.set('ETag', optimizedRes.headers.get('etag'));
+                        }
                         const origin = request.headers.get('Origin') || '';
                         const allowedOrigins = ['https://heelsup.in', 'https://www.heelsup.in', 'https://heelsupnew.heelsup.workers.dev'];
                         headers.set('Access-Control-Allow-Origin', allowedOrigins.includes(origin) ? origin : '*');
@@ -103,99 +115,77 @@ export async function uploadRouter(request, env, ctx) {
         if (authError) return authError;
         try {
             const formData = await request.formData();
-            let files = formData.getAll('files').filter(f => f && typeof f !== 'string');
-            if (!files || files.length === 0) {
-                const singleFile = formData.get('file');
-                if (singleFile && typeof singleFile !== 'string') {
-                    files = [singleFile];
-                }
-            }
+            let files = [
+                ...formData.getAll('files'),
+                ...formData.getAll('file'),
+                ...formData.getAll('images'),
+                ...formData.getAll('image')
+            ].filter(f => f && typeof f !== 'string' && typeof f.arrayBuffer === 'function');
 
             if (!files || files.length === 0) {
-                return error('No files provided', 400);
+                return error('No files provided in FormData under fields files/file/images/image.', 400);
             }
 
             const bucket = env.MEDIA || env.BUCKET;
-            if (!bucket) return error('R2 bucket binding (MEDIA) not found', 500);
+            if (!bucket) return error('R2 bucket binding (MEDIA/BUCKET) not configured on Cloudflare Worker', 500);
 
             const results = await Promise.all(files.map(async (file) => {
-                const fileName = file.name || '';
-                const fileExt = fileName.split('.').pop().toLowerCase();
-                const isHeicExt = ['heic', 'heif'].includes(fileExt); // includes HEIF variant
+                const rawName = file.name || 'image.webp';
+                const rawExt = rawName.includes('.') ? rawName.split('.').pop().toLowerCase() : '';
+                const mimeType = (file.type || '').toLowerCase();
 
-                const isImageMime = file.type && file.type.startsWith('image/');
-                const isOctetStream = file.type === 'application/octet-stream';
-                const isAllowed = isImageMime || ALLOWED_EXTENSIONS.includes(fileExt) || isOctetStream;
+                const isHeicExt = ['heic', 'heif'].includes(rawExt);
+                const isHeic = isHeicExt;
+                const isHeicType = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'].includes(mimeType);
 
-                if (!isAllowed) {
-                    throw new Error('Only image files are allowed');
+                if (isHeic || isHeicType) {
+                    throw new Error(`HEIC/HEIF formats are not natively supported by browsers. Please upload images in JPEG, PNG, WebP, or GIF format.`);
                 }
 
                 let buffer = await file.arrayBuffer();
+                if (!buffer || buffer.byteLength === 0) {
+                    throw new Error(`File "${rawName}" is empty (0 bytes).`);
+                }
+
                 if (buffer.byteLength > MAX_SIZE) {
-                    throw new Error('File too large. Max 50MB');
+                    throw new Error(`File "${rawName}" exceeds maximum allowed limit of 50MB (${(buffer.byteLength / 1024 / 1024).toFixed(1)} MB).`);
                 }
 
-                // If it is HEIC, convert to PNG. Otherwise keep original or convert
-                const isHeic = isHeicExt || fileExt === 'heic' || fileExt === 'heif';
-                const finalExt = isHeic ? 'png' : (ALLOWED_EXTENSIONS.includes(fileExt) ? fileExt : 'png');
-                const contentType = isHeic ? 'image/png' : (file.type || 'image/png');
-                const finalKey = `products/${Date.now()}-${Math.random().toString(36).slice(2)}.${finalExt}`;
+                // Determine final file extension and Content-Type header for R2
+                // Defaults to image/webp / image/jpeg for browser compatibility
+                let finalExt = 'webp';
+                let contentType = 'image/webp';
 
-                if (isHeic && env.R2_PUBLIC_URL) {
-                    // 1. Put raw HEIC temporarily
-                    const tempKey = `temp/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-                    await bucket.put(tempKey, buffer, {
-                        httpMetadata: { contentType: `image/${fileExt}` }
-                    });
-
-                    // 2. Fetch PNG from Cloudflare Image Resizing using same-origin proxy (avoids DNS/R2 propagation delay)
-                    const proxyTempUrl = `${url.origin}/api/upload?key=${encodeURIComponent(tempKey)}`;
-                    try {
-                        const convertRes = await fetch(proxyTempUrl, {
-                            cf: {
-                                image: {
-                                    format: 'png',
-                                    quality: 90
-                                }
-                            }
-                        });
-                        if (convertRes.ok) {
-                            const convertedBuffer = await convertRes.arrayBuffer();
-                            // 3. Save converted PNG
-                            await bucket.put(finalKey, convertedBuffer, {
-                                httpMetadata: { contentType: 'image/png' }
-                            });
-                            // 4. Delete temp file in background
-                            ctx.waitUntil(bucket.delete(tempKey));
-                            buffer = convertedBuffer;
-                        } else {
-                            // Fallback if CF Resizing fails: save raw HEIC as .heic
-                            const fallbackKey = finalKey.replace('.png', `.${fileExt}`);
-                            await bucket.put(fallbackKey, buffer, {
-                                httpMetadata: { contentType: `image/${fileExt}` }
-                            });
-                            ctx.waitUntil(bucket.delete(tempKey));
-                            return { url: `${env.R2_PUBLIC_URL}/${fallbackKey}`, key: fallbackKey };
-                        }
-                    } catch (fetchErr) {
-                        console.error('Server HEIC to PNG conversion error:', fetchErr);
-                        const fallbackKey = finalKey.replace('.png', `.${fileExt}`);
-                        await bucket.put(fallbackKey, buffer, {
-                            httpMetadata: { contentType: `image/${fileExt}` }
-                        });
-                        ctx.waitUntil(bucket.delete(tempKey));
-                        return { url: `${env.R2_PUBLIC_URL}/${fallbackKey}`, key: fallbackKey };
-                    }
-                } else {
-                    // Regular uploads
-                    await bucket.put(finalKey, buffer, {
-                        httpMetadata: { contentType },
-                    });
+                if (rawExt === 'png' || mimeType.includes('png')) {
+                    finalExt = 'png';
+                    contentType = 'image/png';
+                } else if (['jpg', 'jpeg', 'jfif', 'heic', 'heif'].includes(rawExt) || mimeType.includes('jpeg') || mimeType.includes('jpg') || mimeType.includes('heic') || mimeType.includes('heif')) {
+                    finalExt = 'jpg';
+                    contentType = 'image/jpeg';
+                } else if (rawExt === 'gif' || mimeType.includes('gif')) {
+                    finalExt = 'gif';
+                    contentType = 'image/gif';
+                } else if (rawExt === 'svg' || mimeType.includes('svg')) {
+                    finalExt = 'svg';
+                    contentType = 'image/svg+xml';
+                } else if (rawExt === 'avif' || mimeType.includes('avif')) {
+                    finalExt = 'avif';
+                    contentType = 'image/avif';
                 }
 
-                const publicUrl = `${env.R2_PUBLIC_URL}/${finalKey}`;
-                return { url: publicUrl, key: finalKey };
+                const finalKey = `products/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${finalExt}`;
+
+                // Store in R2 bucket with explicit Content-Type metadata header
+                await bucket.put(finalKey, buffer, {
+                    httpMetadata: { contentType },
+                });
+
+                const isWorkersDev = url.hostname.endsWith('.workers.dev') || url.hostname.endsWith('.pages.dev');
+                const publicUrl = (env.R2_PUBLIC_URL && !isWorkersDev) 
+                    ? `${env.R2_PUBLIC_URL}/${finalKey}` 
+                    : `${url.origin}/api/upload?key=${encodeURIComponent(finalKey)}`;
+
+                return { url: publicUrl, key: finalKey, mime_type: contentType, format: finalExt };
             }));
 
             return ok({
@@ -205,8 +195,16 @@ export async function uploadRouter(request, env, ctx) {
                 keys: results.map(r => r.key)
             }, 'File(s) uploaded');
         } catch (e) {
-            console.error('Upload error:', e);
-            return error(e.message || 'Upload failed', 400);
+            console.error('Upload error in Worker:', e);
+            const isClientError = e.message?.includes('HEIC') || e.message?.includes('No files') || e.message?.includes('exceeds') || e.message?.includes('empty');
+            return new Response(JSON.stringify({
+                success: false,
+                error: e.message || 'Upload failed',
+                cause: String(e.cause || e.stack || e)
+            }), {
+                status: isClientError ? 400 : 500,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
     }
 

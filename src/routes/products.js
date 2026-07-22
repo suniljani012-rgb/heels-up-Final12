@@ -235,6 +235,36 @@ async function upsertSizeStock(env, productId, sizeStockArray) {
   await syncLegacyStock(env, productId);
 }
 
+// Sync product_images detail table with product images_json array
+async function syncProductImages(env, productId, imageUrls) {
+  try {
+    // Delete existing images for this product to prevent duplicates
+    await env.DB.prepare("DELETE FROM product_images WHERE product_id = ?").bind(productId).run();
+
+    if (!imageUrls || !Array.isArray(imageUrls)) return;
+
+    for (let i = 0; i < imageUrls.length; i++) {
+      const url = imageUrls[i];
+      if (!url || typeof url !== 'string') continue;
+
+      const fileExt = url.split('.').pop().toLowerCase();
+      let mimeType = 'image/jpeg';
+      if (fileExt === 'png') mimeType = 'image/png';
+      else if (fileExt === 'webp') mimeType = 'image/webp';
+      else if (fileExt === 'gif') mimeType = 'image/gif';
+      else if (fileExt === 'heic') mimeType = 'image/heic';
+      else if (fileExt === 'heif') mimeType = 'image/heif';
+
+      await env.DB.prepare(
+        `INSERT INTO product_images (product_id, url, sort_order, is_primary, mime_type, format, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+      ).bind(productId, url, i, i === 0 ? 1 : 0, mimeType, fileExt).run();
+    }
+  } catch (err) {
+    console.error('syncProductImages error for product:', productId, err);
+  }
+}
+
 // Keep products.stock in sync with total size stock sum
 async function syncLegacyStock(env, productId) {
   try {
@@ -454,7 +484,7 @@ export async function productsRouter(request, env) {
           ORDER BY r.created_at DESC LIMIT 10`
               ).bind(product.id).all(),
               env.DB.prepare(
-                "SELECT id, url, alt, sort_order, is_primary FROM product_images WHERE product_id=? ORDER BY sort_order ASC, id ASC"
+                "SELECT id, url, alt, sort_order, is_primary, COALESCE(mime_type, 'image/webp') as mime_type, COALESCE(format, 'webp') as format FROM product_images WHERE product_id=? ORDER BY sort_order ASC, id ASC"
               ).bind(product.id).all(),
               env.DB.prepare(
                 "SELECT p.*, c.id as category_id FROM products p LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category) WHERE p.category=? AND p.id!=? AND p.active=1 ORDER BY p.featured DESC LIMIT 4"
@@ -516,7 +546,7 @@ export async function productsRouter(request, env) {
          ORDER BY r.created_at DESC LIMIT 10`
               ).bind(id).all(),
               env.DB.prepare(
-                "SELECT id, url, alt, sort_order, is_primary FROM product_images WHERE product_id=? ORDER BY sort_order ASC, id ASC"
+                "SELECT id, url, alt, sort_order, is_primary, COALESCE(mime_type, 'image/webp') as mime_type, COALESCE(format, 'webp') as format FROM product_images WHERE product_id=? ORDER BY sort_order ASC, id ASC"
               ).bind(id).all(),
               fetchSizeStock(env, id),
               fetchColorsForProduct(env, id)
@@ -671,6 +701,9 @@ export async function productsRouter(request, env) {
                             await upsertSizeStock(env, result.id, autoSizeStock);
                         }
 
+                        // Sync images to product_images table
+                        await syncProductImages(env, result.id, images || []);
+
                         const sizeStockRows = await fetchSizeStock(env, result.id);
                         const colorsList = await fetchColorsForProduct(env, result.id);
                         results.push(mapProduct(result, sizeStockRows, colorsList));
@@ -752,6 +785,9 @@ export async function productsRouter(request, env) {
                 await upsertSizeStock(env, result.id, autoSizeStock);
             }
 
+            // Sync images to product_images table
+            await syncProductImages(env, result.id, images || []);
+
             // Log inventory creation
             await env.DB.prepare(
                 "INSERT INTO inventory_log (product_id, product_name, change_type, quantity_before, quantity_change, quantity_after, reason, created_at) VALUES (?, ?, 'restock', 0, ?, ?, 'Product created', datetime('now'))"
@@ -815,6 +851,9 @@ export async function productsRouter(request, env) {
                 // fallback: update legacy stock column
                 await env.DB.prepare("UPDATE products SET stock=?, updated_at=datetime('now') WHERE id=?").bind(parseInt(stock || 0), id).run();
             }
+
+            // Sync images to product_images table
+            await syncProductImages(env, id, images || []);
 
             const product = await env.DB.prepare(
                 "SELECT p.*, c.id as category_id FROM products p LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category) WHERE p.id=?"

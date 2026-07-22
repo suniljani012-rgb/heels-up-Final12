@@ -481,8 +481,8 @@ export async function ordersRouter(request, env) {
         }
     }
 
-    // ── GET /api/orders/my ──────────────────────────────────────────────────
-    if (path === '/my' && method === 'GET') {
+    // ── GET /api/orders/my or GET /api/orders ─────────────────────────────────
+    if ((path === '/my' || path === '/' || path === '') && method === 'GET') {
         const { user, error: authErr } = await requireAuth(request, env);
         if (authErr) return authErr;
         try {

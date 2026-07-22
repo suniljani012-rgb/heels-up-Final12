@@ -31,7 +31,7 @@ export async function reviewsRouter(request, env) {
     // GET /api/reviews?product_id=X
     if (path === '/' && method === 'GET') {
         const productId = url.searchParams.get('product_id');
-        if (!productId) return error('product_id required');
+        if (!productId) return list([]);
         try {
             const reviews = await env.DB.prepare(
                 `SELECT r.id, r.rating, r.title, r.body, r.created_at, r.merchant_reply, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name

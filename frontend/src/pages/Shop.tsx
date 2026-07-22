@@ -5,7 +5,7 @@ import { useWishlistStore } from '../store/useWishlistStore'
 import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
 import HeicImage from '../components/HeicImage'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import { formatSizeToIndian } from '../utils/sizeHelper'
 
@@ -34,7 +34,8 @@ function useCategories() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to fetch categories');
       return data.data;
-    }
+    },
+    staleTime: 10 * 60 * 1000,
   });
 }
 
@@ -71,7 +72,9 @@ function useShopProducts(filters: any) {
         });
       }
       return data;
-    }
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 2 * 60 * 1000,
   });
 }
 
