@@ -1,7 +1,8 @@
 // frontend/src/components/HeicImage.tsx
 // Simple, reliable image component.
 // - In production: serves original URLs directly from database (no proxy, 100% original quality).
-// - In local dev (localhost): proxies R2 URLs to /api/upload to load from the local miniflare R2 bucket.
+// - Non-HEIC images: direct R2 CDN (301 redirect, browser caches at CDN edge).
+// - HEIC: via /api/upload worker proxy for format conversion.
 // - If src is undefined/null/empty → renders nothing
 import React from 'react'
 
@@ -9,6 +10,8 @@ interface HeicImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
   loading?: 'lazy' | 'eager';
   fetchpriority?: 'high' | 'low' | 'auto';
+  /** Pass the index in product grid (0-based). First 4 images get eager+high priority, rest lazy+low */
+  index?: number;
 }
 
 /**
@@ -100,10 +103,11 @@ function getDisplayUrl(src: string | undefined): string | undefined {
 export default function HeicImage({
   src,
   className = '',
-  loading = 'eager',
-  fetchpriority = 'high',
+  loading,
+  fetchpriority,
   alt = '',
   style,
+  index,
   ...props
 }: HeicImageProps) {
   const displaySrc = getDisplayUrl(src);
@@ -111,16 +115,26 @@ export default function HeicImage({
   // No image in database → render nothing
   if (!displaySrc) return null;
 
+  // Auto-determine priority based on position in grid
+  // First 4 images (above the fold on mobile) = eager + high priority (LCP candidates)
+  // Rest = lazy + low priority (saves bandwidth, speeds up initial render)
+  const aboveFold = index !== undefined ? index < 4 : true;
+  const resolvedLoading = loading ?? (aboveFold ? 'eager' : 'lazy');
+  const resolvedPriority = fetchpriority ?? (aboveFold ? 'high' : 'low');
+
   return (
     <img
       src={displaySrc}
       alt={alt}
       className={className}
-      style={style}
-      loading={loading}
-      decoding="sync"
+      style={{
+        backgroundColor: '#f5f5f5', // placeholder color prevents layout shift before image loads
+        ...style,
+      }}
+      loading={resolvedLoading}
+      decoding={aboveFold ? 'sync' : 'async'}
       // @ts-ignore — fetchpriority is valid HTML but TS lib types lag behind
-      fetchpriority={fetchpriority}
+      fetchpriority={resolvedPriority}
       {...props}
     />
   );

@@ -29,22 +29,28 @@ export async function uploadRouter(request, env, ctx) {
             const bucket = env.MEDIA || env.BUCKET;
             if (!bucket) return error('R2 bucket binding not found', 500);
 
-            // Determine browser format support and whether file is HEIC
-            const accept = request.headers.get('accept') || '';
-            const supportsWebp = accept.includes('image/webp');
-            const supportsAvif = accept.includes('image/avif');
+            // Determine if file is HEIC (only HEIC needs CF Image Resizing for format conversion)
             const isHeic = key.toLowerCase().endsWith('.heic') || key.toLowerCase().endsWith('.heif');
 
-            // HEIC ALWAYS needs conversion — browsers cannot render raw HEIC.
-            // All other formats: only use CF Resizing if browser supports modern formats.
-            const needsCfResizing = isHeic || supportsWebp || supportsAvif;
+            // ─── FAST PATH: Non-HEIC images → redirect directly to R2 CDN ───
+            // Skip Worker proxy entirely — browser fetches from CDN edge directly.
+            // This is the biggest speed win: no Worker roundtrip, no CF Image Resizing overhead.
+            if (env.R2_PUBLIC_URL && !isHeic) {
+                const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+                // 301 redirect → browser caches the redirect itself, subsequent loads go direct to CDN
+                return Response.redirect(publicUrl, 301);
+            }
+
+            // ─── HEIC PATH: HEIC/HEIF → must convert via CF Image Resizing ───
             const ua = request.headers.get('user-agent') || '';
             const via = request.headers.get('via') || '';
             const isImageResizingService = ua.includes('Cloudflare-Image-Resizing') || via.includes('image-resizing');
 
-            if (env.R2_PUBLIC_URL && needsCfResizing && !isImageResizingService) {
+            if (env.R2_PUBLIC_URL && isHeic && !isImageResizingService) {
                 const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
-                // For HEIC: force jpeg as safe fallback if browser doesn't support webp/avif
+                const accept = request.headers.get('accept') || '';
+                const supportsAvif = accept.includes('image/avif');
+                const supportsWebp = accept.includes('image/webp');
                 const targetFormat = supportsAvif ? 'avif' : (supportsWebp ? 'webp' : 'jpeg');
                 const resizeOptions = {
                     cf: {
@@ -78,7 +84,7 @@ export async function uploadRouter(request, env, ctx) {
                         });
                     }
                 } catch (fetchErr) {
-                    console.warn('Cloudflare Image Resizing fetch failed, falling back to direct R2 get:', fetchErr);
+                    console.warn('HEIC CF Image Resizing failed, falling back to direct R2:', fetchErr);
                 }
             }
 

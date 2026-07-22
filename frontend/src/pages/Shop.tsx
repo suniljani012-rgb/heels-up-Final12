@@ -348,8 +348,7 @@ export default function Shop() {
                         src={prod.images?.[0] || undefined}
                         alt={prod.name}
                         className="w-full h-full object-contain p-2 bg-white group-hover:scale-105 transition-transform duration-700"
-                        loading="eager"
-                        fetchpriority="high"
+                        index={idx}
                       />
                       
                       {/* Badges */}
