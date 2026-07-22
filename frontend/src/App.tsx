@@ -74,7 +74,22 @@ function AppContent() {
       queryFn: async () => {
         const res = await fetch('/api/products?limit=8&featured=true');
         const data = await res.json();
-        return data.success ? data.data : [];
+        const products = data.success ? data.data : [];
+        // Preload first 4 product images via <link rel="preload"> for instant LCP
+        if (Array.isArray(products)) {
+          products.slice(0, 4).forEach((prod: any) => {
+            const imgUrl = prod?.images?.[0];
+            if (imgUrl && typeof imgUrl === 'string' && imgUrl.startsWith('http')) {
+              const link = document.createElement('link');
+              link.rel = 'preload';
+              link.as = 'image';
+              link.href = imgUrl;
+              link.setAttribute('fetchpriority', 'high');
+              document.head.appendChild(link);
+            }
+          });
+        }
+        return products;
       },
       staleTime: 5 * 60 * 1000,
     });

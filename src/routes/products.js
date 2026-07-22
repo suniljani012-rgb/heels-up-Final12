@@ -24,7 +24,36 @@ function safeJsonParse(str, fallback = []) {
   }
 }
 
-function mapProduct(p, sizeStock = [], colors = []) {
+/**
+ * Converts worker proxy URLs to direct R2 CDN URLs for ultra-fast image loading.
+ * E.g. /api/upload?key=products/abc.jpg  →  https://media.heelsup.in/products/abc.jpg
+ * E.g. https://x.workers.dev/api/upload?key=products/abc.jpg  →  https://media.heelsup.in/products/abc.jpg
+ * Direct CDN URLs and data:/blob: are returned as-is.
+ */
+function normalizeImageUrl(url, r2PublicUrl) {
+  if (!url || typeof url !== 'string') return url;
+  if (!r2PublicUrl) return url;
+  // Already a direct CDN URL
+  if (url.startsWith(r2PublicUrl)) return url;
+  // data: or blob:
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+  // /api/upload?key=... or /api/admin/upload?key=...
+  try {
+    const parsed = new URL(url, 'https://x.invalid');
+    const key = parsed.searchParams.get('key');
+    if (key) return `${r2PublicUrl}/${key}`;
+    // /api/upload/products/abc.jpg (path-based)
+    for (const prefix of ['/api/admin/upload/', '/api/upload/']) {
+      if (parsed.pathname.startsWith(prefix)) {
+        const k = parsed.pathname.slice(prefix.length);
+        if (k) return `${r2PublicUrl}/${k}`;
+      }
+    }
+  } catch {}
+  return url;
+}
+
+function mapProduct(p, sizeStock = [], colors = [], r2PublicUrl = '') {
   if (!p) return null;
   const sizes = safeJsonParse(p.sizes_json, []);
 
@@ -58,6 +87,10 @@ function mapProduct(p, sizeStock = [], colors = []) {
     ? sizeStock.reduce((s, r) => s + r.stock, 0)
     : Number(p.stock || 0);
 
+  // Normalize image URLs: convert any worker proxy URLs to direct CDN URLs
+  const rawImages = safeJsonParse(p.images_json, p.image_url ? [p.image_url] : []);
+  const images = rawImages.map(img => normalizeImageUrl(img, r2PublicUrl));
+
   return {
     id: p.id,
     name: p.name,
@@ -85,7 +118,7 @@ function mapProduct(p, sizeStock = [], colors = []) {
     sizes: sizes,
     size_stock: sizeStockArray,      // Array for Admin.tsx
     size_stock_map: sizeStockMap,    // Object for Product.tsx
-    images: safeJsonParse(p.images_json, p.image_url ? [p.image_url] : []),
+    images: images,
     colors: colors,
   };
 }
@@ -434,7 +467,7 @@ export async function productsRouter(request, env) {
             const productIds = rawProducts.map(p => p.id);
             const sizeStockBatch = await fetchSizeStockBatch(env, productIds);
             const colorsBatch = await fetchColorsBatch(env, rawProducts);
-            const products = rawProducts.map(p => mapProduct(p, sizeStockBatch[p.id] || [], colorsBatch[p.id] || []));
+            const products = rawProducts.map(p => mapProduct(p, sizeStockBatch[p.id] || [], colorsBatch[p.id] || [], env.R2_PUBLIC_URL || ''));
 
             return list(products, {
                 page, limit,
@@ -499,14 +532,14 @@ export async function productsRouter(request, env) {
             const relatedColors = await fetchColorsBatch(env, relatedIds);
 
             const variantsData = await fetchColorVariants(env, product);
-            const mappedProduct = mapProduct(product, sizeStock, variantsData.colors.length > 0 ? variantsData.colors : colors);
+            const mappedProduct = mapProduct(product, sizeStock, variantsData.colors.length > 0 ? variantsData.colors : colors, env.R2_PUBLIC_URL || '');
             mappedProduct.color_to_id = variantsData.color_to_id;
 
             return ok({
                 product: mappedProduct,
                 reviews: reviews.results || [],
                 images: images.results || [],
-                related: relatedRaw.map(r => mapProduct(r, relatedSizeStock[r.id] || [], relatedColors[r.id] || []))
+                related: relatedRaw.map(r => mapProduct(r, relatedSizeStock[r.id] || [], relatedColors[r.id] || [], env.R2_PUBLIC_URL || ''))
             });
         } catch (e) {
             console.error('Slug fetch error:', e);
@@ -553,7 +586,7 @@ export async function productsRouter(request, env) {
             ]);
 
             const variantsData = await fetchColorVariants(env, product);
-            const mappedProduct = mapProduct(product, sizeStock, variantsData.colors.length > 0 ? variantsData.colors : colors);
+            const mappedProduct = mapProduct(product, sizeStock, variantsData.colors.length > 0 ? variantsData.colors : colors, env.R2_PUBLIC_URL || '');
             mappedProduct.color_to_id = variantsData.color_to_id;
 
             return ok({
@@ -706,7 +739,7 @@ export async function productsRouter(request, env) {
 
                         const sizeStockRows = await fetchSizeStock(env, result.id);
                         const colorsList = await fetchColorsForProduct(env, result.id);
-                        results.push(mapProduct(result, sizeStockRows, colorsList));
+                        results.push(mapProduct(result, sizeStockRows, colorsList, env.R2_PUBLIC_URL || ''));
                         
                         // Log inventory creation
                         await env.DB.prepare(
@@ -795,7 +828,7 @@ export async function productsRouter(request, env) {
 
             const sizeStock2 = await fetchSizeStock(env, result.id);
             const colorsList = await fetchColorsForProduct(env, result.id);
-            return created(mapProduct(result, sizeStock2, colorsList), 'Product created');
+            return created(mapProduct(result, sizeStock2, colorsList, env.R2_PUBLIC_URL || ''), 'Product created');
         } catch (e) {
             console.error('Create product error:', e);
             if (e.message?.includes('UNIQUE')) return error('SKU already exists', 409);
@@ -860,7 +893,7 @@ export async function productsRouter(request, env) {
             ).bind(id).first();
             const sizeStockRows = await fetchSizeStock(env, id);
             const colorsList = await fetchColorsForProduct(env, id);
-            return ok(mapProduct(product, sizeStockRows, colorsList), 'Product updated');
+            return ok(mapProduct(product, sizeStockRows, colorsList, env.R2_PUBLIC_URL || ''), 'Product updated');
         } catch (e) {
             console.error('Update product error:', e);
             return serverError('Failed to update product');
@@ -946,7 +979,7 @@ export async function productsRouter(request, env) {
             ).bind(id).first();
             const sizeStockRows = await fetchSizeStock(env, id);
             const colorsList = await fetchColorsForProduct(env, id);
-            return ok(mapProduct(product, sizeStockRows, colorsList), 'Product updated');
+            return ok(mapProduct(product, sizeStockRows, colorsList, env.R2_PUBLIC_URL || ''), 'Product updated');
         } catch (e) {
             console.error('PATCH product error:', e);
             return serverError('Failed to patch product');
@@ -973,7 +1006,7 @@ export async function productsRouter(request, env) {
             if (!product) return notFound('Product not found');
             const sizeStockRows = await fetchSizeStock(env, id);
             const colorsList = await fetchColorsForProduct(env, id);
-            return ok(mapProduct(product, sizeStockRows, colorsList), showMrp ? 'MRP is now visible to customers' : 'MRP is now hidden from customers');
+            return ok(mapProduct(product, sizeStockRows, colorsList, env.R2_PUBLIC_URL || ''), showMrp ? 'MRP is now visible to customers' : 'MRP is now hidden from customers');
         } catch (e) {
             console.error('MRP visibility toggle error:', e);
             return serverError('Failed to update MRP visibility');
