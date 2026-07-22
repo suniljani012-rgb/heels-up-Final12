@@ -448,6 +448,19 @@ export async function productsRouter(request, env) {
             const orderBy = sortMap[sort] || 'p.id DESC';
             const whereStr = where.length ? 'WHERE ' + where.join(' AND ') : '';
 
+            // Check KV Edge Cache for non-admin standard list calls
+            const isPublicDefaultList = !isAdmin && !search && !tag && !minPrice && !maxPrice && !sizeFilter && !color;
+            const kvKey = `cache:products:v1:${page}:${limit}:${cat||'all'}:${featured||'0'}:${isNew||'0'}:${trending||'0'}:${sort}`;
+
+            if (env.KV && isPublicDefaultList) {
+                try {
+                    const cached = await env.KV.get(kvKey, 'json');
+                    if (cached && Array.isArray(cached.data)) {
+                        return list(cached.data, cached.meta);
+                    }
+                } catch {}
+            }
+
             const countResult = await env.DB.prepare(
                 `SELECT COUNT(*) as total FROM products p LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category) ${whereStr}`
             ).bind(...binds).first();
@@ -469,11 +482,25 @@ export async function productsRouter(request, env) {
             const colorsBatch = await fetchColorsBatch(env, rawProducts);
             const products = rawProducts.map(p => mapProduct(p, sizeStockBatch[p.id] || [], colorsBatch[p.id] || [], env.R2_PUBLIC_URL || ''));
 
-            return list(products, {
+            const responseMeta = {
                 page, limit,
                 total: countResult.total,
                 pages: Math.ceil(countResult.total / limit)
-            });
+            };
+
+            // Store in KV cache for 5 minutes (300s) asynchronously
+            if (env.KV && isPublicDefaultList && products.length > 0) {
+                try {
+                    const kvPayload = JSON.stringify({ data: products, meta: responseMeta });
+                    if (ctx && typeof ctx.waitUntil === 'function') {
+                        ctx.waitUntil(env.KV.put(kvKey, kvPayload, { expirationTtl: 300 }).catch(() => {}));
+                    } else {
+                        env.KV.put(kvKey, kvPayload, { expirationTtl: 300 }).catch(() => {});
+                    }
+                } catch {}
+            }
+
+            return list(products, responseMeta);
         } catch (e) {
             console.error('Products list error:', e);
             return serverError('Failed to fetch products');

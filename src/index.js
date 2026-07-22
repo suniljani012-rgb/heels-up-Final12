@@ -155,7 +155,7 @@ export default {
           }
         }
         else if (path.startsWith('/api/auth')) response = await authRouter(request, env);
-        else if (path.startsWith('/api/products')) response = await productsRouter(request, env);
+        else if (path.startsWith('/api/products')) response = await productsRouter(request, env, ctx);
 
         else if (path.startsWith('/api/addresses')) response = await addressesRouter(request, env);
         else if (path.startsWith('/api/returns')) response = await returnsCustomerRouter(request, env);
