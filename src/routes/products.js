@@ -409,8 +409,24 @@ export async function productsRouter(request, env) {
             let binds = [];
 
             if (cat) {
-                where.push('LOWER(p.category) = LOWER(?)');
-                binds.push(cat);
+                where.push(`(
+                    LOWER(p.category) = LOWER(?)
+                    OR LOWER(p.category) = LOWER(?) || 's'
+                    OR LOWER(p.category) || 's' = LOWER(?)
+                    OR EXISTS (
+                        SELECT 1 FROM categories c2 
+                        WHERE (LOWER(c2.name) = LOWER(?) OR LOWER(c2.slug) = LOWER(?)) 
+                          AND (
+                            LOWER(p.category) = LOWER(c2.name) 
+                            OR LOWER(p.category) = LOWER(c2.slug) 
+                            OR LOWER(p.category) || 's' = LOWER(c2.slug) 
+                            OR LOWER(p.category) = LOWER(c2.slug) || 's'
+                            OR LOWER(p.category) || 's' = LOWER(c2.name)
+                            OR LOWER(p.category) = LOWER(c2.name) || 's'
+                          )
+                    )
+                )`);
+                binds.push(cat, cat, cat, cat, cat);
             }
             if (featured === 'true' || featured === '1') {
                 where.push('p.featured = 1');
