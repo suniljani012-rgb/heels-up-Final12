@@ -128,6 +128,12 @@ function useLatestReviews() {
 }
 
 function useFeaturedProducts() {
+  // Only use localStorage as initialData if it has actual products.
+  // An empty array [] treated as initialData causes React Query to think
+  // data is already loaded (isLoading=false), so nothing refetches.
+  const cached = getLocalCache('featuredProducts', null);
+  const hasCache = Array.isArray(cached) && cached.length > 0;
+
   return useQuery({
     queryKey: ['featuredProducts'],
     queryFn: async () => {
@@ -137,8 +143,11 @@ function useFeaturedProducts() {
       setLocalCache('featuredProducts', data.data);
       return data.data;
     },
-    initialData: () => getLocalCache('featuredProducts', []),
+    // Only inject cached data if it's non-empty, otherwise let query run fresh
+    ...(hasCache ? { initialData: cached } : {}),
     staleTime: 30 * 60 * 1000, // 30 minutes
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
   });
 }
 
@@ -157,7 +166,7 @@ export default function Home() {
   // React Queries
   const { data: categories = [] } = useCategories()
   const { data: fetchedBanners } = useBanners()
-  const { data: featuredProducts = [] } = useFeaturedProducts()
+  const { data: featuredProducts = [], isLoading: productsLoading, isError: productsError } = useFeaturedProducts()
   const { data: liveReviews = [] } = useLatestReviews()
 
   const banners = fetchedBanners || []
@@ -367,7 +376,8 @@ export default function Home() {
           </Link>
         </div>
 
-        {featuredProducts.length === 0 ? (
+        {/* Loading skeleton */}
+        {productsLoading && featuredProducts.length === 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-pulse">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="space-y-4">
@@ -376,6 +386,17 @@ export default function Home() {
                 <div className="h-4 bg-gray-100 rounded w-1/3" />
               </div>
             ))}
+          </div>
+        ) : productsError || featuredProducts.length === 0 ? (
+          // Genuinely empty or error — show a friendly retry state
+          <div className="text-center py-16">
+            <p className="text-gray-400 text-sm mb-4">Products could not be loaded.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-xs font-bold uppercase tracking-wider text-primary border border-primary/30 px-5 py-2 rounded-full hover:bg-primary hover:text-white transition-colors"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
