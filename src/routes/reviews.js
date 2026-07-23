@@ -10,6 +10,14 @@ export async function reviewsRouter(request, env) {
     // GET /api/reviews/latest — latest approved reviews (publicly accessible)
     if (path === '/latest' && method === 'GET') {
         try {
+            // Check KV edge cache first (10 min TTL — reviews don't change every second)
+            if (env.KV) {
+                try {
+                    const cached = await env.KV.get('cache:reviews:latest', 'json');
+                    if (cached) return list(cached);
+                } catch {}
+            }
+
             const reviews = await env.DB.prepare(
                 `SELECT r.id, r.rating, r.title, r.body, r.created_at, r.merchant_reply,
                         (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name,
@@ -21,7 +29,16 @@ export async function reviewsRouter(request, env) {
                  ORDER BY r.created_at DESC 
                  LIMIT 20`
             ).all();
-            return list(reviews.results || []);
+            const results = reviews.results || [];
+
+            // Store in KV for 10 minutes
+            if (env.KV && results.length > 0) {
+                try {
+                    await env.KV.put('cache:reviews:latest', JSON.stringify(results), { expirationTtl: 600 });
+                } catch {}
+            }
+
+            return list(results);
         } catch (e) {
             console.error('Fetch latest reviews error:', e);
             return serverError('Failed to fetch latest reviews');
@@ -110,6 +127,9 @@ export async function reviewsRouter(request, env) {
                     WHERE id = ?
                 `).bind(prodId, prodId, prodId).run();
             }
+
+            // Invalidate latest reviews cache so home page reflects the new approval
+            if (env.KV) { try { await env.KV.delete('cache:reviews:latest'); } catch {} }
             
             return ok(null, `Review status updated to ${status}`);
         } catch (e) {
@@ -151,6 +171,9 @@ export async function reviewsRouter(request, env) {
                     WHERE id = ?
                 `).bind(prodId, prodId, prodId).run();
             }
+
+            // Invalidate latest reviews cache
+            if (env.KV) { try { await env.KV.delete('cache:reviews:latest'); } catch {} }
             
             return ok(null, 'Review deleted');
         } catch (e) {

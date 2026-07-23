@@ -35,7 +35,7 @@ export async function categoriesRouter(request, env) {
 
             if (!isAdmin && env.KV && cats.results) {
                 try {
-                    await env.KV.put('cache:categories', JSON.stringify(cats.results), { expirationTtl: 300 });
+                    await env.KV.put('cache:categories', JSON.stringify(cats.results), { expirationTtl: 3600 });
                 } catch (err) {
                     console.warn('KV put failed for categories:', err);
                 }

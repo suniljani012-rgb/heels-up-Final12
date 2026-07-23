@@ -29,8 +29,8 @@ import { useCartStore } from './store/useCartStore'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 2 * 60 * 1000, // 2 minutes default stale time
-      gcTime: 10 * 60 * 1000,   // 10 minutes garbage collection time
+      staleTime: 5 * 60 * 1000, // 5 minutes default — data stays fresh longer
+      gcTime: 15 * 60 * 1000,   // 15 minutes in-memory retention
       refetchOnWindowFocus: false, // Prevent intrusive tab focus refetches
       retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -58,7 +58,7 @@ function AppContent() {
         const data = await res.json();
         return data.success ? data.data : [];
       },
-      staleTime: 10 * 60 * 1000,
+      staleTime: 30 * 60 * 1000, // categories cached for 30 min
     });
     queryClient.prefetchQuery({
       queryKey: ['banners'],
@@ -67,7 +67,7 @@ function AppContent() {
         const data = await res.json();
         return data.success ? data.data : [];
       },
-      staleTime: 10 * 60 * 1000,
+      staleTime: 60 * 60 * 1000, // banners cached for 1 hr
     });
     queryClient.prefetchQuery({
       queryKey: ['featuredProducts'],
@@ -91,7 +91,7 @@ function AppContent() {
         }
         return products;
       },
-      staleTime: 5 * 60 * 1000,
+      staleTime: 30 * 60 * 1000, // featured products cached for 30 min
     });
   }, [detectLocation])
 
@@ -113,6 +113,16 @@ function AppContent() {
   return (
     <div className={isAdmin ? "w-full" : "flex flex-col min-h-screen bg-[#fcfbf9] text-[#1a1816]"}>
       {!isAdmin && <Header />}
+      {/* Inject admin-only CSS/JS dynamically — only downloaded when on /admin route.
+          Regular shoppers never see this ~500KB+ payload. */}
+      {isAdmin && (
+        <>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/icheck-bootstrap/3.0.1/icheck-bootstrap.min.css" />
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" />
+        </>
+      )}
       <main className={isAdmin ? "" : "flex-grow"}>
         <Suspense fallback={
           <div className="max-w-7xl mx-auto px-6 py-12">

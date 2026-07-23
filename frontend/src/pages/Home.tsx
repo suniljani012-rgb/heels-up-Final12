@@ -96,7 +96,7 @@ function useCategories() {
       return data.data;
     },
     initialData: () => getLocalCache('categories', DEFAULT_CATEGORIES),
-    staleTime: 1000 * 60 * 5, // 5 minutes stale limit
+    staleTime: 30 * 60 * 1000, // 30 minutes — matches KV cache TTL
   });
 }
 
@@ -111,7 +111,7 @@ function useBanners() {
       return data.data;
     },
     initialData: () => getLocalCache('banners', DEFAULT_BANNERS),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 60 * 60 * 1000, // 1 hour — banners rarely change
   });
 }
 
@@ -138,7 +138,7 @@ function useFeaturedProducts() {
       return data.data;
     },
     initialData: () => getLocalCache('featuredProducts', []),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 
@@ -248,6 +248,7 @@ export default function Home() {
                   src={currentBanner?.image_url}
                   alt={currentBanner?.title || ''}
                   className="w-full h-full object-cover"
+                  size="hero"
                   loading="eager"
                   fetchpriority="high"
                 />

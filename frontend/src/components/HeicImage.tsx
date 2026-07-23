@@ -1,87 +1,162 @@
 // frontend/src/components/HeicImage.tsx
-// On-the-fly image compression via Cloudflare Image Resizing.
-// - ALL images (PNG/JPG/WebP) are served through /api/upload?key=...&w=400&q=75
-// - Worker uses CF Image Resizing to compress: 400px thumb ~20-50KB, 900px full ~80-150KB
-// - Result cached immutably — second load is instant from browser cache
-// - HEIC/HEIF: also converted to WebP automatically
-// - If src is undefined/null/empty → renders nothing
+//
+// ULTRA-FAST image serving via Cloudflare CDN Image Transforms (cdn-cgi/image).
+//
+// How it works:
+//   - Images are stored in R2 at  https://media.heelsup.in/<key>
+//   - Cloudflare transforms:       https://media.heelsup.in/cdn-cgi/image/<opts>/<key>
+//   - Browser picks best size via `srcset` + `sizes`
+//   - Result is cached immutably at Cloudflare edge — ZERO Worker involvement
+//   - Second load = instant from browser cache or Cloudflare edge (~5ms)
+//
+// Format auto-selection:
+//   - Browsers that support AVIF get AVIF (50% smaller than WebP)
+//   - Browsers that support WebP get WebP
+//   - Others get JPEG
+//
+// Priority strategy:
+//   - First 4 images (above-the-fold on mobile) → eager + high + preload
+//   - Rest → lazy + low + async decode (saves bandwidth)
+//
+// HEIC/HEIF images are transparently converted to WebP/AVIF by Cloudflare.
+
 import React from 'react'
 
-/** Thumbnail (product grid): 400px wide, quality 75 — fast, small (~20-50KB) */
-const THUMB = { w: 400, q: 75 } as const;
-/** Full size (product detail page, zoomed view): 900px wide, quality 85 (~80-150KB) */
-const FULL  = { w: 900, q: 85 } as const;
+const R2_CDN = 'https://media.heelsup.in';
+
+// Quality presets
+const QUALITY = {
+  thumb: 72,   // product grid cards — small, fast
+  full: 85,    // product detail page — high quality
+  hero: 88,    // banner/hero images — max quality (LCP)
+} as const;
 
 interface HeicImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
   loading?: 'lazy' | 'eager';
   fetchpriority?: 'high' | 'low' | 'auto';
-  /** 'thumb' (default) = 400px/q75  |  'full' = 900px/q85 */
-  size?: 'thumb' | 'full';
+  /** 'thumb' (default) = grid cards | 'full' = product detail | 'hero' = banner */
+  size?: 'thumb' | 'full' | 'hero';
   /** Index in product grid (0-based). First 4 get eager+high priority, rest lazy+low */
   index?: number;
 }
 
-const R2_CDN = 'https://media.heelsup.in';
-
 /**
- * Extracts the R2 key from any of our image URL formats:
- *   https://media.heelsup.in/products/xxx.jpg  → products/xxx.jpg
- *   /api/upload?key=products/xxx.jpg            → products/xxx.jpg
- *   /api/upload/products/xxx.jpg                → products/xxx.jpg
- *   https://x.workers.dev/api/upload?key=xxx    → xxx
+ * Extracts the R2 object key from any URL format we use:
+ *   https://media.heelsup.in/products/abc.jpg           → products/abc.jpg
+ *   https://media.heelsup.in/cdn-cgi/image/.../products/abc.jpg → products/abc.jpg
+ *   /api/upload?key=products/abc.jpg                    → products/abc.jpg
+ *   /api/upload/products/abc.jpg                        → products/abc.jpg
+ *   https://x.workers.dev/api/upload?key=products/abc   → products/abc
  */
 function extractKey(src: string): string | null {
+  if (!src) return null;
   try {
-    // /api/upload?key= or full URL with ?key=
     const parsed = new URL(src, 'https://x.invalid');
+
+    // Already a direct CDN URL or cdn-cgi transform URL
+    if (parsed.hostname === 'media.heelsup.in') {
+      const p = parsed.pathname;
+      // Strip cdn-cgi/image/.../ prefix if present
+      const cgiMatch = p.match(/^\/cdn-cgi\/image\/[^/]+\/(.+)$/);
+      if (cgiMatch) return decodeURIComponent(cgiMatch[1]);
+      // Direct path
+      const k = p.startsWith('/') ? p.slice(1) : p;
+      if (k) return decodeURIComponent(k);
+    }
+
+    // ?key= query param (worker proxy URL)
     const key = parsed.searchParams.get('key');
     if (key) return decodeURIComponent(key);
 
-    const pathname = parsed.pathname;
-
-    // /api/admin/upload/products/xxx or /api/upload/products/xxx
+    // Path-based worker proxy
     for (const prefix of ['/api/admin/upload/', '/api/upload/']) {
-      if (pathname.startsWith(prefix)) {
-        const k = pathname.slice(prefix.length);
+      if (parsed.pathname.startsWith(prefix)) {
+        const k = parsed.pathname.slice(prefix.length);
         if (k) return decodeURIComponent(k);
       }
-    }
-
-    // https://media.heelsup.in/products/xxx.jpg
-    if (parsed.hostname === 'media.heelsup.in' || src.startsWith(R2_CDN)) {
-      const k = pathname.startsWith('/') ? pathname.slice(1) : pathname;
-      if (k) return decodeURIComponent(k);
     }
   } catch {}
   return null;
 }
 
 /**
- * Builds the URL to pass to <img src>.
- * - If key can be extracted → route through Worker with resize params
- * - data:/blob: → as-is
- * - Relative static path (e.g. /assets/logo.png) → as-is
- * - Unknown external URL → as-is (no resize)
+ * Builds a Cloudflare cdn-cgi/image transform URL.
+ * This is served entirely from Cloudflare edge cache — no Worker CPU overhead.
+ *
+ * Example output:
+ *   https://media.heelsup.in/cdn-cgi/image/width=400,quality=72,format=auto/products/abc.jpg
  */
-function buildImageUrl(src: string | undefined, size: 'thumb' | 'full'): string | undefined {
-  if (!src || !src.trim()) return undefined;
+function cfImage(key: string, width: number, quality: number): string {
+  return `${R2_CDN}/cdn-cgi/image/width=${width},quality=${quality},format=auto/${key}`;
+}
 
-  // data: or blob: — never proxy
-  if (src.startsWith('data:') || src.startsWith('blob:')) return src;
+/**
+ * Builds the final <img> src and srcset for a given image source.
+ *
+ * For R2 images → uses cdn-cgi/image for on-the-fly resize (cached at edge)
+ * For data:/blob: → pass-through (never proxy)
+ * For relative static paths → pass-through (logo, etc.)
+ * For unknown external URLs → pass-through
+ */
+function buildSrcSet(
+  src: string | undefined,
+  size: 'thumb' | 'full' | 'hero'
+): { src: string; srcSet?: string; sizes?: string } | null {
+  if (!src || !src.trim()) return null;
 
-  // Static relative path (logo, banner, etc.) — never proxy
-  if (src.startsWith('/') && !src.startsWith('/api/')) return src;
+  // data: or blob: — render as-is
+  if (src.startsWith('data:') || src.startsWith('blob:')) return { src };
 
-  // Try to extract R2 key
+  // Static relative path (logo, icons, etc.) — never proxy
+  if (src.startsWith('/') && !src.startsWith('/api/')) return { src };
+
   const key = extractKey(src);
+
   if (key) {
-    const { w, q } = size === 'full' ? FULL : THUMB;
-    return `/api/upload?key=${encodeURIComponent(key)}&w=${w}&q=${q}`;
+    const q = QUALITY[size];
+
+    if (size === 'hero') {
+      // Hero banner: large srcset for all screen sizes
+      return {
+        src: cfImage(key, 1200, q),
+        srcSet: [
+          `${cfImage(key, 640, q)} 640w`,
+          `${cfImage(key, 960, q)} 960w`,
+          `${cfImage(key, 1280, q)} 1280w`,
+          `${cfImage(key, 1920, q)} 1920w`,
+        ].join(', '),
+        sizes: '100vw',
+      };
+    }
+
+    if (size === 'full') {
+      // Product detail: up to 900px on desktop
+      return {
+        src: cfImage(key, 900, q),
+        srcSet: [
+          `${cfImage(key, 480, q)} 480w`,
+          `${cfImage(key, 720, q)} 720w`,
+          `${cfImage(key, 900, q)} 900w`,
+        ].join(', '),
+        sizes: '(max-width: 768px) 100vw, 50vw',
+      };
+    }
+
+    // thumb: product grid cards
+    return {
+      src: cfImage(key, 400, q),
+      srcSet: [
+        `${cfImage(key, 240, q)} 240w`,
+        `${cfImage(key, 400, q)} 400w`,
+        `${cfImage(key, 600, q)} 600w`,
+      ].join(', '),
+      sizes: '(max-width: 640px) 46vw, (max-width: 1024px) 32vw, 22vw',
+    };
   }
 
-  // Unknown URL (external CDN, etc.) — return as-is
-  return src;
+  // Unknown external URL — return as-is
+  return { src };
 }
 
 export default function HeicImage({
@@ -95,30 +170,33 @@ export default function HeicImage({
   index,
   ...props
 }: HeicImageProps) {
-  const displaySrc = buildImageUrl(src, size);
+  const result = buildSrcSet(src, size);
 
   // No image → render nothing
-  if (!displaySrc) return null;
+  if (!result) return null;
 
-  // Auto-determine priority from position in grid
-  // First 4 images (above the fold on mobile) → eager + high priority (LCP)
-  // Rest → lazy + low (saves bandwidth, speeds up initial page render)
-  const aboveFold = index !== undefined ? index < 4 : (size === 'full');
-  const resolvedLoading   = loading   ?? (aboveFold ? 'eager' : 'lazy');
-  const resolvedPriority  = fetchpriority ?? (aboveFold ? 'high' : 'low');
+  // Auto-determine loading priority from grid position
+  // First 4 images (above fold on mobile) → eager+high (helps LCP)
+  // Rest → lazy+low (saves bandwidth, faster initial render)
+  const aboveFold = index !== undefined ? index < 4 : (size === 'full' || size === 'hero');
+  const resolvedLoading  = loading   ?? (aboveFold ? 'eager' : 'lazy');
+  const resolvedPriority = fetchpriority ?? (aboveFold ? 'high' : 'low');
 
   return (
     <img
-      src={displaySrc}
+      src={result.src}
+      srcSet={result.srcSet}
+      sizes={result.sizes}
       alt={alt}
       className={className}
       style={{
-        backgroundColor: '#f0ede8', // warm placeholder — prevents layout shift before image loads
+        // Warm placeholder prevents layout shift before image paints
+        backgroundColor: '#f0ede8',
         ...style,
       }}
       loading={resolvedLoading}
       decoding={aboveFold ? 'sync' : 'async'}
-      // @ts-ignore — fetchpriority is valid HTML but TS lib types lag behind
+      // @ts-ignore — fetchpriority is valid HTML but TS lib types lag behind spec
       fetchpriority={resolvedPriority}
       {...props}
     />

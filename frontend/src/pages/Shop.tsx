@@ -35,7 +35,7 @@ function useCategories() {
       if (!data.success) throw new Error(data.error || 'Failed to fetch categories');
       return data.data;
     },
-    staleTime: 10 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 30 min — matches KV cache TTL
   });
 }
 

@@ -196,13 +196,21 @@ async function fetchColorVariants(env, product) {
 }
 
 // Helper: fetch distinct colors for multiple products as a map { productId: [colors] }
+// OPTIMIZED: queries only the categories present on the current page instead of
+// fetching all active products (avoids full-table-scan as catalog grows).
 async function fetchColorsBatch(env, products) {
   if (!products || !products.length) return {};
   try {
+    // Collect unique categories from the current page of products
+    const categories = [...new Set(products.map(p => (p.category || '').toLowerCase()).filter(Boolean))];
+    if (!categories.length) return {};
+
+    // Query only products in those categories — much smaller result set
+    const placeholders = categories.map(() => '?').join(',');
     const res = await env.DB.prepare(
-      "SELECT id, name, sku, category FROM products WHERE active = 1"
-    ).bind().all();
-    const allActive = res.results || [];
+      `SELECT id, name, sku, category FROM products WHERE active = 1 AND LOWER(category) IN (${placeholders})`
+    ).bind(...categories).all();
+    const categoryProducts = res.results || [];
 
     const map = {};
     for (const p of products) {
@@ -211,7 +219,9 @@ async function fetchColorsBatch(env, products) {
         map[p.id] = [];
         continue;
       }
-      const variants = allActive.filter(v => v.category === p.category && getBaseSku(v.sku) === baseSku);
+      const variants = categoryProducts.filter(
+        v => v.category.toLowerCase() === (p.category || '').toLowerCase() && getBaseSku(v.sku) === baseSku
+      );
       const colors = [];
       for (const v of variants) {
         const color = extractColor(v.name);
@@ -488,14 +498,15 @@ export async function productsRouter(request, env) {
                 pages: Math.ceil(countResult.total / limit)
             };
 
-            // Store in KV cache for 5 minutes (300s) asynchronously
+            // Store in KV cache for 30 minutes (1800s) asynchronously.
+            // Product lists are stable — only invalidated on admin mutation.
             if (env.KV && isPublicDefaultList && products.length > 0) {
                 try {
                     const kvPayload = JSON.stringify({ data: products, meta: responseMeta });
                     if (ctx && typeof ctx.waitUntil === 'function') {
-                        ctx.waitUntil(env.KV.put(kvKey, kvPayload, { expirationTtl: 300 }).catch(() => {}));
+                        ctx.waitUntil(env.KV.put(kvKey, kvPayload, { expirationTtl: 1800 }).catch(() => {}));
                     } else {
-                        env.KV.put(kvKey, kvPayload, { expirationTtl: 300 }).catch(() => {});
+                        env.KV.put(kvKey, kvPayload, { expirationTtl: 1800 }).catch(() => {});
                     }
                 } catch {}
             }

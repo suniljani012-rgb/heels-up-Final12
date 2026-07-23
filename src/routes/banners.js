@@ -20,7 +20,7 @@ export async function bannersRouter(request, env) {
             const banners = await env.DB.prepare(sql).all();
             if (env.KV && banners.results) {
                 try {
-                    await env.KV.put('cache:banners', JSON.stringify(banners.results), { expirationTtl: 300 });
+                    await env.KV.put('cache:banners', JSON.stringify(banners.results), { expirationTtl: 3600 });
                 } catch (err) {}
             }
             return list(banners.results);

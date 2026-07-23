@@ -41,25 +41,38 @@ function rewriteAdminPath(request, fromPrefix, toPrefix) {
 
 export default {
   async fetch(request, env, ctx) {
-    // Auto-update DB settings to ₹1599 threshold and fix announcements text
+    // Auto-update DB settings to ₹1599 threshold and fix announcements text.
+    // TIME-GATED: only runs once per hour to avoid burning D1 write quota on every request.
     if (ctx && typeof ctx.waitUntil === 'function' && env.DB) {
       ctx.waitUntil((async () => {
         try {
-          await env.DB.prepare("UPDATE settings SET value = '1599' WHERE key = 'shipping_free_above'").run();
-          await env.DB.prepare("UPDATE settings SET value = '159900' WHERE key = 'free_shipping_above'").run();
-          await env.DB.prepare("UPDATE announcements SET text = '🚚 FREE Shipping on orders above ₹1599' WHERE text LIKE '%above %999%' OR text LIKE '%above %799%'").run();
-          
-          // Dynamically add columns to track COD advance/outstanding payments if they don't exist yet
-          await env.DB.prepare("ALTER TABLE orders ADD COLUMN cod_advance_paid INTEGER DEFAULT 0").run().catch(() => {});
-          await env.DB.prepare("ALTER TABLE orders ADD COLUMN cod_outstanding_amount INTEGER DEFAULT 0").run().catch(() => {});
-          
-          // Clean up legacy products with default 4.5 rating but 0 reviews
-          await env.DB.prepare("UPDATE products SET rating = 0 WHERE review_count = 0 OR review_count IS NULL").run().catch(() => {});
+          // Check when we last ran this maintenance task
+          const MAINT_KEY = 'sys:maint:last_run';
+          let shouldRun = true;
+          if (env.KV) {
+            try {
+              const lastRun = await env.KV.get(MAINT_KEY);
+              if (lastRun) {
+                const diffMs = Date.now() - parseInt(lastRun, 10);
+                if (diffMs < 3600_000) shouldRun = false; // within last hour — skip
+              }
+            } catch {}
+          }
 
-          // Ensure mock products are active on the storefront
-          await env.DB.prepare("UPDATE products SET active = 1 WHERE sku LIKE 'HU-%'").run().catch(() => {});
+          if (shouldRun) {
+            await env.DB.prepare("UPDATE settings SET value = '1599' WHERE key = 'shipping_free_above'").run();
+            await env.DB.prepare("UPDATE settings SET value = '159900' WHERE key = 'free_shipping_above'").run();
+            await env.DB.prepare("UPDATE announcements SET text = '🚚 FREE Shipping on orders above ₹1599' WHERE text LIKE '%above %999%' OR text LIKE '%above %799%'").run();
+            await env.DB.prepare("ALTER TABLE orders ADD COLUMN cod_advance_paid INTEGER DEFAULT 0").run().catch(() => {});
+            await env.DB.prepare("ALTER TABLE orders ADD COLUMN cod_outstanding_amount INTEGER DEFAULT 0").run().catch(() => {});
+            await env.DB.prepare("UPDATE products SET rating = 0 WHERE review_count = 0 OR review_count IS NULL").run().catch(() => {});
+            await env.DB.prepare("UPDATE products SET active = 1 WHERE sku LIKE 'HU-%'").run().catch(() => {});
 
-
+            // Record last run time
+            if (env.KV) {
+              try { await env.KV.put(MAINT_KEY, String(Date.now()), { expirationTtl: 7200 }); } catch {}
+            }
+          }
         } catch (err) {
           console.warn('DB settings auto-update failed:', err);
         }
@@ -210,7 +223,8 @@ export default {
         try {
           const cacheableRes = new Response(secureCorsResponse.clone().body, secureCorsResponse);
           if (pathNormalized !== "/api/upload") {
-            cacheableRes.headers.set("Cache-Control", "public, max-age=60"); // 60s for standard API
+            // 5 minutes for standard API — reduced D1 hits by 5x vs old 60s
+            cacheableRes.headers.set("Cache-Control", "public, max-age=300, stale-while-revalidate=60");
           }
           if (ctx && ctx.waitUntil) {
             ctx.waitUntil(cache.put(cacheKey, cacheableRes).catch(() => {}));

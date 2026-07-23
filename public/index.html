@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#070707" />
 
     <!-- Primary SEO -->
-    <title>HeelsUp – Premium Ladies Heels, Sandals & Bags | Free Shipping India</title>
+    <title>HeelsUp – Premium Ladies Heels, Sandals &amp; Bags | Free Shipping India</title>
     <meta name="description" content="Discover premium handcrafted ladies heels, stylish block heels, flat sandals, wedges, and designer handbags at HeelsUp. Free shipping above ₹999. Easy exchanges. Shop Jodhpur's finest footwear collection today!" />
     <meta name="keywords" content="ladies heels online india, women sandals online, block heels, wedge heels, ladies bags, flat sandals, wedding heels, summer sandals, women footwear online, heelsup, heelsup jodhpur, footwear online jodhpur" />
     <meta name="author" content="HeelsUp" />
@@ -17,15 +17,15 @@
     <!-- Open Graph / Social Media -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://heelsup.in/" />
-    <meta property="og:title" content="HeelsUp – Premium Ladies Heels, Sandals & Bags" />
-    <meta property="og:description" content="Shop handcrafted premium ladies heels, block heels, flats, sandals, wedges & designer handbags. Free shipping pan-India above ₹999. Easy 7-day exchanges." />
+    <meta property="og:title" content="HeelsUp – Premium Ladies Heels, Sandals &amp; Bags" />
+    <meta property="og:description" content="Shop handcrafted premium ladies heels, block heels, flats, sandals, wedges &amp; designer handbags. Free shipping pan-India above ₹999. Easy 7-day exchanges." />
     <meta property="og:image" content="https://heelsup.in/logo.png" />
     <meta property="og:site_name" content="HeelsUp" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="HeelsUp – Premium Ladies Heels, Sandals & Bags" />
-    <meta name="twitter:description" content="Shop handcrafted premium ladies heels, block heels, flats, sandals, wedges & designer handbags. Free shipping above ₹999." />
+    <meta name="twitter:title" content="HeelsUp – Premium Ladies Heels, Sandals &amp; Bags" />
+    <meta name="twitter:description" content="Shop handcrafted premium ladies heels, block heels, flats, sandals, wedges &amp; designer handbags. Free shipping above ₹999." />
     <meta name="twitter:image" content="https://heelsup.in/logo.png" />
 
     <!-- Structured JSON-LD Schema Markup -->
@@ -51,38 +51,48 @@
     }
     </script>
 
-    <!-- Performance: pre-establish connections to image CDN and API worker -->
+    <!-- ═══════════════════════════════════════════════════════
+         PERFORMANCE: Critical resource hints — establish
+         connections to image CDN & API worker BEFORE JS loads
+         ═══════════════════════════════════════════════════════ -->
+
+    <!-- Image CDN — most images served from here (highest priority) -->
+    <link rel="preconnect" href="https://media.heelsup.in" crossorigin />
+    <link rel="dns-prefetch" href="https://media.heelsup.in" />
+
+    <!-- API Worker -->
     <link rel="preconnect" href="https://heelsupnew.heelsup.workers.dev" />
     <link rel="dns-prefetch" href="https://heelsupnew.heelsup.workers.dev" />
     <link rel="preconnect" href="https://heelsup.in" />
     <link rel="dns-prefetch" href="https://heelsup.in" />
 
-    <!-- Fonts -->
+    <!-- Google Fonts: split into two requests — body font first (faster paint), display font second -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
+    <!-- Body font: DM Sans — load eagerly, it's used everywhere -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&display=swap" rel="stylesheet" />
+    <!-- Display fonts: Cormorant Garamond + Playfair Display — preload but non-blocking -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet" /></noscript>
 
-    <!-- Icons & Plugins -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/icheck-bootstrap/3.0.1/icheck-bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.39.0/css/tempusdominus-bootstrap-4.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" />
+    <!-- ═══════════════════════════════════════════════════════
+         Admin-only CSS/JS — loaded dynamically by Admin.tsx
+         only when the user navigates to /admin. NOT loaded
+         here to avoid blocking 500KB+ for regular shoppers.
+         ═══════════════════════════════════════════════════════ -->
 
-    <!-- Script dependencies -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js" defer></script>
-    <script src="/frame_ant.js" defer></script>
-
-    <!-- Razorpay Checkout -->
+    <!-- Razorpay Checkout — load only on checkout page, deferred -->
     <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
-    <script type="module" crossorigin src="/assets/index-qsxggfXr.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/chunk-Cyuzqnbw.js">
-    <link rel="modulepreload" crossorigin href="/assets/createLucideIcon-CuN1jC0o.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-BqzgtXTV.css">
+    <script type="module" crossorigin src="/assets/index-4kS6aY7b.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/rolldown-runtime-M0oDzQ_3.js">
+    <link rel="modulepreload" crossorigin href="/assets/admin-9Q2b_JmP.js">
+    <link rel="modulepreload" crossorigin href="/assets/react-query-DzSzUeHG.js">
+    <link rel="modulepreload" crossorigin href="/assets/framer-motion-SOxb6siZ.js">
+    <link rel="modulepreload" crossorigin href="/assets/lucide-DyPpHPOn.js">
+    <link rel="modulepreload" crossorigin href="/assets/react-vendor-DR6kZ6dF.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-BP5s6fT-.css">
   </head>
   <body class="bg-[#fcfbf9] text-[#1a1816]">
-    <div id="root"></div>
+    <div id="root"></div>
   </body>
 </html>
