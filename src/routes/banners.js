@@ -18,13 +18,21 @@ export async function bannersRouter(request, env) {
             }
             const sql = 'SELECT * FROM banners WHERE active = 1 ORDER BY sort_order ASC, id DESC';
             const banners = await env.DB.prepare(sql).all();
-            if (env.KV && banners.results) {
+            const r2Base = (env.R2_PUBLIC_URL || 'https://media.heelsup.in').replace(/\/$/, '');
+            const mappedResults = (banners.results || []).map(b => ({
+                ...b,
+                image_url: (b.image_url && !b.image_url.startsWith('http') && !b.image_url.startsWith('data:') && !b.image_url.startsWith('blob:'))
+                    ? `${r2Base}/${b.image_url.replace(/^\//, '')}`
+                    : b.image_url
+            }));
+            if (env.KV && mappedResults.length > 0) {
                 try {
-                    await env.KV.put('cache:banners', JSON.stringify(banners.results), { expirationTtl: 3600 });
+                    await env.KV.put('cache:banners', JSON.stringify(mappedResults), { expirationTtl: 3600 });
                 } catch (err) {}
             }
-            return list(banners.results);
+            return list(mappedResults);
         } catch (e) { return serverError('Failed to fetch banners'); }
+
     }
 
     // GET /api/banners/admin/all
