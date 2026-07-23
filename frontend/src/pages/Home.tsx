@@ -100,11 +100,22 @@ function useFeaturedProducts() {
   return useQuery({
     queryKey: ['featuredProducts'],
     queryFn: async () => {
-      const res = await fetch('/api/products?limit=8&featured=true');
+      let res = await fetch('/api/products?limit=8&featured=true');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      let data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to fetch featured products');
-      return data.data as any[];
+      
+      // Fallback: If no products are marked as featured=1 in DB, fetch latest active products!
+      if (!Array.isArray(data.data) || data.data.length === 0) {
+        res = await fetch('/api/products?limit=8');
+        if (res.ok) {
+          const fallbackData = await res.json();
+          if (fallbackData.success && Array.isArray(fallbackData.data) && fallbackData.data.length > 0) {
+            return fallbackData.data as any[];
+          }
+        }
+      }
+      return (data.data || []) as any[];
     },
     staleTime: 30 * 60 * 1000,
     retry: 3,

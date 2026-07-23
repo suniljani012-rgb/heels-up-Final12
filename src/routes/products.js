@@ -405,7 +405,7 @@ export async function productsRouter(request, env) {
                     isAdmin = payload && ['admin', 'staff', 'manager'].includes(payload.role);
                 }
             } catch {}
-            let where = isAdmin ? [] : ['p.active = 1', 'c.id IS NOT NULL'];
+            let where = isAdmin ? [] : ['p.active = 1'];
             let binds = [];
 
             if (cat) {
