@@ -48,55 +48,21 @@ const getInitials = (name: string) => {
 
 
 
-// Local caching helpers for SWR (stale-while-revalidate) rendering.
-// Loads data instantly from localStorage, refetches in background.
-function getLocalCache(key: string, fallback: any) {
-  if (typeof window === 'undefined') return fallback;
-  try {
-    const item = window.localStorage.getItem(`heelsup_cache_${key}`);
-    return item ? JSON.parse(item) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function setLocalCache(key: string, data: any) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(`heelsup_cache_${key}`, JSON.stringify(data));
-  } catch {}
-}
-
-const DEFAULT_CATEGORIES = [
-  { id: 1, name: 'Heels', slug: 'heels', image_url: '' },
-  { id: 2, name: 'Flats', slug: 'flats', image_url: '' },
-  { id: 3, name: 'Sandals', slug: 'sandals', image_url: '' }
-];
-
-const DEFAULT_BANNERS = [
-  {
-    id: 1,
-    title: 'Exclusive Heels Collection',
-    subtitle: 'Step out in pure luxury and absolute comfort.',
-    image_url: '',
-    link: '/shop?category=heels',
-    active: 1,
-    sort_order: 1
-  }
-];
+// ─── 100% Live Data from Database ───────────────────────────────────────────
+// No mock data. No localStorage cache. Every render shows real DB data.
 
 function useCategories() {
   return useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const res = await fetch('/api/ca' + 'tegories');
+      const res = await fetch('/api/categories');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to fetch categories');
-      setLocalCache('categories', data.data);
-      return data.data;
+      return data.data as any[];
     },
-    initialData: () => getLocalCache('categories', DEFAULT_CATEGORIES),
-    staleTime: 30 * 60 * 1000, // 30 minutes — matches KV cache TTL
+    staleTime: 30 * 60 * 1000, // 30 min — matches KV cache TTL on backend
+    retry: 3,
   });
 }
 
@@ -104,14 +70,14 @@ function useBanners() {
   return useQuery({
     queryKey: ['banners'],
     queryFn: async () => {
-      const res = await fetch('/api/ba' + 'nners');
+      const res = await fetch('/api/banners');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to fetch banners');
-      setLocalCache('banners', data.data);
-      return data.data;
+      return data.data as any[];
     },
-    initialData: () => getLocalCache('banners', DEFAULT_BANNERS),
-    staleTime: 60 * 60 * 1000, // 1 hour — banners rarely change
+    staleTime: 60 * 60 * 1000, // 1 hr — banners rarely change
+    retry: 3,
   });
 }
 
@@ -119,33 +85,28 @@ function useLatestReviews() {
   return useQuery({
     queryKey: ['latestReviews'],
     queryFn: async () => {
-      const res = await fetch('/api/re' + 'views/latest');
+      const res = await fetch('/api/reviews/latest');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to fetch latest reviews');
-      return data.data;
-    }
+      return data.data as any[];
+    },
+    staleTime: 10 * 60 * 1000,
+    retry: 2,
   });
 }
 
 function useFeaturedProducts() {
-  // Only use localStorage as initialData if it has actual products.
-  // An empty array [] treated as initialData causes React Query to think
-  // data is already loaded (isLoading=false), so nothing refetches.
-  const cached = getLocalCache('featuredProducts', null);
-  const hasCache = Array.isArray(cached) && cached.length > 0;
-
   return useQuery({
     queryKey: ['featuredProducts'],
     queryFn: async () => {
-      const res = await fetch('/api/pro' + 'ducts?limit=8&featured=true');
+      const res = await fetch('/api/products?limit=8&featured=true');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Failed to fetch featured products');
-      setLocalCache('featuredProducts', data.data);
-      return data.data;
+      return data.data as any[];
     },
-    // Only inject cached data if it's non-empty, otherwise let query run fresh
-    ...(hasCache ? { initialData: cached } : {}),
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 30 * 60 * 1000,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
   });
@@ -163,9 +124,9 @@ export default function Home() {
   const [reviewsModalOpen, setReviewsModalOpen] = useState(false)
   const [bannerIndex, setBannerIndex] = useState(0)
 
-  // React Queries
-  const { data: categories = [] } = useCategories()
-  const { data: fetchedBanners } = useBanners()
+  // React Queries — 100% live from database
+  const { data: categories = [], isLoading: catsLoading } = useCategories()
+  const { data: fetchedBanners = [], isLoading: bannersLoading } = useBanners()
   const { data: featuredProducts = [], isLoading: productsLoading, isError: productsError } = useFeaturedProducts()
   const { data: liveReviews = [] } = useLatestReviews()
 

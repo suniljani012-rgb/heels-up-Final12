@@ -50,31 +50,44 @@ function AppContent() {
     // Website kholte hi location ki details aur price dynamically loads
     detectLocation();
 
-    // Prefetch essential global data in parallel on app launch
+    // Clear any stale localStorage mock data from old versions
+    try {
+      ['categories', 'banners', 'featuredProducts'].forEach(k =>
+        localStorage.removeItem(`heelsup_cache_${k}`)
+      );
+    } catch {}
+
+    // Prefetch essential global data in parallel on app launch — 100% live from DB
     queryClient.prefetchQuery({
       queryKey: ['categories'],
       queryFn: async () => {
         const res = await fetch('/api/categories');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        return data.success ? data.data : [];
+        if (!data.success) throw new Error(data.error);
+        return data.data;
       },
-      staleTime: 30 * 60 * 1000, // categories cached for 30 min
+      staleTime: 30 * 60 * 1000,
     });
     queryClient.prefetchQuery({
       queryKey: ['banners'],
       queryFn: async () => {
         const res = await fetch('/api/banners');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        return data.success ? data.data : [];
+        if (!data.success) throw new Error(data.error);
+        return data.data;
       },
-      staleTime: 60 * 60 * 1000, // banners cached for 1 hr
+      staleTime: 60 * 60 * 1000,
     });
     queryClient.prefetchQuery({
       queryKey: ['featuredProducts'],
       queryFn: async () => {
         const res = await fetch('/api/products?limit=8&featured=true');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        const products = data.success ? data.data : [];
+        if (!data.success) throw new Error(data.error);
+        const products = data.data;
         // Preload first 4 product images via <link rel="preload"> for instant LCP
         if (Array.isArray(products)) {
           products.slice(0, 4).forEach((prod: any) => {
@@ -91,7 +104,7 @@ function AppContent() {
         }
         return products;
       },
-      staleTime: 30 * 60 * 1000, // featured products cached for 30 min
+      staleTime: 30 * 60 * 1000,
     });
   }, [detectLocation])
 
