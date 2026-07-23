@@ -114,46 +114,10 @@ function buildSrcSet(
   const key = extractKey(src);
 
   if (key) {
-    const q = QUALITY[size];
-
-    if (size === 'hero') {
-      // Hero banner: large srcset for all screen sizes
-      return {
-        src: cfImage(key, 1200, q),
-        srcSet: [
-          `${cfImage(key, 640, q)} 640w`,
-          `${cfImage(key, 960, q)} 960w`,
-          `${cfImage(key, 1280, q)} 1280w`,
-          `${cfImage(key, 1920, q)} 1920w`,
-        ].join(', '),
-        sizes: '100vw',
-      };
-    }
-
-    if (size === 'full') {
-      // Product detail: up to 900px on desktop
-      return {
-        src: cfImage(key, 900, q),
-        srcSet: [
-          `${cfImage(key, 480, q)} 480w`,
-          `${cfImage(key, 720, q)} 720w`,
-          `${cfImage(key, 900, q)} 900w`,
-        ].join(', '),
-        sizes: '(max-width: 768px) 100vw, 50vw',
-      };
-    }
-
-    // thumb: product grid cards
-    return {
-      src: cfImage(key, 400, q),
-      srcSet: [
-        `${cfImage(key, 240, q)} 240w`,
-        `${cfImage(key, 400, q)} 400w`,
-        `${cfImage(key, 600, q)} 600w`,
-      ].join(', '),
-      sizes: '(max-width: 640px) 46vw, (max-width: 1024px) 32vw, 22vw',
-    };
+    const directUrl = `${R2_CDN}/${key}`;
+    return { src: directUrl };
   }
+
 
   // Unknown external URL — return as-is
   return { src };
