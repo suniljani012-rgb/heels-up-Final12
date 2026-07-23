@@ -35,12 +35,23 @@ export async function uploadRouter(request, env, ctx) {
 
             const isHeic = key.toLowerCase().endsWith('.heic') || key.toLowerCase().endsWith('.heif');
 
+            // Cloudflare Image Resizing (the `cf: { image: {...} }` fetch option below) is a
+            // PAID feature — Pro plan or above. On a Free plan it never actually resizes; every
+            // request that reaches the RESIZE PATH still pays for a full extra subrequest that
+            // does nothing useful before falling back to a redirect anyway. Since this store's
+            // uploads are already compressed client-side to WebP (~<100KB, max 900px — see
+            // frontend/src/utils/imageUpload.ts) BEFORE they ever reach R2, there is nothing to
+            // gain from that extra round-trip on a Free plan — skip it and go straight to the
+            // fast direct-CDN redirect. Set IMAGE_RESIZING_ENABLED = "true" in wrangler.toml vars
+            // if this store is ever upgraded to Cloudflare Pro+ and per-request resizing is wanted.
+            const resizingEnabled = env.IMAGE_RESIZING_ENABLED === 'true';
+
             // Parse optional resize params
             const wParam = url.searchParams.get('w');
             const qParam = url.searchParams.get('q');
             const targetWidth  = wParam ? parseInt(wParam, 10) : null;
             const targetQuality = qParam ? Math.min(100, Math.max(1, parseInt(qParam, 10))) : 75;
-            const wantsResize  = !!targetWidth; // only resize when ?w= is present
+            const wantsResize  = !!targetWidth && resizingEnabled; // only attempt resize when ?w= is present AND the plan supports it
 
             // ─── RESIZE PATH: ?w= present → compress via CF Image Resizing ───
             // Returns WebP/AVIF compressed to targetWidth and targetQuality.
@@ -100,7 +111,7 @@ export async function uploadRouter(request, env, ctx) {
             const via2 = request.headers.get('via') || '';
             const isImageResizingService = ua2.includes('Cloudflare-Image-Resizing') || via2.includes('image-resizing');
 
-            if (env.R2_PUBLIC_URL && isHeic && !isImageResizingService) {
+            if (resizingEnabled && env.R2_PUBLIC_URL && isHeic && !isImageResizingService) {
                 const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
                 const accept = request.headers.get('accept') || '';
                 const supportsAvif = accept.includes('image/avif');

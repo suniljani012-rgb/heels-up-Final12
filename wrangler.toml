@@ -13,6 +13,11 @@ JWT_EXPIRES_DAYS = "30"
 OTP_EXPIRY_MINUTES = "10"
 REQUIRE_EMAIL_OTP = "false"
 R2_PUBLIC_URL = "https://media.heelsup.in"
+# Cloudflare Image Resizing is a Pro-plan+ feature. This store is on the Free plan,
+# so leave this "false" — the Worker will skip straight to fast direct-CDN redirects
+# instead of wasting a request trying a resize that Free plan can't do anyway.
+# Flip to "true" only if/when this zone is upgraded to Pro or above.
+IMAGE_RESIZING_ENABLED = "false"
 INFOBIP_API_BASE_URL = "eegg4r.api.infobip.com"
 INFOBIP_SENDER = "HEELUP"
 
