@@ -548,10 +548,19 @@ export async function productsRouter(request, env) {
                     isAdmin = payload && ['admin', 'staff', 'manager'].includes(payload.role);
                 }
             } catch {}
-            const allProducts = await env.DB.prepare("SELECT id, name FROM products" + (isAdmin ? '' : ' WHERE active = 1')).all();
-            const matched = (allProducts.results || []).find(p => slug(p.name) === productSlug);
+            let matched = null;
+            if (/^\d+$/.test(productSlug)) {
+                matched = await env.DB.prepare("SELECT id, name FROM products WHERE id = ?" + (isAdmin ? '' : ' AND active = 1')).bind(parseInt(productSlug)).first();
+            } else {
+                matched = await env.DB.prepare("SELECT id, name FROM products WHERE (LOWER(REPLACE(name, ' ', '-')) = LOWER(?) OR LOWER(name) = LOWER(?))" + (isAdmin ? '' : ' AND active = 1') + " LIMIT 1").bind(productSlug, productSlug).first();
+                if (!matched) {
+                    const allProducts = await env.DB.prepare("SELECT id, name FROM products" + (isAdmin ? '' : ' WHERE active = 1')).all();
+                    matched = (allProducts.results || []).find(p => slug(p.name) === productSlug);
+                }
+            }
             if (!matched) return notFound('Product not found');
             const id = matched.id;
+
 
             const product = await env.DB.prepare(
                 `SELECT p.*, c.id as category_id,
@@ -617,15 +626,15 @@ export async function productsRouter(request, env) {
             } catch {}
             const product = await env.DB.prepare(
                 `SELECT p.*, c.id as category_id,
-                (SELECT ROUND(AVG(rating),1) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as avg_rating,
-                (SELECT COUNT(*) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved') as review_count
+                COALESCE(p.rating, (SELECT ROUND(AVG(rating),1) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved')) as avg_rating,
+                COALESCE(p.review_count, (SELECT COUNT(*) FROM product_reviews r WHERE r.product_id = p.id AND r.status = 'approved')) as review_count
          FROM products p
          LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category)
          WHERE p.id = ?` + (isAdmin ? '' : ' AND p.active = 1')
             ).bind(id).first();
             if (!product) return notFound('Product not found');
 
-            const [reviews, images, sizeStock, colors] = await Promise.all([
+            const [reviews, images, sizeStock, colors, related] = await Promise.all([
               env.DB.prepare(
                 `SELECT r.id, r.rating, r.title, r.body, r.created_at, r.merchant_reply, (u.first_name || ' ' || COALESCE(u.last_name, '')) as reviewer_name
          FROM product_reviews r LEFT JOIN users u ON r.user_id = u.id
@@ -636,7 +645,17 @@ export async function productsRouter(request, env) {
                 "SELECT id, url, alt, sort_order, is_primary, COALESCE(mime_type, 'image/webp') as mime_type, COALESCE(format, 'webp') as format FROM product_images WHERE product_id=? ORDER BY sort_order ASC, id ASC"
               ).bind(id).all(),
               fetchSizeStock(env, id),
-              fetchColorsForProduct(env, id)
+              fetchColorsForProduct(env, id),
+              env.DB.prepare(
+                "SELECT p.*, c.id as category_id FROM products p LEFT JOIN categories c ON LOWER(c.name) = LOWER(p.category) WHERE (LOWER(p.category) = LOWER(?) OR LOWER(p.category) = LOWER(?)) AND p.id != ? AND p.active = 1 ORDER BY p.featured DESC LIMIT 4"
+              ).bind(product.category || '', product.category || '', id).all()
+            ]);
+
+            const relatedRaw = related.results || [];
+            const relatedIds = relatedRaw.map(r => r.id);
+            const [relatedSizeStock, relatedColors] = await Promise.all([
+              fetchSizeStockBatch(env, relatedIds),
+              fetchColorsBatch(env, relatedIds)
             ]);
 
             const variantsData = await fetchColorVariants(env, product);
@@ -646,8 +665,10 @@ export async function productsRouter(request, env) {
             return ok({
                 product: mappedProduct,
                 reviews: reviews.results || [],
-                images: images.results || []
+                images: images.results || [],
+                related: relatedRaw.map(r => mapProduct(r, relatedSizeStock[r.id] || [], relatedColors[r.id] || [], env.R2_PUBLIC_URL || ''))
             });
+
         } catch (e) {
             console.error('ID fetch error:', e);
             return serverError('Failed to fetch product');

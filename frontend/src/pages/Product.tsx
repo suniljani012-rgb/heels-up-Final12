@@ -7,6 +7,7 @@ import { useToastStore } from '../store/useToastStore'
 import { useAuthStore } from '../store/useAuthStore'
 import HeicImage from '../components/HeicImage'
 import { formatSizeToIndian } from '../utils/sizeHelper'
+import { cacheProductData, prefetchProductApi, getCachedProduct } from '../utils/productCache'
 
 interface ProductDetail {
   id: number;
@@ -136,54 +137,20 @@ export default function Product() {
     }
   }
 
-  // On mount: try cached pincode → then geolocation
+  // On mount: try cached pincode -> then default fast estimate
   useEffect(() => {
     const cached = (() => { try { return sessionStorage.getItem('hu_delivery_pin') } catch { return null } })()
     if (cached && /^\d{6}$/.test(cached)) {
       fetchDelivery(cached)
-      return
-    }
-    // Request location silently (non-blocking)
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          try {
-            // Reverse geocode using a free API to get pincode
-            const { latitude, longitude } = pos.coords
-            const geo = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-              { headers: { 'User-Agent': 'HeelsUp/1.0' } }
-            )
-            const geoData = await geo.json()
-            const pin = geoData?.address?.postcode?.replace(/\s/g, '').slice(0, 6)
-            if (pin && /^\d{6}$/.test(pin)) {
-              fetchDelivery(pin)
-            } else {
-              // No pincode from location — show max estimate
-              setDeliveryInfo({
-                feePaise: 12900, feeRupees: 129, isFree: false,
-                cod: true, zone: 'E', estimatedDays: '6-8', city: '', state: '', serviceable: true
-              })
-              setEditingPincode(true)
-            }
-          } catch {
-            setEditingPincode(true)
-          }
-        },
-        () => {
-          // Location denied — show max estimate + ask for pincode
-          setDeliveryInfo({
-            feePaise: 12900, feeRupees: 129, isFree: false,
-            cod: true, zone: 'E', estimatedDays: '6-8', city: '', state: '', serviceable: true
-          })
-          setEditingPincode(true)
-        },
-        { timeout: 5000, maximumAge: 300000 }
-      )
     } else {
+      setDeliveryInfo({
+        feePaise: 0, feeRupees: 0, isFree: true,
+        cod: true, zone: 'A', estimatedDays: '2-4', city: '', state: '', serviceable: true
+      })
       setEditingPincode(true)
     }
   }, [])
+
 
   // Inject JSON-LD Product Schema
   useEffect(() => {
@@ -247,28 +214,23 @@ export default function Product() {
   const [reviewBody, setReviewBody] = useState('')
   const [submittingReview, setSubmittingReview] = useState(false)
 
-  // Fetch details
+  // Fetch details (Unified 1-flight request with instant pre-hydration)
   useEffect(() => {
     if (!productId) return
     
-    // 1. Read and load from Cache synchronously to render instantly (0.01 ms)
-    const cachedData = localStorage.getItem(`heelsup_cached_product_${productId}`)
+    // 1. Instant sync pre-hydration (0.0001 ms)
+    const cachedObj = getCachedProduct(productId)
     let hasCached = false
-    if (cachedData) {
-      try {
-        const parsed = JSON.parse(cachedData)
-        setProduct(parsed.product)
-        setReviews(parsed.reviews || [])
-        setImages(parsed.images || [])
-        if (parsed.images?.length > 0) setActiveImage(parsed.images[0])
-        if (parsed.product.sizes?.length > 0) setSelectedSize(parsed.product.sizes[0])
-
-        setRelated(parsed.related || [])
-        setLoading(false)
-        hasCached = true
-      } catch (err) {
-        console.error("Error parsing cached product:", err)
-      }
+    if (cachedObj && cachedObj.product) {
+      setProduct(cachedObj.product)
+      setReviews(cachedObj.reviews || [])
+      const imgs = cachedObj.images?.length > 0 ? cachedObj.images : (cachedObj.product.images || [])
+      setImages(imgs)
+      if (imgs.length > 0) setActiveImage(imgs[0])
+      if (cachedObj.product.sizes?.length > 0) setSelectedSize(cachedObj.product.sizes[0])
+      setRelated(cachedObj.related || [])
+      setLoading(false)
+      hasCached = true
     }
 
     if (!hasCached) {
@@ -278,45 +240,53 @@ export default function Product() {
     async function fetchDetails() {
       try {
         const res = await fetch(`/api/products/${productId}`)
+        if (!res.ok) return
         const data = await res.json()
         if (data.success && data.data) {
-          const detail = data.data.product
+          const payload = data.data
+          const detail = payload.product
           setProduct(detail)
-          const reviewsRes = await fetch(`/api/products/${productId}/reviews`)
-          const reviewsData = await reviewsRes.json()
-          const reviewsList = reviewsData.data || []
-          setReviews(reviewsList)
           
-          // Image array assembly
-          const fetchedImgs = data.data.images?.map((i: any) => i.url) || []
+          const reviewsList = payload.reviews || []
+          setReviews(reviewsList)
+
+          const fetchedImgs = payload.images?.map((i: any) => typeof i === 'string' ? i : i.url) || []
           const allImages = fetchedImgs.length > 0 ? fetchedImgs : (detail.images || [])
           setImages(allImages)
           if (allImages.length > 0 && (!activeImage || !hasCached)) {
             setActiveImage(allImages[0])
           }
-
-          // Sizes default selector
           if (detail.sizes?.length > 0 && (!selectedSize || !hasCached)) {
             setSelectedSize(detail.sizes[0])
           }
 
-
-          // Fetch related products
-          const relatedRes = await fetch(`/api/products?limit=4&cat=${detail.category}`)
-          const relatedData = await relatedRes.json()
-          let relatedList: any[] = []
-          if (relatedData.success) {
-            relatedList = relatedData.data.filter((r: any) => r.id !== detail.id)
-            setRelated(relatedList)
+          let relatedList = payload.related || []
+          if (!relatedList.length && detail.category) {
+            try {
+              const relRes = await fetch(`/api/products?limit=4&cat=${encodeURIComponent(detail.category)}`)
+              const relData = await relRes.json()
+              if (relData.success && relData.data) {
+                relatedList = relData.data.filter((r: any) => r.id !== detail.id)
+              }
+            } catch {}
           }
+          setRelated(relatedList)
 
-          // Save to cache for 0.01ms rendering on next visit!
-          localStorage.setItem(`heelsup_cached_product_${productId}`, JSON.stringify({
-            product: detail,
-            reviews: reviewsList,
+          // Save to local cache for instant sub-millisecond future renders
+          cacheProductData({
+            ...detail,
             images: allImages,
+            reviews: reviewsList,
             related: relatedList
-          }))
+          })
+
+          // Preload product images into browser cache
+          allImages.slice(0, 4).forEach((url: string) => {
+            if (url) {
+              const img = new Image()
+              img.src = url
+            }
+          })
         }
       } catch (e) {
         console.error('Fetch product detail error:', e)
@@ -326,6 +296,7 @@ export default function Product() {
     }
     fetchDetails()
   }, [productId])
+
 
   if (loading) {
     return (

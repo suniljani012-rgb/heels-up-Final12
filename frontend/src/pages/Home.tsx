@@ -7,6 +7,7 @@ import { useCartStore } from '../store/useCartStore'
 import { useToastStore } from '../store/useToastStore'
 import HeicImage from '../components/HeicImage'
 import { useQuery } from '@tanstack/react-query'
+import { cacheProductData, prefetchProductApi } from '../utils/productCache'
 
 interface Product {
   id: number;
@@ -379,8 +380,12 @@ export default function Home() {
                 <Link
                   key={prod.id}
                   to={`/product?id=${prod.id}`}
+                  onMouseEnter={() => { cacheProductData(prod); prefetchProductApi(prod.id); }}
+                  onTouchStart={() => { cacheProductData(prod); prefetchProductApi(prod.id); }}
+                  onClick={() => cacheProductData(prod)}
                   className="group flex flex-col gap-3 relative"
                 >
+
                   {/* Image container */}
                   <div className="relative rounded-xl overflow-hidden bg-gray-50 aspect-square shadow-sm">
                     <HeicImage
